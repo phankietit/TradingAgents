@@ -1,5 +1,6 @@
 """Public platform domain contracts, versioned independently from persistence."""
 
+from .artifacts import ArtifactKind, ArtifactManifest
 from .base import SCHEMA_VERSION, ContentHash, StrictContract, VersionedContract, Weight
 from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
@@ -12,6 +13,7 @@ CONTRACT_REGISTRY = {
     contract.__name__: contract
     for contract in (
         InstrumentContract,
+        ArtifactManifest,
         SnapshotManifest,
         RunManifest,
         EvidenceReference,
@@ -26,6 +28,8 @@ __all__ = [
     "SCHEMA_VERSION",
     "CONTRACT_REGISTRY",
     "AssetClass",
+    "ArtifactKind",
+    "ArtifactManifest",
     "CashBalance",
     "ContentHash",
     "DataQualityStatus",

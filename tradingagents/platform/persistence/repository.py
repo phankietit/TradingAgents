@@ -11,6 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from tradingagents.contracts import (
+    ArtifactManifest,
     DecisionCandidate,
     InstrumentContract,
     PolicyContract,
@@ -21,6 +22,7 @@ from tradingagents.contracts import (
 )
 
 from .models import (
+    ArtifactRow,
     DecisionRow,
     InstrumentRow,
     PolicyRow,
@@ -81,6 +83,41 @@ class PlatformRepository:
         )
         self.session.flush()
         return contract
+
+    def add_artifact(self, contract: ArtifactManifest) -> ArtifactManifest:
+        existing = self.session.get(ArtifactRow, contract.artifact_id)
+        if existing:
+            if not _same_payload(existing, contract):
+                raise ImmutableRecordConflict("artifact_id already has different content")
+            return contract
+        self.session.add(
+            ArtifactRow(
+                artifact_id=contract.artifact_id,
+                owner_id=contract.owner_id,
+                run_id=contract.run_id,
+                instrument_id=contract.instrument_id,
+                snapshot_id=contract.snapshot_id,
+                schema_version=contract.schema_version,
+                kind=contract.kind.value,
+                media_type=contract.media_type,
+                content_hash=contract.content_hash,
+                byte_size=contract.byte_size,
+                storage_key=contract.storage_key,
+                payload=_payload(contract),
+                created_at=contract.created_at,
+            )
+        )
+        self.session.flush()
+        return contract
+
+    def get_artifact(self, artifact_id: UUID, owner_id: UUID) -> ArtifactManifest | None:
+        row = self.session.scalar(
+            select(ArtifactRow).where(
+                ArtifactRow.artifact_id == artifact_id,
+                ArtifactRow.owner_id == owner_id,
+            )
+        )
+        return ArtifactManifest.model_validate(row.payload) if row else None
 
     def get_instrument(self, instrument_id: UUID) -> InstrumentContract | None:
         row = self.session.get(InstrumentRow, instrument_id)

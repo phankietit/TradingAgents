@@ -123,3 +123,29 @@ class PolicyRow(Base):
     effective_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ArtifactRow(Base):
+    __tablename__ = "artifacts"
+    __table_args__ = (
+        Index("ix_artifacts_owner_created", "owner_id", "created_at"),
+        Index("ix_artifacts_owner_run", "owner_id", "run_id"),
+    )
+
+    artifact_id: Mapped[UUID] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    run_id: Mapped[UUID | None] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=True)
+    instrument_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("instruments.instrument_id"), nullable=True
+    )
+    snapshot_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("snapshots.snapshot_id"), nullable=True
+    )
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    kind: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    media_type: Mapped[str] = mapped_column(String(128), nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(71), nullable=False, index=True)
+    byte_size: Mapped[int] = mapped_column(nullable=False)
+    storage_key: Mapped[str] = mapped_column(String(160), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

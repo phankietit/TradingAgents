@@ -87,6 +87,7 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
     assert {
         "alembic_version",
         "analysis_runs",
+        "artifacts",
         "decisions",
         "instruments",
         "policies",
