@@ -182,3 +182,32 @@ class JobRow(Base):
     output_artifact_ids: Mapped[list[str]] = mapped_column(JSON_VALUE, nullable=False)
     error_code: Mapped[str | None] = mapped_column(String(128), nullable=True)
     error_message: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+
+
+class OwnerRow(Base):
+    __tablename__ = "owner_accounts"
+
+    owner_id: Mapped[UUID] = mapped_column(primary_key=True)
+    singleton_key: Mapped[str] = mapped_column(String(16), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(String(254), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class OwnerSessionRow(Base):
+    __tablename__ = "owner_sessions"
+    __table_args__ = (Index("ix_owner_sessions_owner_expiry", "owner_id", "expires_at"),)
+
+    session_id: Mapped[UUID] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(
+        ForeignKey("owner_accounts.owner_id"), nullable=False, index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

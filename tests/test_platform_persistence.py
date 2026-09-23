@@ -91,6 +91,8 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
         "artifacts",
         "decisions",
         "instruments",
+        "owner_accounts",
+        "owner_sessions",
         "policies",
         "portfolio_snapshots",
         "snapshots",
