@@ -86,6 +86,7 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
     tables = set(inspect(database.engine).get_table_names())
     assert {
         "alembic_version",
+        "analysis_jobs",
         "analysis_runs",
         "artifacts",
         "decisions",
