@@ -254,6 +254,18 @@ print(decision)
 
 See `tradingagents/default_config.py` for all configuration options.
 
+### Concurrent runs
+
+Each `TradingAgentsGraph` keeps a deep-copied configuration and activates it
+only for that graph's run. Separate worker threads or async tasks can therefore
+run graphs with different providers, languages, vendor chains, and storage
+paths without replacing one another's dataflow configuration.
+
+Use `TradingAgentsGraph.propagate()` for programmatic runs. If an integration
+streams `graph.graph` directly, as the CLI does, keep the complete stream inside
+`with graph.config_scope():` so every tool call observes the owning graph's
+configuration.
+
 ### Fundamentals as filed
 
 US company statements can come from SEC EDGAR, which records the date every figure was filed. A run dated in the past then reads the statements exactly as they stood that day: a fiscal year that has ended but has not been filed yet is not served, and a figure restated later still reads as first reported. Apple's 2008 total assets were filed as $39.6B and restated to $36.2B in 2010, so a run dated in between reads $39.6B.
