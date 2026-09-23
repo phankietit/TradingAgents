@@ -205,6 +205,7 @@ class OwnerSessionRow(Base):
         ForeignKey("owner_accounts.owner_id"), nullable=False, index=True
     )
     token_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True)
+    csrf_token_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     issued_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True

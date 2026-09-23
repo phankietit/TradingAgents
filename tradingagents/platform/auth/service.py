@@ -50,12 +50,13 @@ class OwnerPrincipal:
 @dataclass(frozen=True, slots=True, repr=False)
 class IssuedSession:
     token: str
+    csrf_token: str
     principal: OwnerPrincipal
     expires_at: datetime
 
     def __repr__(self) -> str:
         return (
-            "IssuedSession(token=<redacted>, "
+            "IssuedSession(token=<redacted>, csrf_token=<redacted>, "
             f"principal={self.principal!r}, expires_at={self.expires_at!r})"
         )
 
@@ -188,12 +189,14 @@ class OwnerAuth:
             raise InvalidCredentials("invalid credentials")
 
         token = SESSION_PREFIX + secrets.token_urlsafe(32)
+        csrf_token = secrets.token_urlsafe(32)
         expires_at = timestamp + self.session_ttl
         self.session.add(
             OwnerSessionRow(
                 session_id=uuid4(),
                 owner_id=row.owner_id,
                 token_hash=_token_hash(token),
+                csrf_token_hash=_token_hash(csrf_token),
                 issued_at=timestamp,
                 expires_at=expires_at,
                 last_seen_at=timestamp,
@@ -201,7 +204,12 @@ class OwnerAuth:
             )
         )
         self.session.flush()
-        return IssuedSession(token, OwnerPrincipal(row.owner_id, row.email), expires_at)
+        return IssuedSession(
+            token,
+            csrf_token,
+            OwnerPrincipal(row.owner_id, row.email),
+            expires_at,
+        )
 
     def authenticate_session(self, token: str, *, now: datetime | None = None) -> OwnerPrincipal:
         timestamp = _utc(now or datetime.now(UTC))
@@ -237,6 +245,32 @@ class OwnerAuth:
             row.revoked_at = _utc(now or datetime.now(UTC))
             self.session.flush()
         return True
+
+    def validate_csrf(self, token: str, csrf_token: str) -> bool:
+        if (
+            not isinstance(token, str)
+            or not token.startswith(SESSION_PREFIX)
+            or len(token) > 128
+            or not isinstance(csrf_token, str)
+            or not 32 <= len(csrf_token) <= 128
+        ):
+            return False
+        row = self.session.scalar(
+            select(OwnerSessionRow).where(OwnerSessionRow.token_hash == _token_hash(token))
+        )
+        return bool(
+            row
+            and row.revoked_at is None
+            and secrets.compare_digest(row.csrf_token_hash, _token_hash(csrf_token))
+        )
+
+    def lock_owner(self, owner_id: UUID) -> OwnerPrincipal:
+        owner = self.session.scalar(
+            select(OwnerRow).where(OwnerRow.owner_id == owner_id).with_for_update()
+        )
+        if owner is None or OwnerStatus(owner.status) is not OwnerStatus.ACTIVE:
+            raise InvalidCredentials("invalid session")
+        return OwnerPrincipal(owner.owner_id, owner.email)
 
     def change_password(
         self,

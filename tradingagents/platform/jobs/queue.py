@@ -153,6 +153,21 @@ class DurableJobQueue:
         )
         return _record(row) if row else None
 
+    def get_by_run(self, run_id: UUID, owner_id: UUID) -> JobRecord | None:
+        row = self.session.scalar(
+            select(JobRow).where(JobRow.run_id == run_id, JobRow.owner_id == owner_id)
+        )
+        return _record(row) if row else None
+
+    def get_by_idempotency(self, owner_id: UUID, idempotency_key: str) -> JobRecord | None:
+        row = self.session.scalar(
+            select(JobRow).where(
+                JobRow.owner_id == owner_id,
+                JobRow.idempotency_key == idempotency_key,
+            )
+        )
+        return _record(row) if row else None
+
     def claim(
         self,
         worker_id: str,

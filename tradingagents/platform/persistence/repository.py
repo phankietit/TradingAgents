@@ -123,6 +123,14 @@ class PlatformRepository:
         row = self.session.get(InstrumentRow, instrument_id)
         return InstrumentContract.model_validate(row.payload) if row else None
 
+    def list_instruments(self, *, limit: int = 100) -> tuple[InstrumentContract, ...]:
+        if not 1 <= limit <= 500:
+            raise ValueError("limit must be between 1 and 500")
+        rows = self.session.scalars(
+            select(InstrumentRow).order_by(InstrumentRow.canonical_symbol).limit(limit)
+        ).all()
+        return tuple(InstrumentContract.model_validate(row.payload) for row in rows)
+
     def add_snapshot(self, contract: SnapshotManifest) -> SnapshotManifest:
         existing = self.session.get(SnapshotRow, contract.snapshot_id)
         if existing:
@@ -197,6 +205,17 @@ class PlatformRepository:
         )
         return RunManifest.model_validate(row.payload) if row else None
 
+    def list_runs(self, owner_id: UUID, *, limit: int = 50) -> tuple[RunManifest, ...]:
+        if not 1 <= limit <= 200:
+            raise ValueError("limit must be between 1 and 200")
+        rows = self.session.scalars(
+            select(RunRow)
+            .where(RunRow.owner_id == owner_id)
+            .order_by(RunRow.created_at.desc(), RunRow.run_id.desc())
+            .limit(limit)
+        ).all()
+        return tuple(RunManifest.model_validate(row.payload) for row in rows)
+
     def add_decision(self, contract: DecisionCandidate) -> DecisionCandidate:
         existing = self.session.get(DecisionRow, contract.decision_id)
         if existing:
@@ -230,6 +249,19 @@ class PlatformRepository:
             )
         )
         return DecisionCandidate.model_validate(row.payload) if row else None
+
+    def list_decisions(
+        self, owner_id: UUID, *, limit: int = 50
+    ) -> tuple[DecisionCandidate, ...]:
+        if not 1 <= limit <= 200:
+            raise ValueError("limit must be between 1 and 200")
+        rows = self.session.scalars(
+            select(DecisionRow)
+            .where(DecisionRow.owner_id == owner_id)
+            .order_by(DecisionRow.as_of.desc(), DecisionRow.decision_id.desc())
+            .limit(limit)
+        ).all()
+        return tuple(DecisionCandidate.model_validate(row.payload) for row in rows)
 
     def add_portfolio_snapshot(self, contract: PortfolioSnapshot) -> PortfolioSnapshot:
         existing = self.session.get(PortfolioSnapshotRow, contract.portfolio_id)

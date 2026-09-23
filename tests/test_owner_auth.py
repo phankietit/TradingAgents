@@ -75,12 +75,16 @@ def test_login_returns_redacted_token_once_and_database_stores_only_hash(tmp_pat
     assert issued.principal == principal
     assert issued.token.startswith("ta_session_")
     assert issued.token not in repr(issued)
+    assert issued.csrf_token not in repr(issued)
     assert "<redacted>" in repr(issued)
     with database.session() as session:
         stored = session.scalar(select(OwnerSessionRow))
         assert stored.token_hash != issued.token
         assert issued.token not in stored.token_hash
         assert len(stored.token_hash) == 64
+        auth = OwnerAuth(session)
+        assert auth.validate_csrf(issued.token, issued.csrf_token)
+        assert not auth.validate_csrf(issued.token, "wrong-csrf-token-value-000000000")
     database.dispose()
 
 

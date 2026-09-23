@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import inspect
+from sqlalchemy import create_engine, inspect, text
 
 from tradingagents.contracts import (
     AssetClass,
@@ -102,6 +102,54 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
     remaining = set(inspect(database.engine).get_table_names())
     assert remaining <= {"alembic_version"}
     database.dispose()
+
+
+@pytest.mark.unit
+def test_csrf_migration_revokes_preexisting_sessions(tmp_path):
+    url = _url(tmp_path)
+    upgrade_database(url, "0004_owner_authentication")
+    engine = create_engine(url)
+    owner_id = str(uuid4())
+    session_id = str(uuid4())
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO owner_accounts "
+                "(owner_id, singleton_key, email, password_hash, status, created_at, updated_at) "
+                "VALUES (:owner_id, 'primary-owner', 'owner@example.com', 'legacy', 'active', "
+                ":created_at, :updated_at)"
+            ),
+            {"owner_id": owner_id, "created_at": NOW, "updated_at": NOW},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO owner_sessions "
+                "(session_id, owner_id, token_hash, issued_at, expires_at, last_seen_at, revoked_at) "
+                "VALUES (:session_id, :owner_id, :token_hash, :issued_at, :expires_at, "
+                ":last_seen_at, NULL)"
+            ),
+            {
+                "session_id": session_id,
+                "owner_id": owner_id,
+                "token_hash": "a" * 64,
+                "issued_at": NOW,
+                "expires_at": NOW + timedelta(hours=1),
+                "last_seen_at": NOW,
+            },
+        )
+
+    upgrade_database(url)
+    with engine.connect() as connection:
+        row = connection.execute(
+            text(
+                "SELECT csrf_token_hash, revoked_at FROM owner_sessions "
+                "WHERE session_id = :session_id"
+            ),
+            {"session_id": session_id},
+        ).one()
+    assert row.csrf_token_hash == "0" * 64
+    assert row.revoked_at is not None
+    engine.dispose()
 
 
 @pytest.mark.unit
