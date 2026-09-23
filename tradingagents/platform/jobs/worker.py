@@ -6,8 +6,11 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from tradingagents.contracts import JobKind, JobRecord
-from tradingagents.platform.persistence import Database
+from sqlalchemy.orm import Session
+
+from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType, RunStatus
+from tradingagents.platform.events import RunEventStore
+from tradingagents.platform.persistence import Database, PlatformRepository
 
 from .queue import DurableJobQueue
 
@@ -76,21 +79,27 @@ class JobWorker:
         now = self.clock()
         with self.database.session() as session:
             queue = DurableJobQueue(session)
-            queue.recover_expired(now=now)
+            for recovered in queue.recover_expired(now=now):
+                self._record_job_state(session, recovered, now)
             job = queue.claim(self.worker_id, lease_for=self.lease_for, now=now)
+            if job is not None:
+                self._record_job_state(session, job, now)
         if job is None:
             return None
 
         handler = self.handlers.get(job.kind)
         if handler is None:
             with self.database.session() as session:
-                return DurableJobQueue(session).fail(
+                timestamp = self.clock()
+                failed = DurableJobQueue(session).fail(
                     job.job_id,
                     self.worker_id,
                     error_code="HANDLER_NOT_REGISTERED",
                     retryable=False,
-                    now=self.clock(),
+                    now=timestamp,
                 )
+                self._record_job_state(session, failed, timestamp)
+                return failed
 
         context = JobExecutionContext(
             self.database,
@@ -102,26 +111,84 @@ class JobWorker:
         try:
             output_artifact_ids = handler(job, context) or ()
             with self.database.session() as session:
-                return DurableJobQueue(session).complete(
+                timestamp = self.clock()
+                completed = DurableJobQueue(session).complete(
                     job.job_id,
                     self.worker_id,
                     output_artifact_ids=output_artifact_ids,
-                    now=self.clock(),
+                    now=timestamp,
                 )
+                self._record_job_state(session, completed, timestamp)
+                return completed
         except JobCancellationRequested:
             with self.database.session() as session:
-                return DurableJobQueue(session).acknowledge_cancel(
-                    job.job_id, self.worker_id, now=self.clock()
+                timestamp = self.clock()
+                cancelled = DurableJobQueue(session).acknowledge_cancel(
+                    job.job_id, self.worker_id, now=timestamp
                 )
+                self._record_job_state(session, cancelled, timestamp)
+                return cancelled
         except Exception as exc:
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
             with self.database.session() as session:
-                return DurableJobQueue(session).fail(
+                timestamp = self.clock()
+                failed = DurableJobQueue(session).fail(
                     job.job_id,
                     self.worker_id,
                     error_code="HANDLER_ERROR",
                     error_message=type(exc).__name__,
                     retryable=True,
                     retry_after=retry_after,
-                    now=self.clock(),
+                    now=timestamp,
                 )
+                self._record_job_state(session, failed, timestamp)
+                return failed
+
+    @staticmethod
+    def _record_job_state(session: Session, job: JobRecord, timestamp: datetime) -> None:
+        repository = PlatformRepository(session)
+        run = repository.get_run(job.run_id, job.owner_id)
+        if run is None:
+            return
+        event_type: RunEventType | None = None
+        payload: dict[str, object] = {"job_id": str(job.job_id), "attempt": job.attempt}
+
+        if job.status is JobStatus.RUNNING:
+            if run.status is RunStatus.QUEUED:
+                repository.save_run(
+                    run.model_copy(update={"status": RunStatus.RUNNING, "started_at": timestamp})
+                )
+            event_type = RunEventType.RUN_STARTED
+        elif job.status is JobStatus.RETRY_WAIT:
+            event_type = RunEventType.RUN_RETRYING
+            payload["error_code"] = job.error_code
+        elif job.status in {JobStatus.SUCCEEDED, JobStatus.FAILED, JobStatus.CANCELLED}:
+            status_map = {
+                JobStatus.SUCCEEDED: (RunStatus.SUCCEEDED, RunEventType.RUN_SUCCEEDED),
+                JobStatus.FAILED: (RunStatus.FAILED, RunEventType.RUN_FAILED),
+                JobStatus.CANCELLED: (RunStatus.CANCELLED, RunEventType.RUN_CANCELLED),
+            }
+            run_status, event_type = status_map[job.status]
+            update = {
+                "status": run_status,
+                "started_at": run.started_at or timestamp,
+                "completed_at": timestamp,
+                "error_code": job.error_code if run_status is RunStatus.FAILED else None,
+                "error_message": None,
+            }
+            repository.save_run(run.model_copy(update=update))
+            if job.error_code:
+                payload["error_code"] = job.error_code
+            if job.output_artifact_ids:
+                payload["output_artifact_ids"] = [
+                    str(artifact_id) for artifact_id in job.output_artifact_ids
+                ]
+
+        if event_type is not None:
+            RunEventStore(session).append(
+                owner_id=job.owner_id,
+                run_id=job.run_id,
+                event_type=event_type,
+                occurred_at=timestamp,
+                payload=payload,
+            )

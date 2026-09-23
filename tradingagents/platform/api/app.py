@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import secrets
+import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
+import anyio
 from fastapi import (
     Depends,
     FastAPI,
@@ -23,15 +26,19 @@ from fastapi import (
     status,
 )
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyCookie
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from tradingagents.contracts import (
+    TERMINAL_RUN_EVENTS,
     DecisionCandidate,
     InstrumentContract,
     JobRecord,
+    JobStatus,
+    RunEvent,
+    RunEventType,
     RunManifest,
     RunStatus,
 )
@@ -41,6 +48,7 @@ from tradingagents.platform.artifacts import (
     LocalArtifactStore,
 )
 from tradingagents.platform.auth import InvalidCredentials, OwnerAuth, OwnerPrincipal
+from tradingagents.platform.events import RunEventNotFound, RunEventStore
 from tradingagents.platform.jobs import DurableJobQueue, JobConflict
 from tradingagents.platform.persistence import Database, PlatformRepository
 
@@ -142,6 +150,32 @@ def secrets_compare(left: str, right: str) -> bool:
 
 
 CsrfOwnerDependency = Annotated[OwnerPrincipal, Depends(_csrf_owner)]
+
+
+def _stream_owner(request: Request, token: CookieDependency) -> OwnerPrincipal:
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="authentication required"
+        )
+    database: Database = request.app.state.database
+    with database.session() as session:
+        try:
+            return OwnerAuth(session).authenticate_session(token, now=_now(_settings(request)))
+        except InvalidCredentials as error:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="authentication required"
+            ) from error
+
+
+StreamOwnerDependency = Annotated[OwnerPrincipal, Depends(_stream_owner)]
+
+
+def _sse_event(event: RunEvent) -> str:
+    return (
+        f"id: {event.sequence}\n"
+        f"event: {event.event_type.value}\n"
+        f"data: {event.model_dump_json()}\n\n"
+    )
 
 
 def create_app(settings: ApiSettings) -> FastAPI:
@@ -356,6 +390,16 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, detail="job conflict"
             ) from error
+        RunEventStore(session).append(
+            owner_id=owner.owner_id,
+            run_id=run.run_id,
+            event_type=RunEventType.RUN_QUEUED,
+            occurred_at=timestamp,
+            payload={
+                "job_id": str(job.job_id),
+                "instrument_id": str(instrument.instrument_id),
+            },
+        )
         return RunAcceptedResponse(run=run, job=job)
 
     @app.get(f"{API_PREFIX}/runs", response_model=list[RunManifest], tags=["runs"])
@@ -377,6 +421,85 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
         return run
 
+    @app.get(f"{API_PREFIX}/runs/{{run_id}}/events", tags=["runs"])
+    def stream_run_events(
+        request: Request,
+        run_id: UUID,
+        owner: StreamOwnerDependency,
+        last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
+    ) -> StreamingResponse:
+        if last_event_id is None:
+            cursor = 0
+        else:
+            try:
+                cursor = int(last_event_id)
+            except ValueError as error:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Last-Event-ID must be a non-negative integer",
+                ) from error
+            if cursor < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Last-Event-ID must be a non-negative integer",
+                )
+
+        with database.session() as session:
+            if PlatformRepository(session).get_run(run_id, owner.owner_id) is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
+
+        async def generate():
+            sequence = cursor
+            last_keepalive = time.monotonic()
+            yield f"retry: {settings.event_retry_milliseconds}\n\n"
+            while True:
+                if await request.is_disconnected():
+                    return
+
+                def load_batch(after_sequence: int = sequence):
+                    with database.session() as session:
+                        try:
+                            events = RunEventStore(session).list_after(
+                                owner.owner_id,
+                                run_id,
+                                after_sequence=after_sequence,
+                                limit=100,
+                            )
+                        except RunEventNotFound:
+                            return None, None
+                        run = PlatformRepository(session).get_run(run_id, owner.owner_id)
+                        return events, run
+
+                events, run = await anyio.to_thread.run_sync(load_batch)
+                if events is None:
+                    return
+                for event in events:
+                    sequence = event.sequence
+                    yield _sse_event(event)
+                    if event.event_type in TERMINAL_RUN_EVENTS:
+                        return
+                if run is None or run.status in {
+                    RunStatus.SUCCEEDED,
+                    RunStatus.FAILED,
+                    RunStatus.CANCELLED,
+                }:
+                    return
+                now_monotonic = time.monotonic()
+                if now_monotonic - last_keepalive >= settings.event_keepalive_interval:
+                    yield ": keep-alive\n\n"
+                    last_keepalive = now_monotonic
+                await asyncio.sleep(settings.event_poll_interval)
+
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache, no-store",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
     @app.post(
         f"{API_PREFIX}/runs/{{run_id}}/cancel",
         response_model=JobRecord,
@@ -392,13 +515,29 @@ def create_app(settings: ApiSettings) -> FastAPI:
         job = DurableJobQueue(session).get_by_run(run_id, owner.owner_id)
         if run is None or job is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
+        timestamp = _now(settings)
         cancelled = DurableJobQueue(session).request_cancel(
-            job.job_id, owner.owner_id, now=_now(settings)
+            job.job_id, owner.owner_id, now=timestamp
         )
         if cancelled is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
-        if cancelled.status.value == "cancelled" and run.status is RunStatus.QUEUED:
-            timestamp = _now(settings)
+        event_type = None
+        if (
+            job.status in {JobStatus.QUEUED, JobStatus.RETRY_WAIT}
+            and cancelled.status is JobStatus.CANCELLED
+        ):
+            event_type = RunEventType.RUN_CANCELLED
+        elif job.status is JobStatus.RUNNING and cancelled.status is JobStatus.CANCEL_REQUESTED:
+            event_type = RunEventType.RUN_CANCEL_REQUESTED
+        if event_type is not None:
+            RunEventStore(session).append(
+                owner_id=owner.owner_id,
+                run_id=run_id,
+                event_type=event_type,
+                occurred_at=timestamp,
+                payload={"job_id": str(job.job_id)},
+            )
+        if cancelled.status is JobStatus.CANCELLED and run.status is RunStatus.QUEUED:
             repository.save_run(
                 run.model_copy(
                     update={

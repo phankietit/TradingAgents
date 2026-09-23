@@ -22,6 +22,9 @@ class ApiSettings:
     prompt_version: str = "1"
     max_job_attempts: int = 3
     allowed_analysts: tuple[str, ...] = ("market", "social", "news", "fundamentals")
+    event_poll_interval: float = 0.5
+    event_keepalive_interval: float = 15.0
+    event_retry_milliseconds: int = 2000
     clock: Callable[[], datetime] = lambda: datetime.now(UTC)
 
     def __post_init__(self) -> None:
@@ -47,3 +50,9 @@ class ApiSettings:
             set(self.allowed_analysts)
         ):
             raise ValueError("allowed_analysts must be non-empty and unique")
+        if self.event_poll_interval <= 0:
+            raise ValueError("event_poll_interval must be positive")
+        if self.event_keepalive_interval < self.event_poll_interval:
+            raise ValueError("event_keepalive_interval must not be shorter than polling")
+        if not 100 <= self.event_retry_milliseconds <= 60_000:
+            raise ValueError("event_retry_milliseconds must be between 100 and 60000")

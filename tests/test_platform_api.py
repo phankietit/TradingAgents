@@ -250,10 +250,30 @@ def test_cancel_queued_run_and_download_private_artifact(api_context):
     assert cancelled.json()["status"] == "cancelled"
     assert client.get(f"/api/v1/runs/{run_id}").json()["status"] == "cancelled"
 
+    events = client.get(f"/api/v1/runs/{run_id}/events")
+    assert events.status_code == 200
+    assert events.headers["content-type"].startswith("text/event-stream")
+    assert "retry: 2000\n\n" in events.text
+    assert "id: 1\nevent: run.queued\n" in events.text
+    assert "id: 2\nevent: run.cancelled\n" in events.text
+    resumed = client.get(f"/api/v1/runs/{run_id}/events", headers={"Last-Event-ID": "1"})
+    assert "event: run.queued" not in resumed.text
+    assert "id: 2\nevent: run.cancelled\n" in resumed.text
+
     artifact = client.get(f"/api/v1/artifacts/{api_context['artifact'].artifact_id}")
     assert artifact.status_code == 200
     assert artifact.content == b"# Private owner report"
     assert artifact.headers["content-type"] == "application/octet-stream"
+
+
+@pytest.mark.unit
+def test_sse_cursor_and_owner_are_validated_before_streaming(api_context):
+    client = api_context["client"]
+    _login(client)
+    run_id = api_context["other_run"].run_id
+    assert client.get(f"/api/v1/runs/{run_id}/events").status_code == 404
+    invalid = client.get(f"/api/v1/runs/{run_id}/events", headers={"Last-Event-ID": "not-a-number"})
+    assert invalid.status_code == 400
 
 
 @pytest.mark.unit
@@ -265,6 +285,7 @@ def test_openapi_contract_has_cookie_auth_and_no_caller_owner_field(api_context)
     assert "owner_id" not in run_request["properties"]
     assert "/api/v1/runs" in schema["paths"]
     assert "/api/v1/runs/{run_id}/cancel" in schema["paths"]
+    assert "/api/v1/runs/{run_id}/events" in schema["paths"]
 
 
 @pytest.mark.unit

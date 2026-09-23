@@ -28,6 +28,7 @@ implicitly during API startup.
 - `GET /api/v1/instruments`
 - `POST /api/v1/runs`, `GET /api/v1/runs`, `GET /api/v1/runs/{run_id}`
 - `POST /api/v1/runs/{run_id}/cancel`
+- `GET /api/v1/runs/{run_id}/events` (resumable SSE)
 - `GET /api/v1/jobs/{job_id}`
 - `GET /api/v1/decisions`, `GET /api/v1/decisions/{decision_id}`
 - `GET /api/v1/artifacts/{artifact_id}`

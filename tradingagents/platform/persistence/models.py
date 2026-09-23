@@ -212,3 +212,20 @@ class OwnerSessionRow(Base):
     )
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class RunEventRow(Base):
+    __tablename__ = "run_events"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence"),
+        Index("ix_run_events_owner_run_sequence", "owner_id", "run_id", "sequence"),
+    )
+
+    event_id: Mapped[UUID] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    sequence: Mapped[int] = mapped_column(nullable=False)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)

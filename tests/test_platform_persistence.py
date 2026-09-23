@@ -95,6 +95,7 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
         "owner_sessions",
         "policies",
         "portfolio_snapshots",
+        "run_events",
         "snapshots",
     } <= tables
 

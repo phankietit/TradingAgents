@@ -4,6 +4,7 @@ from .artifacts import ArtifactKind, ArtifactManifest
 from .base import SCHEMA_VERSION, ContentHash, StrictContract, VersionedContract, Weight
 from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
+from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
 from .instruments import AssetClass, InstrumentContract, Tradability
 from .jobs import JobKind, JobRecord, JobStatus
 from .policy import PolicyCheck, PolicyContract, PolicyResult
@@ -18,6 +19,7 @@ CONTRACT_REGISTRY = {
         SnapshotManifest,
         RunManifest,
         JobRecord,
+        RunEvent,
         EvidenceReference,
         DecisionCandidate,
         PortfolioSnapshot,
@@ -49,9 +51,12 @@ __all__ = [
     "PortfolioSnapshot",
     "PositionSnapshot",
     "RunManifest",
+    "RunEvent",
+    "RunEventType",
     "RunStatus",
     "SnapshotManifest",
     "StrictContract",
+    "TERMINAL_RUN_EVENTS",
     "Tradability",
     "VersionedContract",
     "Weight",

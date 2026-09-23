@@ -13,10 +13,12 @@ from tradingagents.contracts import (
     InstrumentContract,
     JobKind,
     JobStatus,
+    RunEventType,
     RunManifest,
     RunStatus,
     Tradability,
 )
+from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.jobs import (
     DurableJobQueue,
     JobConflict,
@@ -284,6 +286,14 @@ def test_worker_commits_claim_before_handler_and_records_outputs(tmp_path):
     assert completed.job_id == job.job_id
     assert completed.status is JobStatus.SUCCEEDED
     assert completed.output_artifact_ids == (artifact_id,)
+    with database.session() as session:
+        persisted_run = PlatformRepository(session).get_run(run.run_id, owner_id)
+        events = RunEventStore(session).list_after(owner_id, run.run_id)
+    assert persisted_run.status is RunStatus.SUCCEEDED
+    assert [event.event_type for event in events] == [
+        RunEventType.RUN_STARTED,
+        RunEventType.RUN_SUCCEEDED,
+    ]
     database.dispose()
 
 
@@ -305,6 +315,14 @@ def test_worker_retries_without_persisting_exception_message(tmp_path):
     assert retry.status is JobStatus.RETRY_WAIT
     assert retry.error_code == "HANDLER_ERROR"
     assert retry.error_message == "RuntimeError"
+    with database.session() as session:
+        persisted_run = PlatformRepository(session).get_run(run.run_id, owner_id)
+        events = RunEventStore(session).list_after(owner_id, run.run_id)
+    assert persisted_run.status is RunStatus.RUNNING
+    assert [event.event_type for event in events] == [
+        RunEventType.RUN_STARTED,
+        RunEventType.RUN_RETRYING,
+    ]
     database.dispose()
 
 
