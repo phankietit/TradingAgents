@@ -30,9 +30,16 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+    "alembic>=1.13,<2.0",
+    "sqlalchemy>=2.0,<3.0",
     "ruff>=0.15",
     "pytest>=8.0",
     "pytest-subtests>=0.13",
+]
+platform = [
+    "alembic>=1.13,<2.0",
+    "psycopg[binary]>=3.2,<4.0",
+    "sqlalchemy>=2.0,<3.0",
 ]
 # Amazon Bedrock support (AWS SigV4 auth + boto3). Optional so the core install
 # stays lean: pip install "tradingagents[bedrock]".
@@ -48,6 +55,7 @@ include = ["tradingagents*", "cli*"]
 
 [tool.setuptools.package-data]
 cli = ["static/*"]
+"tradingagents.platform.persistence.migrations" = ["script.py.mako"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
