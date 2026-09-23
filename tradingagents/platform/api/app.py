@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
+import re
 import secrets
 import time
 from collections.abc import Iterator
@@ -50,6 +52,7 @@ from tradingagents.platform.artifacts import (
 from tradingagents.platform.auth import InvalidCredentials, OwnerAuth, OwnerPrincipal
 from tradingagents.platform.events import RunEventNotFound, RunEventStore
 from tradingagents.platform.jobs import DurableJobQueue, JobConflict
+from tradingagents.platform.observability import MetricsRegistry, request_id_scope
 from tradingagents.platform.persistence import Database, PlatformRepository
 
 from .schemas import (
@@ -68,6 +71,8 @@ CSRF_COOKIE = "ta_csrf"
 CSRF_HEADER = "X-CSRF-Token"
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 cookie_scheme = APIKeyCookie(name=SESSION_COOKIE, auto_error=False)
+REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
+logger = logging.getLogger("tradingagents.platform.api")
 
 
 def _now(settings: ApiSettings) -> datetime:
@@ -181,6 +186,7 @@ def _sse_event(event: RunEvent) -> str:
 def create_app(settings: ApiSettings) -> FastAPI:
     database = Database(settings.database_url)
     artifact_store = LocalArtifactStore(settings.artifact_root)
+    metrics = MetricsRegistry()
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -196,6 +202,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
     app.state.database = database
     app.state.artifact_store = artifact_store
     app.state.settings = settings
+    app.state.metrics = metrics
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_request: Request, error: RequestValidationError):
@@ -209,15 +216,51 @@ def create_app(settings: ApiSettings) -> FastAPI:
         )
 
     @app.middleware("http")
-    async def browser_security(request: Request, call_next):
-        if request.method in UNSAFE_METHODS:
-            origin = request.headers.get("origin")
-            if origin != settings.allowed_origin.rstrip("/"):
-                return JSONResponse(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    content={"detail": "origin validation failed"},
+    async def platform_request(request: Request, call_next):
+        supplied_request_id = request.headers.get("X-Request-ID", "")
+        request_id = (
+            supplied_request_id
+            if REQUEST_ID_PATTERN.fullmatch(supplied_request_id)
+            else str(uuid4())
+        )
+        started = time.perf_counter()
+        response = None
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        with request_id_scope(request_id):
+            try:
+                if request.method in UNSAFE_METHODS and request.headers.get(
+                    "origin"
+                ) != settings.allowed_origin.rstrip("/"):
+                    response = JSONResponse(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        content={"detail": "origin validation failed"},
+                    )
+                else:
+                    response = await call_next(request)
+                status_code = response.status_code
+            finally:
+                route_object = request.scope.get("route")
+                route = getattr(route_object, "path", "unmatched")
+                duration = time.perf_counter() - started
+                metrics.observe_http(
+                    method=request.method,
+                    route=route,
+                    status_code=status_code,
+                    duration=duration,
                 )
-        response = await call_next(request)
+                logger.log(
+                    logging.ERROR if status_code >= 500 else logging.INFO,
+                    "http_request",
+                    extra={
+                        "method": request.method,
+                        "route": route,
+                        "status_code": status_code,
+                        "duration_ms": round(duration * 1000, 3),
+                    },
+                )
+        if response is None:
+            raise RuntimeError("request completed without a response")
+        response.headers["X-Request-ID"] = request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
@@ -237,6 +280,13 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="not ready"
             ) from error
         return StatusResponse(status="ready")
+
+    @app.get(f"{API_PREFIX}/observability/metrics", tags=["observability"])
+    def observability_metrics(_owner: OwnerDependency) -> Response:
+        return Response(
+            metrics.render(),
+            media_type="text/plain; version=0.0.4",
+        )
 
     @app.post(f"{API_PREFIX}/auth/login", response_model=LoginResponse, tags=["auth"])
     def login(
@@ -449,46 +499,50 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
 
         async def generate():
-            sequence = cursor
-            last_keepalive = time.monotonic()
-            yield f"retry: {settings.event_retry_milliseconds}\n\n"
-            while True:
-                if await request.is_disconnected():
-                    return
-
-                def load_batch(after_sequence: int = sequence):
-                    with database.session() as session:
-                        try:
-                            events = RunEventStore(session).list_after(
-                                owner.owner_id,
-                                run_id,
-                                after_sequence=after_sequence,
-                                limit=100,
-                            )
-                        except RunEventNotFound:
-                            return None, None
-                        run = PlatformRepository(session).get_run(run_id, owner.owner_id)
-                        return events, run
-
-                events, run = await anyio.to_thread.run_sync(load_batch)
-                if events is None:
-                    return
-                for event in events:
-                    sequence = event.sequence
-                    yield _sse_event(event)
-                    if event.event_type in TERMINAL_RUN_EVENTS:
+            metrics.open_sse()
+            try:
+                sequence = cursor
+                last_keepalive = time.monotonic()
+                yield f"retry: {settings.event_retry_milliseconds}\n\n"
+                while True:
+                    if await request.is_disconnected():
                         return
-                if run is None or run.status in {
-                    RunStatus.SUCCEEDED,
-                    RunStatus.FAILED,
-                    RunStatus.CANCELLED,
-                }:
-                    return
-                now_monotonic = time.monotonic()
-                if now_monotonic - last_keepalive >= settings.event_keepalive_interval:
-                    yield ": keep-alive\n\n"
-                    last_keepalive = now_monotonic
-                await asyncio.sleep(settings.event_poll_interval)
+
+                    def load_batch(after_sequence: int = sequence):
+                        with database.session() as session:
+                            try:
+                                events = RunEventStore(session).list_after(
+                                    owner.owner_id,
+                                    run_id,
+                                    after_sequence=after_sequence,
+                                    limit=100,
+                                )
+                            except RunEventNotFound:
+                                return None, None
+                            run = PlatformRepository(session).get_run(run_id, owner.owner_id)
+                            return events, run
+
+                    events, run = await anyio.to_thread.run_sync(load_batch)
+                    if events is None:
+                        return
+                    for event in events:
+                        sequence = event.sequence
+                        yield _sse_event(event)
+                        if event.event_type in TERMINAL_RUN_EVENTS:
+                            return
+                    if run is None or run.status in {
+                        RunStatus.SUCCEEDED,
+                        RunStatus.FAILED,
+                        RunStatus.CANCELLED,
+                    }:
+                        return
+                    now_monotonic = time.monotonic()
+                    if now_monotonic - last_keepalive >= settings.event_keepalive_interval:
+                        yield ": keep-alive\n\n"
+                        last_keepalive = now_monotonic
+                    await asyncio.sleep(settings.event_poll_interval)
+            finally:
+                metrics.close_sse()
 
         return StreamingResponse(
             generate(),

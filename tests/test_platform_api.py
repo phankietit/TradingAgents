@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime, timedelta
+from io import StringIO
 from uuid import uuid4
 
 import pytest
@@ -20,6 +22,7 @@ from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.api.runtime import load_api_settings
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
+from tradingagents.platform.observability import configure_platform_logging
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 
 NOW = datetime(2026, 9, 23, 12, 0, tzinfo=UTC)
@@ -137,6 +140,11 @@ def test_health_security_headers_and_authentication_boundary(api_context):
     assert live.json() == {"status": "ok"}
     assert ready.json() == {"status": "ready"}
     assert live.headers["x-frame-options"] == "DENY"
+    assert live.headers["x-request-id"]
+    supplied = client.get("/health/live", headers={"X-Request-ID": "request-1234"})
+    assert supplied.headers["x-request-id"] == "request-1234"
+    replaced = client.get("/health/live", headers={"X-Request-ID": "bad"})
+    assert replaced.headers["x-request-id"] != "bad"
     assert client.get("/api/v1/instruments").status_code == 401
 
     wrong_origin = client.post(
@@ -259,6 +267,8 @@ def test_cancel_queued_run_and_download_private_artifact(api_context):
     resumed = client.get(f"/api/v1/runs/{run_id}/events", headers={"Last-Event-ID": "1"})
     assert "event: run.queued" not in resumed.text
     assert "id: 2\nevent: run.cancelled\n" in resumed.text
+    metrics = client.get("/api/v1/observability/metrics")
+    assert "tradingagents_sse_connections_active 0" in metrics.text
 
     artifact = client.get(f"/api/v1/artifacts/{api_context['artifact'].artifact_id}")
     assert artifact.status_code == 200
@@ -286,6 +296,40 @@ def test_openapi_contract_has_cookie_auth_and_no_caller_owner_field(api_context)
     assert "/api/v1/runs" in schema["paths"]
     assert "/api/v1/runs/{run_id}/cancel" in schema["paths"]
     assert "/api/v1/runs/{run_id}/events" in schema["paths"]
+    assert "/api/v1/observability/metrics" in schema["paths"]
+
+
+@pytest.mark.unit
+def test_metrics_are_authenticated_and_use_route_templates(api_context):
+    client = api_context["client"]
+    assert client.get("/api/v1/observability/metrics").status_code == 401
+    _login(client)
+    run_id = api_context["other_run"].run_id
+    assert client.get(f"/api/v1/runs/{run_id}").status_code == 404
+    response = client.get("/api/v1/observability/metrics")
+    assert response.status_code == 200
+    assert "/api/v1/runs/{run_id}" in response.text
+    assert str(run_id) not in response.text
+
+
+@pytest.mark.unit
+def test_http_log_uses_correlation_and_route_template_without_private_request_data(api_context):
+    client = api_context["client"]
+    _login(client)
+    stream = StringIO()
+    configure_platform_logging(stream=stream)
+    run_id = api_context["other_run"].run_id
+    response = client.get(
+        f"/api/v1/runs/{run_id}?private_query=do-not-log",
+        headers={"X-Request-ID": "request-log-1"},
+    )
+    assert response.status_code == 404
+    records = [json.loads(line) for line in stream.getvalue().splitlines()]
+    record = records[-1]
+    assert record["request_id"] == "request-log-1"
+    assert record["route"] == "/api/v1/runs/{run_id}"
+    assert str(run_id) not in stream.getvalue()
+    assert "do-not-log" not in stream.getvalue()
 
 
 @pytest.mark.unit

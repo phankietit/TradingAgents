@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
@@ -10,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType, RunStatus
 from tradingagents.platform.events import RunEventStore
+from tradingagents.platform.observability import MetricsRegistry
 from tradingagents.platform.persistence import Database, PlatformRepository
 
 from .queue import DurableJobQueue
@@ -53,6 +55,7 @@ class JobExecutionContext:
 
 
 JobHandler = Callable[[JobRecord, JobExecutionContext], tuple[UUID, ...] | None]
+logger = logging.getLogger("tradingagents.platform.jobs")
 
 
 class JobWorker:
@@ -65,6 +68,7 @@ class JobWorker:
         lease_for: timedelta = timedelta(minutes=5),
         retry_base: timedelta = timedelta(seconds=30),
         clock: Callable[[], datetime] | None = None,
+        metrics: MetricsRegistry | None = None,
     ):
         if retry_base < timedelta(0):
             raise ValueError("retry_base cannot be negative")
@@ -74,6 +78,7 @@ class JobWorker:
         self.lease_for = lease_for
         self.retry_base = retry_base
         self.clock = clock or (lambda: datetime.now(UTC))
+        self.metrics = metrics
 
     def run_once(self) -> JobRecord | None:
         now = self.clock()
@@ -144,8 +149,7 @@ class JobWorker:
                 self._record_job_state(session, failed, timestamp)
                 return failed
 
-    @staticmethod
-    def _record_job_state(session: Session, job: JobRecord, timestamp: datetime) -> None:
+    def _record_job_state(self, session: Session, job: JobRecord, timestamp: datetime) -> None:
         repository = PlatformRepository(session)
         run = repository.get_run(job.run_id, job.owner_id)
         if run is None:
@@ -191,4 +195,15 @@ class JobWorker:
                 event_type=event_type,
                 occurred_at=timestamp,
                 payload=payload,
+            )
+            if self.metrics is not None:
+                self.metrics.observe_job(job.status.value)
+            logger.info(
+                "job_transition",
+                extra={
+                    "job_id": str(job.job_id),
+                    "run_id": str(job.run_id),
+                    "job_status": job.status.value,
+                    "attempt": job.attempt,
+                },
             )

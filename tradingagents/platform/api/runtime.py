@@ -8,6 +8,8 @@ from pathlib import Path
 
 import uvicorn
 
+from tradingagents.platform.observability import configure_platform_logging
+
 from .app import create_app
 from .settings import ApiSettings
 
@@ -41,6 +43,7 @@ def load_api_settings(environ: Mapping[str, str] | None = None) -> ApiSettings:
 
 def main() -> None:
     settings = load_api_settings()
+    configure_platform_logging()
     try:
         port = int(os.environ.get("TRADINGAGENTS_API_PORT", "8000"))
     except ValueError as error:
@@ -48,4 +51,10 @@ def main() -> None:
     if not 1 <= port <= 65535:
         raise RuntimeError("TRADINGAGENTS_API_PORT must be between 1 and 65535")
     # Binding stays local until a separately reviewed deployment exposes the service.
-    uvicorn.run(create_app(settings), host="127.0.0.1", port=port, log_config=None)
+    uvicorn.run(
+        create_app(settings),
+        host="127.0.0.1",
+        port=port,
+        log_config=None,
+        access_log=False,
+    )

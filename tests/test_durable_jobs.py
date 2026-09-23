@@ -25,6 +25,7 @@ from tradingagents.platform.jobs import (
     JobLeaseError,
     JobWorker,
 )
+from tradingagents.platform.observability import MetricsRegistry
 from tradingagents.platform.persistence import (
     Database,
     PlatformRepository,
@@ -276,11 +277,13 @@ def test_worker_commits_claim_before_handler_and_records_outputs(tmp_path):
         assert persisted.status is JobStatus.RUNNING
         return (artifact_id,)
 
+    metrics = MetricsRegistry()
     worker = JobWorker(
         database,
         worker_id="worker-a",
         handlers={JobKind.ANALYSIS_RUN: handler},
         clock=lambda: NOW + timedelta(seconds=1),
+        metrics=metrics,
     )
     completed = worker.run_once()
     assert completed.job_id == job.job_id
@@ -294,6 +297,9 @@ def test_worker_commits_claim_before_handler_and_records_outputs(tmp_path):
         RunEventType.RUN_STARTED,
         RunEventType.RUN_SUCCEEDED,
     ]
+    rendered_metrics = metrics.render()
+    assert 'status="running"' in rendered_metrics
+    assert 'status="succeeded"' in rendered_metrics
     database.dispose()
 
 

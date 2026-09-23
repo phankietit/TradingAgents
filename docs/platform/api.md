@@ -32,6 +32,7 @@ implicitly during API startup.
 - `GET /api/v1/jobs/{job_id}`
 - `GET /api/v1/decisions`, `GET /api/v1/decisions/{decision_id}`
 - `GET /api/v1/artifacts/{artifact_id}`
+- `GET /api/v1/observability/metrics` (authenticated Prometheus text)
 
 Creating a run requires `Idempotency-Key`, a same-origin request, and a session
 bound `X-CSRF-Token`. The API derives owner identity only from the authenticated
