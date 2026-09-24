@@ -1,6 +1,7 @@
 """Normalized market-data services with point-in-time-safe snapshot access."""
 
 from .equity_etf import EquityETFSnapshotPipeline, SourceBatch
+from .futures_reference import FuturesReferencePipeline
 from .timeseries import (
     InsufficientBenchmarkCoverage,
     TimeSeriesSnapshotService,
@@ -13,6 +14,7 @@ from .timeseries import (
 __all__ = [
     "InsufficientBenchmarkCoverage",
     "EquityETFSnapshotPipeline",
+    "FuturesReferencePipeline",
     "SourceBatch",
     "TimeSeriesSnapshotService",
     "TimeSeriesUnavailable",

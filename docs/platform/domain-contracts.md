@@ -25,6 +25,8 @@ database model.
   benchmark comparison.
 - `EquityETFSnapshotBundle`: filed-date equity evidence or fund-specific ETF
   evidence with per-dataset coverage and future-row exclusion counts.
+- `FuturesReferenceSnapshot`: reference-only NQ/ES contract identity, explicit
+  roll adjustment, CME overnight/RTH sessions, and non-fabricated gap handling.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

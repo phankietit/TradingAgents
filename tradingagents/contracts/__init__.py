@@ -15,6 +15,16 @@ from .equity_etf import (
     NewsRecord,
 )
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
+from .futures_reference import (
+    FuturesContractReference,
+    FuturesDataGap,
+    FuturesGapKind,
+    FuturesReferenceSnapshot,
+    FuturesSessionWindow,
+    GapDisposition,
+    RollAdjustmentMethod,
+    RolloverMetadata,
+)
 from .instruments import (
     AssetClass,
     InstrumentAliasContract,
@@ -55,6 +65,7 @@ CONTRACT_REGISTRY = {
         NormalizedTimeSeries,
         TimeSeriesView,
         EquityETFSnapshotBundle,
+        FuturesReferenceSnapshot,
     )
 }
 
@@ -79,6 +90,12 @@ __all__ = [
     "FilingRecord",
     "FundHolding",
     "FundamentalFact",
+    "FuturesContractReference",
+    "FuturesDataGap",
+    "FuturesGapKind",
+    "FuturesReferenceSnapshot",
+    "FuturesSessionWindow",
+    "GapDisposition",
     "InstrumentContract",
     "InstrumentAliasContract",
     "JobKind",
@@ -94,6 +111,8 @@ __all__ = [
     "PriceBasis",
     "PriceInterval",
     "ReturnPoint",
+    "RollAdjustmentMethod",
+    "RolloverMetadata",
     "PositionSnapshot",
     "RunManifest",
     "RunEvent",
