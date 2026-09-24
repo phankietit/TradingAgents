@@ -2,6 +2,12 @@
 
 from .artifacts import ArtifactKind, ArtifactManifest
 from .base import SCHEMA_VERSION, ContentHash, StrictContract, VersionedContract, Weight
+from .crypto import (
+    CryptoLiquidityMetrics,
+    CryptoQualityThresholds,
+    CryptoSnapshot,
+    CryptoVenueObservation,
+)
 from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
 from .equity_etf import (
@@ -66,6 +72,7 @@ CONTRACT_REGISTRY = {
         TimeSeriesView,
         EquityETFSnapshotBundle,
         FuturesReferenceSnapshot,
+        CryptoSnapshot,
     )
 }
 
@@ -78,6 +85,10 @@ __all__ = [
     "BenchmarkComparison",
     "CashBalance",
     "ContentHash",
+    "CryptoLiquidityMetrics",
+    "CryptoQualityThresholds",
+    "CryptoSnapshot",
+    "CryptoVenueObservation",
     "DataQualityStatus",
     "DecisionCandidate",
     "DecisionRating",
