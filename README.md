@@ -254,6 +254,18 @@ print(decision)
 
 See `tradingagents/default_config.py` for all configuration options.
 
+### Concurrent runs
+
+Each `TradingAgentsGraph` keeps a deep-copied configuration and activates it
+only for that graph's run. Separate worker threads or async tasks can therefore
+run graphs with different providers, languages, vendor chains, and storage
+paths without replacing one another's dataflow configuration.
+
+Use `TradingAgentsGraph.propagate()` for programmatic runs. If an integration
+streams `graph.graph` directly, as the CLI does, keep the complete stream inside
+`with graph.config_scope():` so every tool call observes the owning graph's
+configuration.
+
 ### Fundamentals as filed
 
 US company statements can come from SEC EDGAR, which records the date every figure was filed. A run dated in the past then reads the statements exactly as they stood that day: a fiscal year that has ended but has not been filed yet is not served, and a figure restated later still reads as first reported. Apple's 2008 total assets were filed as $39.6B and restated to $36.2B in 2010, so a run dated in between reads $39.6B.
@@ -361,6 +373,15 @@ config["temperature"] = 0.0
 What does not vary anymore: the analyzed company identity is resolved deterministically from the ticker before any agent runs, and the market analyst grounds exact price and indicator claims in a verified data snapshot. Earlier reports of "different companies" or fabricated price levels across runs are addressed by these two mechanisms.
 
 Backtest results are not guaranteed to match any published figure. Returns depend on the model, the temperature, the date range, data quality, and the sampling above. Treat the framework as a research scaffold for studying multi-agent analysis, not as a strategy with a fixed, replicable return.
+
+## Platform foundation API
+
+The optional `platform` extra now includes a private, authenticated FastAPI
+foundation for durable analysis jobs and owner-scoped results. It is intended
+for the future Web UI and currently binds locally through `tradingagents-api`.
+There is no Web UI, broker connection, order execution, or autonomous trading
+path in this repository. See `docs/platform/api.md` for the current HTTP and
+runtime contract.
 
 ## Contributing
 

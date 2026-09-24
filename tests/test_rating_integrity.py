@@ -9,6 +9,8 @@ direction, so an unclear decision is REVIEW everywhere.
 
 from __future__ import annotations
 
+from contextlib import nullcontext
+
 import pytest
 
 from tradingagents.agents.utils.rating import RATING_REVIEW, extract_rating, parse_rating
@@ -113,6 +115,9 @@ def test_the_cli_says_when_a_run_produced_no_usable_rating(monkeypatch, tmp_path
 
     class _Graph:
         graph = propagator = None
+
+        def config_scope(self):
+            return nullcontext()
 
         def create_run_state(self, *a, **k):
             return {"messages": []}

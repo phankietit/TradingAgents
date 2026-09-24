@@ -9,6 +9,8 @@ record their decision through the same graph methods.
 
 from __future__ import annotations
 
+from contextlib import nullcontext
+
 import pytest
 
 from tradingagents.agents.utils.memory import TradingMemoryLog
@@ -68,6 +70,9 @@ class _FakeGraph:
         self.calls = []
         self.graph = self
         self.propagator = self
+
+    def config_scope(self):
+        return nullcontext()
 
     def create_run_state(self, ticker, trade_date, asset_type="stock", portfolio=None):
         self.calls.append(("create_run_state", ticker, trade_date))

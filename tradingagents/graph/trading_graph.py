@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -29,7 +30,7 @@ from tradingagents.agents.utils.agent_utils import (
     resolve_instrument_identity,
 )
 from tradingagents.agents.utils.memory import TradingMemoryLog
-from tradingagents.dataflows.config import set_config
+from tradingagents.dataflows.config import config_scope as dataflow_config_scope
 from tradingagents.dataflows.utils import get_current_date, safe_ticker_component
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.llm_clients import create_llm_client
@@ -109,11 +110,12 @@ class TradingAgentsGraph:
             callbacks: Optional list of callback handlers (e.g., for tracking LLM/tool stats)
         """
         self.debug = debug
-        self.config = config or DEFAULT_CONFIG
+        # A graph owns an isolated snapshot. Never retain the caller's nested
+        # dictionaries and never publish graph config as process-global state:
+        # platform workers may execute graphs with different providers,
+        # languages, and storage paths concurrently.
+        self.config = deepcopy(config or DEFAULT_CONFIG)
         self.callbacks = callbacks or []
-
-        # Update the interface's config
-        set_config(self.config)
 
         # Create necessary directories
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)
@@ -178,6 +180,12 @@ class TradingAgentsGraph:
         self.graph = self.workflow.compile()
         self._checkpointer_ctx = None
         self._resuming = False
+
+    @contextmanager
+    def config_scope(self):
+        """Activate this graph's dataflow configuration for one run."""
+        with dataflow_config_scope(self.config) as scoped:
+            yield scoped
 
     def _get_provider_kwargs(self) -> dict[str, Any]:
         """Get provider-specific kwargs for LLM client creation."""
@@ -403,8 +411,9 @@ class TradingAgentsGraph:
         path and the CLI call this so the resolved identity reaches the whole
         graph regardless of entry point.
         """
-        identity = resolve_instrument_identity(ticker)
-        return build_instrument_context(ticker, asset_type, identity, curr_date)
+        with self.config_scope():
+            identity = resolve_instrument_identity(ticker)
+            return build_instrument_context(ticker, asset_type, identity, curr_date)
 
     def _memory_as_of(self, trade_date) -> str | None:
         """Point-in-time cutoff for past-context lessons (#1251).
@@ -449,14 +458,22 @@ class TradingAgentsGraph:
         ``tradingagents.agents.utils.rating.is_review`` before mapping it to the
         PortfolioRating enum.
         """
+        # Validate before touching instance state so malformed input fails
+        # cleanly even for lightweight callers that only exercise validation.
         trade_date = _validate_trade_date(trade_date)
-        self.ticker = company_name
+        with self.config_scope():
+            self.ticker = company_name
 
-        with self.checkpoint_scope(company_name, trade_date, asset_type, portfolio) as thread_id_value:
-            return self._run_graph(
-                company_name, trade_date, asset_type=asset_type,
-                checkpoint_thread_id=thread_id_value, portfolio=portfolio,
-            )
+            with self.checkpoint_scope(
+                company_name, trade_date, asset_type, portfolio
+            ) as thread_id_value:
+                return self._run_graph(
+                    company_name,
+                    trade_date,
+                    asset_type=asset_type,
+                    checkpoint_thread_id=thread_id_value,
+                    portfolio=portfolio,
+                )
 
     def begin_checkpoint(self, company_name, trade_date, asset_type: str = "stock", portfolio=None) -> str | None:
         """Recompile the graph with a per-ticker checkpointer and return the
@@ -544,17 +561,20 @@ class TradingAgentsGraph:
         resolved instrument identity for every agent (#814). An entry point that
         assembled the state itself would skip the decision log.
         """
-        self._resolve_pending_entries(company_name)
-        return self.propagator.create_initial_state(
-            company_name,
-            trade_date,
-            asset_type=asset_type,
-            past_context=self.memory_log.get_past_context(
-                company_name, as_of=self._memory_as_of(trade_date)
-            ),
-            instrument_context=self.resolve_instrument_context(company_name, asset_type, trade_date),
-            portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
-        )
+        with self.config_scope():
+            self._resolve_pending_entries(company_name)
+            return self.propagator.create_initial_state(
+                company_name,
+                trade_date,
+                asset_type=asset_type,
+                past_context=self.memory_log.get_past_context(
+                    company_name, as_of=self._memory_as_of(trade_date)
+                ),
+                instrument_context=self.resolve_instrument_context(
+                    company_name, asset_type, trade_date
+                ),
+                portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
+            )
 
     def settle_pending(self, company_name):
         """Settle this ticker's decisions whose holding window has now traded.
@@ -564,7 +584,8 @@ class TradingAgentsGraph:
         that is done analyzing a ticker (a backtest sweep, a scheduled job) calls
         this to settle it now.
         """
-        self._resolve_pending_entries(company_name)
+        with self.config_scope():
+            self._resolve_pending_entries(company_name)
 
     def record_decision(self, company_name, trade_date, final_state):
         """Log a finished run's decision for reflection on the next same-ticker run."""
