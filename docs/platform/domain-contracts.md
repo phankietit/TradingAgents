@@ -29,6 +29,8 @@ database model.
   roll adjustment, CME overnight/RTH sessions, and non-fabricated gap handling.
 - `CryptoSnapshot`: BTC/ETH-only UTC prices, multi-venue liquidity/freshness
   evidence, versioned quality thresholds, and exact-timestamp BTC comparison.
+- `StockUniverseSnapshot`: deterministic point-in-time screening policy,
+  ranked candidates, explicit exclusions, and stable input/universe hashes.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

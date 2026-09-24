@@ -42,6 +42,14 @@ from .jobs import JobKind, JobRecord, JobStatus
 from .policy import PolicyCheck, PolicyContract, PolicyResult
 from .portfolio import CashBalance, PortfolioSnapshot, PositionSnapshot
 from .runs import RunManifest, RunStatus
+from .screening import (
+    ScreenedStock,
+    ScreeningExclusionCode,
+    StockScreenerPolicy,
+    StockScreeningExclusion,
+    StockScreeningInput,
+    StockUniverseSnapshot,
+)
 from .timeseries import (
     BenchmarkComparison,
     NormalizedTimeSeries,
@@ -73,6 +81,7 @@ CONTRACT_REGISTRY = {
         EquityETFSnapshotBundle,
         FuturesReferenceSnapshot,
         CryptoSnapshot,
+        StockUniverseSnapshot,
     )
 }
 
@@ -129,7 +138,13 @@ __all__ = [
     "RunEvent",
     "RunEventType",
     "RunStatus",
+    "ScreenedStock",
+    "ScreeningExclusionCode",
     "SnapshotManifest",
+    "StockScreenerPolicy",
+    "StockScreeningExclusion",
+    "StockScreeningInput",
+    "StockUniverseSnapshot",
     "StrictContract",
     "TERMINAL_RUN_EVENTS",
     "Tradability",
