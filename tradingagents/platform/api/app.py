@@ -55,6 +55,13 @@ from tradingagents.platform.auth import InvalidCredentials, OwnerAuth, OwnerPrin
 from tradingagents.platform.events import RunEventNotFound, RunEventStore
 from tradingagents.platform.instruments import InstrumentMaster
 from tradingagents.platform.jobs import DurableJobQueue, JobConflict
+from tradingagents.platform.market_data import (
+    InsufficientBenchmarkCoverage,
+    TimeSeriesSnapshotService,
+    TimeSeriesUnavailable,
+    build_time_series_view,
+    slice_time_series,
+)
 from tradingagents.platform.observability import MetricsRegistry, request_id_scope
 from tradingagents.platform.persistence import (
     AmbiguousInstrumentAlias,
@@ -70,6 +77,7 @@ from .schemas import (
     RunAcceptedResponse,
     RunCreateRequest,
     StatusResponse,
+    TimeSeriesResponse,
 )
 from .settings import ApiSettings
 
@@ -427,6 +435,67 @@ def create_app(settings: ApiSettings) -> FastAPI:
             instrument=instrument,
             aliases=repository.list_instrument_aliases(instrument.instrument_id),
         )
+
+    @app.get(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/timeseries",
+        response_model=TimeSeriesResponse,
+        tags=["market-data"],
+    )
+    def get_time_series(
+        instrument_id: UUID,
+        owner: OwnerDependency,
+        session: SessionDependency,
+        dataset: str = Query(default="ohlcv.daily", min_length=1, max_length=128),
+        as_of: datetime | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        benchmark_instrument_id: UUID | None = None,
+    ) -> TimeSeriesResponse:
+        requested_as_of = as_of or _now(settings)
+        if requested_as_of.tzinfo is None or requested_as_of.astimezone(UTC) > _now(settings):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="as_of must be timezone-aware and not in the future",
+            )
+        repository = PlatformRepository(session)
+        if repository.get_instrument(instrument_id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="instrument not found",
+            )
+        snapshots = TimeSeriesSnapshotService(
+            repository,
+            ArtifactService(artifact_store, repository),
+        )
+        try:
+            snapshot, series = snapshots.load(
+                owner_id=owner.owner_id,
+                instrument_id=instrument_id,
+                dataset=dataset,
+                as_of=requested_as_of,
+            )
+            series = slice_time_series(series, start=start, end=end)
+            benchmark = None
+            if benchmark_instrument_id is not None:
+                _benchmark_snapshot, benchmark = snapshots.load(
+                    owner_id=owner.owner_id,
+                    instrument_id=benchmark_instrument_id,
+                    dataset=dataset,
+                    as_of=requested_as_of,
+                )
+                benchmark = slice_time_series(benchmark, start=start, end=end)
+            view = build_time_series_view(series, benchmark=benchmark)
+        except TimeSeriesUnavailable as error:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(error),
+            ) from error
+        except (InsufficientBenchmarkCoverage, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(error),
+            ) from error
+        return TimeSeriesResponse(snapshot=snapshot, view=view)
 
     @app.post(
         f"{API_PREFIX}/runs",

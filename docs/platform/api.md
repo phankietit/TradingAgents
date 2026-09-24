@@ -28,6 +28,8 @@ implicitly during API startup.
 - `GET /api/v1/instruments` (asset-class, tradability, and venue filters)
 - `GET /api/v1/instruments/resolve` (namespaced alias resolution)
 - `GET /api/v1/instruments/{instrument_id}` (identity and aliases)
+- `GET /api/v1/instruments/{instrument_id}/timeseries` (immutable normalized
+  OHLCV, deterministic metrics, and optional benchmark comparison)
 - `POST /api/v1/runs`, `GET /api/v1/runs`, `GET /api/v1/runs/{run_id}`
 - `POST /api/v1/runs/{run_id}/cancel`
 - `GET /api/v1/runs/{run_id}/events` (resumable SSE)

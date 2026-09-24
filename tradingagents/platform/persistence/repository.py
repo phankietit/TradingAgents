@@ -304,6 +304,40 @@ class PlatformRepository:
         row = self.session.get(SnapshotRow, snapshot_id)
         return SnapshotManifest.model_validate(row.payload) if row else None
 
+    def latest_snapshot(
+        self,
+        *,
+        instrument_id: UUID,
+        dataset: str,
+        as_of: datetime,
+    ) -> SnapshotManifest | None:
+        row = self.session.scalar(
+            select(SnapshotRow)
+            .where(
+                SnapshotRow.instrument_id == instrument_id,
+                SnapshotRow.dataset == dataset,
+                SnapshotRow.as_of <= as_of,
+            )
+            .order_by(SnapshotRow.as_of.desc(), SnapshotRow.retrieved_at.desc())
+            .limit(1)
+        )
+        return SnapshotManifest.model_validate(row.payload) if row else None
+
+    def get_snapshot_artifact(
+        self, snapshot_id: UUID, owner_id: UUID
+    ) -> ArtifactManifest | None:
+        row = self.session.scalar(
+            select(ArtifactRow)
+            .where(
+                ArtifactRow.snapshot_id == snapshot_id,
+                ArtifactRow.owner_id == owner_id,
+                ArtifactRow.kind == "snapshot_payload",
+            )
+            .order_by(ArtifactRow.created_at)
+            .limit(1)
+        )
+        return ArtifactManifest.model_validate(row.payload) if row else None
+
     def save_run(self, contract: RunManifest) -> RunManifest:
         row = self.session.get(RunRow, contract.run_id)
         now = datetime.now(UTC)

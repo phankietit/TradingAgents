@@ -11,6 +11,8 @@ from tradingagents.contracts import (
     InstrumentContract,
     JobRecord,
     RunManifest,
+    SnapshotManifest,
+    TimeSeriesView,
 )
 
 
@@ -35,6 +37,11 @@ class LoginResponse(OwnerResponse):
 class InstrumentDetailResponse(ApiModel):
     instrument: InstrumentContract
     aliases: tuple[InstrumentAliasContract, ...]
+
+
+class TimeSeriesResponse(ApiModel):
+    snapshot: SnapshotManifest
+    view: TimeSeriesView
 
 
 class RunCreateRequest(ApiModel):

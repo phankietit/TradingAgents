@@ -20,6 +20,9 @@ database model.
   calendar, benchmark, and investable/reference-only boundary.
 - `InstrumentAliasContract`: immutable namespaced alias and normalized lookup
   key linked to one canonical instrument.
+- `NormalizedTimeSeries` and `TimeSeriesView`: ordered point-in-time OHLCV,
+  adjusted-price basis, deterministic returns/risk metrics, and aligned
+  benchmark comparison.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

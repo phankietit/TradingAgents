@@ -16,6 +16,16 @@ from .jobs import JobKind, JobRecord, JobStatus
 from .policy import PolicyCheck, PolicyContract, PolicyResult
 from .portfolio import CashBalance, PortfolioSnapshot, PositionSnapshot
 from .runs import RunManifest, RunStatus
+from .timeseries import (
+    BenchmarkComparison,
+    NormalizedTimeSeries,
+    OHLCVBar,
+    PriceBasis,
+    PriceInterval,
+    ReturnPoint,
+    TimeSeriesStatistics,
+    TimeSeriesView,
+)
 
 CONTRACT_REGISTRY = {
     contract.__name__: contract
@@ -32,6 +42,8 @@ CONTRACT_REGISTRY = {
         PortfolioSnapshot,
         PolicyContract,
         PolicyCheck,
+        NormalizedTimeSeries,
+        TimeSeriesView,
     )
 }
 
@@ -41,6 +53,7 @@ __all__ = [
     "AssetClass",
     "ArtifactKind",
     "ArtifactManifest",
+    "BenchmarkComparison",
     "CashBalance",
     "ContentHash",
     "DataQualityStatus",
@@ -57,6 +70,11 @@ __all__ = [
     "PolicyContract",
     "PolicyResult",
     "PortfolioSnapshot",
+    "NormalizedTimeSeries",
+    "OHLCVBar",
+    "PriceBasis",
+    "PriceInterval",
+    "ReturnPoint",
     "PositionSnapshot",
     "RunManifest",
     "RunEvent",
@@ -66,6 +84,8 @@ __all__ = [
     "StrictContract",
     "TERMINAL_RUN_EVENTS",
     "Tradability",
+    "TimeSeriesStatistics",
+    "TimeSeriesView",
     "VersionedContract",
     "Weight",
     "normalize_instrument_alias",
