@@ -13,6 +13,7 @@ from .base import ContentHash, NonEmptyText, VersionedContract
 class ArtifactKind(str, Enum):
     SNAPSHOT_PAYLOAD = "snapshot_payload"
     SCREENING_SNAPSHOT = "screening_snapshot"
+    DERIVED_FACTOR_SNAPSHOT = "derived_factor_snapshot"
     ANALYSIS_REPORT = "analysis_report"
     RUN_EVENT_LOG = "run_event_log"
     DECISION_EVIDENCE = "decision_evidence"

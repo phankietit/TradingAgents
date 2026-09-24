@@ -21,6 +21,13 @@ from .equity_etf import (
     NewsRecord,
 )
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
+from .factors import (
+    DerivedFactorSnapshot,
+    FactorSeriesInput,
+    FactorWindowConfig,
+    InstrumentFactors,
+    MarketBreadth,
+)
 from .futures_reference import (
     FuturesContractReference,
     FuturesDataGap,
@@ -82,6 +89,7 @@ CONTRACT_REGISTRY = {
         FuturesReferenceSnapshot,
         CryptoSnapshot,
         StockUniverseSnapshot,
+        DerivedFactorSnapshot,
     )
 }
 
@@ -102,6 +110,7 @@ __all__ = [
     "DecisionCandidate",
     "DecisionRating",
     "DecisionStatus",
+    "DerivedFactorSnapshot",
     "DatasetCoverage",
     "EvidenceReference",
     "EquityETFDataset",
@@ -115,9 +124,12 @@ __all__ = [
     "FuturesGapKind",
     "FuturesReferenceSnapshot",
     "FuturesSessionWindow",
+    "FactorSeriesInput",
+    "FactorWindowConfig",
     "GapDisposition",
     "InstrumentContract",
     "InstrumentAliasContract",
+    "InstrumentFactors",
     "JobKind",
     "JobRecord",
     "JobStatus",
@@ -126,6 +138,7 @@ __all__ = [
     "PolicyResult",
     "PortfolioSnapshot",
     "NormalizedTimeSeries",
+    "MarketBreadth",
     "NewsRecord",
     "OHLCVBar",
     "PriceBasis",

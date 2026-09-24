@@ -31,6 +31,8 @@ database model.
   evidence, versioned quality thresholds, and exact-timestamp BTC comparison.
 - `StockUniverseSnapshot`: deterministic point-in-time screening policy,
   ranked candidates, explicit exclusions, and stable input/universe hashes.
+- `DerivedFactorSnapshot`: configured momentum, trend, volatility, relative
+  strength, correlation, and cross-sectional breadth with source hashes.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,
