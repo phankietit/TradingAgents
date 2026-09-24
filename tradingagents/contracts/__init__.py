@@ -4,6 +4,16 @@ from .artifacts import ArtifactKind, ArtifactManifest
 from .base import SCHEMA_VERSION, ContentHash, StrictContract, VersionedContract, Weight
 from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
+from .equity_etf import (
+    DatasetCoverage,
+    EquityETFDataset,
+    EquityETFSnapshotBundle,
+    ETFProfile,
+    FilingRecord,
+    FundamentalFact,
+    FundHolding,
+    NewsRecord,
+)
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
 from .instruments import (
     AssetClass,
@@ -44,6 +54,7 @@ CONTRACT_REGISTRY = {
         PolicyCheck,
         NormalizedTimeSeries,
         TimeSeriesView,
+        EquityETFSnapshotBundle,
     )
 }
 
@@ -60,7 +71,14 @@ __all__ = [
     "DecisionCandidate",
     "DecisionRating",
     "DecisionStatus",
+    "DatasetCoverage",
     "EvidenceReference",
+    "EquityETFDataset",
+    "EquityETFSnapshotBundle",
+    "ETFProfile",
+    "FilingRecord",
+    "FundHolding",
+    "FundamentalFact",
     "InstrumentContract",
     "InstrumentAliasContract",
     "JobKind",
@@ -71,6 +89,7 @@ __all__ = [
     "PolicyResult",
     "PortfolioSnapshot",
     "NormalizedTimeSeries",
+    "NewsRecord",
     "OHLCVBar",
     "PriceBasis",
     "PriceInterval",

@@ -23,6 +23,8 @@ database model.
 - `NormalizedTimeSeries` and `TimeSeriesView`: ordered point-in-time OHLCV,
   adjusted-price basis, deterministic returns/risk metrics, and aligned
   benchmark comparison.
+- `EquityETFSnapshotBundle`: filed-date equity evidence or fund-specific ETF
+  evidence with per-dataset coverage and future-row exclusion counts.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,
