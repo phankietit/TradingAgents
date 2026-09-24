@@ -18,6 +18,8 @@ database model.
 
 - `InstrumentContract`: canonical identity, asset class, venue, timezone,
   calendar, benchmark, and investable/reference-only boundary.
+- `InstrumentAliasContract`: immutable namespaced alias and normalized lookup
+  key linked to one canonical instrument.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

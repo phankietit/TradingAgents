@@ -38,6 +38,23 @@ class InstrumentRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class InstrumentAliasRow(Base):
+    __tablename__ = "instrument_aliases"
+    __table_args__ = (
+        Index("ix_instrument_aliases_instrument", "instrument_id"),
+        Index("ix_instrument_aliases_lookup", "normalized_alias"),
+    )
+
+    namespace: Mapped[str] = mapped_column(String(32), primary_key=True)
+    normalized_alias: Mapped[str] = mapped_column(String(128), primary_key=True)
+    instrument_id: Mapped[UUID] = mapped_column(
+        ForeignKey("instruments.instrument_id"), nullable=False
+    )
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    alias: Mapped[str] = mapped_column(String(128), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class SnapshotRow(Base):
     __tablename__ = "snapshots"
     __table_args__ = (

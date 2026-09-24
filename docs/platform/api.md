@@ -25,7 +25,9 @@ implicitly during API startup.
 
 - `GET /health/live`, `GET /health/ready`
 - `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`
-- `GET /api/v1/instruments`
+- `GET /api/v1/instruments` (asset-class, tradability, and venue filters)
+- `GET /api/v1/instruments/resolve` (namespaced alias resolution)
+- `GET /api/v1/instruments/{instrument_id}` (identity and aliases)
 - `POST /api/v1/runs`, `GET /api/v1/runs`, `GET /api/v1/runs/{run_id}`
 - `POST /api/v1/runs/{run_id}/cancel`
 - `GET /api/v1/runs/{run_id}/events` (resumable SSE)

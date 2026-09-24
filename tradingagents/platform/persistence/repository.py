@@ -12,18 +12,23 @@ from sqlalchemy.orm import Session
 
 from tradingagents.contracts import (
     ArtifactManifest,
+    AssetClass,
     DecisionCandidate,
+    InstrumentAliasContract,
     InstrumentContract,
     PolicyContract,
     PortfolioSnapshot,
     RunManifest,
     RunStatus,
     SnapshotManifest,
+    Tradability,
+    normalize_instrument_alias,
 )
 
 from .models import (
     ArtifactRow,
     DecisionRow,
+    InstrumentAliasRow,
     InstrumentRow,
     PolicyRow,
     PortfolioSnapshotRow,
@@ -40,6 +45,10 @@ class ImmutableRecordConflict(ValueError):
 
 class InvalidStateTransition(ValueError):
     """A mutable lifecycle aggregate attempted an invalid transition."""
+
+
+class AmbiguousInstrumentAlias(ValueError):
+    """An unqualified alias refers to more than one canonical instrument."""
 
 
 RUN_TRANSITIONS = {
@@ -68,6 +77,7 @@ class PlatformRepository:
         if existing:
             if not _same_payload(existing, contract):
                 raise ImmutableRecordConflict("instrument_id already has different content")
+            self._ensure_primary_instrument_aliases(contract)
             return contract
         self.session.add(
             InstrumentRow(
@@ -78,6 +88,87 @@ class PlatformRepository:
                 asset_class=contract.asset_class.value,
                 tradability=contract.tradability.value,
                 payload=_payload(contract),
+                created_at=datetime.now(UTC),
+            )
+        )
+        self.session.flush()
+        self._ensure_primary_instrument_aliases(contract)
+        return contract
+
+    def _ensure_primary_instrument_aliases(self, contract: InstrumentContract) -> None:
+        self.add_instrument_alias(
+            InstrumentAliasContract.create(
+                instrument_id=contract.instrument_id,
+                namespace="canonical",
+                alias=contract.canonical_symbol,
+            )
+        )
+        if normalize_instrument_alias(contract.symbol) != normalize_instrument_alias(
+            contract.canonical_symbol
+        ):
+            self.add_instrument_alias(
+                InstrumentAliasContract.create(
+                    instrument_id=contract.instrument_id,
+                    namespace="symbol",
+                    alias=contract.symbol,
+                )
+            )
+
+    def add_instrument_alias(
+        self, contract: InstrumentAliasContract
+    ) -> InstrumentAliasContract:
+        instrument = self.session.get(InstrumentRow, contract.instrument_id)
+        if instrument is None:
+            raise ValueError("instrument alias requires an existing instrument")
+        if contract.namespace == "canonical" and contract.normalized_alias != normalize_instrument_alias(
+            instrument.canonical_symbol
+        ):
+            raise ValueError("canonical alias must match the instrument canonical symbol")
+
+        existing = self.session.get(
+            InstrumentAliasRow,
+            (contract.namespace, contract.normalized_alias),
+        )
+        if existing:
+            if existing.instrument_id != contract.instrument_id:
+                raise ImmutableRecordConflict(
+                    "instrument alias already belongs to another instrument"
+                )
+            return InstrumentAliasContract(
+                instrument_id=existing.instrument_id,
+                namespace=existing.namespace,
+                alias=existing.alias,
+                normalized_alias=existing.normalized_alias,
+                schema_version=existing.schema_version,
+            )
+
+        canonical_collision = self.session.scalar(
+            select(InstrumentAliasRow).where(
+                InstrumentAliasRow.namespace == "canonical",
+                InstrumentAliasRow.normalized_alias == contract.normalized_alias,
+                InstrumentAliasRow.instrument_id != contract.instrument_id,
+            )
+        )
+        alias_collision = None
+        if contract.namespace == "canonical":
+            alias_collision = self.session.scalar(
+                select(InstrumentAliasRow).where(
+                    InstrumentAliasRow.normalized_alias == contract.normalized_alias,
+                    InstrumentAliasRow.instrument_id != contract.instrument_id,
+                )
+            )
+        if canonical_collision is not None or alias_collision is not None:
+            raise ImmutableRecordConflict(
+                "instrument alias conflicts with another canonical instrument"
+            )
+
+        self.session.add(
+            InstrumentAliasRow(
+                instrument_id=contract.instrument_id,
+                namespace=contract.namespace,
+                alias=contract.alias,
+                normalized_alias=contract.normalized_alias,
+                schema_version=contract.schema_version,
                 created_at=datetime.now(UTC),
             )
         )
@@ -123,11 +214,65 @@ class PlatformRepository:
         row = self.session.get(InstrumentRow, instrument_id)
         return InstrumentContract.model_validate(row.payload) if row else None
 
-    def list_instruments(self, *, limit: int = 100) -> tuple[InstrumentContract, ...]:
+    def list_instrument_aliases(
+        self, instrument_id: UUID
+    ) -> tuple[InstrumentAliasContract, ...]:
+        rows = self.session.scalars(
+            select(InstrumentAliasRow)
+            .where(InstrumentAliasRow.instrument_id == instrument_id)
+            .order_by(InstrumentAliasRow.namespace, InstrumentAliasRow.normalized_alias)
+        ).all()
+        return tuple(
+            InstrumentAliasContract(
+                instrument_id=row.instrument_id,
+                namespace=row.namespace,
+                alias=row.alias,
+                normalized_alias=row.normalized_alias,
+                schema_version=row.schema_version,
+            )
+            for row in rows
+        )
+
+    def resolve_instrument(
+        self,
+        alias: str,
+        *,
+        namespace: str | None = None,
+    ) -> InstrumentContract | None:
+        normalized_alias = normalize_instrument_alias(alias)
+        statement = select(InstrumentAliasRow.instrument_id).where(
+            InstrumentAliasRow.normalized_alias == normalized_alias
+        )
+        if namespace is not None:
+            statement = statement.where(InstrumentAliasRow.namespace == namespace)
+        instrument_ids = set(self.session.scalars(statement).all())
+        if not instrument_ids:
+            return None
+        if len(instrument_ids) > 1:
+            raise AmbiguousInstrumentAlias(
+                "instrument alias is ambiguous; provide an alias namespace"
+            )
+        return self.get_instrument(instrument_ids.pop())
+
+    def list_instruments(
+        self,
+        *,
+        asset_class: AssetClass | None = None,
+        tradability: Tradability | None = None,
+        venue: str | None = None,
+        limit: int = 100,
+    ) -> tuple[InstrumentContract, ...]:
         if not 1 <= limit <= 500:
             raise ValueError("limit must be between 1 and 500")
+        statement = select(InstrumentRow)
+        if asset_class is not None:
+            statement = statement.where(InstrumentRow.asset_class == asset_class.value)
+        if tradability is not None:
+            statement = statement.where(InstrumentRow.tradability == tradability.value)
+        if venue is not None:
+            statement = statement.where(InstrumentRow.payload["venue"].as_string() == venue)
         rows = self.session.scalars(
-            select(InstrumentRow).order_by(InstrumentRow.canonical_symbol).limit(limit)
+            statement.order_by(InstrumentRow.canonical_symbol).limit(limit)
         ).all()
         return tuple(InstrumentContract.model_validate(row.payload) for row in rows)
 

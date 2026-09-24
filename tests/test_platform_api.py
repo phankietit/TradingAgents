@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from tradingagents.contracts import (
     ArtifactKind,
     AssetClass,
+    InstrumentAliasContract,
     InstrumentContract,
     RunManifest,
     RunStatus,
@@ -70,6 +71,13 @@ def api_context(tmp_path):
         )
         repository = PlatformRepository(session)
         repository.add_instrument(instrument)
+        repository.add_instrument_alias(
+            InstrumentAliasContract.create(
+                instrument_id=instrument.instrument_id,
+                namespace="common",
+                alias="APPLE",
+            )
+        )
         repository.save_run(other_run)
         artifact = ArtifactService(LocalArtifactStore(artifact_root), repository).create(
             owner_id=owner_id,
@@ -178,6 +186,40 @@ def test_login_sets_private_session_and_me_uses_server_principal(api_context):
     assert client.cookies.get("ta_session")
     assert client.cookies.get("ta_csrf")
     assert client.get("/api/v1/auth/me").json()["email"] == "owner@example.com"
+
+
+@pytest.mark.unit
+def test_instrument_master_api_filters_resolves_and_returns_aliases(api_context):
+    client = api_context["client"]
+    instrument = api_context["instrument"]
+    _login(client)
+
+    equities = client.get("/api/v1/instruments", params={"asset_class": "equity"})
+    assert equities.status_code == 200
+    assert [item["canonical_symbol"] for item in equities.json()] == ["AAPL"]
+    assert client.get(
+        "/api/v1/instruments", params={"tradability": "reference_only"}
+    ).json() == []
+    assert client.get("/api/v1/instruments", params={"venue": "NASDAQ"}).status_code == 200
+    assert client.get("/api/v1/instruments", params={"asset_class": "unknown"}).status_code == 422
+
+    resolved = client.get("/api/v1/instruments/resolve", params={"alias": " apple "})
+    assert resolved.status_code == 200
+    assert resolved.json()["instrument"]["instrument_id"] == str(instrument.instrument_id)
+    assert {item["namespace"] for item in resolved.json()["aliases"]} == {
+        "canonical",
+        "common",
+    }
+    assert client.get(
+        "/api/v1/instruments/resolve",
+        params={"alias": "APPLE", "namespace": "common"},
+    ).status_code == 200
+    assert client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}"
+    ).status_code == 200
+    assert client.get(
+        "/api/v1/instruments/resolve", params={"alias": "missing"}
+    ).status_code == 404
 
 
 @pytest.mark.unit

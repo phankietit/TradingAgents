@@ -5,7 +5,13 @@ from .base import SCHEMA_VERSION, ContentHash, StrictContract, VersionedContract
 from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
-from .instruments import AssetClass, InstrumentContract, Tradability
+from .instruments import (
+    AssetClass,
+    InstrumentAliasContract,
+    InstrumentContract,
+    Tradability,
+    normalize_instrument_alias,
+)
 from .jobs import JobKind, JobRecord, JobStatus
 from .policy import PolicyCheck, PolicyContract, PolicyResult
 from .portfolio import CashBalance, PortfolioSnapshot, PositionSnapshot
@@ -15,6 +21,7 @@ CONTRACT_REGISTRY = {
     contract.__name__: contract
     for contract in (
         InstrumentContract,
+        InstrumentAliasContract,
         ArtifactManifest,
         SnapshotManifest,
         RunManifest,
@@ -42,6 +49,7 @@ __all__ = [
     "DecisionStatus",
     "EvidenceReference",
     "InstrumentContract",
+    "InstrumentAliasContract",
     "JobKind",
     "JobRecord",
     "JobStatus",
@@ -60,4 +68,5 @@ __all__ = [
     "Tradability",
     "VersionedContract",
     "Weight",
+    "normalize_instrument_alias",
 ]
