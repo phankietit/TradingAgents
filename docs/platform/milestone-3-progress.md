@@ -4,6 +4,12 @@ Scope: PLAN-030 through PLAN-037. PLAN-038 remains outside this milestone.
 Base: `f76c353ee912e6d6d16ff1ba660287a6a383a291`.
 Branch: `feature/TA-030-analysis-engine`.
 
+Final acceptance update: the owner approved manual/local security review in
+place of sealed plugin output. Local PostgreSQL regression and scoped manual
+security gates PASS at `ebc954c`; see the top of the verification receipt.
+Earlier plugin/CI blockers below are historical and superseded by these owner
+decisions. Merge remains subject to the actual PR receipt, not test counts alone.
+
 Delivery update: [PR #3](https://github.com/phankietit/TradingAgents/pull/3)
 is open as a draft against `main`. Initial remote head `a7909fc` matches the
 local candidate and GitHub reports MERGEABLE with no hosted checks/runs.

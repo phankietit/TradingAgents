@@ -3,6 +3,44 @@
 This is local backend-foundation evidence, not production readiness or milestone
 completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or orders.
 
+## Final local/manual acceptance (supersedes historical blockers below)
+
+Owner explicitly approved manual/local security review instead of plugin-sealed
+report finalization. Reviewed candidate: `ebc954c52a9f70b308507a5424301d238156fef8`.
+This receipt is documentation-only. Runtime, package and test files are byte
+identical to `129696b`, verified with `git diff --exit-code` on those paths.
+
+Security coverage combines the retained initial source review (`f76c353..8364663`),
+post-fix source review (`8364663..b87190c`) and manual review of every remaining
+changed path (`b87190c..ebc954c`). The last range contains the local shell script,
+withdrawn workflow changes and three documentation files. Script arguments and
+Python path are quoted; no eval, arbitrary downloads or secret output is added.
+Default mode excludes inherited PostgreSQL configuration; integration mode
+requires explicit destructive-test acknowledgement. Operator-selected Python
+and disposable database remain trusted local inputs. Application authorization,
+CSRF, owner isolation, snapshot eligibility, risk policy and human approval are
+unchanged from the reviewed runtime. No unresolved actionable security finding
+was identified within these reviewed changes. This is scoped manual review,
+not whole-repository, live-deployment or external penetration-test certification.
+
+| Final gate | Result | Evidence |
+| --- | --- | --- |
+| Local full suite including PostgreSQL | PASS | `TA_ALLOW_TEST_DB_RESET=1 TEST_POSTGRES_URL=<disposable-db> bash scripts/verify-local.sh --postgres`: 1228 passed, 88 subtests, 2 skips, 22 warnings, 26.17s; Python 3.14.7 |
+| Lint/dependency consistency/whitespace | PASS | Included in same local script |
+| PostgreSQL migrations, rollback, owner replay, concurrent approval | PASS | Included integration tests; task-labelled loopback-only PostgreSQL 16 tmpfs container, stopped/removed after label verification |
+| Installed package smoke | PASS | Non-editable isolated package, imports outside checkout and worker help rechecked; source unchanged since install |
+| Resolved dependency audit | PASS | `pip-audit --progress-spinner off`: no known vulnerabilities |
+| Tracked-file secret scan | PASS (scoped) | `detect-secrets scan --no-verify`: 18 previously reviewed test fixtures; no non-test detections; no value disclosure or network verification |
+| Manual security review | PASS (scoped) | Source review ranges and boundary checks above; owner-approved alternative evidence format |
+| Plugin report sealing | UNVERIFIED | Original partial report and failed post-fix finalization retained unchanged; not represented as PASS, no longer a required merge gate under owner decision |
+| Hosted CI | DEFERRED | Owner budget decision; Actions remains disabled |
+| Other Python versions / optional live providers | UNVERIFIED | No claims beyond local runtime and synthetic test inputs |
+| PR merge | UNVERIFIED | To be established by GitHub merge receipt after this acceptance commit |
+
+PLAN-030–037 acceptance is mapped below. Release class remains local research
+package/backend foundations, not a production private platform. No UI, orders,
+paper simulator, deployment or performance claim is introduced.
+
 ## Remote delivery checkpoint
 
 The branch was pushed successfully after the owner-approved local-only policy.

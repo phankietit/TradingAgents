@@ -7,6 +7,11 @@ during this temporary policy. Do not re-enable Actions without owner approval.
 The repository's original workflow file is retained unchanged from the M3 base;
 new M3 CI changes are withdrawn. No paid runner or replacement service is added.
 
+The owner subsequently approved manual/local security review as the M3
+acceptance gate instead of requiring a sealed plugin report. Retain plugin
+failures unchanged and label them accurately; this is a change in evidence
+format, not permission to skip security review or unresolved findings.
+
 ## Local gate
 
 Use an existing isolated environment with `.[dev,platform]` installed:
