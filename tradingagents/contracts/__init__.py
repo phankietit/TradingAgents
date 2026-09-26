@@ -38,6 +38,7 @@ from .equity_etf import (
     FundHolding,
     NewsRecord,
 )
+from .evaluation import DecisionEvaluation, HistoricalEvaluation
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
 from .evidence import EvidenceClaim, EvidenceGraph
 from .factors import (
@@ -114,6 +115,8 @@ CONTRACT_REGISTRY = {
         EvidenceGraph,
         LedgerTransaction,
         DecisionLifecycleEvent,
+        DecisionEvaluation,
+        HistoricalEvaluation,
     )
 }
 
@@ -139,6 +142,7 @@ __all__ = [
     "DecisionCandidate",
     "DecisionActorType",
     "DecisionLifecycleEvent",
+    "DecisionEvaluation",
     "DecisionRating",
     "DecisionStatus",
     "DerivedFactorSnapshot",
@@ -163,6 +167,7 @@ __all__ = [
     "InstrumentContract",
     "InstrumentAliasContract",
     "InstrumentFactors",
+    "HistoricalEvaluation",
     "JobKind",
     "JobRecord",
     "JobStatus",

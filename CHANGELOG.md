@@ -16,6 +16,8 @@
   weights, concentration, exposure, turnover, correlation, and cash limits.
 - Add an append-only decision lifecycle with actor/reason/policy audit and
   matching-owner human approval enforcement.
+- Add reproducible historical decision evaluation v2 with immutable input and
+  outcome hashes, while explicitly prohibiting portfolio-performance claims.
 
 All notable changes to TradingAgents are documented here.
 
