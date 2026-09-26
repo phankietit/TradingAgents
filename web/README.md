@@ -1,9 +1,9 @@
 # Local web (M4 implementation in progress)
 
-This checkpoint implements the React shell and session boundary only. Markets,
-analysis, portfolio and decisions are not connected yet; the signed-in screen
-explicitly labels that limitation. Do not use this checkpoint for investment
-decisions or describe it as the completed M4 product.
+This checkpoint implements the React shell, session boundary and Markets with
+real API instrument discovery, persisted watchlists, saved price chart/table,
+backend metrics and source provenance. Analysis, portfolio and decisions remain
+pending. Do not describe this checkpoint as the completed M4 product.
 
 ## Development
 
@@ -43,7 +43,14 @@ development server or use it as a production deployment.
 - Request errors use local safe messages, not unrestricted backend payloads.
 - Component tests use explicitly synthetic responses. They are not live-provider
   or browser-to-backend integration evidence.
-- First IAB smoke: login renders at 1280×720, no framework overlay, retry returns
-  to the visible unavailable-API state. No app warning/error captured by the
-  browser log API. Authenticated and narrow-viewport browser checks remain
-  UNVERIFIED at this checkpoint.
+- IAB verification at 1280×720 and 390×844: real API login → AAPL saved snapshot
+  → add watchlist → reload/session restoration → watchlist filter → price table
+  → index reference with missing series → logout/private data unmount. No
+  framework overlay or app warning/error captured. Narrow viewport has no
+  document-level horizontal overflow; OHLCV table scrolls within its region.
+- Reproduce isolated synthetic QA from the repository root with
+  `.venv/bin/python -m scripts.web_fixture --synthetic-local-only`, then start
+  Vite. Fixture credentials are documented in that script, not owner credentials.
+  Each run creates a new ignored `.cache/web-fixture-*` database and artifacts.
+  This server never starts a worker or calls a vendor/model. The synthetic vendor
+  label is visible beside the chart. This is integration evidence, not live data.

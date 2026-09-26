@@ -4,6 +4,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import App from './App';
 import { SESSION_EXPIRED } from './api';
 
+vi.mock('./Markets', () => ({ default: () => <p>Market component tested independently</p> }));
+
 const owner = { owner_id: 'fixture-owner', email: 'owner@example.com' };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 afterEach(() => { vi.unstubAllGlobals(); window.location.hash = ''; });

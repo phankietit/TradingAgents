@@ -133,7 +133,22 @@ serving and data workspaces remain UNVERIFIED/pending; not a completed web produ
 
 ### M4-MARKETS — provenance-first market workspace
 
-Status: planned. Depends on M4-API and M4-SHELL.
+Status: in-progress. Depends on M4-API and M4-SHELL.
+
+Implemented: group/search/watchlist filters, owner watchlist mutation, saved
+timeseries chart and paginated OHLCV table, backend return/volatility/drawdown,
+source/vendor/as-of/hash and quality notices. NQ/ES remain reference only;
+missing series has no synthetic production fallback. IAB real API/SQLite/artifact
+integration verified with an explicitly labelled synthetic fixture, desktop
+1280×720 and narrow 390×844 (no document overflow), login/save/reload/table/
+reference-missing/logout. 13 frontend tests, build and lint PASS. Further work:
+analysis handoff, benchmark/date controls, screener integration and broader
+failure/accessibility acceptance. This is not live-provider evidence.
+
+Native-design comparison: rail/layout, exact neutral-dark palette, tabular metrics,
+labelled source state, responsive stacked controls and table overflow inspected.
+Source vendor label moved out of collapsed provenance into chart context so test
+data cannot look like real quotes. No generated concept exists by owner choice.
 
 - AAPL instrument selection, persisted watchlist, daily chart plus OHLCV table;
   current metrics come from backend, not duplicate financial calculations.
