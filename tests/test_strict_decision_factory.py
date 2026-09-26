@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 
+from tests.decision_fixtures import ready_inputs
 from tradingagents.contracts import DataQualityStatus, DecisionRating, DecisionStatus
 from tradingagents.platform.analysis import DecisionCandidateFactory
 
@@ -31,7 +32,7 @@ def test_valid_structured_narrative_is_ready_but_still_requires_human_approval()
         "thesis": "Evidence-backed thesis",
         "risks": ["Valuation"],
         "invalidation_conditions": ["Trend reversal"],
-    })
+    }, **ready_inputs())
     assert decision.status is DecisionStatus.READY_FOR_APPROVAL
     assert decision.rating is DecisionRating.BUY
     assert decision.requires_human_approval is True
@@ -74,3 +75,13 @@ def test_bad_data_quality_cannot_become_approval_ready():
     )
     assert decision.status is DecisionStatus.REVIEW
     assert decision.rating is DecisionRating.REVIEW
+
+
+@pytest.mark.parametrize("missing", ["evidence", "policy_checks", "target_weight"])
+def test_valid_narrative_without_required_readiness_stays_review(missing):
+    inputs = ready_inputs()
+    inputs[missing] = None if missing == "target_weight" else ()
+    decision = _build({"rating": "Buy", "confidence": 0.7, "thesis": "Thesis",
+                       "risks": ["Risk"], "invalidation_conditions": ["Invalidation"]}, **inputs)
+    assert decision.status is DecisionStatus.REVIEW
+    assert decision.target_weight is None

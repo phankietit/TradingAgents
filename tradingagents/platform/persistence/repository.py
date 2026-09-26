@@ -7,7 +7,7 @@ from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from tradingagents.contracts import (
@@ -15,6 +15,7 @@ from tradingagents.contracts import (
     AssetClass,
     DecisionCandidate,
     DecisionLifecycleEvent,
+    DecisionStatus,
     InstrumentAliasContract,
     InstrumentContract,
     LedgerTransaction,
@@ -400,6 +401,12 @@ class PlatformRepository:
         return tuple(RunManifest.model_validate(row.payload) for row in rows)
 
     def add_decision(self, contract: DecisionCandidate) -> DecisionCandidate:
+        contract = DecisionCandidate.model_validate(contract.model_dump())
+        run = self.get_run(contract.run_id, contract.owner_id)
+        if run is None or run.instrument_id != contract.instrument_id or run.analysis_as_of != contract.as_of:
+            raise ValueError("decision does not match its owner run")
+        if contract.status is DecisionStatus.APPROVED:
+            raise ValueError("approval must be recorded through lifecycle events")
         existing = self.session.get(DecisionRow, contract.decision_id)
         if existing:
             if not _same_payload(existing, contract):
@@ -434,11 +441,38 @@ class PlatformRepository:
         return DecisionCandidate.model_validate(row.payload) if row else None
 
     def add_decision_event(self, contract: DecisionLifecycleEvent) -> DecisionLifecycleEvent:
+        from tradingagents.platform.decisions import DecisionLifecycle
+
+        contract = DecisionLifecycleEvent.model_validate(contract.model_dump())
+        row = self.session.scalar(select(DecisionRow).where(
+            DecisionRow.decision_id == contract.decision_id,
+            DecisionRow.owner_id == contract.owner_id,
+        ).with_for_update())
+        if row is None:
+            raise ValueError("decision not found")
         existing = self.session.get(DecisionLifecycleEventRow, contract.event_id)
         if existing:
             if not _same_payload(existing, contract):
                 raise ImmutableRecordConflict("decision event already has different content")
             return contract
+        decision = DecisionCandidate.model_validate(row.payload)
+        history = self.list_decision_events(contract.decision_id, contract.owner_id)
+        if history and contract.occurred_at <= max(item.occurred_at for item in history):
+            raise InvalidStateTransition("event must follow the previous event timestamp")
+        new_status = DecisionLifecycle().apply(decision, (*history, contract))
+        if contract.from_status.value != row.status:
+            raise InvalidStateTransition("decision state changed")
+        if contract.to_status in {DecisionStatus.READY_FOR_APPROVAL, DecisionStatus.APPROVED}:
+            self._validate_decision_sources(decision)
+        previous_updated_at = row.updated_at
+        result = self.session.execute(update(DecisionRow).where(
+            DecisionRow.decision_id == contract.decision_id,
+            DecisionRow.owner_id == contract.owner_id,
+            DecisionRow.status == contract.from_status.value,
+            DecisionRow.updated_at == previous_updated_at,
+        ).values(status=new_status.value, updated_at=datetime.now(UTC)))
+        if result.rowcount != 1:
+            raise InvalidStateTransition("concurrent decision transition")
         self.session.add(
             DecisionLifecycleEventRow(
                 event_id=contract.event_id,
@@ -454,6 +488,32 @@ class PlatformRepository:
         )
         self.session.flush()
         return contract
+
+    def _validate_decision_sources(self, decision: DecisionCandidate) -> None:
+        from tradingagents.contracts.decisions import require_decision_readiness
+
+        require_decision_readiness(decision)
+        run = self.get_run(decision.run_id, decision.owner_id)
+        if run is None or run.instrument_id != decision.instrument_id:
+            raise ValueError("decision owner run mismatch")
+        for evidence in decision.evidence:
+            source = self.get_snapshot(evidence.snapshot_id)
+            if (
+                source is None or source.snapshot_id not in run.snapshot_ids
+                or source.instrument_id != decision.instrument_id
+                or source.content_hash != evidence.content_hash
+                or source.vendor != evidence.source_name
+                or source.source_end != evidence.source_at
+                or source.retrieved_at != evidence.observed_at
+                or source.as_of > decision.as_of
+                or source.quality_status.value != "OK"
+            ):
+                raise ValueError("decision evidence does not match persisted run source")
+        check = decision.policy_checks[0]
+        policy = self.get_policy(check.policy_id, check.policy_version, decision.owner_id)
+        instrument = self.get_instrument(decision.instrument_id)
+        if policy is None or policy.effective_at > decision.as_of or instrument is None or policy.asset_class != instrument.asset_class:
+            raise ValueError("decision policy is not eligible for this owner instrument")
 
     def list_decision_events(
         self, decision_id: UUID, owner_id: UUID

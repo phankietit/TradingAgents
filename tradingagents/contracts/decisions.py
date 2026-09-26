@@ -83,9 +83,10 @@ class DecisionCandidate(VersionedContract):
 
     @model_validator(mode="after")
     def enforce_decision_boundary(self):
-        if self.status in {DecisionStatus.DRAFT, DecisionStatus.REVIEW} and self.rating is not DecisionRating.REVIEW:
-            raise ValueError("review decisions must use the Review rating")
-        if self.status not in {DecisionStatus.DRAFT, DecisionStatus.REVIEW} and self.rating is DecisionRating.REVIEW:
+        # V1 persisted review records may contain a narrative rating. Keep them
+        # readable, but readiness is enforced separately at every write/approval
+        # boundary. A narrative rating alone never grants approval authority.
+        if self.status in {DecisionStatus.READY_FOR_APPROVAL, DecisionStatus.APPROVED} and self.rating is DecisionRating.REVIEW:
             raise ValueError("Review rating requires review status")
         if (
             self.target_weight is not None
@@ -99,3 +100,33 @@ class DecisionCandidate(VersionedContract):
             if any(check.blocking and check.result is not PolicyResult.PASS for check in self.policy_checks):
                 raise ValueError("blocking policy checks must pass before approval")
         return self
+
+
+REQUIRED_RISK_CHECKS = frozenset({
+    "data_quality", "tradability", "max_position_weight", "max_asset_class_weight",
+    "max_gross_exposure", "max_turnover", "max_correlation", "min_cash_weight",
+})
+
+
+def require_decision_readiness(decision: DecisionCandidate) -> None:
+    """Validate readiness without rewriting historical V1 serialized records."""
+    if decision.rating is DecisionRating.REVIEW or decision.data_quality is not DataQualityStatus.OK:
+        raise ValueError("decision is not eligible for approval")
+    if not decision.evidence or not decision.risks or not decision.invalidation_conditions:
+        raise ValueError("decision requires evidence, risks and invalidation conditions")
+    evidence_ids = [item.evidence_id for item in decision.evidence]
+    if len(evidence_ids) != len(set(evidence_ids)):
+        raise ValueError("duplicate decision evidence")
+    if any(item.source_at is None or item.source_at > decision.as_of or item.observed_at < item.source_at for item in decision.evidence):
+        raise ValueError("decision evidence is not point-in-time eligible")
+    if any(value is None for value in (decision.current_weight, decision.target_weight, decision.max_allowed_weight)):
+        raise ValueError("decision requires deterministic weights")
+    checks = {item.check_id: item for item in decision.policy_checks}
+    if len(checks) != len(decision.policy_checks) or not checks.keys() >= REQUIRED_RISK_CHECKS:
+        raise ValueError("decision requires complete unique risk checks")
+    if any(not checks[key].blocking or checks[key].result is not PolicyResult.PASS for key in REQUIRED_RISK_CHECKS):
+        raise ValueError("all required risk checks must pass and be blocking")
+    if any(item.blocking and item.result is not PolicyResult.PASS for item in decision.policy_checks):
+        raise ValueError("blocking policy failure")
+    if len({(item.policy_id, item.policy_version) for item in decision.policy_checks}) != 1:
+        raise ValueError("risk checks must reference one exact policy version")

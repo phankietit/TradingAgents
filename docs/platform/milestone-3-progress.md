@@ -14,8 +14,8 @@ following missing integration and correctness requirements.
 - PLAN-030/031: connect the adapter to the durable worker path; verify real
   graph profile/tool enforcement, snapshot context, and CLI compatibility.
 - PLAN-032: connect validated structured graph output to the candidate factory;
-  require evidence and deterministic policy results before approval readiness;
-  preserve compatibility for previously persisted review candidates.
+  evidence/complete policy checks/weights are now required at factory readiness;
+  previously persisted review candidates remain readable.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
   artifact persistence are implemented with nine targeted tests. Integration
   with the decision-producing worker and PostgreSQL verification remain.
@@ -25,9 +25,10 @@ following missing integration and correctness requirements.
 - PLAN-035: validate classification/correlation coverage, reconciled accounting,
   effective policy and all limits. Coverage fixes now have targeted regression
   tests; integration with the decision factory remains to be verified.
-- PLAN-036: enforce policy/evidence readiness on each transition and enforce
-  authorization, serialization and audit in the persistence/API write path.
-  A pure lifecycle replay test is insufficient proof of approval enforcement.
+- PLAN-036: readiness, matching policy, owner/run source checks, idempotent
+  events and transactional projection writes now have SQLite integration tests.
+  Authenticated API wiring, policy-assessment provenance and concurrent
+  PostgreSQL validation remain before approval enforcement is complete.
 - PLAN-037: derive outcomes from validated immutable price snapshots and
   calendars; reject duplicate/future outcomes; verify deterministic replay.
 - Run PostgreSQL upgrade/schema parity/rollback, persistence integration,

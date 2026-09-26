@@ -16,18 +16,20 @@ from tradingagents.contracts import (
     EvidenceReference,
     PolicyCheck,
 )
+from tradingagents.contracts.base import NonEmptyText
+from tradingagents.contracts.decisions import require_decision_readiness
 
 
 class StructuredDecisionNarrative(BaseModel):
     """Fields an LLM may author; portfolio math is intentionally absent."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config = ConfigDict(extra="forbid", frozen=True, str_strip_whitespace=True)
 
     rating: DecisionRating
     confidence: float = Field(ge=0.0, le=1.0)
     thesis: str = Field(min_length=1, max_length=20_000)
-    risks: tuple[str, ...] = Field(min_length=1)
-    invalidation_conditions: tuple[str, ...] = Field(min_length=1)
+    risks: tuple[NonEmptyText, ...] = Field(min_length=1)
+    invalidation_conditions: tuple[NonEmptyText, ...] = Field(min_length=1)
 
     def model_post_init(self, __context: Any) -> None:
         if self.rating is DecisionRating.REVIEW:
@@ -102,7 +104,7 @@ class DecisionCandidateFactory:
                 max_allowed_weight=max_allowed_weight,
                 policy_checks=policy_checks,
             )
-        return DecisionCandidate(
+        candidate = DecisionCandidate(
             decision_id=decision_id or uuid4(),
             run_id=run_id,
             owner_id=owner_id,
@@ -121,3 +123,11 @@ class DecisionCandidateFactory:
             max_allowed_weight=max_allowed_weight,
             policy_checks=policy_checks,
         )
+        try:
+            require_decision_readiness(candidate)
+        except ValueError:
+            return DecisionCandidate.model_validate({
+                **candidate.model_dump(), "status": DecisionStatus.REVIEW,
+                "rating": DecisionRating.REVIEW, "target_weight": None,
+            })
+        return candidate

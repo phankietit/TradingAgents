@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
+from tests.decision_fixtures import ready_inputs
 from tradingagents.contracts import (
     DataQualityStatus,
     DecisionActorType,
@@ -19,12 +20,11 @@ NOW = datetime(2026, 9, 25, tzinfo=UTC)
 
 def _decision(owner_id):
     return DecisionCandidate(
-        decision_id=uuid4(), run_id=uuid4(), owner_id=owner_id,
-        instrument_id=uuid4(), as_of=NOW,
+        decision_id=uuid4(), run_id=uuid4(), as_of=NOW,
         status=DecisionStatus.READY_FOR_APPROVAL, rating=DecisionRating.BUY,
         confidence=0.7, thesis="Thesis", risks=("Risk",),
-        invalidation_conditions=("Invalidation",), evidence=(),
-        data_quality=DataQualityStatus.OK, policy_checks=(),
+        invalidation_conditions=("Invalidation",),
+        data_quality=DataQualityStatus.OK, **ready_inputs(owner_id),
     )
 
 
@@ -37,7 +37,8 @@ def _approval(decision, **overrides):
         "actor_id": decision.owner_id, "actor_type": DecisionActorType.OWNER,
         "reason": "Owner reviewed evidence and policy results",
         "occurred_at": NOW + timedelta(minutes=1),
-        "policy_id": uuid4(), "policy_version": "2026-09-25",
+        "policy_id": decision.policy_checks[0].policy_id,
+        "policy_version": decision.policy_checks[0].policy_version,
     }
     values.update(overrides)
     return DecisionLifecycleEvent(**values)
@@ -70,6 +71,22 @@ def test_terminal_decision_cannot_transition_again():
 @pytest.mark.unit
 def test_cross_owner_event_is_rejected():
     decision = _decision(uuid4())
-    event = _approval(decision).model_copy(update={"owner_id": uuid4(), "actor_id": uuid4()})
+    other_owner = uuid4()
+    event = _approval(decision).model_copy(update={"owner_id": other_owner, "actor_id": other_owner})
     with pytest.raises(ValueError, match="does not belong"):
         DecisionLifecycle().apply(decision, (event,))
+
+
+@pytest.mark.parametrize("missing", ["evidence", "policy_checks", "target_weight"])
+def test_lifecycle_cannot_approve_incomplete_legacy_candidate(missing):
+    decision = _decision(uuid4())
+    event = _approval(decision)
+    decision = decision.model_copy(update={missing: None if missing == "target_weight" else ()})
+    with pytest.raises(ValueError, match="requires"):
+        DecisionLifecycle().apply(decision, (event,))
+
+
+def test_approval_cannot_substitute_policy_version():
+    decision = _decision(uuid4())
+    with pytest.raises(ValueError, match="does not match"):
+        DecisionLifecycle().apply(decision, (_approval(decision, policy_version="invented"),))

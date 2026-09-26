@@ -124,9 +124,9 @@ def _decision(**overrides):
 
 
 @pytest.mark.unit
-def test_review_status_cannot_hide_a_tradeable_rating():
-    with pytest.raises(ValidationError, match="Review rating"):
-        _decision(status=DecisionStatus.REVIEW)
+def test_legacy_review_with_narrative_rating_remains_readable():
+    decision = _decision(status=DecisionStatus.REVIEW)
+    assert decision.status is DecisionStatus.REVIEW
 
 
 @pytest.mark.unit
