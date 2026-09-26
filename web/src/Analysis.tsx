@@ -4,8 +4,9 @@ import { instruments, timestamp, useResource } from './data';
 import type { Instrument } from './data';
 import RunForm from './RunForm';
 import type { Run } from './RunForm';
+import ArtifactPreview from './ArtifactPreview';
+import type { Artifact } from './ArtifactPreview';
 
-interface Artifact { artifact_id: string; kind: string; media_type: string; content_hash: string; byte_size: number; created_at: string }
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
 export default function Analysis() {
@@ -101,6 +102,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     {artifacts.error ? <p role="alert" className="danger">{errorMessage(artifacts.error)}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
       <a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{item.kind.replaceAll('_', ' ')} · Download</a>
       <span className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} bytes · {timestamp(item.created_at)}</span><span className="mono caption">{item.content_hash}</span>
+      <ArtifactPreview artifact={item} runId={runId} />
     </li>)}</ul> : <p className="muted">No artifacts have been published for this run.</p>}
     <p className="muted caption">Artifacts download after backend integrity checks. Run success does not imply decision approval.</p>
   </section>;

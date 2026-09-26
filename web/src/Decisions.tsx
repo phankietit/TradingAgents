@@ -25,17 +25,24 @@ export default function Decisions() {
   const [version, setVersion] = useState(0);
   const list = useResource<Decision[]>('/decisions?limit=200', version);
   const catalog = useResource<Instrument[]>('/instruments?limit=500', 0, instruments);
-  const [selected, setSelected] = useState('');
-  const current = list.data?.find(item => item.decision_id === selected) ?? list.data?.[0];
+  const [selected, setSelected] = useState(() => new URLSearchParams(window.location.hash.split('?')[1]).get('decision') ?? '');
+  useEffect(() => {
+    const update = () => setSelected(new URLSearchParams(window.location.hash.split('?')[1]).get('decision') ?? '');
+    window.addEventListener('hashchange', update);
+    return () => window.removeEventListener('hashchange', update);
+  }, []);
+  // A deep link may target older research outside the bounded history page.
+  // Never silently substitute the first candidate for a missing/unauthorized ID.
+  const currentId = selected || list.data?.[0]?.decision_id;
   return <>
     <div className="section-actions"><p className="muted">Research candidates and human review · No order execution.</p><button onClick={() => setVersion(value => value + 1)}>Refresh decisions</button></div>
     <div className="market-layout"><section className="instrument-list" aria-label="Decision history"><div className="list-heading">Research candidates</div>
       {list.loading ? <p role="status">Loading decisions…</p> : list.error ? <p role="alert" className="danger">{errorMessage(list.error)}</p> : !list.data?.length ? <p className="muted">No decision candidates have been published.</p>
-        : <ul>{list.data.map(item => <li key={item.decision_id}><button aria-pressed={current?.decision_id === item.decision_id} onClick={() => setSelected(item.decision_id)}>
+        : <ul>{list.data.map(item => <li key={item.decision_id}><button aria-pressed={currentId === item.decision_id} onClick={() => { setSelected(item.decision_id); window.history.replaceState(null, '', `#/decisions?decision=${encodeURIComponent(item.decision_id)}`); }}>
           <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? 'Instrument'}</strong><span>{item.rating}</span></span>
           <span className="instrument-name">{timestamp(item.as_of)}</span><span className="caption">Original state: {item.status}</span>
         </button></li>)}</ul>}
-    </section>{current ? <DecisionDetail key={current.decision_id} id={current.decision_id} version={version} /> : <section className="empty-state"><h2>Select a candidate</h2><p>Evidence, risk checks and the current review state appear here. A research rating is not an approval.</p></section>}</div>
+    </section>{currentId ? <DecisionDetail key={currentId} id={currentId} version={version} /> : <section className="empty-state"><h2>Select a candidate</h2><p>Evidence, risk checks and the current review state appear here. A research rating is not an approval.</p></section>}</div>
   </>;
 }
 

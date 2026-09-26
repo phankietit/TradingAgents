@@ -4,7 +4,7 @@ This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
 backend metrics and source provenance. Analysis now supports snapshot selection,
 explicit cost authorization, durable queue submission, SSE progress, cancellation,
-new-attempt configuration and artifact downloads. Portfolio renders persisted
+new-attempt configuration and artifact downloads/inline inspection. Portfolio renders persisted
 snapshots/cash/holdings/policies without recomputing portfolio math. Decisions
 renders original/current state, narrative/evidence/risk checks and explicit
 approve/reject dialogs. Worker-to-approval integration is verified locally with a
@@ -136,3 +136,20 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   from the fetched run detail; a second queued run reached succeeded in both
   list and detail without manual refresh. Regression test checks no SSE reconnect.
   Local gates: 24 frontend tests, 6 snapshot-worker tests, lint/typecheck/build PASS.
+- Report inspection checkpoint: a user-triggered preview reads the existing
+  owner-authorized, integrity-checked artifact endpoint. Only analysis-report and
+  decision-evidence JSON up to 1 MB is previewed; both manifest and streamed-byte
+  bounds apply. Run identity, report shape and claim/source links are checked
+  before rendering. Malformed, mismatched or integrity-failed data yields an
+  explicit unavailable state, not a narrative fallback. HTML remains plain text;
+  there is no HTML/Markdown injection, iframe, external asset fetch or browser
+  persistence. Other formats/sizes retain explicit download only.
+  Reports link to the exact decision, including older candidates outside the
+  latest history page; missing/forbidden IDs do not silently select another row.
+  Selection survives reload. Immutable research and current lifecycle are labelled
+  separately; a successful run without risk inputs still cannot be approved.
+  Built-mode IAB at 1280×720 and 390×844: synthetic worker publication → inspect
+  narrative/structured output → claim/source/time/hash drilldown → correct linked
+  REVIEW decision → reload PASS; Enter opens preview/disclosure, visible focus,
+  no document overflow, console/CSP errors or framework overlay. 34 frontend
+  tests plus lint/typecheck/build PASS. This remains offline fixture evidence.

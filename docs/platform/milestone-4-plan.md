@@ -185,8 +185,13 @@ shared backend mapping and reflected in source choices. Risk input configuration
 selects owner portfolio/policy, pins its timestamp and accepts only explicit owner
 target weight; correlation inputs use owner snapshot discovery. Browser fixture
 queue with these inputs PASS; 23 frontend and 43 scoped backend tests PASS.
-Remaining: provider-readiness display, inline safe report/decision inspection,
-full negative/browser acceptance and broader asset coverage. Worker/result
+Remaining: provider-readiness display, full negative/browser acceptance and
+broader asset coverage. Inline report/evidence inspection is implemented using
+the existing protected artifact endpoint, explicit on-demand load, 1 MB streaming
+bound, context/shape/link validation and text-only rendering. Deep links target
+the exact decision without silently selecting another history row. Built-mode
+IAB desktop/narrow inspection, provenance, keyboard Enter/focus, linked REVIEW
+decision and reload PASS; 34 frontend tests/build/lint PASS. Worker/result
 integration checkpoint: explicit `--fixture-worker` runs durable jobs with a
 labelled offline synthetic graph in a newly isolated QA database. Real API,
 worker, immutable evidence, deterministic risk and approval services remain

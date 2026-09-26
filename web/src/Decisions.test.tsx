@@ -5,10 +5,11 @@ import Decisions from './Decisions';
 import type { Decision } from './Decisions';
 const candidate: Decision = { decision_id: 'decision-fixture', run_id: 'run-fixture', instrument_id: 'aapl', as_of: '2026-09-01T00:00:00Z', status: 'review', rating: 'Review', confidence: .5, thesis: '<script>not executable</script>', risks: ['Synthetic risk'], invalidation_conditions: ['Synthetic invalidation'], data_quality: 'STALE', current_weight: null, target_weight: null, max_allowed_weight: null, portfolio_snapshot_id: null, policy_checks: [], evidence: [] };
 beforeEach(() => {
+  window.history.replaceState(null, '', '#/decisions');
   HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
   HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
 });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/decisions'); });
 function setup(rejectFails = false) {
   let rejected = false;
   const fetch = vi.fn(async (url: string, init: RequestInit) => {
@@ -46,4 +47,21 @@ it('does not claim success when backend rejects the transition', async () => {
   expect((await screen.findByRole('alert')).textContent).toContain('No successful transition');
   expect(screen.getByRole('dialog')).toBeTruthy();
   expect(screen.queryByText('review → rejected')).toBeNull();
+});
+
+it('loads a deep-linked candidate outside the history page instead of substituting the first row', async () => {
+  window.history.replaceState(null, '', '#/decisions?decision=older-candidate');
+  const fetch = setup(); render(<Decisions />);
+  expect(await screen.findByText(candidate.thesis)).toBeTruthy();
+  expect(fetch.mock.calls.some(([url]) => url === '/api/v1/decisions/older-candidate/state')).toBe(true);
+});
+
+it('does not substitute another candidate when the deep link is missing or forbidden', async () => {
+  window.history.replaceState(null, '', '#/decisions?decision=unavailable-candidate');
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/decisions?') ? [candidate] : []),
+    { status: url.endsWith('/unavailable-candidate/state') ? 404 : 200 })));
+  render(<Decisions />);
+  expect(await screen.findByRole('alert')).toBeTruthy();
+  expect(screen.queryByText(candidate.thesis)).toBeNull();
+  expect(screen.queryByRole('button', {name:'Approve decision'})).toBeNull();
 });
