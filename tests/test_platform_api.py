@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta
 from io import StringIO
 from uuid import uuid4
@@ -249,6 +250,60 @@ def test_login_sets_private_session_and_me_uses_server_principal(api_context):
     assert client.cookies.get("ta_session")
     assert client.cookies.get("ta_csrf")
     assert client.get("/api/v1/auth/me").json()["email"] == "owner@example.com"
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_authenticates_and_preserves_cookie_scope(api_context):
+    client = api_context["client"]
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+    login = _login(client)
+    assert all("Path=/api/v1" in value for value in login.headers.get_list("set-cookie"))
+    response = client.get("/api/v1/auth/csrf")
+    assert response.status_code == 200
+    assert response.json() == {"csrf_token": client.cookies.get("ta_csrf")}
+    assert response.headers["cache-control"] == "no-store"
+    assert "set-cookie" not in response.headers
+    cross_origin = client.get("/api/v1/auth/csrf", headers={"Origin": "https://evil.example"})
+    assert "access-control-allow-origin" not in cross_origin.headers
+    logout = client.post("/api/v1/auth/logout", headers={
+        "Origin": ORIGIN, "X-CSRF-Token": response.json()["csrf_token"],
+    })
+    assert logout.status_code == 200
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("csrf_value", [None, "forged-csrf-token-value-000000000000"])
+def test_csrf_bootstrap_rejects_missing_or_forged_cookie(api_context, csrf_value):
+    client = api_context["client"]
+    _login(client)
+    client.cookies.delete("ta_csrf")
+    if csrf_value is not None:
+        client.cookies.set("ta_csrf", csrf_value, path="/api/v1")
+    response = client.get("/api/v1/auth/csrf")
+    assert response.status_code == 403
+    assert response.json() == {"detail": "CSRF validation failed"}
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_rejects_expired_session(api_context):
+    client = api_context["client"]
+    _login(client)
+    client.app.state.settings = replace(
+        client.app.state.settings, clock=lambda: NOW + timedelta(days=1)
+    )
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_rejects_another_session_token(api_context):
+    client = api_context["client"]
+    _login(client)
+    old_csrf = client.cookies.get("ta_csrf")
+    _login(client)
+    client.cookies.delete("ta_csrf")
+    client.cookies.set("ta_csrf", old_csrf, path="/api/v1")
+    assert client.get("/api/v1/auth/csrf").status_code == 403
 
 
 @pytest.mark.unit

@@ -47,6 +47,13 @@ sets before enqueueing a durable job.
 
 The session cookie is HTTP-only, Secure by default, and SameSite Strict. A
 separate readable CSRF cookie must match the header and its server-side digest.
+Both cookies remain scoped to `/api/v1`. A web client mounted at `/` fetches
+`GET /api/v1/auth/csrf` with same-origin credentials after login or session
+restoration, then keeps the returned `csrf_token` only in memory for mutation
+headers. This authenticated, non-cacheable endpoint validates the existing
+cookie against the session digest; it does not mint or rotate credentials.
+Missing or forged CSRF cookies return 403; missing or expired sessions return
+401. No cross-origin read access is enabled.
 Unsafe methods also require the exact configured Origin. Responses use
 `no-store`, `nosniff`, frame denial, and no-referrer headers. Validation errors
 omit rejected input values so passwords are not echoed.

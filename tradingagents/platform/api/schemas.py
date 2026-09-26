@@ -39,6 +39,10 @@ class LoginResponse(OwnerResponse):
     expires_at: AwareDatetime
 
 
+class CsrfResponse(ApiModel):
+    csrf_token: str = Field(repr=False)
+
+
 class InstrumentDetailResponse(ApiModel):
     instrument: InstrumentContract
     aliases: tuple[InstrumentAliasContract, ...]

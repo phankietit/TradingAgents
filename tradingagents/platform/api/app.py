@@ -75,6 +75,7 @@ from tradingagents.platform.persistence import (
 )
 
 from .schemas import (
+    CsrfResponse,
     DecisionStateResponse,
     DecisionTransitionRequest,
     InstrumentDetailResponse,
@@ -366,6 +367,21 @@ def create_app(settings: ApiSettings) -> FastAPI:
     @app.get(f"{API_PREFIX}/auth/me", response_model=OwnerResponse, tags=["auth"])
     def me(owner: OwnerDependency) -> OwnerResponse:
         return OwnerResponse(owner_id=owner.owner_id, email=owner.email)
+
+    @app.get(f"{API_PREFIX}/auth/csrf", response_model=CsrfResponse, tags=["auth"])
+    def csrf_token(
+        request: Request,
+        _owner: OwnerDependency,
+        session: SessionDependency,
+    ) -> CsrfResponse:
+        # Root-mounted web clients cannot read cookies scoped to /api/v1.
+        # Return only the existing session-bound value, never mint or rotate it.
+        csrf_cookie = request.cookies.get(CSRF_COOKIE, "")
+        if not csrf_cookie or not OwnerAuth(session).validate_csrf(
+            request.cookies.get(SESSION_COOKIE, ""), csrf_cookie
+        ):
+            raise HTTPException(status_code=403, detail="CSRF validation failed")
+        return CsrfResponse(csrf_token=csrf_cookie)
 
     @app.get(
         f"{API_PREFIX}/instruments",

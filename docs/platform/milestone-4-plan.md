@@ -70,9 +70,13 @@ Do not assume that existing source adapters imply populated snapshots.
 
 Browser integration issue discovered: the existing readable CSRF cookie has
 Path=/api/v1, so a document served at / cannot read it for the mutation header.
-Resolve this explicitly in M4-API with tests; keep the session HTTP-only and
-API-scoped, same-origin checks and session-bound CSRF validation intact. Never
-work around this by disabling CSRF or moving the session into localStorage.
+Resolved by authenticated `GET /api/v1/auth/csrf`: the root-mounted client fetches
+the existing session-bound token into memory. Cookies remain API-scoped; session
+stays HTTP-only, with same-origin and mutation CSRF checks intact. No token
+rotation, localStorage credential storage, or cross-origin read access is added.
+Local API tests cover unauthenticated/expired sessions, missing/forged/other-session
+CSRF cookies, no-store, cookie paths, no CORS headers and bootstrap-to-logout.
+Browser integration remains UNVERIFIED until M4-SHELL acceptance.
 
 ## Local tickets and acceptance
 
@@ -88,7 +92,7 @@ Status: in-progress. Depends on merged M3.
 
 ### M4-API — owner-scoped workspace discovery
 
-Status: planned. Depends on M4-FOUNDATION.
+Status: in-progress (CSRF bootstrap only; discovery/watchlist pending). Depends on M4-FOUNDATION.
 
 - Add only necessary typed list/detail endpoints for portfolio snapshots, policy,
   snapshot metadata/eligibility and run artifact manifests, with pagination/bounds.
@@ -105,7 +109,7 @@ Status: planned. Depends on M4-FOUNDATION.
 Status: planned. Depends on M4-FOUNDATION; may precede API discovery completion.
 
 - Reusable shell/components, route navigation, login/logout/session expiry.
-- Same-origin credentials and readable CSRF cookie/header; no wildcard CORS bypass.
+- Same-origin credentials and authenticated CSRF bootstrap/header; no wildcard CORS bypass.
 - Schema-aware errors without reflected secrets; untrusted report text never raw HTML.
 - Local dev/build/start instructions and loopback-only defaults.
 - Tests: session restore/logout/401, keyboard/focus, desktop/narrow shell and build.
