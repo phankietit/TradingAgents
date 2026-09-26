@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { errorMessage, mutate } from './api';
 import { instruments, timestamp, useResource } from './data';
 import type { Instrument } from './data';
@@ -13,9 +13,13 @@ export default function Analysis() {
   const catalog = useResource<Instrument[]>('/instruments?limit=500', 0, instruments);
   const history = useResource<Run[]>('/runs?limit=200', version);
   const [selected, setSelected] = useState<string | null>(null);
+  const [observedStatuses, setObservedStatuses] = useState<Record<string, string>>({});
+  const observeStatus = useCallback((id: string, status: string) => {
+    setObservedStatuses(previous => previous[id] === status ? previous : { ...previous, [id]: status });
+  }, []);
   const [initialInstrument, setInitialInstrument] = useState(() => new URLSearchParams(window.location.hash.split('?')[1]).get('instrument') ?? undefined);
   const [newRun, setNewRun] = useState(!!initialInstrument);
-  const refresh = () => setVersion(value => value + 1);
+  const refresh = () => { setObservedStatuses({}); setVersion(value => value + 1); };
   const run = history.data?.find(item => item.run_id === selected) ?? history.data?.[0];
   return <>
     <div className="section-actions"><p className="muted">Snapshot-based research · Results require review, not automatic execution.</p>
@@ -28,19 +32,19 @@ export default function Analysis() {
         {history.loading ? <p role="status">Loading runs…</p> : history.error ? <p role="alert" className="danger">{errorMessage(history.error)}</p>
           : !history.data?.length ? <p className="muted">No runs yet. Create one using saved evidence.</p>
           : <ul>{history.data.map(item => <li key={item.run_id}><button aria-pressed={run?.run_id === item.run_id} onClick={() => setSelected(item.run_id)}>
-            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? 'Instrument'}</strong><span>{item.status}</span></span>
+            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? 'Instrument'}</strong><span>{observedStatuses[item.run_id] ?? item.status}</span></span>
             <span className="instrument-name">{timestamp(item.created_at)}</span><span className="caption mono">{item.run_id.slice(0, 8)}</span>
           </button></li>)}</ul>}
         {history.data?.length === 200 ? <p className="warning">Showing the latest 200 runs.</p> : null}
       </section>
-      {run ? <RunDetail key={run.run_id} runId={run.run_id} version={version} onChanged={refresh} onRetry={value => { setInitialInstrument(value.instrument_id); setNewRun(true); }} />
+      {run ? <RunDetail key={run.run_id} runId={run.run_id} version={version} onStatus={observeStatus} onChanged={refresh} onRetry={value => { setInitialInstrument(value.instrument_id); setNewRun(true); }} />
         : <section className="empty-state"><h2>Research runs</h2><p>Queue a run to inspect progress and artifacts. A worker must be running to process the queue.</p></section>}
     </div>
   </>;
 }
 
 const eventNames = ['run.queued', 'run.started', 'stage.started', 'stage.completed', 'artifact.created', 'decision.ready', 'run.retrying', 'run.cancel_requested', 'run.cancelled', 'run.failed', 'run.succeeded'];
-function RunDetail({ runId, version, onChanged, onRetry }: { runId: string; version: number; onChanged: () => void; onRetry: (run: Run) => void }) {
+function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: string; version: number; onStatus: (id: string, status: string) => void; onChanged: () => void; onRetry: (run: Run) => void }) {
   const [tick, setTick] = useState(0);
   const run = useResource<Run>(`/runs/${encodeURIComponent(runId)}`, version + tick);
   const artifacts = useResource<Artifact[]>(`/runs/${encodeURIComponent(runId)}/artifacts?limit=200`, version + tick);
@@ -49,6 +53,10 @@ function RunDetail({ runId, version, onChanged, onRetry }: { runId: string; vers
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const isTerminal = run.data ? terminal(run.data.status) : false;
+  const observedStatus = run.data?.status;
+  useEffect(() => {
+    if (observedStatus) onStatus(runId, observedStatus);
+  }, [runId, observedStatus, onStatus]);
   useEffect(() => {
     const stream = new EventSource(`/api/v1/runs/${encodeURIComponent(runId)}/events`);
     const update = (event: MessageEvent) => {

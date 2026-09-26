@@ -7,8 +7,9 @@ explicit cost authorization, durable queue submission, SSE progress, cancellatio
 new-attempt configuration and artifact downloads. Portfolio renders persisted
 snapshots/cash/holdings/policies without recomputing portfolio math. Decisions
 renders original/current state, narrative/evidence/risk checks and explicit
-approve/reject dialogs. Full worker-to-approval integration and acceptance remain
-pending. Do not describe this checkpoint as the completed M4 product.
+approve/reject dialogs. Worker-to-approval integration is verified locally with a
+labelled synthetic graph; live-provider and broader acceptance remain pending.
+Do not describe this checkpoint as the completed M4 product.
 
 ## Development
 
@@ -57,20 +58,35 @@ development server or use it as a production deployment.
   `.venv/bin/python -m scripts.web_fixture --synthetic-local-only`, then start
   Vite. Fixture credentials are documented in that script, not owner credentials.
   Each run creates a new ignored `.cache/web-fixture-*` database and artifacts.
-  This server never starts a worker or calls a vendor/model. The synthetic vendor
-  label is visible beside the chart. This is integration evidence, not live data.
+  By default no worker starts. Add `--fixture-worker` to run the real durable job,
+  evidence and risk pipeline with explicitly labelled synthetic graph output.
+  Neither mode calls a vendor/model; the fixture graph has no live-tool fallback.
+  Provider/model metadata is synthetic, not OpenAI. The synthetic vendor label
+  is visible beside the chart. This is integration evidence, not live data.
 - Analysis IAB check: Markets Analyze → choose market snapshot → explicit queue
   authorization → real queued run → cancel → SSE `run.cancelled`. No worker or
   model ran. Browser logs had no app errors. Generated report/risk/decision paths
-  remain UNVERIFIED. Unit tests cover disabled stale inputs, required consent and
+  were UNVERIFIED at that checkpoint. Unit tests cover disabled stale inputs, required consent and
   stable idempotency keys after failed unchanged submissions.
 - Portfolio/Decisions IAB: backend replay of synthetic deposit and historical
   holding gives NAV 10180.20 USD, cash 8200 USD, 10 AAPL units at 198.02 USD.
   Seeded REVIEW candidate cannot be approved; explicit reason/reject persists an
   audit event after reload. This is seeded local QA, not generated model output.
-  Successful approval and multi-asset risk integration remain UNVERIFIED.
+  Multi-asset browser risk integration remains UNVERIFIED.
 - Analysis risk input check: choose a persisted portfolio and existing effective
   policy, enter an owner target, select market evidence, authorize and enqueue.
   API accepted the pinned timestamp/risk payload. Price sources are disabled for
   unrelated analysts. No worker/model ran in this browser check; policy fixture
   is explicitly synthetic and does not change owner limits.
+- Worker fixture check (2026-09-27 local, 1280×720, IAB): login → AAPL market
+  snapshot → synthetic portfolio/policy → owner target 0.2 → queue → worker
+  succeeded → two integrity-checked artifact manifests → eight risk checks PASS
+  → confirm approval with reason → reload → approved audit persists. Source run
+  `26dc48fa-…`, decision `156eadfd-fa5a-5cfd-ad7f-fd4e33aaad54`. Original research
+  state remains ready_for_approval while current state is approved; actions are
+  disabled afterward. No order or paid model call occurs. Browser console clean,
+  meaningful page/title and no framework overlay; screenshot inspected.
+  A discovered stale history-row status was fixed with stable status propagation
+  from the fetched run detail; a second queued run reached succeeded in both
+  list and detail without manual refresh. Regression test checks no SSE reconnect.
+  Local gates: 24 frontend tests, 6 snapshot-worker tests, lint/typecheck/build PASS.

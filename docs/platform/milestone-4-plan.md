@@ -172,8 +172,15 @@ selects owner portfolio/policy, pins its timestamp and accepts only explicit own
 target weight; correlation inputs use owner snapshot discovery. Browser fixture
 queue with these inputs PASS; 23 frontend and 43 scoped backend tests PASS.
 Remaining: provider-readiness display, inline safe report/decision inspection,
-worker/result integration and full negative/browser acceptance. Do not call this
-completed analysis capability from queue/cancel evidence alone.
+full negative/browser acceptance and broader asset coverage. Worker/result
+integration checkpoint: explicit `--fixture-worker` runs durable jobs with a
+labelled offline synthetic graph in a newly isolated QA database. Real API,
+worker, immutable evidence, deterministic risk and approval services remain
+unchanged. Browser AAPL target 0.2 → succeeded → eight risk checks PASS → owner
+confirmation → approved → reload/audit PASS. No live provider or model call.
+History status now follows fetched detail without reopening SSE; regression and
+second browser run PASS. 24 frontend tests, six snapshot-worker tests, build/lint
+PASS. This is synthetic integration evidence, not live analysis acceptance.
 
 - Form selects permitted analysts and eligible immutable inputs; exact as-of and
   cost/provider readiness are visible before any invocation.
