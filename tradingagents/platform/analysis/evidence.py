@@ -50,7 +50,8 @@ class EvidenceGraphBuilder:
                 if snapshot.quality_status is not DataQualityStatus.OK:
                     raise ValueError("material claims require OK source data")
                 source_at = snapshot.source_end
-                if source_at is None or source_at > as_of or snapshot.as_of > as_of:
+                if (source_at is None or source_at > as_of or snapshot.as_of > as_of
+                        or snapshot.retrieved_at > as_of):
                     raise ValueError("material claim source is not point-in-time eligible")
                 reference = EvidenceReference(
                     evidence_id=uuid5(run_id, f"evidence:{claim_text}:{snapshot_id}:{snapshot.content_hash}"),

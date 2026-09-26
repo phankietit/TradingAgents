@@ -119,7 +119,9 @@ def require_decision_readiness(decision: DecisionCandidate) -> None:
     evidence_ids = [item.evidence_id for item in decision.evidence]
     if len(evidence_ids) != len(set(evidence_ids)):
         raise ValueError("duplicate decision evidence")
-    if any(item.source_at is None or item.source_at > decision.as_of or item.observed_at < item.source_at for item in decision.evidence):
+    if any(item.source_at is None or item.source_at > decision.as_of
+           or item.observed_at < item.source_at or item.observed_at > decision.as_of
+           for item in decision.evidence):
         raise ValueError("decision evidence is not point-in-time eligible")
     if any(value is None for value in (decision.current_weight, decision.target_weight, decision.max_allowed_weight)):
         raise ValueError("decision requires deterministic weights")

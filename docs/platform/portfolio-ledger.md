@@ -8,6 +8,8 @@ this module has no order-generation or broker path.
 Replay rejects duplicate events, owner/ledger mismatches, negative cash, short
 positions, missing prices, and implicit FX conversion. Snapshot hashes bind the
 full transaction payloads and valuation quotes used at the requested `as_of`.
+The pure replay engine, not only the persisted service, rejects quotes observed
+after `as_of`; an old source date does not establish historical availability.
 
 Each `ValuationQuote` carries instrument/currency, source and retrieval times,
 snapshot ID, content hash and quality status. Open holdings require an explicit

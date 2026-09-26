@@ -68,6 +68,8 @@ class EvidenceGraph(VersionedContract):
                 raise ValueError("evidence source timestamp is missing or future")
             if item.observed_at < item.source_at:
                 raise ValueError("evidence observation predates its source")
+            if item.observed_at > self.as_of:
+                raise ValueError("evidence observation is future at graph as_of")
         if self.content_hash != evidence_graph_hash(self.run_id, self.as_of, self.claims, self.evidence):
             raise ValueError("evidence graph content hash mismatch")
         return self

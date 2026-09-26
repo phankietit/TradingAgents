@@ -88,6 +88,7 @@ def test_replay_is_order_independent_and_hash_binds_event_values():
     {"currency": "EUR"}, {"instrument_id": uuid4()},
     {"quality_status": "STALE"}, {"source_at": NOW + timedelta(days=1)},
     {"source_at": NOW - timedelta(days=2)},
+    {"observed_at": NOW + timedelta(seconds=1)},
 ])
 def test_invalid_quote_cannot_value_a_portfolio(changes):
     args = _book()

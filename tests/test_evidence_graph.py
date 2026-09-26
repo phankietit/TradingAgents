@@ -16,7 +16,7 @@ def _snapshot(**overrides):
         "dataset": "ohlcv.daily",
         "vendor": "approved-vendor",
         "as_of": NOW,
-        "retrieved_at": NOW + timedelta(minutes=1),
+        "retrieved_at": NOW,
         "source_end": NOW,
         "content_hash": "sha256:" + "a" * 64,
         "quality_status": DataQualityStatus.OK,
@@ -81,6 +81,7 @@ def test_graph_hash_and_ids_are_reproducible_under_input_permutation():
     {"source_end": None},
     {"as_of": NOW + timedelta(days=1), "source_end": NOW + timedelta(days=1)},
     {"retrieved_at": NOW - timedelta(days=1)},
+    {"retrieved_at": NOW + timedelta(seconds=1)},
 ])
 def test_unproven_time_eligibility_fails_closed(changes):
     snapshot = _snapshot(**changes)
@@ -96,6 +97,20 @@ def test_duplicate_sources_are_not_silently_overwritten():
                                      material_claims={"Claim": (snapshot.snapshot_id,)})
 
 
+def test_serialized_graph_rejects_future_observation_even_with_valid_hash():
+    from tradingagents.contracts.evidence import evidence_graph_hash
+
+    snapshot = _snapshot()
+    graph = EvidenceGraphBuilder().build(run_id=uuid4(), as_of=NOW, snapshots=(snapshot,),
+                                         material_claims={"Claim": (snapshot.snapshot_id,)})
+    evidence = (graph.evidence[0].model_copy(update={"observed_at": NOW + timedelta(seconds=1)}),)
+    payload = graph.model_dump()
+    payload["evidence"] = evidence
+    payload["content_hash"] = evidence_graph_hash(graph.run_id, graph.as_of, graph.claims, evidence)
+    with pytest.raises(ValueError, match="observation is future"):
+        EvidenceGraph.model_validate(payload)
+
+
 def test_run_bound_evidence_persistence_and_owner_isolation(tmp_path):
     from tests.test_platform_persistence import _instrument, _run
     from tradingagents.platform.analysis.evidence_service import EvidenceGraphService
@@ -108,7 +123,8 @@ def test_run_bound_evidence_persistence_and_owner_isolation(tmp_path):
     owner, instrument = uuid4(), _instrument()
     run = _run(instrument.instrument_id, owner)
     snapshot = _snapshot(instrument_id=instrument.instrument_id,
-                         as_of=run.analysis_as_of, source_end=run.analysis_as_of)
+                         as_of=run.analysis_as_of, source_end=run.analysis_as_of,
+                         retrieved_at=run.analysis_as_of)
     run = run.model_copy(update={"snapshot_ids": (snapshot.snapshot_id,)})
     store = LocalArtifactStore(tmp_path / "artifacts")
     with database.session() as session:

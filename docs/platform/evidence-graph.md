@@ -5,6 +5,8 @@ immutable snapshot-backed `EvidenceReference` records. Each reference preserves
 the vendor, observed/source timestamps, point-in-time cutoff, snapshot ID, and
 content hash. Missing, stale, unavailable, or future-leaking snapshots cannot
 support a material claim.
+Observation/retrieval must also be at or before the graph or decision `as_of`,
+including direct builder, serialized graph and readiness-validation calls.
 
 The graph hash covers all claim and evidence links so a recorded decision can
 identify the exact evidence set it used. This is local contract and unit-test

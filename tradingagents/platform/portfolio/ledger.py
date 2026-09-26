@@ -103,7 +103,8 @@ class PortfolioLedger:
             quote = ValuationQuote.model_validate(prices[instrument_id])
             if quote.instrument_id != instrument_id or quote.currency != base_currency:
                 raise ValueError("valuation quote identity/currency mismatch")
-            if quote.quality_status is not DataQualityStatus.OK or quote.source_at > as_of or quote.observed_at < quote.source_at:
+            if (quote.quality_status is not DataQualityStatus.OK or quote.source_at > as_of
+                    or quote.observed_at < quote.source_at or quote.observed_at > as_of):
                 raise ValueError("valuation quote is not point-in-time eligible")
             if max_price_age is None or as_of - quote.source_at > max_price_age:
                 raise ValueError("valuation requires an explicit freshness limit and fresh prices")

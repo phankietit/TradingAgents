@@ -107,6 +107,19 @@ def test_ready_write_rejects_unbound_or_forged_risk_inputs(tmp_path, mutation):
     database.dispose()
 
 
+def test_readiness_rejects_future_observed_evidence(tmp_path):
+    from tradingagents.contracts.decisions import require_decision_readiness
+
+    database, decision = seed(tmp_path)
+    try:
+        evidence = tuple(item.model_copy(update={"observed_at": decision.as_of + timedelta(seconds=1)})
+                         for item in decision.evidence)
+        with pytest.raises(ValueError, match="point-in-time"):
+            require_decision_readiness(decision.model_copy(update={"evidence": evidence}))
+    finally:
+        database.dispose()
+
+
 def test_ready_write_rejects_forged_pass_observations(tmp_path):
     database, decision = seed(tmp_path)
     checks = tuple(check.model_copy(update={"observed_value": 0.0})
