@@ -62,4 +62,6 @@ def select_analysts(
         )
     if not requested:
         raise ValueError("at least one analyst is required")
+    if len(requested) != len(set(requested)):
+        raise ValueError("duplicate analysts are not allowed")
     return requested

@@ -50,3 +50,21 @@ Report/candidate publication fences the current lease and cancellation status
 inside its write transaction. A stale worker cannot publish or fail a job that
 has been reclaimed by another worker. Synchronous model calls are not forcibly
 terminated on cancellation; their result is withheld at publication.
+
+## Snapshot-only graph execution
+
+An `AnalysisRequest.snapshot_context` selects tool-free analyst nodes while
+reusing the existing research/trader/risk/Portfolio Manager workflow. Context
+must cover exactly the selected profile analysts with nonempty JSON snapshots;
+input hashes, instrument identity, OK quality and source/retrieval eligibility
+are checked before model invocation. A bounded input size prevents unbounded
+snapshot prompt expansion. `load_snapshot_context` additionally resolves only
+owner-readable artifacts already listed in the run manifest.
+
+The snapshot path never constructs legacy tool nodes, reads/settles memory,
+resolves a live vendor identity, or writes legacy ticker logs/checkpoints.
+Its model clients are unbound to tools; analyst tool-call responses are errors.
+Real graph fixture tests cover the full debate/manager path with forbidden
+legacy hooks. They are offline evidence, not live-provider validation.
+Durable worker snapshot selection and claim-to-source evidence orchestration
+are not yet connected; the legacy research handler remains REVIEW-only.

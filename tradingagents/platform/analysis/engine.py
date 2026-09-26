@@ -21,6 +21,7 @@ from tradingagents.portfolio import PortfolioContext
 
 from .decisions import StructuredDecisionNarrative
 from .profiles import resolve_analysis_profile, select_analysts
+from .snapshots import SnapshotAnalysisContext
 
 
 class AnalysisRequest(BaseModel):
@@ -33,6 +34,7 @@ class AnalysisRequest(BaseModel):
     selected_analysts: tuple[str, ...] | None = None
     portfolio: PortfolioContext | None = None
     config_overrides: Mapping[str, Any] = Field(default_factory=dict)
+    snapshot_context: SnapshotAnalysisContext | None = None
 
 
 class AnalysisResult(BaseModel):
@@ -70,16 +72,30 @@ class AnalysisEngine:
         analysts = select_analysts(profile, request.selected_analysts)
         config = deepcopy(self._base_config)
         config.update(deepcopy(dict(request.config_overrides)))
+        snapshot_options = {}
+        if request.snapshot_context is not None:
+            if request.snapshot_context.as_of.date() != request.analysis_date:
+                raise ValueError("snapshot clock does not match analysis date")
+            snapshot_options["snapshot_reports"] = request.snapshot_context.reports(
+                request.instrument.instrument_id, analysts)
         graph = self._graph_factory(
             selected_analysts=analysts,
             config=config,
+            **snapshot_options,
         )
-        final_state, signal = graph.propagate(
-            request.instrument.canonical_symbol,
-            request.analysis_date.isoformat(),
-            asset_type=profile.legacy_asset_type,
-            portfolio=request.portfolio,
-        )
+        if request.snapshot_context is not None:
+            final_state, signal = graph.propagate_snapshots(
+                request.instrument.canonical_symbol, request.analysis_date.isoformat(),
+                asset_type=profile.legacy_asset_type, portfolio=request.portfolio,
+                instrument_context=request.instrument.model_dump_json(),
+            )
+        else:
+            final_state, signal = graph.propagate(
+                request.instrument.canonical_symbol,
+                request.analysis_date.isoformat(),
+                asset_type=profile.legacy_asset_type,
+                portfolio=request.portfolio,
+            )
         decision_payload = None
         raw_decision = final_state.get("structured_decision")
         if raw_decision is not None:
