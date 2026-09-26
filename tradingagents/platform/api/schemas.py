@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from tradingagents.contracts import (
+    DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionStatus,
     InstrumentAliasContract,
     InstrumentContract,
     JobRecord,
@@ -57,3 +61,18 @@ class RunAcceptedResponse(ApiModel):
 
 class StatusResponse(ApiModel):
     status: str
+
+
+class DecisionTransitionRequest(ApiModel):
+    event_id: UUID
+    expected_status: DecisionStatus
+    action: Literal["approve", "reject", "review", "expire"]
+    reason: str = Field(min_length=1, max_length=2000)
+    policy_id: UUID | None = None
+    policy_version: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class DecisionStateResponse(ApiModel):
+    candidate: DecisionCandidate
+    current_status: DecisionStatus
+    events: tuple[DecisionLifecycleEvent, ...]

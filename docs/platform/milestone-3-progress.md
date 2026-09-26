@@ -27,8 +27,10 @@ following missing integration and correctness requirements.
   tests; integration with the decision factory remains to be verified.
 - PLAN-036: readiness, matching policy, owner/run source checks, idempotent
   events and transactional projection writes now have SQLite integration tests.
-  Authenticated API wiring, policy-assessment provenance and concurrent
-  PostgreSQL validation remain before approval enforcement is complete.
+  Authenticated state/transition API wiring is covered by tests for sessions,
+  CSRF, actor spoofing, policy mismatch, state projection and retry behavior.
+  Policy-assessment provenance and concurrent PostgreSQL validation remain
+  before approval enforcement is complete.
 - PLAN-037: derive outcomes from validated immutable price snapshots and
   calendars; reject duplicate/future outcomes; verify deterministic replay.
 - Run PostgreSQL upgrade/schema parity/rollback, persistence integration,
