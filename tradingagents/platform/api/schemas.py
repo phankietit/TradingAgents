@@ -44,6 +44,15 @@ class CsrfResponse(ApiModel):
     csrf_token: str = Field(repr=False)
 
 
+class AnalysisConfigurationResponse(ApiModel):
+    provider: str
+    quick_model: str
+    deep_model: str
+    worker_status: Literal["UNVERIFIED"] = "UNVERIFIED"
+    provider_connection: Literal["UNVERIFIED"] = "UNVERIFIED"
+    max_job_attempts: int
+
+
 class ArtifactMetadataResponse(ApiModel):
     artifact_id: UUID
     kind: ArtifactKind

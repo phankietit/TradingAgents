@@ -130,6 +130,17 @@ silently filtered to a current version; run validation determines temporal
 eligibility. Cross-owner and missing detail IDs both return 404. All data remains
 non-cacheable. These routes do not fetch vendors, trigger LLMs or mutate history.
 
+## Research configuration disclosure
+
+`GET /api/v1/analysis-configuration` requires an owner session and returns only
+the configured provider, quick/deep model names, maximum job attempts and explicit
+`UNVERIFIED` worker/provider states. Responses are non-cacheable. It does not
+inspect credentials, connect to providers, start work or report service health.
+The API cannot attest a separate worker's credentials or liveness. These settings
+describe new runs; existing run manifests retain their own recorded configuration.
+No environment values, database URLs, artifact paths or provider endpoints are
+included. This is configuration disclosure, not a readiness probe or cost quote.
+
 ## Saved stock screenings
 
 - `GET /api/v1/screenings` lists owner-scoped screening artifact metadata with

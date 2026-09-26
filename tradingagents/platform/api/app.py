@@ -81,6 +81,7 @@ from tradingagents.platform.persistence import (
 from tradingagents.platform.screening import DeterministicStockScreener
 
 from .schemas import (
+    AnalysisConfigurationResponse,
     AnalysisProfileResponse,
     ArtifactMetadataResponse,
     CsrfResponse,
@@ -399,6 +400,15 @@ def create_app(settings: ApiSettings) -> FastAPI:
         ):
             raise HTTPException(status_code=403, detail="CSRF validation failed")
         return CsrfResponse(csrf_token=csrf_cookie)
+
+    @app.get(f"{API_PREFIX}/analysis-configuration", response_model=AnalysisConfigurationResponse, tags=["runs"])
+    def analysis_configuration(owner: OwnerDependency):
+        # API settings describe future runs, not worker liveness or credentials.
+        # Never serialize environment, endpoint URLs or the full settings object.
+        return AnalysisConfigurationResponse(
+            provider=settings.llm_provider, quick_model=settings.quick_model,
+            deep_model=settings.deep_model, max_job_attempts=settings.max_job_attempts,
+        )
 
     @app.get(f"{API_PREFIX}/screenings", response_model=list[ArtifactMetadataResponse], tags=["screening"])
     def screening_history(owner: OwnerDependency, session: SessionDependency,

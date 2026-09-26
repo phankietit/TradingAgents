@@ -4,6 +4,7 @@ import { errorMessage, mutate } from './api';
 import { timestamp, useResource } from './data';
 import type { Instrument, Snapshot } from './data';
 import type { Policy, PortfolioSnapshot } from './Portfolio';
+import ResearchSetup from './ResearchSetup';
 
 export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
@@ -70,6 +71,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   }
   return <form className="analysis-form" onSubmit={submit} aria-label="New analysis" aria-busy={pending}>
     <h2>Configure analysis</h2>
+    <ResearchSetup />
     <p className="muted">Choose evidence for each analyst. The server verifies content and freshness again before queuing. Portfolio evaluation is optional and uses an explicit owner target, never a model-generated weight.</p>
     <fieldset disabled={pending}><div className="form-grid">
       <label>Instrument<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>

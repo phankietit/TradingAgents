@@ -194,3 +194,10 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   tests, lint/typecheck/build PASS. Built IAB 1280×720/390×844 verified default
   presentation, keyboard-opened audit details, exclusion switching, clean console
   and no document overflow. Other workspaces still require the finance-first pass.
+- Research setup disclosure: the analysis form explains possible charges and
+  unverified background-service/provider availability before authorization.
+  Configured model names and retry limit are collapsed details; no credentials or
+  paid connectivity probe is involved. Authenticated API contract tests: 30 PASS;
+  frontend: 48 PASS, lint/typecheck/build PASS. Built-mode IAB verified keyboard
+  disclosure, truthful synthetic model settings, clean console and narrow layout.
+  This does not prove a production worker or provider is available.

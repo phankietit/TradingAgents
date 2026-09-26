@@ -137,6 +137,7 @@ dt { color: var(--muted); } dd { margin: 0; }
 @media (max-width: 600px) {
   .review-columns, .portfolio-metrics { grid-template-columns: minmax(0, 1fr); }
   .market-toolbar { align-items: stretch; flex-direction: column; }
+  .section-actions > p { flex-basis: 100%; }
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .caption, .quality-line, .metrics span, .instrument-name, .price-chart figcaption, dl, table { font-size: 14px; }
   .pagination { flex-wrap: wrap; }
