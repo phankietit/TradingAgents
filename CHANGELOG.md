@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+All notable changes to TradingAgents are documented here.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Breaking changes within the 0.x line are called out explicitly.
+
+## [Unreleased]
+
+### Added
 
 - Add a stable `AnalysisEngine` platform adapter around the existing LangGraph
   research runtime while preserving the CLI and programmatic graph API.
@@ -29,16 +37,10 @@
   evidence, deterministic risk and human-approval candidates. Inputs include
   explicit role freshness limits and cannot change during run transitions.
 
-All notable changes to TradingAgents are documented here.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-Breaking changes within the 0.x line are called out explicitly.
-
-## [Unreleased]
-
-### Added
-
+- Add `tradingagents-worker` with bounded lease renewal, transaction-fenced
+  publication, retry recovery, and graceful stop semantics.
+- Add owner-bound ledger valuation and persisted evaluation replay receipts
+  using pinned exchange calendars, explicit session closes, and source hashes.
 - Canonical instrument master with immutable namespaced aliases for initial US
   large-cap, ETF, index-reference, NQ/ES-reference, and BTC/ETH identities.
 - Owner-scoped immutable normalized OHLCV snapshots, deterministic return/risk
