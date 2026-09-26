@@ -49,9 +49,10 @@ Keyboard navigation, visible focus, reduced motion and readable narrow viewport
 are required. Long tables may scroll within labelled regions, not overflow the
 whole page. Charts must have a tabular accessible alternative.
 
-Visual concept method is awaiting the owner's choice: opt out of Image Gen and
-design in code, or authorize Image Gen. No image/model call is made before that
-choice. API and planning work can proceed independently of visual concepting.
+The owner explicitly opted out of Image Gen: design directly in native code.
+The [web design specification](web-design-spec.md) defines the initial visual
+system; browser screenshots, not generated images, will establish its reference.
+No image/model call is authorized for concepting.
 
 ## Observed API and gaps
 
@@ -66,6 +67,12 @@ watchlist. There is no general data-ingestion or owner-onboarding web flow.
 Keep owner bootstrap and data import operator-controlled, documented and explicit;
 do not expose arbitrary URL fetch, filesystem upload or credentials in M4.
 Do not assume that existing source adapters imply populated snapshots.
+
+Browser integration issue discovered: the existing readable CSRF cookie has
+Path=/api/v1, so a document served at / cannot read it for the mutation header.
+Resolve this explicitly in M4-API with tests; keep the session HTTP-only and
+API-scoped, same-origin checks and session-bound CSRF validation intact. Never
+work around this by disabling CSRF or moving the session into localStorage.
 
 ## Local tickets and acceptance
 
