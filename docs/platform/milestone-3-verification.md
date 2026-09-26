@@ -3,6 +3,16 @@
 This is local backend-foundation evidence, not production readiness or milestone
 completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or orders.
 
+## Remote delivery checkpoint
+
+The branch was pushed successfully after the owner-approved local-only policy.
+[Draft PR #3](https://github.com/phankietit/TradingAgents/pull/3) targets fork
+`main`, base `f76c353`, initial head `a7909fc`. Read-back confirmed DRAFT,
+MERGEABLE, empty status checks and no Actions runs. This supersedes historical
+push/no-PR blockers below. No merge was performed; security report finalization
+remains BLOCKED. Subsequent documentation-only receipts do not change runtime
+code tested by the recorded local gates.
+
 ## Owner-approved policy change: local gates instead of hosted CI
 
 On 2026-09-27 the owner explicitly deferred hosted CI for budget reasons.

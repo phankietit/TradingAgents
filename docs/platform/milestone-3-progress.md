@@ -4,6 +4,13 @@ Scope: PLAN-030 through PLAN-037. PLAN-038 remains outside this milestone.
 Base: `f76c353ee912e6d6d16ff1ba660287a6a383a291`.
 Branch: `feature/TA-030-analysis-engine`.
 
+Delivery update: [PR #3](https://github.com/phankietit/TradingAgents/pull/3)
+is open as a draft against `main`. Initial remote head `a7909fc` matches the
+local candidate and GitHub reports MERGEABLE with no hosted checks/runs.
+Actions remains disabled. Push/workflow permission is no longer a blocker
+after withdrawing the workflow diff. Security report finalization remains
+BLOCKED; no merge or milestone-complete claim has been made.
+
 Policy update, 2026-09-27: the owner now requires local/manual verification
 instead of hosted CI. Repository Actions is disabled. The new M3 workflow
 changes are withdrawn and `scripts/verify-local.sh` provides the local gate.
