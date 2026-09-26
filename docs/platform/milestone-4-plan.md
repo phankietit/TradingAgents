@@ -119,6 +119,20 @@ owner isolation and existing M3 ledger/approval checks. No owner data reset.
 
 Status: in-progress. Depends on M4-FOUNDATION; may precede API discovery completion.
 
+Built-server checkpoint: opt-in WEB_ROOT serves the built shell and allowlisted
+assets through the loopback API process, no catch-all or source/private-file
+mount. Exact Host/origin/port, CSP and existing auth/CSRF remain enforced.
+43 static/API tests PASS; IAB built mode at 1280×720 verifies login, saved chart,
+watchlist mutation, reload persistence and logout without console/CSP errors.
+This supersedes the older static-serving UNVERIFIED checkpoint below, not the
+remaining full browser/security/asset acceptance.
+
+Full local regression on `6598a03` plus the built-server patch (Python 3.14.7):
+ruff and installed dependency consistency PASS; 1,244 tests and 88 subtests PASS,
+20 skips (PostgreSQL, optional Bedrock dependency, live DeepSeek) UNVERIFIED.
+Command: `bash scripts/verify-local.sh`. This dirty-patch result is not clean
+final-candidate or PostgreSQL acceptance; rerun at the final candidate.
+
 Checkpoint: `web/` contains pinned React/Vite/TypeScript tooling, native dark
 tokens, shell navigation and session/login/logout/API client. Local build/lint
 and 10 synthetic unit/component tests PASS. IAB login/unavailable-API retry smoke

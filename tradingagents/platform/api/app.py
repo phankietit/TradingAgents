@@ -13,6 +13,7 @@ from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 import anyio
@@ -94,6 +95,7 @@ from .schemas import (
     TimeSeriesResponse,
 )
 from .settings import ApiSettings
+from .web import CSP, mount_built_web
 
 API_PREFIX = "/api/v1"
 SESSION_COOKIE = "ta_session"
@@ -258,7 +260,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         with request_id_scope(request_id):
             try:
-                if request.method in UNSAFE_METHODS and request.headers.get(
+                if settings.web_root is not None and request.headers.get("host") != urlparse(settings.allowed_origin).netloc:
+                    # Reject DNS-rebinding hosts even when they resolve to loopback.
+                    response = JSONResponse(status_code=400, content={"detail": "invalid host"})
+                elif request.method in UNSAFE_METHODS and request.headers.get(
                     "origin"
                 ) != settings.allowed_origin.rstrip("/"):
                     response = JSONResponse(
@@ -295,6 +300,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Cache-Control"] = "no-store"
+        if settings.web_root is not None:
+            response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+            if request.url.path in {"/", "/index.html"} or request.url.path.startswith("/assets/"):
+                response.headers["Content-Security-Policy"] = CSP
         return response
 
     @app.get("/health/live", response_model=StatusResponse, tags=["health"])
@@ -1019,4 +1028,6 @@ def create_app(settings: ApiSettings) -> FastAPI:
             headers={"Content-Disposition": f'attachment; filename="{manifest.artifact_id}"'},
         )
 
+    if settings.web_root is not None:
+        mount_built_web(app, settings.web_root)
     return app

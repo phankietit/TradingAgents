@@ -26,8 +26,8 @@ from tradingagents.contracts import (
     PriceInterval,
     RunManifest,
 )
-from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.analysis import AnalysisEngine
+from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.instruments import InstrumentMaster
@@ -68,6 +68,8 @@ def main():
     parser.add_argument("--synthetic-local-only", action="store_true", required=True)
     parser.add_argument("--fixture-worker", action="store_true",
                         help="Run durable jobs with synthetic graph output; never calls models/vendors")
+    parser.add_argument("--built-web", action="store_true",
+                        help="Serve the existing web/dist build and API together on 127.0.0.1:8000")
     args = parser.parse_args()
     cache = Path(__file__).resolve().parents[1] / ".cache"
     cache.mkdir(exist_ok=True)
@@ -144,7 +146,9 @@ def main():
     print(f"Synthetic-only API on 127.0.0.1:8000; fixture worker={args.fixture_worker}; no provider calls.")
     try:
         uvicorn.run(create_app(ApiSettings(database_url=url, artifact_root=directory / "artifacts",
-            allowed_origin="http://127.0.0.1:5173", secure_cookies=False,
+            allowed_origin="http://127.0.0.1:8000" if args.built_web else "http://127.0.0.1:5173",
+            web_root=Path(__file__).resolve().parents[1] / "web" / "dist" if args.built_web else None,
+            secure_cookies=False,
             llm_provider="synthetic-local-qa", quick_model="fixture", deep_model="fixture")),
             host="127.0.0.1", port=8000, access_log=False)
     finally:

@@ -17,6 +17,7 @@ class ApiSettings:
     artifact_root: Path
     allowed_origin: str
     secure_cookies: bool = True
+    web_root: Path | None = None
     session_ttl: timedelta = timedelta(hours=12)
     llm_provider: str = "openai"
     quick_model: str = "gpt-4o-mini"
@@ -46,6 +47,10 @@ class ApiSettings:
             raise ValueError("allowed_origin must be one exact HTTP(S) origin")
         if self.secure_cookies and parsed.scheme != "https":
             raise ValueError("secure cookies require an HTTPS allowed_origin")
+        if self.web_root is not None and (
+            parsed.scheme != "http" or parsed.hostname != "127.0.0.1" or parsed.port is None
+        ):
+            raise ValueError("built web requires an explicit http://127.0.0.1:<port> origin")
         if not 1 <= self.max_job_attempts <= 20:
             raise ValueError("max_job_attempts must be between 1 and 20")
         if not self.allowed_analysts or len(self.allowed_analysts) != len(

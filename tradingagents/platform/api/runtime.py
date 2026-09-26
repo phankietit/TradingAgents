@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from pathlib import Path
+from urllib.parse import urlparse
 
 import uvicorn
 
@@ -38,6 +39,7 @@ def load_api_settings(environ: Mapping[str, str] | None = None) -> ApiSettings:
         artifact_root=Path(_required(source, "TRADINGAGENTS_ARTIFACT_ROOT")),
         allowed_origin=_required(source, "TRADINGAGENTS_ALLOWED_ORIGIN"),
         secure_cookies=_boolean(source, "TRADINGAGENTS_SECURE_COOKIES", default=True),
+        web_root=Path(source["TRADINGAGENTS_WEB_ROOT"]) if source.get("TRADINGAGENTS_WEB_ROOT", "").strip() else None,
     )
 
 
@@ -50,6 +52,8 @@ def main() -> None:
         raise RuntimeError("TRADINGAGENTS_API_PORT must be an integer") from error
     if not 1 <= port <= 65535:
         raise RuntimeError("TRADINGAGENTS_API_PORT must be between 1 and 65535")
+    if settings.web_root is not None and urlparse(settings.allowed_origin).port != port:
+        raise RuntimeError("built web origin port must equal TRADINGAGENTS_API_PORT")
     # Binding stays local until a separately reviewed deployment exposes the service.
     uvicorn.run(
         create_app(settings),

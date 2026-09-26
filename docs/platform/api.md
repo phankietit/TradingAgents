@@ -1,8 +1,8 @@
 # Private Platform API
 
 The platform now exposes a versioned FastAPI contract under `/api/v1`. It is an
-API foundation for the planned Web UI; it is not itself a Web UI and does not
-add broker or order endpoints.
+API foundation for the local Web UI. UI serving is explicitly opt-in and adds
+no broker or order endpoints.
 
 ## Runtime
 
@@ -15,11 +15,35 @@ requires these explicit environment names:
 - `TRADINGAGENTS_ALLOWED_ORIGIN`
 - `TRADINGAGENTS_SECURE_COOKIES` (`true` by default)
 - `TRADINGAGENTS_API_PORT` (`8000` by default)
+- `TRADINGAGENTS_WEB_ROOT` (optional absolute path to the built `web/dist`)
 
 Run `tradingagents-api`. The bundled entrypoint binds only to `127.0.0.1`.
 Reverse proxy, TLS, public network exposure, rate limits, and deployment are
 separate release decisions. Database migrations and owner bootstrap never run
 implicitly during API startup.
+
+### Built local UI (M4)
+
+With `TRADINGAGENTS_WEB_ROOT` set, the same process serves `/`, `/index.html`
+and allowlisted built files under `/assets/`. The browser uses hash navigation,
+so there is no SPA catch-all; unknown API routes and missing assets stay 404.
+Build first using `cd web && npm ci && npm run build`. Missing index/assets
+causes startup to fail rather than quietly serve a blank app.
+
+This mode requires `TRADINGAGENTS_ALLOWED_ORIGIN=http://127.0.0.1:<port>`,
+`TRADINGAGENTS_SECURE_COOKIES=false` for loopback HTTP only, and the same port in
+`TRADINGAGENTS_API_PORT`. The bundled entrypoint always binds `127.0.0.1`.
+Requests with another Host are rejected to resist DNS rebinding. Existing
+session, owner, Origin and CSRF enforcement is unchanged. The shell is public
+static code; private data still comes exclusively from authenticated API routes.
+
+Only index and built asset files are served, never the repository, artifact
+root, source maps, dotfiles or source files. StaticFiles confines asset paths
+and rejects symlinks escaping the asset directory. Built UI responses use CSP
+with self-only scripts/styles/connections, no inline scripts/eval, no framing
+or object embeds, and restrictive browser permissions. All responses remain
+`no-store`. API-only mode is unchanged when WEB_ROOT is absent. This is not
+approval for public hosting, TLS termination or a production deployment.
 
 ## HTTP Contract
 

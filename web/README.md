@@ -36,9 +36,55 @@ npm test
 npm run build
 ```
 
-These commands run locally; no hosted CI. `npm run build` emits static assets,
-but a supported built-asset server remains pending. Do not publicly expose the
-development server or use it as a production deployment.
+These commands run locally; no hosted CI. Do not publicly expose the development
+server or use it as a production deployment.
+
+## Run the built local web
+
+After `npm run build`, use the existing `tradingagents-api` process with:
+
+```sh
+export TRADINGAGENTS_WEB_ROOT="/absolute/path/to/TradingAgents/web/dist"
+export TRADINGAGENTS_ALLOWED_ORIGIN="http://127.0.0.1:8000"
+export TRADINGAGENTS_API_PORT=8000
+export TRADINGAGENTS_SECURE_COOKIES=false
+tradingagents-api
+```
+
+Set the existing `TRADINGAGENTS_DATABASE_URL` and `TRADINGAGENTS_ARTIFACT_ROOT`
+in that process environment first, using your approved local database/store.
+The package initializer may load `.env` and `.env.enterprise` from the current
+directory/parents without overriding exported variables; keep those files local
+and ignored, and launch from the intended checkout. API startup does not migrate,
+bootstrap an owner, seed data or start a worker. Follow [API setup](../docs/platform/api.md),
+[owner bootstrap](../docs/platform/owner-authentication.md) and
+[worker operation](../docs/platform/durable-jobs.md). Run `tradingagents-worker`
+separately with the same database/store only after authorizing its model use.
+Missing data/worker/credentials is not repaired with synthetic production data.
+
+Open `http://127.0.0.1:8000`; no Vite process is needed. UI, API and SSE share
+one origin. Do not use localhost aliases or another port: the configured Host
+and Origin must match exactly. `secure_cookies=false` is for this loopback HTTP
+mode only. Omit WEB_ROOT to retain API-only operation. The build is a separate
+operator-generated artifact, not bundled into the Python wheel.
+
+For **isolated synthetic QA only**, from repo root after building:
+
+```sh
+.venv/bin/python -m scripts.web_fixture --synthetic-local-only --fixture-worker --built-web
+```
+
+This creates a new ignored database/store and uses labelled synthetic graph
+output; it does not load owner records or call models/vendors. Never point the
+fixture script at an owner database. Stop with Ctrl-C; fixture data is retained
+for inspection. This is not a populated investment product or live-data demo.
+
+Built-mode QA: 1280×720 IAB login → saved AAPL → CSRF watchlist save → reload
+and session restoration → logout PASS, no console/CSP errors or framework
+overlay. Static/API gate: 43 tests PASS, including no API-to-HTML fallback,
+path traversal/symlink/dotfile/source-map refusal, Host/Origin rejection,
+same-origin session/CSRF and local bind/port checks. Narrow built-mode and full
+cross-asset acceptance remain pending; earlier narrow checks used Vite.
 
 ## Security and verification boundary
 
