@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from tradingagents.contracts import (
+    ArtifactKind,
     DecisionCandidate,
     DecisionLifecycleEvent,
     DecisionStatus,
@@ -43,6 +44,18 @@ class CsrfResponse(ApiModel):
     csrf_token: str = Field(repr=False)
 
 
+class ArtifactMetadataResponse(ApiModel):
+    artifact_id: UUID
+    kind: ArtifactKind
+    media_type: str
+    content_hash: str
+    byte_size: int
+    created_at: AwareDatetime
+    run_id: UUID | None
+    instrument_id: UUID | None
+    snapshot_id: UUID | None
+
+
 class InstrumentDetailResponse(ApiModel):
     instrument: InstrumentContract
     aliases: tuple[InstrumentAliasContract, ...]
@@ -51,6 +64,13 @@ class InstrumentDetailResponse(ApiModel):
 class TimeSeriesResponse(ApiModel):
     snapshot: SnapshotManifest
     view: TimeSeriesView
+
+
+class SnapshotDiscoveryResponse(ApiModel):
+    snapshot: SnapshotManifest
+    metadata_eligible: bool
+    ineligibility_reasons: tuple[str, ...]
+    content_validation: Literal["required_on_run_creation"] = "required_on_run_creation"
 
 
 class RunCreateRequest(ApiModel):

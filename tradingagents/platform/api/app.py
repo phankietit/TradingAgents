@@ -30,6 +30,7 @@ from fastapi import (
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyCookie
+from pydantic import AwareDatetime
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -44,6 +45,8 @@ from tradingagents.contracts import (
     InstrumentContract,
     JobRecord,
     JobStatus,
+    PolicyContract,
+    PortfolioSnapshot,
     RunEvent,
     RunEventType,
     RunManifest,
@@ -75,6 +78,7 @@ from tradingagents.platform.persistence import (
 )
 
 from .schemas import (
+    ArtifactMetadataResponse,
     CsrfResponse,
     DecisionStateResponse,
     DecisionTransitionRequest,
@@ -84,6 +88,7 @@ from .schemas import (
     OwnerResponse,
     RunAcceptedResponse,
     RunCreateRequest,
+    SnapshotDiscoveryResponse,
     StatusResponse,
     TimeSeriesResponse,
 )
@@ -520,6 +525,31 @@ def create_app(settings: ApiSettings) -> FastAPI:
             ) from error
         return TimeSeriesResponse(snapshot=snapshot, view=view)
 
+    @app.get(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",
+        response_model=list[SnapshotDiscoveryResponse], tags=["instruments"],
+    )
+    def discover_snapshots(
+        instrument_id: UUID, owner: OwnerDependency, session: SessionDependency,
+        analysis_as_of: AwareDatetime,
+        max_age_seconds: int = Query(ge=0, le=315360000),
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[SnapshotDiscoveryResponse, ...]:
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+
+        if analysis_as_of > _now(settings):
+            raise HTTPException(status_code=422, detail="future as_of")
+        repository = PlatformRepository(session)
+        if repository.get_instrument(instrument_id) is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        result = []
+        for item in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=limit, offset=offset):
+            reasons = snapshot_ineligibility(item, instrument_id, analysis_as_of, max_age_seconds)
+            result.append(SnapshotDiscoveryResponse(snapshot=item, metadata_eligible=not reasons,
+                                                    ineligibility_reasons=reasons))
+        return tuple(result)
+
     @app.post(
         f"{API_PREFIX}/runs",
         response_model=RunAcceptedResponse,
@@ -657,6 +687,60 @@ def create_app(settings: ApiSettings) -> FastAPI:
         if run is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
         return run
+
+    @app.get(
+        f"{API_PREFIX}/runs/{{run_id}}/artifacts",
+        response_model=list[ArtifactMetadataResponse], tags=["artifacts"],
+    )
+    def run_artifacts(
+        run_id: UUID, owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[ArtifactMetadataResponse, ...]:
+        repository = PlatformRepository(session)
+        if repository.get_run(run_id, owner.owner_id) is None:
+            raise HTTPException(status_code=404, detail="run not found")
+        return tuple(
+            ArtifactMetadataResponse.model_validate(
+                item.model_dump(include=set(ArtifactMetadataResponse.model_fields))
+            )
+            for item in repository.list_run_artifacts(run_id, owner.owner_id, limit=limit, offset=offset)
+        )
+
+    @app.get(f"{API_PREFIX}/portfolios", response_model=list[PortfolioSnapshot], tags=["portfolios"])
+    def portfolios(
+        owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[PortfolioSnapshot, ...]:
+        return PlatformRepository(session).list_portfolio_snapshots(owner.owner_id, limit=limit, offset=offset)
+
+    @app.get(f"{API_PREFIX}/portfolios/{{portfolio_id}}", response_model=PortfolioSnapshot, tags=["portfolios"])
+    def portfolio(portfolio_id: UUID, owner: OwnerDependency, session: SessionDependency) -> PortfolioSnapshot:
+        result = PlatformRepository(session).get_portfolio_snapshot(portfolio_id, owner.owner_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="portfolio not found")
+        return result
+
+    @app.get(f"{API_PREFIX}/policies", response_model=list[PolicyContract], tags=["policies"])
+    def policies(
+        owner: OwnerDependency, session: SessionDependency,
+        asset_class: AssetClass | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[PolicyContract, ...]:
+        return PlatformRepository(session).list_policies(
+            owner.owner_id, asset_class=asset_class, limit=limit, offset=offset
+        )
+
+    @app.get(f"{API_PREFIX}/policies/{{policy_id}}/{{policy_version}}", response_model=PolicyContract, tags=["policies"])
+    def policy(
+        policy_id: UUID, policy_version: str, owner: OwnerDependency, session: SessionDependency,
+    ) -> PolicyContract:
+        result = PlatformRepository(session).get_policy(policy_id, policy_version, owner.owner_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="policy not found")
+        return result
 
     @app.get(f"{API_PREFIX}/runs/{{run_id}}/events", tags=["runs"])
     def stream_run_events(

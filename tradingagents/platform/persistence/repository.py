@@ -221,6 +221,50 @@ class PlatformRepository:
         row = self.session.get(InstrumentRow, instrument_id)
         return InstrumentContract.model_validate(row.payload) if row else None
 
+    def list_run_artifacts(
+        self, run_id: UUID, owner_id: UUID, *, limit: int = 50, offset: int = 0
+    ) -> tuple[ArtifactManifest, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(ArtifactRow)
+            .where(ArtifactRow.owner_id == owner_id, ArtifactRow.run_id == run_id)
+            .order_by(ArtifactRow.created_at.desc(), ArtifactRow.artifact_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(ArtifactManifest.model_validate(row.payload) for row in rows)
+
+    @staticmethod
+    def _validate_page(limit: int, offset: int) -> None:
+        if not 1 <= limit <= 200 or not 0 <= offset <= 100_000:
+            raise ValueError("invalid pagination bounds")
+
+    def list_portfolio_snapshots(
+        self, owner_id: UUID, *, limit: int = 50, offset: int = 0
+    ) -> tuple[PortfolioSnapshot, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(PortfolioSnapshotRow)
+            .where(PortfolioSnapshotRow.owner_id == owner_id)
+            .order_by(PortfolioSnapshotRow.as_of.desc(), PortfolioSnapshotRow.portfolio_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(PortfolioSnapshot.model_validate(row.payload) for row in rows)
+
+    def list_policies(
+        self, owner_id: UUID, *, asset_class: AssetClass | None = None,
+        limit: int = 50, offset: int = 0,
+    ) -> tuple[PolicyContract, ...]:
+        self._validate_page(limit, offset)
+        statement = select(PolicyRow).where(PolicyRow.owner_id == owner_id)
+        if asset_class is not None:
+            statement = statement.where(PolicyRow.asset_class == asset_class.value)
+        rows = self.session.scalars(
+            statement.order_by(
+                PolicyRow.effective_at.desc(), PolicyRow.policy_id.desc(), PolicyRow.policy_version.desc()
+            ).limit(limit).offset(offset)
+        ).all()
+        return tuple(PolicyContract.model_validate(row.payload) for row in rows)
+
     def list_instrument_aliases(
         self, instrument_id: UUID
     ) -> tuple[InstrumentAliasContract, ...]:
@@ -310,6 +354,24 @@ class PlatformRepository:
     def get_snapshot(self, snapshot_id: UUID) -> SnapshotManifest | None:
         row = self.session.get(SnapshotRow, snapshot_id)
         return SnapshotManifest.model_validate(row.payload) if row else None
+
+    def list_owner_snapshots(
+        self, instrument_id: UUID, owner_id: UUID, *, limit: int = 50, offset: int = 0,
+    ) -> tuple[SnapshotManifest, ...]:
+        self._validate_page(limit, offset)
+        owner_payload = select(ArtifactRow.artifact_id).where(
+            ArtifactRow.snapshot_id == SnapshotRow.snapshot_id,
+            ArtifactRow.owner_id == owner_id,
+            ArtifactRow.kind == "snapshot_payload",
+            ArtifactRow.instrument_id == SnapshotRow.instrument_id,
+            ArtifactRow.content_hash == SnapshotRow.content_hash,
+        ).exists()
+        rows = self.session.scalars(
+            select(SnapshotRow).where(SnapshotRow.instrument_id == instrument_id, owner_payload)
+            .order_by(SnapshotRow.as_of.desc(), SnapshotRow.snapshot_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(SnapshotManifest.model_validate(row.payload) for row in rows)
 
     def latest_snapshot(
         self,

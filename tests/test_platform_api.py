@@ -15,8 +15,11 @@ from tradingagents._compat import UTC
 from tradingagents.contracts import (
     ArtifactKind,
     AssetClass,
+    CashBalance,
     InstrumentAliasContract,
     InstrumentContract,
+    PolicyContract,
+    PortfolioSnapshot,
     PriceInterval,
     RunManifest,
     RunStatus,
@@ -179,6 +182,113 @@ def _run_payload(instrument_id):
         "analysis_as_of": (NOW - timedelta(days=1)).isoformat(),
         "selected_analysts": ["market", "news"],
     }
+
+
+@pytest.mark.unit
+def test_snapshot_discovery_reports_temporal_eligibility_without_claiming_content_validation(api_context):
+    client = api_context["client"]
+    instrument_id = api_context["instrument"].instrument_id
+    path = f"/api/v1/instruments/{instrument_id}/snapshots"
+    params = {"analysis_as_of": NOW.isoformat(), "max_age_seconds": 172800}
+    assert client.get(path, params=params).status_code == 401
+    _login(client)
+    response = client.get(path, params=params)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    item = response.json()[0]
+    assert item["snapshot"]["snapshot_id"] == str(api_context["time_series_snapshot"].snapshot_id)
+    assert item["metadata_eligible"] is True
+    assert item["content_validation"] == "required_on_run_creation"
+    assert item["ineligibility_reasons"] == []
+    stale = client.get(path, params={**params, "max_age_seconds": 0}).json()[0]
+    assert stale["metadata_eligible"] is False
+    assert "stale" in stale["ineligibility_reasons"]
+    historical = client.get(path, params={**params, "analysis_as_of": (NOW - timedelta(days=2)).isoformat()}).json()[0]
+    assert historical["metadata_eligible"] is False
+    assert "not_available_at_analysis_time" in historical["ineligibility_reasons"]
+    for changes in ({"analysis_as_of": "2026-09-23T12:00:00"},
+                    {"analysis_as_of": (NOW + timedelta(days=1)).isoformat()},
+                    {"max_age_seconds": -1}, {"limit": 201}, {"offset": -1}):
+        assert client.get(path, params={**params, **changes}).status_code == 422
+    assert client.get(path, params={**params, "offset": 1}).json() == []
+    assert client.get(f"/api/v1/instruments/{uuid4()}/snapshots", params=params).status_code == 404
+    # The manifest alone grants no access: payload ownership is required.
+    from sqlalchemy import update
+
+    from tradingagents.platform.persistence.models import ArtifactRow
+    with client.app.state.database.session() as session:
+        session.execute(update(ArtifactRow).where(
+            ArtifactRow.snapshot_id == api_context["time_series_snapshot"].snapshot_id
+        ).values(owner_id=uuid4()))
+    assert client.get(path, params=params).json() == []
+
+
+@pytest.mark.unit
+def test_workspace_discovery_is_owner_scoped_bounded_and_read_only(api_context):
+    client = api_context["client"]
+    assert client.get("/api/v1/portfolios").status_code == 401
+    assert client.get("/api/v1/policies").status_code == 401
+    owner_id = api_context["principal"].owner_id
+    portfolio = PortfolioSnapshot(
+        portfolio_id=uuid4(), owner_id=owner_id, as_of=NOW, base_currency="USD",
+        cash=(CashBalance(currency="USD", amount="10000"),), positions=(),
+        net_asset_value="10000", content_hash="sha256:" + "c" * 64,
+    )
+    policy = PolicyContract(
+        policy_id=uuid4(), owner_id=owner_id, name="Fixture policy", policy_version="1.0.0",
+        asset_class=AssetClass.EQUITY, effective_at=NOW, parameters={"max_weight": 0.1},
+    )
+    other_portfolio = portfolio.model_copy(update={"portfolio_id": uuid4(), "owner_id": uuid4()})
+    other_policy = policy.model_copy(update={"policy_id": uuid4(), "owner_id": uuid4()})
+    older = portfolio.model_copy(update={"portfolio_id": uuid4(), "as_of": NOW - timedelta(days=1)})
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        for item in (portfolio, older, other_portfolio):
+            repository.add_portfolio_snapshot(item)
+        for item in (policy, other_policy):
+            repository.add_policy(item)
+    _login(client)
+    assert client.get("/api/v1/portfolios", params={"limit": 1}).json() == [portfolio.model_dump(mode="json")]
+    assert client.get("/api/v1/portfolios", params={"limit": 1, "offset": 1}).json() == [older.model_dump(mode="json")]
+    assert client.get(f"/api/v1/portfolios/{portfolio.portfolio_id}").json() == portfolio.model_dump(mode="json")
+    assert client.get(f"/api/v1/portfolios/{other_portfolio.portfolio_id}").status_code == 404
+    assert client.get(f"/api/v1/portfolios/{uuid4()}").status_code == 404
+    assert client.get("/api/v1/policies").json() == [policy.model_dump(mode="json")]
+    assert client.get("/api/v1/policies", params={"asset_class": "crypto"}).json() == []
+    assert client.get(f"/api/v1/policies/{policy.policy_id}/1.0.0").json() == policy.model_dump(mode="json")
+    assert client.get(f"/api/v1/policies/{other_policy.policy_id}/1.0.0").status_code == 404
+    assert client.get(f"/api/v1/policies/{policy.policy_id}/unknown").status_code == 404
+    for path in ("portfolios", "policies"):
+        for params in ({"limit": 0}, {"limit": 201}, {"offset": -1}, {"offset": 100001}):
+            assert client.get(f"/api/v1/{path}", params=params).status_code == 422
+    assert client.get("/api/v1/policies", params={"asset_class": "unknown"}).status_code == 422
+
+
+@pytest.mark.unit
+def test_run_artifact_discovery_excludes_storage_and_other_owners(api_context):
+    client = api_context["client"]
+    owner_id = api_context["principal"].owner_id
+    run = api_context["other_run"].model_copy(update={"run_id": uuid4(), "owner_id": owner_id})
+    path = f"/api/v1/runs/{run.run_id}/artifacts"
+    assert client.get(path).status_code == 401
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        repository.save_run(run)
+        service = ArtifactService(client.app.state.artifact_store, repository)
+        artifact = service.create(owner_id=owner_id, run_id=run.run_id,
+            kind=ArtifactKind.ANALYSIS_REPORT, media_type="text/markdown",
+            content=b"Synthetic report", created_at=NOW)
+    _login(client)
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.json()[0]["artifact_id"] == str(artifact.artifact_id)
+    assert "storage_key" not in response.text
+    assert "owner_id" not in response.text
+    assert client.get(path, params={"offset": 1}).json() == []
+    assert client.get(path, params={"limit": 201}).status_code == 422
+    assert client.get(f"/api/v1/runs/{api_context['other_run'].run_id}/artifacts").status_code == 404
+    assert client.get(f"/api/v1/runs/{uuid4()}/artifacts").status_code == 404
 
 
 def test_snapshot_run_inputs_are_owner_validated_and_idempotent(api_context):

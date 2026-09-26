@@ -43,6 +43,34 @@ bound `X-CSRF-Token`. The API derives owner identity only from the authenticated
 session. It rejects future analysis dates and unsupported/duplicate analyst
 sets before enqueueing a durable job.
 
+## Workspace discovery (M4)
+
+Authenticated read-only routes:
+
+- `GET /api/v1/portfolios` and `/portfolios/{portfolio_id}` return persisted
+  owner snapshots, not frontend-recomputed balances.
+- `GET /api/v1/policies` (optional `asset_class`) and
+  `/policies/{policy_id}/{policy_version}` expose existing owner policy versions;
+  these endpoints cannot edit policy or waive risk checks.
+- `GET /api/v1/runs/{run_id}/artifacts` returns download metadata with artifact
+  identity, kind, content hash, byte size and timestamps. It omits storage keys
+  and checks run ownership before listing. Bytes still use the existing
+  integrity-checked attachment endpoint.
+- `GET /api/v1/instruments/{instrument_id}/snapshots` requires timezone-aware
+  `analysis_as_of` (not future) and explicit `max_age_seconds` (0–315360000).
+  Only manifests with an owner-readable matching payload artifact are listed.
+  Each response includes `metadata_eligible`, `ineligibility_reasons` and
+  `content_validation=required_on_run_creation`. This is not a claim that bytes
+  have been loaded or hashes verified. Run creation still performs full content,
+  freshness, analyst-role and policy validation. Ineligible snapshots stay visibly
+  labelled instead of becoming an apparently valid fallback.
+
+List endpoints above use `limit` 1–200 (default 50), `offset` 0–100000 (default 0)
+and deterministic descending time/ID order. Portfolio/policy history is not
+silently filtered to a current version; run validation determines temporal
+eligibility. Cross-owner and missing detail IDs both return 404. All data remains
+non-cacheable. These routes do not fetch vendors, trigger LLMs or mutate history.
+
 ## Browser Security
 
 The session cookie is HTTP-only, Secure by default, and SameSite Strict. A
