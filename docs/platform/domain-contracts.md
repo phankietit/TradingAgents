@@ -33,6 +33,8 @@ database model.
   ranked candidates, explicit exclusions, and stable input/universe hashes.
 - `DerivedFactorSnapshot`: configured momentum, trend, volatility, relative
   strength, correlation, and cross-sectional breadth with source hashes.
+- `DataHealthReport`: consistent source health classification, per-state
+  counts, worst-state aggregation, and an immutable report hash.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

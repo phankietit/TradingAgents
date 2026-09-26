@@ -18,11 +18,11 @@ from tradingagents.contracts import (
     DataQualityStatus,
     InstrumentContract,
     SnapshotManifest,
+    worst_data_quality_status,
 )
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.persistence import ImmutableRecordConflict, PlatformRepository
 
-from .equity_etf import QUALITY_PRIORITY
 from .timeseries import TimeSeriesSnapshotService, build_time_series_view
 
 
@@ -134,7 +134,7 @@ class CryptoSnapshotPipeline:
         ):
             statuses.append(DataQualityStatus.STALE)
             reasons.append("one or more venue observations are stale or absent")
-        quality = max(statuses, key=QUALITY_PRIORITY.__getitem__)
+        quality = worst_data_quality_status(statuses)
 
         snapshot = CryptoSnapshot(
             crypto_snapshot_id=crypto_snapshot_id or uuid4(),

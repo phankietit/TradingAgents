@@ -20,11 +20,11 @@ from tradingagents.contracts import (
     RolloverMetadata,
     SnapshotManifest,
     Tradability,
+    worst_data_quality_status,
 )
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.persistence import ImmutableRecordConflict, PlatformRepository
 
-from .equity_etf import QUALITY_PRIORITY
 from .timeseries import TimeSeriesSnapshotService
 
 
@@ -88,7 +88,7 @@ class FuturesReferencePipeline:
         if degraded_gaps:
             statuses.append(DataQualityStatus.COVERAGE_GAP)
             reasons.append(f"{len(degraded_gaps)} unresolved futures data gap(s)")
-        quality = max(statuses, key=QUALITY_PRIORITY.__getitem__)
+        quality = worst_data_quality_status(statuses)
 
         reference = FuturesReferenceSnapshot(
             reference_id=reference_id or uuid4(),

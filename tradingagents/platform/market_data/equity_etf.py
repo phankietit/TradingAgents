@@ -22,6 +22,7 @@ from tradingagents.contracts import (
     InstrumentContract,
     NewsRecord,
     SnapshotManifest,
+    worst_data_quality_status,
 )
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.persistence import ImmutableRecordConflict, PlatformRepository
@@ -45,16 +46,6 @@ class SourceBatch(Generic[RecordT]):
             raise ValueError("source batch reason is required")
         if self.status is not DataQualityStatus.OK and self.records:
             raise ValueError("a non-OK source batch must not contain apparently valid records")
-
-
-QUALITY_PRIORITY = {
-    DataQualityStatus.OK: 0,
-    DataQualityStatus.NO_DATA: 1,
-    DataQualityStatus.STALE: 2,
-    DataQualityStatus.COVERAGE_GAP: 3,
-    DataQualityStatus.UNAVAILABLE: 4,
-    DataQualityStatus.INVALID: 5,
-}
 
 
 def _coverage(
@@ -287,7 +278,7 @@ class EquityETFSnapshotPipeline:
         fund_profile: ETFProfile | None,
         coverage: tuple[DatasetCoverage, ...],
     ) -> EquityETFSnapshotBundle:
-        quality = max((item.status for item in coverage), key=QUALITY_PRIORITY.__getitem__)
+        quality = worst_data_quality_status([item.status for item in coverage])
         reasons = tuple(
             f"{item.dataset.value}: {item.reason}"
             for item in coverage

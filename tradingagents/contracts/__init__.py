@@ -8,7 +8,19 @@ from .crypto import (
     CryptoSnapshot,
     CryptoVenueObservation,
 )
-from .data import DataQualityStatus, EvidenceReference, SnapshotManifest
+from .data import (
+    DATA_QUALITY_PRIORITY,
+    DataQualityStatus,
+    EvidenceReference,
+    SnapshotManifest,
+    worst_data_quality_status,
+)
+from .data_health import (
+    DataHealthCheck,
+    DataHealthProbe,
+    DataHealthReport,
+    DataHealthSummary,
+)
 from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
 from .equity_etf import (
     DatasetCoverage,
@@ -90,6 +102,7 @@ CONTRACT_REGISTRY = {
         CryptoSnapshot,
         StockUniverseSnapshot,
         DerivedFactorSnapshot,
+        DataHealthReport,
     )
 }
 
@@ -107,6 +120,11 @@ __all__ = [
     "CryptoSnapshot",
     "CryptoVenueObservation",
     "DataQualityStatus",
+    "DATA_QUALITY_PRIORITY",
+    "DataHealthCheck",
+    "DataHealthProbe",
+    "DataHealthReport",
+    "DataHealthSummary",
     "DecisionCandidate",
     "DecisionRating",
     "DecisionStatus",
@@ -166,4 +184,5 @@ __all__ = [
     "VersionedContract",
     "Weight",
     "normalize_instrument_alias",
+    "worst_data_quality_status",
 ]

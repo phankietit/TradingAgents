@@ -20,6 +20,24 @@ class DataQualityStatus(str, Enum):
     INVALID = "INVALID"
 
 
+DATA_QUALITY_PRIORITY = {
+    DataQualityStatus.OK: 0,
+    DataQualityStatus.NO_DATA: 1,
+    DataQualityStatus.STALE: 2,
+    DataQualityStatus.COVERAGE_GAP: 3,
+    DataQualityStatus.UNAVAILABLE: 4,
+    DataQualityStatus.INVALID: 5,
+}
+
+
+def worst_data_quality_status(
+    statuses: tuple[DataQualityStatus, ...] | list[DataQualityStatus],
+) -> DataQualityStatus:
+    if not statuses:
+        raise ValueError("at least one data quality status is required")
+    return max(statuses, key=DATA_QUALITY_PRIORITY.__getitem__)
+
+
 class SnapshotManifest(VersionedContract):
     snapshot_id: UUID
     instrument_id: UUID
