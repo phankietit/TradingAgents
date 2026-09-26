@@ -34,9 +34,10 @@ following missing integration and correctness requirements.
   Authenticated state/transition API wiring is covered by tests for sessions,
   CSRF, actor spoofing, policy mismatch, state projection and retry behavior.
   Ready writes/approvals now recompute risk against an owner-scoped portfolio,
-  policy and instrument master, rejecting forged checks/weights. Source-bound
-  correlation replay and concurrent PostgreSQL validation remain before
-  approval enforcement is complete.
+  policy and instrument master, rejecting forged checks/weights. Correlation
+  replays hash-verified owner/run-bound daily price snapshots under explicit
+  policy windows/freshness; SQLite covers multi-asset approval and source bypass
+  rejection. Concurrent PostgreSQL validation remains.
 - PLAN-037: hash-verified snapshot outcome helper, duplicate/future outcome
   rejection, canonical ordering and deterministic evaluation IDs have targeted
   tests. Caller-supplied returns remain `reproducible=False`. Owner-scoped

@@ -803,7 +803,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
         decision_id: UUID, body: DecisionTransitionRequest,
         owner: CsrfOwnerDependency, session: SessionDependency,
     ):
-        repository = PlatformRepository(session)
+        repository = PlatformRepository(session, artifact_store=artifact_store)
         candidate = repository.get_decision(decision_id, owner.owner_id)
         if candidate is None:
             raise HTTPException(status_code=404, detail="decision not found")

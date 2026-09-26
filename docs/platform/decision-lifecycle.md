@@ -28,8 +28,14 @@ Risk is recomputed with persisted policy parameters and instrument-master
 classifications. Every supplied policy check (including observed values),
 current weight and maximum allowed weight must match that recomputation.
 Missing portfolio provenance cannot be repaired by a caller's PASS flags.
-Correlation-dependent proposals currently remain blocked until source-bound
-correlation replay is integrated; an omitted correlation is never assumed safe.
+Correlation-dependent proposals require run-bound `risk_snapshot_ids` with
+owner-readable immutable daily price payloads. The repository verifies bytes,
+hashes, identity, currency, price basis, quality, source/retrieval timestamps and
+matching session coverage, then recomputes return correlation. The policy must
+explicitly configure `correlation_periods` and `correlation_max_age_seconds`;
+there are no new policy defaults. Missing, stale, short or constant-return
+series cannot authorize readiness. These fields are supported inputs, not a
+change to any owner's existing policy version.
 
 The authenticated API exposes `GET /api/v1/decisions/{id}/state` with the
 immutable candidate, current projected status, and audit events.

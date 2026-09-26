@@ -79,6 +79,7 @@ class DecisionCandidate(VersionedContract):
     target_weight: Weight | None = None
     max_allowed_weight: Weight | None = None
     portfolio_snapshot_id: UUID | None = None
+    risk_snapshot_ids: tuple[UUID, ...] = ()
     policy_checks: tuple[PolicyCheck, ...]
     requires_human_approval: Literal[True] = True
 

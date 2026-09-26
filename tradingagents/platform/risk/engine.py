@@ -31,6 +31,8 @@ class RiskLimits(BaseModel):
     max_turnover: Ratio
     max_correlation: Annotated[float, Field(ge=-1.0, le=1.0)]
     min_cash_weight: Ratio
+    correlation_periods: int | None = Field(default=None, ge=2, le=10000)
+    correlation_max_age_seconds: int | None = Field(default=None, ge=0)
 
 
 class RiskProposal(BaseModel):

@@ -74,8 +74,9 @@ def _same_payload(row, contract: BaseModel) -> bool:
 
 
 class PlatformRepository:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, *, artifact_store=None):
         self.session = session
+        self.artifact_store = artifact_store
 
     def add_instrument(self, contract: InstrumentContract) -> InstrumentContract:
         existing = self.session.get(InstrumentRow, contract.instrument_id)
@@ -533,14 +534,16 @@ class PlatformRepository:
             if held is None:
                 raise ValueError("portfolio instrument classification is unavailable")
             classifications[position.instrument_id] = held.asset_class
-        # Until source-bound correlation replay is supplied, missing coverage
-        # deliberately produces REVIEW. Never trust caller-authored correlations.
+        from tradingagents.platform.risk.provenance import replay_correlations
+
+        correlations = replay_correlations(self, decision, portfolio, policy)
         assessment = RiskEngine().evaluate(
             portfolio=portfolio, policy=policy,
             proposal=RiskProposal(
                 instrument_id=instrument.instrument_id, asset_class=instrument.asset_class,
                 tradability=instrument.tradability, target_weight=decision.target_weight,
                 data_quality=decision.data_quality, position_asset_classes=classifications,
+                correlations=correlations,
             ),
         )
         current_weight = next((p.weight for p in portfolio.positions
