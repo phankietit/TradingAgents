@@ -12,6 +12,8 @@
   source timestamps, snapshot IDs, vendors, and content hashes.
 - Add an immutable owner-scoped portfolio ledger with deterministic cash,
   position, NAV, and realized/unrealized P&L replay; no broker or order path.
+- Add a versioned deterministic risk engine for data quality, tradability,
+  weights, concentration, exposure, turnover, correlation, and cash limits.
 
 All notable changes to TradingAgents are documented here.
 
