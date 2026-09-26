@@ -16,8 +16,9 @@ following missing integration and correctness requirements.
 - PLAN-032: connect validated structured graph output to the candidate factory;
   require evidence and deterministic policy results before approval readiness;
   preserve compatibility for previously persisted review candidates.
-- PLAN-033: validate snapshot identity, source eligibility and graph hash;
-  establish deterministic identifiers and persistence with owner/run scope.
+- PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
+  artifact persistence are implemented with nine targeted tests. Integration
+  with the decision-producing worker and PostgreSQL verification remain.
 - PLAN-034: validate valuation timestamps, transaction ordering, finite decimal
   amounts and complete event hashes; test durable ledger owner isolation,
   idempotency and immutable history.
