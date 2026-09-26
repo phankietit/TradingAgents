@@ -3,7 +3,28 @@
 This is local backend-foundation evidence, not production readiness or milestone
 completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or orders.
 
-## Candidate
+## Latest follow-up checkpoint
+
+At `a96ff29becce19ae0d552f6b39f1195fe9260d49`, source-review follow-ups now
+reject future-observed quotes/evidence at pure-library boundaries, require a
+successful analysis run before approval, and contain lease-loss races during
+cancellation acknowledgement. `.venv/bin/python -m pytest -q --disable-warnings`
+passes 1200 tests and 88 subtests, with 19 skips and 22 warnings (18.25s).
+Those skips include 17 PostgreSQL cases because the disposable database had
+been removed, plus optional Bedrock/live DeepSeek. Lint and diff checks pass.
+The PostgreSQL/install evidence below applies to the earlier SHA only and must
+be refreshed after the follow-up changes.
+
+Security scan `ba0bb730-304e-461b-99cb-9692520dd95f` completed source review of
+all 49 changed runtime/build files in `f76c353..8364663`, plus supplemental tests
+and docs. No plausible new security vulnerability was established. The sealed
+scan nevertheless retains an older checkpoint's deferred coverage row and
+reports `partial`; do not represent the canonical scan as complete coverage.
+Its old-SHA result also does not cover the subsequent functional fixes. Keep
+that sealed result intact and perform a new candidate review after remaining
+fixes; do not overwrite or relabel it.
+
+## Earlier candidate evidence
 
 - Branch: `feature/TA-030-analysis-engine`.
 - Tested SHA: `83646631ba9f2b0e697cc0370a8989ec2cda862f`.
@@ -27,7 +48,7 @@ completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or ord
 | Optional Bedrock test | UNVERIFIED | `langchain_aws` is not installed in regression environment |
 | Live DeepSeek test | UNVERIFIED | No configured test credential; no live call made |
 | Cross-version GitHub CI | BLOCKED | Push rejected because current OAuth grant lacks `workflow` scope for `.github/workflows/ci.yml` |
-| Scoped security review | UNVERIFIED | Durable scan created for tested range; capability preflight READY, source review not yet complete |
+| Scoped security review | UNVERIFIED | Source review completed at old SHA, no candidate findings; canonical sealed coverage retains stale partial checkpoint; post-fix review still required |
 | PR/review/merge | BLOCKED | Push rejected; PR creation failed because branch was not uploaded; no PR exists |
 | Browser/deployment/broker | NOT_IN_SCOPE | No Web UI or deployment/order path in M3 |
 
@@ -39,10 +60,14 @@ gate to bypass the GitHub permission failure.
 
 1. Owner authorizes the current GitHub credential for workflow updates, then
    retry the same branch push and create/attach the draft PR.
-2. Continue existing security scan `ba0bb730-304e-461b-99cb-9692520dd95f`, range
-   `f76c353..8364663`; do not create a replacement scan. Preflight has passed;
-   threat-model/source review and finalization remain.
-3. Complete acceptance review, triage any findings, rerun gates after fixes,
+2. Finish remaining functional review follow-ups: snapshot profiles must carry
+   ETF/reference narrative guidance; sanitize structured-call exception text;
+   explicitly document/test evaluation of immutable original research versus
+   later owner lifecycle actions. Audit full worker configuration reproducibility
+   and Python 3.10 compatibility (existing `datetime.UTC` imports need checking).
+3. Run dependency/secret checks and a post-fix candidate security review with
+   accurate coverage metadata. Preserve the sealed old-SHA scan unchanged.
+4. Complete acceptance review, triage any findings, rerun gates after fixes,
    obtain cross-version CI evidence, refresh this receipt/tracker and merge only
    with passing in-scope gates.
 

@@ -11,6 +11,15 @@ installed imports/worker smoke, lint and diff checks also pass. See
 GitHub rejected the branch push because OAuth lacks `workflow` scope; no PR
 exists, CI and merge remain blocked, and security source review is not finished.
 
+Follow-up at `a96ff29`: old-SHA security source review has completed and surfaced
+functional gaps, not confirmed security vulnerabilities. Fixed observation
+cutoffs at pure replay/evidence/readiness boundaries and approval/cancel races.
+Full local suite now passes 1200 tests/88 subtests with 19 skips (PostgreSQL
+not running plus two optional providers). The sealed old-SHA scan reports
+partial coverage due to retained checkpoint metadata; new candidate review
+and PostgreSQL/clean-install refresh remain required. See the verification
+receipt for all remaining functional and evidence tasks.
+
 ## Remaining completion checks
 
 - PLAN-030/031: durable research handler now runs AnalysisEngine and atomically
