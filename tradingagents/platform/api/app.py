@@ -543,6 +543,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
             "selected_analysts": list(payload.selected_analysts),
             "config_hash": config_hash,
         }
+        if payload.decision_inputs is not None:
+            job_payload["decision_inputs"] = payload.decision_inputs.model_dump(mode="json")
         queue = DurableJobQueue(session)
         existing_job = queue.get_by_idempotency(owner.owner_id, idempotency_key)
         if existing_job:
@@ -572,7 +574,28 @@ def create_app(settings: ApiSettings) -> FastAPI:
             deep_model=settings.deep_model,
             config_hash=config_hash,
             prompt_version=settings.prompt_version,
+            snapshot_ids=payload.decision_inputs.snapshot_ids() if payload.decision_inputs else (),
+            decision_inputs=payload.decision_inputs,
         )
+        if payload.decision_inputs is not None:
+            from tradingagents.platform.analysis.profiles import (
+                resolve_analysis_profile,
+                select_analysts,
+            )
+            from tradingagents.platform.analysis.snapshots import load_snapshot_context
+
+            try:
+                select_analysts(resolve_analysis_profile(instrument), run.selected_analysts)
+                load_snapshot_context(ArtifactService(artifact_store, repository), run,
+                                      payload.decision_inputs.snapshots_by_analyst)
+                inputs = payload.decision_inputs
+                if inputs.portfolio_snapshot_id is not None:
+                    portfolio = repository.get_portfolio_snapshot(inputs.portfolio_snapshot_id, owner.owner_id)
+                    policy = repository.get_policy(inputs.policy_id, inputs.policy_version, owner.owner_id)
+                    if portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None:
+                        raise ValueError("risk inputs unavailable")
+            except (ValueError, ArtifactIntegrityError) as error:
+                raise HTTPException(status_code=422, detail="ineligible snapshot analysis inputs") from error
         repository.save_run(run)
         try:
             job = queue.enqueue(

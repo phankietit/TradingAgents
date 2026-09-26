@@ -16,18 +16,22 @@ following missing integration and correctness requirements.
   persists report plus REVIEW candidate, with idempotent completion recovery
   and cancellation tests. A snapshot-only engine/real graph path now validates
   source bytes/times and disables live tools/memory/logs. Worker snapshot
-  selection, evidence orchestration and command wiring remain. Long calls now renew leases;
+  selection and evidence/risk orchestration are now connected through immutable
+  run inputs and the authenticated API; command wiring remains. Long calls now renew leases;
   publication uses a transaction-level lease/cancellation fence, with tests for
   reclaim races and renewal-thread cleanup.
 - PLAN-032: PM structured payload is now retained separately from CLI prose;
   AnalysisEngine validates the narrative and rejects missing/extra fields.
-  Durable handler passes this payload to the candidate factory; legacy tool
-  reads remain unattested, so its candidates intentionally remain REVIEW;
+  Durable handler passes this payload to the candidate factory. Snapshot runs
+  require exact thesis/risk/invalidation source claims and deterministic policy
+  checks; offline integration covers readiness then owner approval. Legacy tool
+  reads remain unattested, so legacy-mode candidates intentionally remain REVIEW;
   evidence/complete policy checks/weights are now required at factory readiness;
   previously persisted review candidates remain readable.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
-  artifact persistence are implemented with nine targeted tests. Integration
-  with the decision-producing worker and PostgreSQL verification remain.
+  artifact persistence are implemented. Worker integration now persists evidence
+  alongside candidates, with invalid citations routed to REVIEW. PostgreSQL
+  verification remains.
 - PLAN-034: timestamped/quality-checked quotes, explicit freshness limits,
   simultaneous-event sequencing, complete event/quote hashes and deterministic
   snapshot IDs are implemented. SQLite tests verify immutable writes and owner

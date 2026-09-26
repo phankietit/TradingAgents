@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from typing import Annotated
 from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
@@ -28,12 +29,15 @@ class SnapshotAnalysisContext(BaseModel):
 
     as_of: AwareDatetime
     by_analyst: dict[str, tuple[AnalysisSnapshot, ...]]
+    source_max_age_seconds: dict[str, Annotated[int, Field(ge=0, le=315360000)]]
 
     def reports(self, instrument_id: UUID, analysts: tuple[str, ...]) -> dict[str, str]:
         # Frozen Pydantic models can still contain mutable dictionaries.
         validated = SnapshotAnalysisContext.model_validate(self.model_dump())
         if set(validated.by_analyst) != set(analysts):
             raise ValueError("snapshot roles must exactly cover selected analysts")
+        if set(validated.source_max_age_seconds) != set(analysts):
+            raise ValueError("snapshot roles require explicit freshness limits")
         if sum(len(s.payload) for sources in validated.by_analyst.values() for s in sources) > 2_000_000:
             raise ValueError("snapshot prompt payload exceeds bounded input size")
         reports = {}
@@ -49,6 +53,8 @@ class SnapshotAnalysisContext(BaseModel):
                         or manifest.retrieved_at > validated.as_of
                         or manifest.as_of > validated.as_of):
                     raise ValueError("analysis source is not point-in-time eligible")
+                if (validated.as_of - manifest.source_end).total_seconds() > validated.source_max_age_seconds[role]:
+                    raise ValueError("analysis source is stale for its role")
             reports[role] = json.dumps([
                 {"snapshot_id": str(s.manifest.snapshot_id),
                  "provenance": s.manifest.model_dump(mode="json"),
@@ -76,6 +82,7 @@ def load_snapshot_context(artifacts, run, by_analyst):
                 raise ValueError("owner analysis snapshot bytes are unavailable")
             sources.append(AnalysisSnapshot(manifest=manifest, payload=loaded[1].decode("utf-8")))
         result[role] = tuple(sources)
-    context = SnapshotAnalysisContext(as_of=run.analysis_as_of, by_analyst=result)
+    context = SnapshotAnalysisContext(as_of=run.analysis_as_of, by_analyst=result,
+        source_max_age_seconds=run.decision_inputs.source_max_age_seconds)
     context.reports(run.instrument_id, run.selected_analysts)
     return context

@@ -10,6 +10,7 @@ from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import date
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -50,6 +51,7 @@ class AnalysisResult(BaseModel):
     final_state: dict[str, Any]
     narrative_signal: str
     decision_payload: StructuredDecisionNarrative | None = None
+    material_claims: dict[str, tuple[UUID, ...]] = Field(default_factory=dict)
 
 
 GraphFactory = Callable[..., TradingAgentsGraph]
@@ -97,6 +99,7 @@ class AnalysisEngine:
                 portfolio=request.portfolio,
             )
         decision_payload = None
+        material_claims = {}
         raw_decision = final_state.get("structured_decision")
         if raw_decision is not None:
             try:
@@ -108,6 +111,8 @@ class AnalysisEngine:
                     "risks": parsed.risks,
                     "invalidation_conditions": parsed.invalidation_conditions,
                 })
+                if len({item.claim for item in parsed.evidence_claims}) == len(parsed.evidence_claims):
+                    material_claims = {item.claim: item.snapshot_ids for item in parsed.evidence_claims}
             except (ValueError, TypeError):
                 # Never parse prose or invent missing confidence/risk fields.
                 pass
@@ -120,4 +125,5 @@ class AnalysisEngine:
             final_state=dict(final_state),
             narrative_signal=str(signal),
             decision_payload=decision_payload,
+            material_claims=material_claims,
         )

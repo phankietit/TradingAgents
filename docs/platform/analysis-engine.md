@@ -39,13 +39,11 @@ research report plus candidate atomically. Deterministic run-derived IDs allow
 a retry after output commit to reuse the result without another model call.
 Cancellation and lease validity are checked before execution and publication.
 
-This initial handler preserves useful legacy research, but marks source
+For runs without snapshot inputs, the handler preserves legacy research but marks source
 attestation `UNVERIFIED` and the candidate `REVIEW` with no target weight.
 Legacy graph tools do not yet attest all reads to immutable run snapshots;
 the handler does not fabricate claim links from a list of available snapshots.
-Snapshot-attested graph execution, evidence/risk orchestration, periodic lease
-renewal is now handled by the worker; worker command wiring remains integration
-work. Renewal uses a separate short-lived session every third of the lease.
+Lease renewal uses a separate short-lived session every third of the lease.
 Report/candidate publication fences the current lease and cancellation status
 inside its write transaction. A stale worker cannot publish or fail a job that
 has been reclaimed by another worker. Synchronous model calls are not forcibly
@@ -66,5 +64,21 @@ resolves a live vendor identity, or writes legacy ticker logs/checkpoints.
 Its model clients are unbound to tools; analyst tool-call responses are errors.
 Real graph fixture tests cover the full debate/manager path with forbidden
 legacy hooks. They are offline evidence, not live-provider validation.
-Durable worker snapshot selection and claim-to-source evidence orchestration
-are not yet connected; the legacy research handler remains REVIEW-only.
+
+The authenticated run API accepts optional `decision_inputs` containing
+`snapshots_by_analyst` and explicit `source_max_age_seconds` for every role.
+Snapshot IDs and inputs are immutable across run lifecycle transitions.
+The worker loads owner-scoped bytes and uses the snapshot-only graph path.
+Portfolio Manager `evidence_claims` must cover the exact thesis and every risk
+and invalidation condition, using only snapshots supplied to its analysts.
+Missing/unknown/duplicate source links produce REVIEW, not invented citations.
+
+Optional portfolio proposals supply `portfolio_snapshot_id`, a policy ID and
+version, an owner-requested target weight, and risk snapshot IDs together.
+The worker passes persisted holdings as narrative context, recomputes all risk
+checks and writes evidence/report/candidate in one fenced transaction.
+Only complete eligible narrative/evidence and passing deterministic checks can
+yield `READY_FOR_APPROVAL`; approval still requires a separate owner event.
+Reference profiles remain non-investable. Source binding proves provenance,
+not that every model inference is correct. Worker command wiring and live
+provider evidence remain separate gates.

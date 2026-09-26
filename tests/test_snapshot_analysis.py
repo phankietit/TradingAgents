@@ -23,7 +23,7 @@ def context(instrument):
         vendor="fixture", as_of=NOW, retrieved_at=NOW, source_end=NOW,
         content_hash="sha256:" + hashlib.sha256(payload.encode()).hexdigest(), quality_status="OK",
     ), payload=payload)
-    return SnapshotAnalysisContext(as_of=NOW, by_analyst={"market": (source,)})
+    return SnapshotAnalysisContext(as_of=NOW, by_analyst={"market": (source,)}, source_max_age_seconds={"market": 0})
 
 
 def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch):
@@ -86,4 +86,14 @@ def test_snapshot_input_rejects_invalid_provenance(mutation):
         source = source.model_copy(update={"manifest": source.manifest.model_copy(update={"source_end": None})})
     inputs = inputs.model_copy(update={"by_analyst": {"news" if mutation == "roles" else "market": (source,)}})
     with pytest.raises(ValueError):
+        inputs.reports(instrument.instrument_id, ("market",))
+
+
+def test_snapshot_freshness_is_explicit_and_enforced():
+    instrument = _instrument()
+    inputs = context(instrument).model_copy(update={"as_of": NOW + timedelta(seconds=1)})
+    with pytest.raises(ValueError, match="stale"):
+        inputs.reports(instrument.instrument_id, ("market",))
+    inputs = inputs.model_copy(update={"source_max_age_seconds": {}})
+    with pytest.raises(ValueError, match="freshness"):
         inputs.reports(instrument.instrument_id, ("market",))

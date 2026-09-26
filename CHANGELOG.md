@@ -25,6 +25,9 @@
   policy and instrument classifications; reject unbound or forged PASS checks.
 - Add durable research-handler persistence with retry reuse and cancellation;
   unattested legacy graph output remains REVIEW rather than approval-ready.
+- Connect owner-bound snapshot runs to source-cited graph narrative, immutable
+  evidence, deterministic risk and human-approval candidates. Inputs include
+  explicit role freshness limits and cannot change during run transitions.
 
 All notable changes to TradingAgents are documented here.
 

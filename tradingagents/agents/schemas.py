@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -218,6 +219,12 @@ def render_trader_proposal(proposal: TraderProposal) -> str:
 # ---------------------------------------------------------------------------
 
 
+class DecisionEvidenceClaim(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    claim: str = Field(min_length=1, max_length=20000)
+    snapshot_ids: tuple[UUID, ...] = Field(min_length=1, max_length=16)
+
+
 class PortfolioDecision(BaseModel):
     """Structured output produced by the Portfolio Manager.
 
@@ -228,6 +235,8 @@ class PortfolioDecision(BaseModel):
     """
 
     model_config = ConfigDict(extra="forbid")
+    evidence_claims: tuple[DecisionEvidenceClaim, ...] = Field(default=(), max_length=100,
+        description="For snapshot runs, cite snapshot IDs for the exact investment_thesis text and each risk and invalidation condition. Do not invent sources.")
 
     confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False,
                                     description="Uncalibrated confidence; omit if unsupported by evidence.")

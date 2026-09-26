@@ -345,10 +345,14 @@ class PlatformRepository:
         return ArtifactManifest.model_validate(row.payload) if row else None
 
     def save_run(self, contract: RunManifest) -> RunManifest:
+        contract = RunManifest.model_validate(contract.model_dump())
         row = self.session.get(RunRow, contract.run_id)
         now = datetime.now(UTC)
         if row:
             previous = RunManifest.model_validate(row.payload)
+            mutable_fields = {"status", "started_at", "completed_at", "error_code", "error_message"}
+            if previous.model_dump(exclude=mutable_fields) != contract.model_dump(exclude=mutable_fields):
+                raise ImmutableRecordConflict("run inputs are immutable across lifecycle transitions")
             if (
                 previous.owner_id != contract.owner_id
                 or previous.instrument_id != contract.instrument_id

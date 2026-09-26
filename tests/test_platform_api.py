@@ -179,6 +179,29 @@ def _run_payload(instrument_id):
     }
 
 
+def test_snapshot_run_inputs_are_owner_validated_and_idempotent(api_context):
+    client = api_context["client"]
+    _login(client)
+    source_id = str(api_context["time_series_snapshot"].snapshot_id)
+    payload = {"instrument_id": str(api_context["instrument"].instrument_id),
+               "analysis_as_of": NOW.isoformat(), "selected_analysts": ["market"],
+               "decision_inputs": {"snapshots_by_analyst": {"market": [source_id]},
+                                   "source_max_age_seconds": {"market": 172800}}}
+    headers = _csrf_headers(client, **{"Idempotency-Key": "snapshot-request-001"})
+    first = client.post("/api/v1/runs", headers=headers, json=payload)
+    assert first.status_code == 202, first.text
+    second = client.post("/api/v1/runs", headers=headers, json=payload)
+    assert second.json() == first.json()
+    assert first.json()["run"]["snapshot_ids"] == [source_id]
+    assert first.json()["job"]["payload"]["decision_inputs"]["snapshots_by_analyst"] == {"market": [source_id]}
+    payload["decision_inputs"]["snapshots_by_analyst"]["market"] = [str(uuid4())]
+    assert client.post("/api/v1/runs", headers=headers, json=payload).status_code == 409
+    headers["Idempotency-Key"] = "snapshot-request-002"
+    assert client.post("/api/v1/runs", headers=headers, json=payload).status_code == 422
+    payload["decision_inputs"]["snapshots_by_analyst"] = {"news": [source_id]}
+    assert client.post("/api/v1/runs", headers=headers, json=payload).status_code == 422
+
+
 @pytest.mark.unit
 def test_health_security_headers_and_authentication_boundary(api_context):
     client = api_context["client"]
