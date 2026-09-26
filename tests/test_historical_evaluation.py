@@ -103,3 +103,12 @@ def test_evaluation_hash_does_not_depend_on_input_order():
                                                universe=("MSFT", "AAPL"), **common)
     assert one == two
     assert one.reproducible is False  # caller-supplied returns are not verified source replay
+
+
+def test_legacy_review_with_directional_rating_is_not_scored():
+    decision = _decision(DecisionRating.BUY, DecisionStatus.REVIEW)
+    result = HistoricalEvaluationService().build(decisions=(decision,),
+        observations=(_observation(decision),), universe=("AAPL",), benchmark="SPY",
+        config_hash=HASH, created_at=NOW + timedelta(days=8))
+    assert result.review_cells == 1
+    assert result.scored_cells == 0

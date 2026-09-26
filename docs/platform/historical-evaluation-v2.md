@@ -21,10 +21,19 @@ No missing bar is padded and no date-only bar is silently relabeled as an
 exchange close. Tests cover holidays, early closes, DST and crypto weekends.
 See the [calendar library documentation](https://github.com/gerrymanoim/exchange_calendars/blob/master/README.md).
 
-Owner-scoped persisted snapshot/calendar receipt replay remains required before
-the evaluation can claim full historical reproducibility.
+`PersistedEvaluationService` reads owner-scoped decisions from successful
+snapshot-attested runs and immutable outcome payloads. It computes calendar
+windows and price returns from those sources, then stores a content-addressed evaluation receipt
+containing exact selections, evaluation clock and calendar versions/windows.
+Only this reconstructed path sets `reproducible=True`. `verify` reads the
+receipt by owner, reloads its sources and recomputes the entire receipt; changed
+or unavailable source data or calendar behavior fails verification. Repeated
+creation with identical inputs is idempotent. This proves deterministic replay
+of recorded research, not that a model historically predicted future prices or
+that its pretrained knowledge is point-in-time isolated.
 
-`REVIEW` decisions are counted but never scored. Outcomes must become knowable
+`REVIEW`/draft decisions are counted but never scored, including legacy review
+records that retain a directional rating. Outcomes must become knowable
 after the decision `as_of` and no later than the evaluation clock. Duplicate
 decisions/outcome cells and non-finite returns are rejected. The result reports directional
 decision quality only. It has no cash ledger, fills, fees, slippage, turnover,

@@ -13,8 +13,14 @@ from tradingagents.contracts import (
     DecisionCandidate,
     DecisionEvaluation,
     DecisionRating,
+    DecisionStatus,
     HistoricalEvaluation,
 )
+
+
+def is_scorable_decision(decision):
+    return (decision.rating is not DecisionRating.REVIEW
+            and decision.status in {DecisionStatus.READY_FOR_APPROVAL, DecisionStatus.APPROVED})
 
 
 class EvaluationObservation(BaseModel):
@@ -62,7 +68,7 @@ class HistoricalEvaluationService:
         if any(item.as_of > created_at for item in decisions):
             raise ValueError("decision is future to the evaluation clock")
         cells: list[DecisionEvaluation] = []
-        reviews = sum(1 for decision in decisions if decision.rating is DecisionRating.REVIEW)
+        reviews = sum(1 for decision in decisions if not is_scorable_decision(decision))
         for observation in observations:
             decision = by_decision.get(observation.decision_id)
             if decision is None:
@@ -73,7 +79,7 @@ class HistoricalEvaluationService:
                 raise ValueError("outcome is future to the evaluation clock")
             if len(observation.outcome_snapshot_ids) != len(set(observation.outcome_snapshot_ids)):
                 raise ValueError("duplicate outcome snapshots")
-            if decision.rating is DecisionRating.REVIEW:
+            if not is_scorable_decision(decision):
                 continue
             alpha = observation.raw_return - observation.benchmark_return
             cells.append(
