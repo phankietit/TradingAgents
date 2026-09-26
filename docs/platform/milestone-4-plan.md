@@ -183,7 +183,12 @@ completed analysis capability from queue/cancel evidence alone.
 
 ### M4-PORTFOLIO — owner valuation and policy view
 
-Status: planned. Depends on M4-API and M4-SHELL.
+Status: in-progress. Depends on M4-API and M4-SHELL.
+
+Persisted snapshot selector, exact decimal balances, holdings/weights and read-only
+policy versions implemented. IAB real API/ledger replay fixture values verified;
+no frontend portfolio recomputation. Source-linked valuation drill-down and full
+multi-asset/currency acceptance remain pending.
 
 - Display immutable portfolio snapshot, holdings/cash/NAV/allocation and source clock.
 - Explain deterministic policy observations, missing correlation/coverage and limits.
@@ -193,7 +198,14 @@ Status: planned. Depends on M4-API and M4-SHELL.
 
 ### M4-DECISIONS — human review and audit
 
-Status: planned. Depends on M4-ANALYSIS and M4-PORTFOLIO.
+Status: in-progress. Depends on M4-ANALYSIS and M4-PORTFOLIO.
+
+Original/current state, narrative/evidence/checks, reasoned modal confirmation,
+expected-status/idempotent event identity and audit timeline implemented. IAB
+REVIEW approval-disabled → explicit rejection → reload persisted audit PASS.
+22 frontend tests/build/lint PASS, including escaped narrative and backend
+transition rejection. Successful approval and full worker/risk integration still
+UNVERIFIED, not implied by rejection QA.
 
 - Display original research separately from current state/event history.
 - Approval/rejection requires explicit confirmation and reason, uses expected

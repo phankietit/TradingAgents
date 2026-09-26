@@ -4,7 +4,10 @@ This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
 backend metrics and source provenance. Analysis now supports snapshot selection,
 explicit cost authorization, durable queue submission, SSE progress, cancellation,
-new-attempt configuration and artifact downloads. Portfolio and decisions remain
+new-attempt configuration and artifact downloads. Portfolio renders persisted
+snapshots/cash/holdings/policies without recomputing portfolio math. Decisions
+renders original/current state, narrative/evidence/risk checks and explicit
+approve/reject dialogs. Full worker-to-approval integration and acceptance remain
 pending. Do not describe this checkpoint as the completed M4 product.
 
 ## Development
@@ -61,3 +64,8 @@ development server or use it as a production deployment.
   model ran. Browser logs had no app errors. Generated report/risk/decision paths
   remain UNVERIFIED. Unit tests cover disabled stale inputs, required consent and
   stable idempotency keys after failed unchanged submissions.
+- Portfolio/Decisions IAB: backend replay of synthetic deposit and historical
+  holding gives NAV 10180.20 USD, cash 8200 USD, 10 AAPL units at 198.02 USD.
+  Seeded REVIEW candidate cannot be approved; explicit reason/reject persists an
+  audit event after reload. This is seeded local QA, not generated model output.
+  Successful approval and multi-asset risk integration remain UNVERIFIED.

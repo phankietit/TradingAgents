@@ -10,17 +10,19 @@ import math
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
+from uuid import uuid4
 
 import uvicorn
 
 from tradingagents._compat import UTC
-from tradingagents.contracts import PriceInterval
+from tradingagents.contracts import DecisionCandidate, LedgerTransaction, PriceInterval, RunManifest
 from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.instruments import InstrumentMaster
 from tradingagents.platform.market_data import TimeSeriesSnapshotService, normalize_time_series
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
+from tradingagents.platform.portfolio.service import PortfolioLedgerService
 
 
 def main():
@@ -49,8 +51,33 @@ def main():
         series = normalize_time_series(instrument=instrument, dataset="ohlcv.daily",
             interval=PriceInterval.ONE_DAY, as_of=now, annualization_periods=252, bars=bars)
         artifacts = ArtifactService(LocalArtifactStore(directory / "artifacts"), repository)
-        TimeSeriesSnapshotService(repository, artifacts).persist(
+        source = TimeSeriesSnapshotService(repository, artifacts).persist(
             owner_id=owner.owner_id, series=series, vendor="SYNTHETIC LOCAL QA — NOT MARKET DATA", retrieved_at=now)
+        ledger_id = uuid4()
+        repository.add_ledger_transaction(LedgerTransaction(transaction_id=uuid4(), ledger_id=ledger_id,
+            owner_id=owner.owner_id, occurred_at=now - timedelta(days=62), transaction_type="cash_deposit",
+            currency="USD", cash_amount="10000", external_reference="SYNTHETIC-QA-DEPOSIT"))
+        repository.add_ledger_transaction(LedgerTransaction(transaction_id=uuid4(), ledger_id=ledger_id,
+            owner_id=owner.owner_id, occurred_at=now - timedelta(days=61), transaction_type="buy",
+            currency="USD", instrument_id=instrument.instrument_id, quantity="10", unit_price="180",
+            external_reference="SYNTHETIC-QA-HISTORICAL-ENTRY-NOT-AN-ORDER"))
+        PortfolioLedgerService(artifacts).replay(ledger_id=ledger_id, owner_id=owner.owner_id,
+            base_currency="USD", price_snapshot_ids={instrument.instrument_id: source.snapshot_id},
+            as_of=now, max_price_age=timedelta(days=2))
+        # Deliberately REVIEW with no risk approval. This is seeded QA content,
+        # not a worker/model result and cannot be approved.
+        run = RunManifest(run_id=uuid4(), owner_id=owner.owner_id, instrument_id=instrument.instrument_id,
+            analysis_as_of=now, status="queued", created_at=now, selected_analysts=("market",),
+            llm_provider="synthetic-no-provider", quick_model="fixture", deep_model="fixture",
+            config_hash="sha256:" + "0" * 64, prompt_version="fixture", snapshot_ids=(source.snapshot_id,))
+        repository.save_run(run)
+        repository.add_decision(DecisionCandidate(decision_id=uuid4(), run_id=run.run_id,
+            owner_id=owner.owner_id, instrument_id=instrument.instrument_id, as_of=now,
+            status="review", rating="Review", confidence=0,
+            thesis="SYNTHETIC LOCAL QA — seeded review candidate, not model output or investment advice.",
+            risks=("Synthetic fixture has no live-provider verification.",),
+            invalidation_conditions=("Do not use this fixture to make an investment decision.",),
+            evidence=(), data_quality="UNAVAILABLE", policy_checks=()))
     database.dispose()
     print("Synthetic-only API on 127.0.0.1:8000; no worker or provider calls.")
     uvicorn.run(create_app(ApiSettings(database_url=url, artifact_root=directory / "artifacts",
