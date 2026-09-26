@@ -21,10 +21,15 @@ it('renders backend ranks, policy, source IDs and explicit exclusions without ra
   const fetch = setup(); const user = userEvent.setup(); render(<StockScreener />);
   expect(await screen.findByText('1 · AAPL')).toBeTruthy();
   expect(screen.getByText('100,000,000,000')).toBeTruthy();
+  expect(screen.getByText('$100B')).toBeTruthy();
+  expect(screen.getByText(/Sample data/)).toBeTruthy();
+  expect(screen.getByText('source-fixture').closest('details')?.open).toBe(false);
+  expect(screen.getByText('sha256:fixture-input').closest('details')?.open).toBe(false);
   expect(screen.getByText('source-fixture')).toBeTruthy();
   expect(screen.getByRole('link',{name:'Configure research'}).getAttribute('href')).toBe('#/analysis?instrument=aapl');
   await user.click(screen.getByRole('button',{name:'Excluded (1)'}));
-  expect(screen.getByText('history: <script>missing history</script>')).toBeTruthy();
+  expect(screen.getByText('<script>missing history</script>')).toBeTruthy();
+  expect(screen.getByText('history').closest('details')?.open).toBe(false);
   expect(document.querySelector('script')).toBeNull();
   await user.click(screen.getByText('Screening policy & provenance'));
   expect(screen.getByText('sha256:fixture-input')).toBeTruthy();

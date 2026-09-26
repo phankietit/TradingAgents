@@ -187,3 +187,10 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   Full local Python regression on Python 3.14.7: 1248 tests and 88 subtests PASS,
   20 skipped (PostgreSQL, optional Bedrock dependency, live DeepSeek); Ruff and
   dependency consistency PASS. These skipped gates are not release approval.
+- Finance-first screening pass: compact USD values, explicit annualized volatility
+  and 20-day liquidity labels, optional financial definitions, collapsed exact
+  amounts/rank details/source IDs and raw exclusion codes. Synthetic warning and
+  as-of caveat remain visible; no backend policy or ranking changes. 45 frontend
+  tests, lint/typecheck/build PASS. Built IAB 1280×720/390×844 verified default
+  presentation, keyboard-opened audit details, exclusion switching, clean console
+  and no document overflow. Other workspaces still require the finance-first pass.
