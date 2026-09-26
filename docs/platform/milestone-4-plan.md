@@ -106,7 +106,13 @@ Status: in-progress (CSRF bootstrap only; discovery/watchlist pending). Depends 
 
 ### M4-SHELL — local web shell and owner session
 
-Status: planned. Depends on M4-FOUNDATION; may precede API discovery completion.
+Status: in-progress. Depends on M4-FOUNDATION; may precede API discovery completion.
+
+Checkpoint: `web/` contains pinned React/Vite/TypeScript tooling, native dark
+tokens, shell navigation and session/login/logout/API client. Local build/lint
+and 10 synthetic unit/component tests PASS. IAB login/unavailable-API retry smoke
+is verified at 1280×720. Authenticated browser flow, narrow viewport, static
+serving and data workspaces remain UNVERIFIED/pending; not a completed web product.
 
 - Reusable shell/components, route navigation, login/logout/session expiry.
 - Same-origin credentials and authenticated CSRF bootstrap/header; no wildcard CORS bypass.
