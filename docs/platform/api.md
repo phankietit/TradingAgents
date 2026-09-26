@@ -79,6 +79,19 @@ Authenticated read-only routes:
   freshness, analyst-role and policy validation. Ineligible snapshots stay visibly
   labelled instead of becoming an apparently valid fallback.
 
+Snapshot discovery also returns `supported_analysts`. Dataset-to-role mapping is
+explicit: `daily_prices`, `price`, supported `ohlcv.*` intervals and
+`futures.reference` map to market; `news`, `fundamentals`, `social` and `sentiment`
+map to their corresponding role. Unknown/bundle datasets are withheld from
+analysis until a reviewed mapping exists. Both UI and snapshot-run validation
+enforce this boundary; a price source cannot stand in for news or fundamentals.
+
+Optional risk inputs bind an owner portfolio snapshot at the exact analysis
+timestamp, an existing policy effective at that timestamp for the instrument's
+asset class, and an explicit owner target weight. Reference-only instruments
+cannot submit a portfolio risk proposal. Missing correlation coverage remains a
+blocking REVIEW from the risk engine, never a default passing correlation.
+
 List endpoints above use `limit` 1–200 (default 50), `offset` 0–100000 (default 0)
 and deterministic descending time/ID order. Portfolio/policy history is not
 silently filtered to a current version; run validation determines temporal

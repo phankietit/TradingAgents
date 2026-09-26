@@ -76,6 +76,7 @@ class SnapshotDiscoveryResponse(ApiModel):
     snapshot: SnapshotManifest
     metadata_eligible: bool
     ineligibility_reasons: tuple[str, ...]
+    supported_analysts: tuple[str, ...]
     content_validation: Literal["required_on_run_creation"] = "required_on_run_creation"
 
 

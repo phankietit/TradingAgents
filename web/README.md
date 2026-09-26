@@ -69,3 +69,8 @@ development server or use it as a production deployment.
   Seeded REVIEW candidate cannot be approved; explicit reason/reject persists an
   audit event after reload. This is seeded local QA, not generated model output.
   Successful approval and multi-asset risk integration remain UNVERIFIED.
+- Analysis risk input check: choose a persisted portfolio and existing effective
+  policy, enter an owner target, select market evidence, authorize and enqueue.
+  API accepted the pinned timestamp/risk payload. Price sources are disabled for
+  unrelated analysts. No worker/model ran in this browser check; policy fixture
+  is explicitly synthetic and does not change owner limits.

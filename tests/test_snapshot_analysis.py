@@ -26,6 +26,16 @@ def context(instrument):
     return SnapshotAnalysisContext(as_of=NOW, by_analyst={"market": (source,)}, source_max_age_seconds={"market": 0})
 
 
+@pytest.mark.parametrize("role", ["news", "social", "fundamentals"])
+def test_price_snapshot_cannot_masquerade_as_other_analyst_evidence(role):
+    instrument = _instrument()
+    original = context(instrument)
+    mismatched = SnapshotAnalysisContext(as_of=NOW, by_analyst={role: original.by_analyst["market"]},
+        source_max_age_seconds={role: 0})
+    with pytest.raises(ValueError, match="dataset is not supported"):
+        mismatched.reports(instrument.instrument_id, (role,))
+
+
 def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch):
     calls = []
 

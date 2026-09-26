@@ -4,10 +4,12 @@ import { afterEach, expect, it, vi } from 'vitest';
 import RunForm from './RunForm';
 const catalog = [{ instrument_id: 'aapl', canonical_symbol: 'AAPL', display_name: 'Apple', asset_class: 'equity', tradability: 'investable', venue: 'NASDAQ', quote_currency: 'USD', timezone: 'America/New_York', session_calendar: 'XNAS', benchmark_symbol: 'SPY' }];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [] };
+const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['market'] };
 afterEach(() => vi.unstubAllGlobals());
 function setup(stale = false) {
   const fetch = vi.fn(async (url: string) => {
+    if (url.includes('/portfolios?')) return json([{ portfolio_id: 'portfolio1', as_of: '2026-09-01T00:00:00Z', base_currency: 'USD', positions: [] }]);
+    if (url.includes('/policies?')) return json([{ policy_id: 'policy1', policy_version: '1', name: 'Fixture policy', asset_class: 'equity', effective_at: '2026-08-01T00:00:00Z', parameters: {} }]);
     if (url.includes('/analysis-profile')) return json({ name: 'equity', allowed_analysts: ['market', 'news'], investable: true });
     if (url.includes('/snapshots?')) return json([{ ...source, metadata_eligible: !stale, ineligibility_reasons: stale ? ['stale'] : [] }]);
     if (url.endsWith('/auth/csrf')) return json({ csrf_token: 'test-csrf' });
@@ -23,6 +25,24 @@ it('requires evidence and explicit paid-call authorization', async () => {
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(false);
+});
+it('withholds price snapshots from news and pins risk request to portfolio time', async () => {
+  const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const news = await screen.findByRole('group', {name:'news analyst'});
+  expect((await within(news).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
+  await user.click(screen.getByRole('checkbox', {name:/Evaluate against my portfolio/}));
+  await user.selectOptions(screen.getByLabelText('Portfolio snapshot'), 'portfolio1');
+  expect((screen.getByLabelText('Analysis as of (ISO with timezone)') as HTMLInputElement).value).toBe('2026-09-01T00:00:00Z');
+  expect((screen.getByLabelText('Analysis as of (ISO with timezone)') as HTMLInputElement).disabled).toBe(true);
+  await user.selectOptions(screen.getByLabelText('Risk policy version'), 'policy1:1');
+  await user.type(screen.getByLabelText('Owner target weight (0–1)'), '0.2');
+  await user.click(await within(screen.getByRole('group', {name:'market analyst'})).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox', {name:/I authorize/}));
+  await user.click(screen.getByRole('button', {name:'Queue analysis'}));
+  await screen.findByRole('alert');
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  const body = JSON.parse(calls.find(([url]) => url.endsWith('/runs'))![1].body as string);
+  expect(body.decision_inputs).toMatchObject({ portfolio_snapshot_id:'portfolio1', policy_id:'policy1', policy_version:'1', requested_target_weight:0.2, risk_snapshot_ids:[] });
 });
 it('disables stale evidence', async () => {
   setup(true); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);

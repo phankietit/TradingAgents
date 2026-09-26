@@ -166,8 +166,12 @@ Checkpoint: backend analyst-profile endpoint, Markets handoff, snapshot selectio
 explicit cost consent, idempotent enqueue, run history/SSE, cancel/new attempt and
 artifact downloads. 16 frontend tests and 24 API tests PASS; build/lint PASS.
 IAB real API/database fixture: enqueue → queued → cancel → terminal SSE verified.
-No worker/model call made. Remaining: dataset-to-role suitability, full risk-input
-configuration, provider-readiness display, inline safe report/decision inspection,
+No worker/model call made. Dataset-to-role suitability is now enforced by the
+shared backend mapping and reflected in source choices. Risk input configuration
+selects owner portfolio/policy, pins its timestamp and accepts only explicit owner
+target weight; correlation inputs use owner snapshot discovery. Browser fixture
+queue with these inputs PASS; 23 frontend and 43 scoped backend tests PASS.
+Remaining: provider-readiness display, inline safe report/decision inspection,
 worker/result integration and full negative/browser acceptance. Do not call this
 completed analysis capability from queue/cancel evidence alone.
 

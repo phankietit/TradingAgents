@@ -15,7 +15,13 @@ from uuid import uuid4
 import uvicorn
 
 from tradingagents._compat import UTC
-from tradingagents.contracts import DecisionCandidate, LedgerTransaction, PriceInterval, RunManifest
+from tradingagents.contracts import (
+    DecisionCandidate,
+    LedgerTransaction,
+    PolicyContract,
+    PriceInterval,
+    RunManifest,
+)
 from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
@@ -64,6 +70,11 @@ def main():
         PortfolioLedgerService(artifacts).replay(ledger_id=ledger_id, owner_id=owner.owner_id,
             base_currency="USD", price_snapshot_ids={instrument.instrument_id: source.snapshot_id},
             as_of=now, max_price_age=timedelta(days=2))
+        repository.add_policy(PolicyContract(policy_id=uuid4(), owner_id=owner.owner_id,
+            name="SYNTHETIC QA POLICY — NOT OWNER LIMITS", policy_version="fixture-1", asset_class="equity",
+            effective_at=now, parameters={"max_position_weight": .3, "max_asset_class_weight": .7,
+                "max_gross_exposure": .8, "max_turnover": .2, "max_correlation": .8, "min_cash_weight": .2,
+                "correlation_periods": 20, "correlation_max_age_seconds": 172800}))
         # Deliberately REVIEW with no risk approval. This is seeded QA content,
         # not a worker/model result and cannot be approved.
         run = RunManifest(run_id=uuid4(), owner_id=owner.owner_id, instrument_id=instrument.instrument_id,

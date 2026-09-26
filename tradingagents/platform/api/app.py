@@ -576,7 +576,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         limit: int = Query(default=50, ge=1, le=200),
         offset: int = Query(default=0, ge=0, le=100_000),
     ) -> tuple[SnapshotDiscoveryResponse, ...]:
-        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.analysis.snapshots import (
+            snapshot_ineligibility,
+            supported_snapshot_analysts,
+        )
 
         if analysis_as_of > _now(settings):
             raise HTTPException(status_code=422, detail="future as_of")
@@ -587,7 +590,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
         for item in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=limit, offset=offset):
             reasons = snapshot_ineligibility(item, instrument_id, analysis_as_of, max_age_seconds)
             result.append(SnapshotDiscoveryResponse(snapshot=item, metadata_eligible=not reasons,
-                                                    ineligibility_reasons=reasons))
+                ineligibility_reasons=reasons, supported_analysts=supported_snapshot_analysts(item.dataset)))
         return tuple(result)
 
     @app.post(
@@ -679,7 +682,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 if inputs.portfolio_snapshot_id is not None:
                     portfolio = repository.get_portfolio_snapshot(inputs.portfolio_snapshot_id, owner.owner_id)
                     policy = repository.get_policy(inputs.policy_id, inputs.policy_version, owner.owner_id)
-                    if portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None:
+                    if (portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None
+                            or policy.effective_at > run.analysis_as_of or policy.asset_class != instrument.asset_class
+                            or not resolve_analysis_profile(instrument).investable):
                         raise ValueError("risk inputs unavailable")
             except (ValueError, ArtifactIntegrityError) as error:
                 raise HTTPException(status_code=422, detail="ineligible snapshot analysis inputs") from error

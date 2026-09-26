@@ -185,6 +185,31 @@ def _run_payload(instrument_id):
 
 
 @pytest.mark.unit
+@pytest.mark.parametrize("case", ["valid", "future_policy", "wrong_asset", "foreign_policy"])
+def test_risk_run_inputs_bind_owner_policy_asset_and_timestamp(api_context, case):
+    client = api_context["client"]
+    _login(client)
+    owner = api_context["principal"].owner_id
+    portfolio = PortfolioSnapshot(portfolio_id=uuid4(), owner_id=owner, as_of=NOW,
+        base_currency="USD", cash=(CashBalance(currency="USD", amount="10000"),), positions=(),
+        net_asset_value="10000", content_hash="sha256:" + "c" * 64)
+    policy = PolicyContract(policy_id=uuid4(), owner_id=uuid4() if case == "foreign_policy" else owner,
+        name="Synthetic risk input QA", policy_version="1", asset_class="crypto" if case == "wrong_asset" else "equity",
+        effective_at=NOW + timedelta(days=1) if case == "future_policy" else NOW, parameters={})
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        repository.add_portfolio_snapshot(portfolio)
+        repository.add_policy(policy)
+    payload = {"instrument_id": str(api_context["instrument"].instrument_id),
+        "analysis_as_of": NOW.isoformat(), "selected_analysts": ["market"], "decision_inputs": {
+            "snapshots_by_analyst": {"market": [str(api_context["time_series_snapshot"].snapshot_id)]},
+            "source_max_age_seconds": {"market": 172800}, "portfolio_snapshot_id": str(portfolio.portfolio_id),
+            "policy_id": str(policy.policy_id), "policy_version": "1", "requested_target_weight": .2}}
+    result = client.post("/api/v1/runs", headers=_csrf_headers(client, **{"Idempotency-Key": "risk-input-qa-001"}), json=payload)
+    assert result.status_code == (202 if case == "valid" else 422)
+
+
+@pytest.mark.unit
 def test_analysis_profile_is_authenticated_and_uses_backend_roles(api_context):
     client = api_context["client"]
     path = f"/api/v1/instruments/{api_context['instrument'].instrument_id}/analysis-profile"

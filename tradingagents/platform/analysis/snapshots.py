@@ -10,6 +10,18 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from tradingagents.contracts import DataQualityStatus, SnapshotManifest
 
 
+def supported_snapshot_analysts(dataset: str) -> tuple[str, ...]:
+    """Explicit dataset semantics; unknown feeds need a reviewed mapping."""
+    if dataset in {"daily_prices", "price", "futures.reference"} or dataset in {
+        "ohlcv.daily", "ohlcv.hourly", "ohlcv.15m", "ohlcv.5m", "ohlcv.1m",
+    }:
+        return ("market",)
+    return {
+        "news": ("news",), "fundamentals": ("fundamentals",),
+        "social": ("social",), "sentiment": ("social",),
+    }.get(dataset, ())
+
+
 def snapshot_ineligibility(manifest: SnapshotManifest, instrument_id: UUID,
                           as_of, max_age_seconds: int) -> tuple[str, ...]:
     """Shared metadata gate; content integrity is independently checked on load."""
@@ -65,6 +77,8 @@ class SnapshotAnalysisContext(BaseModel):
                 raise ValueError("snapshot role requires nonempty unique sources")
             for source in sources:
                 manifest = source.manifest
+                if role not in supported_snapshot_analysts(manifest.dataset):
+                    raise ValueError("snapshot dataset is not supported for analyst role")
                 reasons = snapshot_ineligibility(manifest, instrument_id, validated.as_of,
                                                 validated.source_max_age_seconds[role])
                 if reasons:
