@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -92,3 +92,60 @@ def test_reference_future_is_always_blocked_from_portfolio_proposal():
         portfolio=_portfolio(owner_id, held_id), proposal=proposal, policy=policy
     )
     assert next(c for c in assessment.checks if c.check_id == "tradability").result is PolicyResult.FAIL
+
+
+@pytest.mark.parametrize("missing", ["classification", "correlation"])
+def test_missing_risk_inputs_require_review(missing):
+    owner, held, proposed = uuid4(), uuid4(), uuid4()
+    proposal = RiskProposal(
+        instrument_id=proposed, asset_class=AssetClass.EQUITY,
+        tradability=Tradability.INVESTABLE, target_weight=0.1,
+        data_quality=DataQualityStatus.OK,
+        position_asset_classes={} if missing == "classification" else {held: AssetClass.EQUITY},
+        correlations={} if missing == "correlation" else {held: 0.5},
+    )
+    result = RiskEngine().evaluate(portfolio=_portfolio(owner, held), proposal=proposal, policy=_policy(owner))
+    assert not result.passed
+    assert result.max_allowed_weight == 0
+    check = "max_asset_class_weight" if missing == "classification" else "max_correlation"
+    assert next(c for c in result.checks if c.check_id == check).result is PolicyResult.REVIEW
+
+
+def test_proposal_class_is_counted_even_when_mapping_omits_it():
+    owner, held = uuid4(), uuid4()
+    proposal = RiskProposal(
+        instrument_id=uuid4(), asset_class=AssetClass.EQUITY,
+        tradability=Tradability.INVESTABLE, target_weight=0.5,
+        data_quality=DataQualityStatus.OK,
+        position_asset_classes={held: AssetClass.EQUITY}, correlations={held: 0.2},
+    )
+    result = RiskEngine().evaluate(portfolio=_portfolio(owner, held), proposal=proposal, policy=_policy(owner))
+    assert next(c for c in result.checks if c.check_id == "max_asset_class_weight").result is PolicyResult.FAIL
+
+
+def test_future_policy_and_forged_portfolio_weights_are_rejected():
+    owner, held = uuid4(), uuid4()
+    portfolio = _portfolio(owner, held)
+    proposal = RiskProposal(
+        instrument_id=held, asset_class=AssetClass.EQUITY,
+        tradability=Tradability.INVESTABLE, target_weight=0.3,
+        data_quality=DataQualityStatus.OK, position_asset_classes={},
+    )
+    policy = _policy(owner)
+    with pytest.raises(ValueError, match="not effective"):
+        RiskEngine().evaluate(portfolio=portfolio, proposal=proposal, policy=policy.model_copy(update={"effective_at": NOW + timedelta(days=1)}))
+    bad_position = portfolio.positions[0].model_copy(update={"weight": 0.01})
+    with pytest.raises(ValueError, match="weight does not reconcile"):
+        RiskEngine().evaluate(portfolio=portfolio.model_copy(update={"positions": (bad_position,)}), proposal=proposal, policy=policy)
+
+
+def test_reduction_restores_cash_and_does_not_require_self_correlation():
+    owner, held = uuid4(), uuid4()
+    proposal = RiskProposal(
+        instrument_id=held, asset_class=AssetClass.EQUITY,
+        tradability=Tradability.INVESTABLE, target_weight=0.3,
+        data_quality=DataQualityStatus.OK, position_asset_classes={},
+    )
+    result = RiskEngine().evaluate(portfolio=_portfolio(owner, held), proposal=proposal, policy=_policy(owner))
+    assert result.passed
+    assert next(c for c in result.checks if c.check_id == "min_cash_weight").observed_value == pytest.approx(0.7)
