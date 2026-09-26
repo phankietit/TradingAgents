@@ -8,6 +8,7 @@ so they share the same deterministic output shape.
 """
 
 import inspect
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -29,6 +30,25 @@ from tradingagents.agents.schemas import (
     render_trader_proposal,
 )
 from tradingagents.agents.trader.trader import create_trader
+from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
+
+
+def test_structured_errors_never_log_exception_payload(caplog):
+    private_marker = "synthetic-private-portfolio-and-provider-payload"
+
+    class FailingModel:
+        def with_structured_output(self, schema):
+            raise NotImplementedError(private_marker)
+
+        def invoke(self, prompt):
+            raise ValueError(private_marker)
+
+    assert bind_structured(FailingModel(), PortfolioDecision, "PM") is None
+    fallback = SimpleNamespace(invoke=lambda prompt: SimpleNamespace(content="Review narrative"))
+    assert invoke_structured_or_freetext(FailingModel(), fallback, "prompt", str, "PM") == "Review narrative"
+    assert private_marker not in caplog.text
+    assert "NotImplementedError" in caplog.text
+    assert "ValueError" in caplog.text
 
 # ---------------------------------------------------------------------------
 # Render functions

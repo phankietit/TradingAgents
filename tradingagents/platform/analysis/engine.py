@@ -15,6 +15,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from tradingagents.agents.schemas import PortfolioDecision
+from tradingagents.agents.utils.agent_utils import build_instrument_context
 from tradingagents.contracts import InstrumentContract
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
@@ -89,7 +90,10 @@ class AnalysisEngine:
             final_state, signal = graph.propagate_snapshots(
                 request.instrument.canonical_symbol, request.analysis_date.isoformat(),
                 asset_type=profile.legacy_asset_type, portfolio=request.portfolio,
-                instrument_context=request.instrument.model_dump_json(),
+                instrument_context=(build_instrument_context(
+                    request.instrument.canonical_symbol, profile.legacy_asset_type,
+                    curr_date=request.analysis_date.isoformat())
+                    + "\nCanonical instrument metadata: " + request.instrument.model_dump_json()),
             )
         else:
             final_state, signal = graph.propagate(

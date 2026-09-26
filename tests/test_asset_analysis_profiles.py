@@ -90,3 +90,31 @@ def test_prompt_context_states_etf_and_reference_boundaries():
         "SPY", "etf"
     )
     assert "reference-only" in build_instrument_context("NQ=F", "reference")
+
+
+@pytest.mark.parametrize("asset_class,symbol,tradability,expected", [
+    (AssetClass.EQUITY, "AAPL", Tradability.INVESTABLE, "exact ticker"),
+    (AssetClass.ETF, "SPY", Tradability.INVESTABLE, "Do not apply company balance-sheet reasoning"),
+    (AssetClass.CRYPTO, "BTC-USD", Tradability.INVESTABLE, "crypto asset rather than a company"),
+    (AssetClass.CRYPTO, "ETH-USD", Tradability.INVESTABLE, "crypto asset rather than a company"),
+    (AssetClass.REFERENCE_FUTURE, "NQ=F", Tradability.REFERENCE_ONLY, "reference-only"),
+    (AssetClass.REFERENCE_FUTURE, "ES=F", Tradability.REFERENCE_ONLY, "reference-only"),
+])
+def test_snapshot_profile_retains_asset_guidance(asset_class, symbol, tradability, expected):
+    from tests.test_snapshot_analysis import context
+
+    instrument = _instrument(asset_class, symbol, tradability)
+    inputs = context(instrument)
+
+    class SnapshotGraph:
+        def __init__(self, **kwargs):
+            assert set(kwargs["snapshot_reports"]) == {"market"}
+
+        def propagate_snapshots(self, *args, **kwargs):
+            assert expected in kwargs["instrument_context"]
+            assert instrument.model_dump_json() in kwargs["instrument_context"]
+            return {}, "REVIEW"
+
+    AnalysisEngine(graph_factory=SnapshotGraph).analyze(AnalysisRequest(
+        instrument=instrument, analysis_date=inputs.as_of.date(), selected_analysts=("market",),
+        snapshot_context=inputs))
