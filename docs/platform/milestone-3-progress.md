@@ -4,11 +4,12 @@ Scope: PLAN-030 through PLAN-037. PLAN-038 remains outside this milestone.
 Base: `f76c353ee912e6d6d16ff1ba660287a6a383a291`.
 Branch: `feature/TA-030-analysis-engine`.
 
-The initial ticket commits provide services and contracts. They are **not yet
-completion evidence** for the integrated milestone. The full local suite at
-`37d9193` passed 1124 tests with 14 skips and 88 subtests; that result predates
-the structured graph bridge and does not establish the
-following missing integration and correctness requirements.
+The integrated local suite at `8364663` passed 1207 tests with 2 optional skips
+and 88 subtests, including PostgreSQL. Clean non-editable platform installation,
+installed imports/worker smoke, lint and diff checks also pass. See
+[candidate evidence](milestone-3-verification.md). This is **not yet completion**:
+GitHub rejected the branch push because OAuth lacks `workflow` scope; no PR
+exists, CI and merge remain blocked, and security source review is not finished.
 
 ## Remaining completion checks
 
@@ -33,17 +34,17 @@ following missing integration and correctness requirements.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
   artifact persistence are implemented. Worker integration now persists evidence
   alongside candidates, with invalid citations routed to REVIEW. PostgreSQL
-  verification remains.
+  risk/evaluation persistence verification passes.
 - PLAN-034: timestamped/quality-checked quotes, explicit freshness limits,
   simultaneous-event sequencing, complete event/quote hashes and deterministic
   snapshot IDs are implemented. SQLite tests verify immutable writes and owner
   isolation. The valuation service now resolves hash-verified owner snapshots,
   enforces source cutoffs and raw-close pricing, and persists replay idempotently.
-  PostgreSQL evidence remains.
+  PostgreSQL persisted valuation replay and owner isolation pass.
 - PLAN-035: validate classification/correlation coverage, reconciled accounting,
   effective policy and all limits. Coverage fixes now have targeted regression
   tests; snapshot-worker integration now covers the decision factory through
-  readiness and owner approval. PostgreSQL verification remains.
+  readiness and owner approval. PostgreSQL risk/approval replay passes.
 - PLAN-036: readiness, matching policy, owner/run source checks, idempotent
   events and transactional projection writes now have SQLite integration tests.
   Authenticated state/transition API wiring is covered by tests for sessions,
@@ -52,7 +53,8 @@ following missing integration and correctness requirements.
   policy and instrument master, rejecting forged checks/weights. Correlation
   replays hash-verified owner/run-bound daily price snapshots under explicit
   policy windows/freshness; SQLite covers multi-asset approval and source bypass
-  rejection. Concurrent PostgreSQL validation remains.
+  rejection. Concurrent PostgreSQL approval/rejection and identical-event retry
+  validation pass; exactly one audit event is persisted.
 - PLAN-037: hash-verified snapshot outcome helper, duplicate/future outcome
   rejection, canonical ordering and deterministic evaluation IDs have targeted
   tests. Caller-supplied returns remain `reproducible=False`. Owner-scoped
@@ -61,9 +63,10 @@ following missing integration and correctness requirements.
   verification tests. Calendar integration uses a pinned exchange
   calendar library, verifies asset/benchmark alignment, and hashes exact session
   windows into outcomes; tests cover DST, holidays, early closes and 24/7 data.
-- Run PostgreSQL upgrade/schema parity/rollback, persistence integration,
-  clean installation, full regression and scoped security checks after fixes.
-- Update README, consolidate the changelog, produce a candidate-SHA receipt,
-  create/review the fork PR and merge only after all in-scope gates pass.
+- PostgreSQL upgrade/schema parity/rollback, persistence integration, clean
+  installation and full regression pass. Scoped security review remains.
+- README and changelog are updated and candidate evidence is recorded. Obtain
+  GitHub workflow permission, create/review the fork PR, verify CI and merge only
+  after all in-scope gates pass.
 
 No production readiness or performance claim follows from this tracker.
