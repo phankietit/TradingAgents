@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 
 from tradingagents.contracts import (
     TERMINAL_RUN_EVENTS,
+    AssetClass,
     DecisionCandidate,
     InstrumentContract,
     JobRecord,
@@ -43,6 +44,7 @@ from tradingagents.contracts import (
     RunEventType,
     RunManifest,
     RunStatus,
+    Tradability,
 )
 from tradingagents.platform.artifacts import (
     ArtifactIntegrityError,
@@ -51,17 +53,31 @@ from tradingagents.platform.artifacts import (
 )
 from tradingagents.platform.auth import InvalidCredentials, OwnerAuth, OwnerPrincipal
 from tradingagents.platform.events import RunEventNotFound, RunEventStore
+from tradingagents.platform.instruments import InstrumentMaster
 from tradingagents.platform.jobs import DurableJobQueue, JobConflict
+from tradingagents.platform.market_data import (
+    InsufficientBenchmarkCoverage,
+    TimeSeriesSnapshotService,
+    TimeSeriesUnavailable,
+    build_time_series_view,
+    slice_time_series,
+)
 from tradingagents.platform.observability import MetricsRegistry, request_id_scope
-from tradingagents.platform.persistence import Database, PlatformRepository
+from tradingagents.platform.persistence import (
+    AmbiguousInstrumentAlias,
+    Database,
+    PlatformRepository,
+)
 
 from .schemas import (
+    InstrumentDetailResponse,
     LoginRequest,
     LoginResponse,
     OwnerResponse,
     RunAcceptedResponse,
     RunCreateRequest,
     StatusResponse,
+    TimeSeriesResponse,
 )
 from .settings import ApiSettings
 
@@ -352,9 +368,134 @@ def create_app(settings: ApiSettings) -> FastAPI:
     def list_instruments(
         _owner: OwnerDependency,
         session: SessionDependency,
+        asset_class: AssetClass | None = None,
+        tradability: Tradability | None = None,
+        venue: str | None = Query(default=None, min_length=1, max_length=64),
         limit: int = Query(default=100, ge=1, le=500),
     ) -> tuple[InstrumentContract, ...]:
-        return PlatformRepository(session).list_instruments(limit=limit)
+        return InstrumentMaster(PlatformRepository(session)).list(
+            asset_class=asset_class,
+            tradability=tradability,
+            venue=venue,
+            limit=limit,
+        )
+
+    @app.get(
+        f"{API_PREFIX}/instruments/resolve",
+        response_model=InstrumentDetailResponse,
+        tags=["instruments"],
+    )
+    def resolve_instrument(
+        _owner: OwnerDependency,
+        session: SessionDependency,
+        alias: str = Query(min_length=1, max_length=128),
+        namespace: str | None = Query(
+            default=None,
+            min_length=1,
+            max_length=32,
+            pattern=r"^[a-z0-9][a-z0-9_.-]*$",
+        ),
+    ) -> InstrumentDetailResponse:
+        repository = PlatformRepository(session)
+        try:
+            instrument = InstrumentMaster(repository).resolve(alias, namespace=namespace)
+        except AmbiguousInstrumentAlias as error:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="instrument alias is ambiguous; provide namespace",
+            ) from error
+        if instrument is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="instrument not found",
+            )
+        return InstrumentDetailResponse(
+            instrument=instrument,
+            aliases=repository.list_instrument_aliases(instrument.instrument_id),
+        )
+
+    @app.get(
+        f"{API_PREFIX}/instruments/{{instrument_id}}",
+        response_model=InstrumentDetailResponse,
+        tags=["instruments"],
+    )
+    def get_instrument(
+        instrument_id: UUID,
+        _owner: OwnerDependency,
+        session: SessionDependency,
+    ) -> InstrumentDetailResponse:
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="instrument not found",
+            )
+        return InstrumentDetailResponse(
+            instrument=instrument,
+            aliases=repository.list_instrument_aliases(instrument.instrument_id),
+        )
+
+    @app.get(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/timeseries",
+        response_model=TimeSeriesResponse,
+        tags=["market-data"],
+    )
+    def get_time_series(
+        instrument_id: UUID,
+        owner: OwnerDependency,
+        session: SessionDependency,
+        dataset: str = Query(default="ohlcv.daily", min_length=1, max_length=128),
+        as_of: datetime | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
+        benchmark_instrument_id: UUID | None = None,
+    ) -> TimeSeriesResponse:
+        requested_as_of = as_of or _now(settings)
+        if requested_as_of.tzinfo is None or requested_as_of.astimezone(UTC) > _now(settings):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="as_of must be timezone-aware and not in the future",
+            )
+        repository = PlatformRepository(session)
+        if repository.get_instrument(instrument_id) is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="instrument not found",
+            )
+        snapshots = TimeSeriesSnapshotService(
+            repository,
+            ArtifactService(artifact_store, repository),
+        )
+        try:
+            snapshot, series = snapshots.load(
+                owner_id=owner.owner_id,
+                instrument_id=instrument_id,
+                dataset=dataset,
+                as_of=requested_as_of,
+            )
+            series = slice_time_series(series, start=start, end=end)
+            benchmark = None
+            if benchmark_instrument_id is not None:
+                _benchmark_snapshot, benchmark = snapshots.load(
+                    owner_id=owner.owner_id,
+                    instrument_id=benchmark_instrument_id,
+                    dataset=dataset,
+                    as_of=requested_as_of,
+                )
+                benchmark = slice_time_series(benchmark, start=start, end=end)
+            view = build_time_series_view(series, benchmark=benchmark)
+        except TimeSeriesUnavailable as error:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(error),
+            ) from error
+        except (InsufficientBenchmarkCoverage, ValueError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=str(error),
+            ) from error
+        return TimeSeriesResponse(snapshot=snapshot, view=view)
 
     @app.post(
         f"{API_PREFIX}/runs",

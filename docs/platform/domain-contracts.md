@@ -18,6 +18,23 @@ database model.
 
 - `InstrumentContract`: canonical identity, asset class, venue, timezone,
   calendar, benchmark, and investable/reference-only boundary.
+- `InstrumentAliasContract`: immutable namespaced alias and normalized lookup
+  key linked to one canonical instrument.
+- `NormalizedTimeSeries` and `TimeSeriesView`: ordered point-in-time OHLCV,
+  adjusted-price basis, deterministic returns/risk metrics, and aligned
+  benchmark comparison.
+- `EquityETFSnapshotBundle`: filed-date equity evidence or fund-specific ETF
+  evidence with per-dataset coverage and future-row exclusion counts.
+- `FuturesReferenceSnapshot`: reference-only NQ/ES contract identity, explicit
+  roll adjustment, CME overnight/RTH sessions, and non-fabricated gap handling.
+- `CryptoSnapshot`: BTC/ETH-only UTC prices, multi-venue liquidity/freshness
+  evidence, versioned quality thresholds, and exact-timestamp BTC comparison.
+- `StockUniverseSnapshot`: deterministic point-in-time screening policy,
+  ranked candidates, explicit exclusions, and stable input/universe hashes.
+- `DerivedFactorSnapshot`: configured momentum, trend, volatility, relative
+  strength, correlation, and cross-sectional breadth with source hashes.
+- `DataHealthReport`: consistent source health classification, per-state
+  counts, worst-state aggregation, and an immutable report hash.
 - `SnapshotManifest`: immutable dataset provenance, content hash, data window,
   retrieval time, and quality state.
 - `RunManifest`: reproducible analysis lifecycle, model/config/prompt identity,

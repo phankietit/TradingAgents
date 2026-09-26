@@ -32,6 +32,7 @@ from tradingagents.platform.persistence import (
     downgrade_database,
     upgrade_database,
 )
+from tradingagents.platform.persistence.models import InstrumentRow
 
 NOW = datetime(2026, 9, 23, 8, 0, tzinfo=UTC)
 
@@ -90,6 +91,7 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
         "analysis_runs",
         "artifacts",
         "decisions",
+        "instrument_aliases",
         "instruments",
         "owner_accounts",
         "owner_sessions",
@@ -102,6 +104,36 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
     downgrade_database(url)
     remaining = set(inspect(database.engine).get_table_names())
     assert remaining <= {"alembic_version"}
+    database.dispose()
+
+
+@pytest.mark.unit
+def test_instrument_alias_migration_backfills_existing_canonical_symbols(tmp_path):
+    url = _url(tmp_path)
+    upgrade_database(url, "0006_run_events")
+    instrument = _instrument()
+    database = Database(url)
+    with database.session() as session:
+        session.add(
+            InstrumentRow(
+                instrument_id=instrument.instrument_id,
+                schema_version=instrument.schema_version,
+                symbol=instrument.symbol,
+                canonical_symbol=instrument.canonical_symbol,
+                asset_class=instrument.asset_class.value,
+                tradability=instrument.tradability.value,
+                payload=instrument.model_dump(mode="json"),
+                created_at=NOW,
+            )
+        )
+    database.dispose()
+
+    upgrade_database(url)
+    database = Database(url)
+    with database.session() as session:
+        repository = PlatformRepository(session)
+        assert repository.resolve_instrument(" aapl ") == instrument
+        assert repository.list_instrument_aliases(instrument.instrument_id)[0].namespace == "canonical"
     database.dispose()
 
 

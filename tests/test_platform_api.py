@@ -13,7 +13,9 @@ from fastapi.testclient import TestClient
 from tradingagents.contracts import (
     ArtifactKind,
     AssetClass,
+    InstrumentAliasContract,
     InstrumentContract,
+    PriceInterval,
     RunManifest,
     RunStatus,
     Tradability,
@@ -22,6 +24,7 @@ from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.api.runtime import load_api_settings
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
+from tradingagents.platform.market_data import TimeSeriesSnapshotService, normalize_time_series
 from tradingagents.platform.observability import configure_platform_logging
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 
@@ -70,6 +73,13 @@ def api_context(tmp_path):
         )
         repository = PlatformRepository(session)
         repository.add_instrument(instrument)
+        repository.add_instrument_alias(
+            InstrumentAliasContract.create(
+                instrument_id=instrument.instrument_id,
+                namespace="common",
+                alias="APPLE",
+            )
+        )
         repository.save_run(other_run)
         artifact = ArtifactService(LocalArtifactStore(artifact_root), repository).create(
             owner_id=owner_id,
@@ -84,6 +94,42 @@ def api_context(tmp_path):
             media_type="text/plain",
             content=b"other owner",
             created_at=NOW,
+        )
+        time_series = normalize_time_series(
+            instrument=instrument,
+            dataset="ohlcv.daily",
+            interval=PriceInterval.ONE_DAY,
+            as_of=NOW - timedelta(hours=1),
+            annualization_periods=252,
+            bars=(
+                {
+                    "timestamp": NOW - timedelta(days=2),
+                    "open": 100,
+                    "high": 102,
+                    "low": 99,
+                    "close": 101,
+                    "adjusted_close": 100,
+                    "volume": 1_000_000,
+                },
+                {
+                    "timestamp": NOW - timedelta(days=1),
+                    "open": 101,
+                    "high": 104,
+                    "low": 100,
+                    "close": 103,
+                    "adjusted_close": 102,
+                    "volume": 1_100_000,
+                },
+            ),
+        )
+        time_series_snapshot = TimeSeriesSnapshotService(
+            repository,
+            ArtifactService(LocalArtifactStore(artifact_root), repository),
+        ).persist(
+            owner_id=owner_id,
+            series=time_series,
+            vendor="test-fixture",
+            retrieved_at=NOW,
         )
     database.dispose()
 
@@ -105,6 +151,7 @@ def api_context(tmp_path):
             "other_run": other_run,
             "artifact": artifact,
             "other_artifact": other_artifact,
+            "time_series_snapshot": time_series_snapshot,
         }
 
 
@@ -178,6 +225,78 @@ def test_login_sets_private_session_and_me_uses_server_principal(api_context):
     assert client.cookies.get("ta_session")
     assert client.cookies.get("ta_csrf")
     assert client.get("/api/v1/auth/me").json()["email"] == "owner@example.com"
+
+
+@pytest.mark.unit
+def test_instrument_master_api_filters_resolves_and_returns_aliases(api_context):
+    client = api_context["client"]
+    instrument = api_context["instrument"]
+    _login(client)
+
+    equities = client.get("/api/v1/instruments", params={"asset_class": "equity"})
+    assert equities.status_code == 200
+    assert [item["canonical_symbol"] for item in equities.json()] == ["AAPL"]
+    assert client.get(
+        "/api/v1/instruments", params={"tradability": "reference_only"}
+    ).json() == []
+    assert client.get("/api/v1/instruments", params={"venue": "NASDAQ"}).status_code == 200
+    assert client.get("/api/v1/instruments", params={"asset_class": "unknown"}).status_code == 422
+
+    resolved = client.get("/api/v1/instruments/resolve", params={"alias": " apple "})
+    assert resolved.status_code == 200
+    assert resolved.json()["instrument"]["instrument_id"] == str(instrument.instrument_id)
+    assert {item["namespace"] for item in resolved.json()["aliases"]} == {
+        "canonical",
+        "common",
+    }
+    assert client.get(
+        "/api/v1/instruments/resolve",
+        params={"alias": "APPLE", "namespace": "common"},
+    ).status_code == 200
+    assert client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}"
+    ).status_code == 200
+    assert client.get(
+        "/api/v1/instruments/resolve", params={"alias": "missing"}
+    ).status_code == 404
+
+
+@pytest.mark.unit
+def test_normalized_time_series_api_is_point_in_time_scoped(api_context):
+    client = api_context["client"]
+    instrument = api_context["instrument"]
+    _login(client)
+    response = client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}/timeseries",
+        params={"dataset": "ohlcv.daily", "as_of": NOW.isoformat()},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["snapshot"]["snapshot_id"] == str(
+        api_context["time_series_snapshot"].snapshot_id
+    )
+    assert body["view"]["statistics"]["price_basis"] == "adjusted_close"
+    assert body["view"]["statistics"]["total_return"] == pytest.approx(0.02)
+    assert len(body["view"]["series"]["bars"]) == 2
+
+    future = client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}/timeseries",
+        params={"as_of": (NOW + timedelta(seconds=1)).isoformat()},
+    )
+    assert future.status_code == 422
+    before_snapshot = client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}/timeseries",
+        params={"as_of": (NOW - timedelta(days=3)).isoformat()},
+    )
+    assert before_snapshot.status_code == 404
+    missing_benchmark = client.get(
+        f"/api/v1/instruments/{instrument.instrument_id}/timeseries",
+        params={
+            "as_of": NOW.isoformat(),
+            "benchmark_instrument_id": str(uuid4()),
+        },
+    )
+    assert missing_benchmark.status_code == 404
 
 
 @pytest.mark.unit

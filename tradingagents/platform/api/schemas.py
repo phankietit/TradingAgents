@@ -6,7 +6,14 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
-from tradingagents.contracts import JobRecord, RunManifest
+from tradingagents.contracts import (
+    InstrumentAliasContract,
+    InstrumentContract,
+    JobRecord,
+    RunManifest,
+    SnapshotManifest,
+    TimeSeriesView,
+)
 
 
 class ApiModel(BaseModel):
@@ -25,6 +32,16 @@ class OwnerResponse(ApiModel):
 
 class LoginResponse(OwnerResponse):
     expires_at: AwareDatetime
+
+
+class InstrumentDetailResponse(ApiModel):
+    instrument: InstrumentContract
+    aliases: tuple[InstrumentAliasContract, ...]
+
+
+class TimeSeriesResponse(ApiModel):
+    snapshot: SnapshotManifest
+    view: TimeSeriesView
 
 
 class RunCreateRequest(ApiModel):
