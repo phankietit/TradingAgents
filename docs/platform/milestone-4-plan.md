@@ -260,6 +260,12 @@ UNVERIFIED, not implied by rejection QA.
 
 Status: planned. Depends on all tickets above.
 
+- Mandatory finance-first UX pass per `web-design-spec.md`: clean modern output
+  for nontechnical investors; professional financial detail via progressive
+  disclosure. Remove default-view technical clutter without hiding source quality,
+  risk, synthetic labels or approval boundaries. Existing checkpoint screenshots
+  are not final visual acceptance. Verify routine use needs no IDs/JSON/ISO input.
+
 - Browser E2E over real local API/worker/database, fixture labels explicit;
   desktop and narrow screenshots, console/network/keyboard/state checks.
 - Local lint/typecheck/build/component/E2E, full Python regression and disposable

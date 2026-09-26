@@ -4,6 +4,50 @@ Owner chose direct code design, no Image Gen. This is the implementation brief,
 not evidence of rendered or functional UI. Reference screenshots will be captured
 from the actual browser as each complete surface is implemented.
 
+## Owner acceptance requirement: finance-first, not developer-first
+
+The owner requires a clean, modern, professional product usable without technical
+knowledge, while retaining financial depth for experienced investors. This is a
+mandatory M4 acceptance gate, not an optional cosmetic pass. Existing technical
+checkpoint screens are implementation evidence, not the final UX standard.
+
+- Primary hierarchy: what changed, over which period, what it means for the
+  portfolio, key risks and the next permitted research/review action. Show a
+  concise overview first, then financial detail, then optional technical audit.
+- Keep financially meaningful terms (NAV, allocation, drawdown, volatility,
+  benchmark, liquidity), with short definitions and explicit units/periods.
+  Never replace precise finance concepts with vague scores or unsupported advice.
+- Default screens must not lead with UUIDs, hashes, schema versions, JSON,
+  internal dataset names, raw enum codes, endpoint names or infrastructure terms.
+  Put these in collapsed audit/advanced details, still reachable and copyable.
+  Sources, freshness, material warnings and synthetic-data labels stay visible.
+- Translate system states into plain language: “Waiting to start”, “Analysis in
+  progress”, “Needs review”, “Data unavailable”. Explain consequence and recovery
+  action. Preserve distinctions between missing, stale, partial and failed data;
+  do not turn an outage into an empty result or promise a completion time.
+- Routine setup uses instrument names, readable source choices, date/time controls
+  with timezone, and sensible existing defaults. ISO strings, source-age seconds,
+  IDs and worker configuration belong in advanced/operator settings. No silent
+  changes to financial policy, eligibility, data cutoff or cost authorization.
+- Screening presents financial eligibility and readable exclusion reasons;
+  ranking is explicitly not forecast return. Technical policy identity and raw
+  codes belong in details; effective criteria remain inspectable. Synthetic
+  policies must still be prominently identified as examples, not owner settings.
+- Use restrained color, clear typography, whitespace and consistent formatting;
+  compact financial tables where useful, no badge clutter or developer-console
+  aesthetic. Red/green must not substitute for text or imply buy/sell instructions.
+- Each main screen has a clear primary task. Secondary diagnostics do not compete
+  with price/period performance, research conclusions, holdings or review actions.
+- Verify that a nontechnical user can find a stock, understand the period/source,
+  read the research and risks, inspect portfolio impact and record a review
+  without reading JSON or typing internal IDs. Verify expert drilldowns retain
+  provenance, precise financial definitions and deterministic risk checks.
+
+Final browser review must cover all four workspaces at desktop and narrow widths,
+including loading/empty/error/stale states. A passing build or functional flow
+alone does not satisfy this presentation requirement. Direct code design only;
+no Image Gen, paid service, new provider or public deployment is authorized.
+
 ## Layout and visual system
 
 - Theme: neutral near-black canvas `#0b0e13`, rail `#10151c`, raised surface
