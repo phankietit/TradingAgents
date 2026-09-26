@@ -10,6 +10,37 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Added
 
+- Add a stable `AnalysisEngine` platform adapter around the existing LangGraph
+  research runtime while preserving the CLI and programmatic graph API.
+- Add enforced equity, ETF, reference-market, and BTC/ETH analysis profiles so
+  incompatible analysts and company-specific prompts cannot cross asset types.
+- Add fail-closed structured decision conversion: invalid or overreaching model
+  output becomes `REVIEW`, never an executable default or implicit `Hold`.
+- Add a point-in-time evidence graph linking every material claim to immutable
+  source timestamps, snapshot IDs, vendors, and content hashes.
+- Add an immutable owner-scoped portfolio ledger with deterministic cash,
+  position, NAV, and realized/unrealized P&L replay; no broker or order path.
+- Add a versioned deterministic risk engine for data quality, tradability,
+  weights, concentration, exposure, turnover, correlation, and cash limits.
+- Add an append-only decision lifecycle with actor/reason/policy audit and
+  matching-owner human approval enforcement.
+- Add deterministic historical decision evaluation v2 and hash-verified
+  snapshot outcome calculations. Caller-supplied returns are explicitly not
+  certified reproducible, and portfolio-performance claims remain prohibited.
+- Retain validated Portfolio Manager narrative separately from CLI Markdown;
+  absent, incomplete or overreaching payloads cannot become platform decisions.
+- Recompute decision readiness/approval risk against persisted owner portfolio,
+  policy and instrument classifications; reject unbound or forged PASS checks.
+- Add durable research-handler persistence with retry reuse and cancellation;
+  unattested legacy graph output remains REVIEW rather than approval-ready.
+- Connect owner-bound snapshot runs to source-cited graph narrative, immutable
+  evidence, deterministic risk and human-approval candidates. Inputs include
+  explicit role freshness limits and cannot change during run transitions.
+
+- Add `tradingagents-worker` with bounded lease renewal, transaction-fenced
+  publication, retry recovery, and graceful stop semantics.
+- Add owner-bound ledger valuation and persisted evaluation replay receipts
+  using pinned exchange calendars, explicit session closes, and source hashes.
 - Canonical instrument master with immutable namespaced aliases for initial US
   large-cap, ETF, index-reference, NQ/ES-reference, and BTC/ETH identities.
 - Owner-scoped immutable normalized OHLCV snapshots, deterministic return/risk

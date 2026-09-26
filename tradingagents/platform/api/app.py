@@ -11,7 +11,7 @@ import secrets
 import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -33,10 +33,14 @@ from fastapi.security import APIKeyCookie
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     TERMINAL_RUN_EVENTS,
     AssetClass,
+    DecisionActorType,
     DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionStatus,
     InstrumentContract,
     JobRecord,
     JobStatus,
@@ -52,6 +56,7 @@ from tradingagents.platform.artifacts import (
     LocalArtifactStore,
 )
 from tradingagents.platform.auth import InvalidCredentials, OwnerAuth, OwnerPrincipal
+from tradingagents.platform.decisions import DecisionLifecycle
 from tradingagents.platform.events import RunEventNotFound, RunEventStore
 from tradingagents.platform.instruments import InstrumentMaster
 from tradingagents.platform.jobs import DurableJobQueue, JobConflict
@@ -70,6 +75,8 @@ from tradingagents.platform.persistence import (
 )
 
 from .schemas import (
+    DecisionStateResponse,
+    DecisionTransitionRequest,
     InstrumentDetailResponse,
     LoginRequest,
     LoginResponse,
@@ -537,6 +544,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
             "selected_analysts": list(payload.selected_analysts),
             "config_hash": config_hash,
         }
+        if payload.decision_inputs is not None:
+            job_payload["decision_inputs"] = payload.decision_inputs.model_dump(mode="json")
         queue = DurableJobQueue(session)
         existing_job = queue.get_by_idempotency(owner.owner_id, idempotency_key)
         if existing_job:
@@ -566,7 +575,28 @@ def create_app(settings: ApiSettings) -> FastAPI:
             deep_model=settings.deep_model,
             config_hash=config_hash,
             prompt_version=settings.prompt_version,
+            snapshot_ids=payload.decision_inputs.snapshot_ids() if payload.decision_inputs else (),
+            decision_inputs=payload.decision_inputs,
         )
+        if payload.decision_inputs is not None:
+            from tradingagents.platform.analysis.profiles import (
+                resolve_analysis_profile,
+                select_analysts,
+            )
+            from tradingagents.platform.analysis.snapshots import load_snapshot_context
+
+            try:
+                select_analysts(resolve_analysis_profile(instrument), run.selected_analysts)
+                load_snapshot_context(ArtifactService(artifact_store, repository), run,
+                                      payload.decision_inputs.snapshots_by_analyst)
+                inputs = payload.decision_inputs
+                if inputs.portfolio_snapshot_id is not None:
+                    portfolio = repository.get_portfolio_snapshot(inputs.portfolio_snapshot_id, owner.owner_id)
+                    policy = repository.get_policy(inputs.policy_id, inputs.policy_version, owner.owner_id)
+                    if portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None:
+                        raise ValueError("risk inputs unavailable")
+            except (ValueError, ArtifactIntegrityError) as error:
+                raise HTTPException(status_code=422, detail="ineligible snapshot analysis inputs") from error
         repository.save_run(run)
         try:
             job = queue.enqueue(
@@ -781,6 +811,46 @@ def create_app(settings: ApiSettings) -> FastAPI:
         if decision is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="decision not found")
         return decision
+
+    @app.get(f"{API_PREFIX}/decisions/{{decision_id}}/state", response_model=DecisionStateResponse, tags=["decisions"])
+    def get_decision_state(decision_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        repository = PlatformRepository(session)
+        candidate = repository.get_decision(decision_id, owner.owner_id)
+        if candidate is None:
+            raise HTTPException(status_code=404, detail="decision not found")
+        events = repository.list_decision_events(decision_id, owner.owner_id)
+        return DecisionStateResponse(candidate=candidate, events=events,
+                                     current_status=DecisionLifecycle().apply(candidate, events))
+
+    @app.post(f"{API_PREFIX}/decisions/{{decision_id}}/transitions", response_model=DecisionStateResponse, tags=["decisions"])
+    def transition_decision(
+        decision_id: UUID, body: DecisionTransitionRequest,
+        owner: CsrfOwnerDependency, session: SessionDependency,
+    ):
+        repository = PlatformRepository(session, artifact_store=artifact_store)
+        candidate = repository.get_decision(decision_id, owner.owner_id)
+        if candidate is None:
+            raise HTTPException(status_code=404, detail="decision not found")
+        history = repository.list_decision_events(decision_id, owner.owner_id)
+        target = {
+            "approve": DecisionStatus.APPROVED, "reject": DecisionStatus.REJECTED,
+            "review": DecisionStatus.REVIEW, "expire": DecisionStatus.EXPIRED,
+        }[body.action]
+        previous = next((item for item in history if item.event_id == body.event_id), None)
+        try:
+            event = DecisionLifecycleEvent(
+                event_id=body.event_id, decision_id=decision_id, owner_id=owner.owner_id,
+                actor_id=owner.owner_id, actor_type=DecisionActorType.OWNER,
+                from_status=body.expected_status, to_status=target, reason=body.reason,
+                occurred_at=previous.occurred_at if previous else _now(settings),
+                policy_id=body.policy_id, policy_version=body.policy_version,
+            )
+            repository.add_decision_event(event)
+        except ValueError as error:
+            raise HTTPException(status_code=409, detail="decision transition rejected") from error
+        events = repository.list_decision_events(decision_id, owner.owner_id)
+        return DecisionStateResponse(candidate=candidate, events=events,
+                                     current_status=DecisionLifecycle().apply(candidate, events))
 
     @app.get(f"{API_PREFIX}/artifacts/{{artifact_id}}", tags=["artifacts"])
     def get_artifact(

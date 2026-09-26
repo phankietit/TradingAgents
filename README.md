@@ -388,6 +388,26 @@ classification. These services operate on explicitly supplied or previously
 stored snapshots; this milestone does not select or configure a production
 market-data vendor.
 
+The analysis layer now connects those snapshots to an `AnalysisEngine`,
+asset-specific graph profiles, strict structured narrative, source-linked
+evidence, deterministic portfolio/risk checks, and an audited owner-approval
+lifecycle. Invalid, stale, incomplete, or unattested output remains `REVIEW`.
+LLMs cannot choose portfolio weights or approve decisions. NQ/ES remain
+reference-only; supported crypto analysis is BTC/ETH.
+
+Install with `pip install ".[platform]"`. After applying the documented
+migrations, `tradingagents-worker` processes durable research jobs using the
+same private database and artifact root as the API. See
+[analysis engine and worker setup](docs/platform/analysis-engine.md).
+
+An immutable owner-scoped ledger can replay recorded cash/position events and
+value holdings from verified price snapshots. Historical evaluation can persist
+and verify decision-level returns against calendar-aligned benchmark snapshots.
+This is reproducibility of recorded inputs/results, not proof of historical
+model knowledge or portfolio performance. See [ledger](docs/platform/portfolio-ledger.md),
+[risk](docs/platform/risk-engine.md), [approval](docs/platform/decision-lifecycle.md),
+and [historical evaluation](docs/platform/historical-evaluation-v2.md).
+
 There is no Web UI, portfolio simulator, broker connection, order execution,
 or autonomous trading path in this repository. See `docs/platform/api.md` and
 the contracts under `docs/platform/` for the current runtime and data

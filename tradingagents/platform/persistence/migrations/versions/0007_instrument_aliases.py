@@ -5,10 +5,12 @@ Revises: 0006_run_events
 """
 
 import unicodedata
-from datetime import UTC, datetime
+from datetime import datetime
 
 import sqlalchemy as sa
 from alembic import op
+
+from tradingagents._compat import UTC
 
 revision = "0007_instrument_aliases"
 down_revision = "0006_run_events"

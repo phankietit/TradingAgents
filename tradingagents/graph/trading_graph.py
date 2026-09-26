@@ -100,6 +100,7 @@ class TradingAgentsGraph:
         debug=False,
         config: dict[str, Any] = None,
         callbacks: list | None = None,
+        snapshot_reports: dict[str, str] | None = None,
     ):
         """Initialize the trading agents graph and components.
 
@@ -144,10 +145,12 @@ class TradingAgentsGraph:
         self.deep_thinking_llm = deep_client.get_llm()
         self.quick_thinking_llm = quick_client.get_llm()
 
-        self.memory_log = TradingMemoryLog(self.config)
+        self.snapshot_mode = snapshot_reports is not None
+        self.memory_log = None if self.snapshot_mode else TradingMemoryLog(self.config)
 
         # Create tool nodes
-        self.tool_nodes = self._create_tool_nodes()
+        self.tool_nodes = {} if self.snapshot_mode else self._create_tool_nodes()
+        from .snapshot_analysis import snapshot_analyst_nodes
 
         # Initialize components
         self.conditional_logic = ConditionalLogic(
@@ -159,6 +162,8 @@ class TradingAgentsGraph:
             self.deep_thinking_llm,
             self.tool_nodes,
             self.conditional_logic,
+            analyst_nodes=snapshot_analyst_nodes(self.quick_thinking_llm, snapshot_reports)
+            if self.snapshot_mode else None,
         )
 
         self.propagator = Propagator(
@@ -442,6 +447,21 @@ class TradingAgentsGraph:
             f"portfolio={portfolio.fingerprint() if portfolio is not None else 'none'}",
         ])
 
+    def propagate_snapshots(self, company_name, trade_date, *, asset_type, instrument_context, portfolio=None):
+        """Reuse debates and managers with no live tools, memory, logs or checkpoints."""
+        if not self.snapshot_mode:
+            raise ValueError("snapshot propagation requires snapshot analyst nodes")
+        trade_date = _validate_trade_date(trade_date)
+        with self.config_scope():
+            state = self.propagator.create_initial_state(
+                company_name, trade_date, asset_type=asset_type,
+                instrument_context=instrument_context,
+                portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
+            )
+            final = self.graph.invoke(state, **self.propagator.get_graph_args())
+            structured = final.get("structured_decision")
+            return final, structured.get("rating", "REVIEW") if structured else "REVIEW"
+
     def propagate(self, company_name, trade_date, asset_type: str = "stock", portfolio=None):
         """Run the trading agents graph for a company on a specific date.
 
@@ -461,6 +481,8 @@ class TradingAgentsGraph:
         # Validate before touching instance state so malformed input fails
         # cleanly even for lightweight callers that only exercise validation.
         trade_date = _validate_trade_date(trade_date)
+        if getattr(self, "snapshot_mode", False):
+            raise ValueError("snapshot graph requires propagate_snapshots")
         with self.config_scope():
             self.ticker = company_name
 

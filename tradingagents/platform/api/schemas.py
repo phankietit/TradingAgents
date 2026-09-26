@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from tradingagents.contracts import (
+    DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionStatus,
     InstrumentAliasContract,
     InstrumentContract,
     JobRecord,
@@ -14,6 +18,7 @@ from tradingagents.contracts import (
     SnapshotManifest,
     TimeSeriesView,
 )
+from tradingagents.contracts.runs import DecisionRunInputs
 
 
 class ApiModel(BaseModel):
@@ -48,6 +53,13 @@ class RunCreateRequest(ApiModel):
     instrument_id: UUID
     analysis_as_of: AwareDatetime
     selected_analysts: tuple[str, ...] = Field(min_length=1, max_length=4)
+    decision_inputs: DecisionRunInputs | None = None
+
+    @model_validator(mode="after")
+    def validate_snapshot_roles(self):
+        if self.decision_inputs and set(self.decision_inputs.snapshots_by_analyst) != set(self.selected_analysts):
+            raise ValueError("snapshot roles must match selected analysts")
+        return self
 
 
 class RunAcceptedResponse(ApiModel):
@@ -57,3 +69,18 @@ class RunAcceptedResponse(ApiModel):
 
 class StatusResponse(ApiModel):
     status: str
+
+
+class DecisionTransitionRequest(ApiModel):
+    event_id: UUID
+    expected_status: DecisionStatus
+    action: Literal["approve", "reject", "review", "expire"]
+    reason: str = Field(min_length=1, max_length=2000)
+    policy_id: UUID | None = None
+    policy_version: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+class DecisionStateResponse(ApiModel):
+    candidate: DecisionCandidate
+    current_status: DecisionStatus
+    events: tuple[DecisionLifecycleEvent, ...]

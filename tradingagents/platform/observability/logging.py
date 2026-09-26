@@ -6,8 +6,10 @@ import json
 import logging
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, TextIO
+
+from tradingagents._compat import UTC
 
 from .context import get_request_id
 

@@ -4,17 +4,20 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from threading import Event, Thread
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType, RunStatus
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.observability import MetricsRegistry
 from tradingagents.platform.persistence import Database, PlatformRepository
 
-from .queue import DurableJobQueue
+from .queue import DurableJobQueue, JobLeaseError
 
 
 class JobCancellationRequested(RuntimeError):
@@ -35,8 +38,47 @@ class JobExecutionContext:
         self.worker_id = worker_id
         self.lease_for = lease_for
         self.clock = clock
+        self._lease_error = None
+
+    def _check_lease(self):
+        if self._lease_error is not None:
+            raise JobLeaseError("background lease renewal failed") from self._lease_error
+
+    @contextmanager
+    def keepalive(self):
+        """Renew on a separate session while a synchronous model call runs."""
+        stopped = Event()
+
+        def renew():
+            while not stopped.wait(self.lease_for.total_seconds() / 3):
+                try:
+                    self.heartbeat()
+                except Exception as error:
+                    self._lease_error = error
+                    return
+
+        thread = Thread(target=renew, name=f"job-lease-{self.job_id}", daemon=True)
+        thread.start()
+        try:
+            yield
+        finally:
+            stopped.set()
+            thread.join()
+        self._check_lease()
+
+    @contextmanager
+    def publication_session(self):
+        """Fence publication against cancellation/recovery in the same transaction."""
+        self._check_lease()
+        with self.database.session() as session:
+            job = DurableJobQueue(session).heartbeat(
+                self.job_id, self.worker_id, lease_for=self.lease_for, now=self.clock())
+            if job.status is JobStatus.CANCEL_REQUESTED:
+                raise JobCancellationRequested("job cancellation requested")
+            yield session
 
     def heartbeat(self) -> JobRecord:
+        self._check_lease()
         with self.database.session() as session:
             return DurableJobQueue(session).heartbeat(
                 self.job_id,
@@ -50,6 +92,7 @@ class JobExecutionContext:
             return DurableJobQueue(session).cancellation_requested(self.job_id, self.worker_id)
 
     def raise_if_cancelled(self) -> None:
+        self._check_lease()
         if self.cancellation_requested():
             raise JobCancellationRequested("job cancellation requested")
 
@@ -114,7 +157,8 @@ class JobWorker:
             self.clock,
         )
         try:
-            output_artifact_ids = handler(job, context) or ()
+            with context.keepalive():
+                output_artifact_ids = handler(job, context) or ()
             with self.database.session() as session:
                 timestamp = self.clock()
                 completed = DurableJobQueue(session).complete(
@@ -125,29 +169,41 @@ class JobWorker:
                 )
                 self._record_job_state(session, completed, timestamp)
                 return completed
-        except JobCancellationRequested:
+        except JobLeaseError:
+            # A stale worker has no authority to mark a recovered job failed.
             with self.database.session() as session:
-                timestamp = self.clock()
-                cancelled = DurableJobQueue(session).acknowledge_cancel(
-                    job.job_id, self.worker_id, now=timestamp
-                )
-                self._record_job_state(session, cancelled, timestamp)
-                return cancelled
+                return DurableJobQueue(session).get(job.job_id, job.owner_id)
+        except JobCancellationRequested:
+            try:
+                with self.database.session() as session:
+                    timestamp = self.clock()
+                    cancelled = DurableJobQueue(session).acknowledge_cancel(
+                        job.job_id, self.worker_id, now=timestamp
+                    )
+                    self._record_job_state(session, cancelled, timestamp)
+                    return cancelled
+            except JobLeaseError:
+                with self.database.session() as session:
+                    return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except Exception as exc:
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
-            with self.database.session() as session:
-                timestamp = self.clock()
-                failed = DurableJobQueue(session).fail(
-                    job.job_id,
-                    self.worker_id,
-                    error_code="HANDLER_ERROR",
-                    error_message=type(exc).__name__,
-                    retryable=True,
-                    retry_after=retry_after,
-                    now=timestamp,
-                )
-                self._record_job_state(session, failed, timestamp)
-                return failed
+            try:
+                with self.database.session() as session:
+                    timestamp = self.clock()
+                    failed = DurableJobQueue(session).fail(
+                        job.job_id,
+                        self.worker_id,
+                        error_code="HANDLER_ERROR",
+                        error_message=type(exc).__name__,
+                        retryable=True,
+                        retry_after=retry_after,
+                        now=timestamp,
+                    )
+                    self._record_job_state(session, failed, timestamp)
+                    return failed
+            except JobLeaseError:
+                with self.database.session() as session:
+                    return DurableJobQueue(session).get(job.job_id, job.owner_id)
 
     def _record_job_state(self, session: Session, job: JobRecord, timestamp: datetime) -> None:
         repository = PlatformRepository(session)

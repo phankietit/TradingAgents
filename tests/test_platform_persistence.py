@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     CashBalance,
@@ -325,7 +326,7 @@ def test_private_contracts_require_matching_owner(tmp_path):
         instrument_id=instrument.instrument_id,
         as_of=NOW,
         status=DecisionStatus.REVIEW,
-        rating=DecisionRating.HOLD,
+        rating=DecisionRating.REVIEW,
         confidence=0.6,
         thesis="Valuation and quality are balanced.",
         risks=("Multiple compression",),

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID, uuid4
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import ArtifactKind, ArtifactManifest
 from tradingagents.platform.persistence import PlatformRepository
 

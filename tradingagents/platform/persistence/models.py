@@ -115,6 +115,23 @@ class DecisionRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class DecisionLifecycleEventRow(Base):
+    __tablename__ = "decision_lifecycle_events"
+    __table_args__ = (
+        Index("ix_decision_events_owner_decision_time", "owner_id", "decision_id", "occurred_at"),
+    )
+
+    event_id: Mapped[UUID] = mapped_column(primary_key=True)
+    decision_id: Mapped[UUID] = mapped_column(ForeignKey("decisions.decision_id"), nullable=False)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    from_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    to_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class PortfolioSnapshotRow(Base):
     __tablename__ = "portfolio_snapshots"
     __table_args__ = (Index("ix_portfolios_owner_as_of", "owner_id", "as_of"),)
@@ -124,6 +141,22 @@ class PortfolioSnapshotRow(Base):
     schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
     as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     content_hash: Mapped[str] = mapped_column(String(71), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class LedgerTransactionRow(Base):
+    __tablename__ = "ledger_transactions"
+    __table_args__ = (
+        Index("ix_ledger_transactions_owner_ledger_time", "owner_id", "ledger_id", "occurred_at"),
+    )
+
+    transaction_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ledger_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    transaction_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

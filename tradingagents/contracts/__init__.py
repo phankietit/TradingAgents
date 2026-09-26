@@ -21,7 +21,13 @@ from .data_health import (
     DataHealthReport,
     DataHealthSummary,
 )
-from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
+from .decisions import (
+    DecisionActorType,
+    DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionRating,
+    DecisionStatus,
+)
 from .equity_etf import (
     DatasetCoverage,
     EquityETFDataset,
@@ -32,7 +38,9 @@ from .equity_etf import (
     FundHolding,
     NewsRecord,
 )
+from .evaluation import DecisionEvaluation, HistoricalEvaluation
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
+from .evidence import EvidenceClaim, EvidenceGraph
 from .factors import (
     DerivedFactorSnapshot,
     FactorSeriesInput,
@@ -58,6 +66,7 @@ from .instruments import (
     normalize_instrument_alias,
 )
 from .jobs import JobKind, JobRecord, JobStatus
+from .ledger import LedgerTransaction, LedgerTransactionType
 from .policy import PolicyCheck, PolicyContract, PolicyResult
 from .portfolio import CashBalance, PortfolioSnapshot, PositionSnapshot
 from .runs import RunManifest, RunStatus
@@ -103,6 +112,11 @@ CONTRACT_REGISTRY = {
         StockUniverseSnapshot,
         DerivedFactorSnapshot,
         DataHealthReport,
+        EvidenceGraph,
+        LedgerTransaction,
+        DecisionLifecycleEvent,
+        DecisionEvaluation,
+        HistoricalEvaluation,
     )
 }
 
@@ -126,11 +140,16 @@ __all__ = [
     "DataHealthReport",
     "DataHealthSummary",
     "DecisionCandidate",
+    "DecisionActorType",
+    "DecisionLifecycleEvent",
+    "DecisionEvaluation",
     "DecisionRating",
     "DecisionStatus",
     "DerivedFactorSnapshot",
     "DatasetCoverage",
     "EvidenceReference",
+    "EvidenceClaim",
+    "EvidenceGraph",
     "EquityETFDataset",
     "EquityETFSnapshotBundle",
     "ETFProfile",
@@ -148,9 +167,12 @@ __all__ = [
     "InstrumentContract",
     "InstrumentAliasContract",
     "InstrumentFactors",
+    "HistoricalEvaluation",
     "JobKind",
     "JobRecord",
     "JobStatus",
+    "LedgerTransaction",
+    "LedgerTransactionType",
     "PolicyCheck",
     "PolicyContract",
     "PolicyResult",

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     CONTRACT_REGISTRY,
     AssetClass,
@@ -121,6 +122,12 @@ def _decision(**overrides):
     }
     values.update(overrides)
     return DecisionCandidate.model_validate(values)
+
+
+@pytest.mark.unit
+def test_legacy_review_with_narrative_rating_remains_readable():
+    decision = _decision(status=DecisionStatus.REVIEW)
+    assert decision.status is DecisionStatus.REVIEW
 
 
 @pytest.mark.unit

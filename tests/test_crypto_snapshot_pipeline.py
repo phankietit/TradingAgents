@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import pytest
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     CryptoQualityThresholds,

@@ -926,6 +926,7 @@ class TestLegacyRemoval:
         mock_graph.memory_log = TradingMemoryLog({"memory_log_path": str(tmp_path / "mem.md")})
         mock_graph.log_states_dict = {}
         mock_graph.debug = False
+        mock_graph.snapshot_mode = False
         mock_graph.config = {"results_dir": str(tmp_path)}
         mock_graph.graph.invoke.return_value = fake_state
         mock_graph.propagator.create_initial_state.return_value = fake_state

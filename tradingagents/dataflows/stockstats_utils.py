@@ -187,10 +187,16 @@ def _cache_is_fresh(data_file, curr_date_dt, now) -> bool:
     whose ``Close`` is not the closing price, and row inspection cannot tell it
     from a final one (#1150).
     """
-    written = pd.Timestamp.fromtimestamp(os.path.getmtime(data_file))
+    # ``now`` is local wall time (Timestamp.today). Python's datetime applies
+    # the host timezone to naive timestamps, matching filesystem epoch mtimes.
+    # Pandas' naive .timestamp() instead interprets wall time as UTC.
+    age_seconds = now.to_pydatetime().timestamp() - os.path.getmtime(data_file)
+    if age_seconds < 0:
+        return False
+    written = now - pd.Timedelta(seconds=age_seconds)
     if written.date() != now.date():
         return False
-    return curr_date_dt.date() < now.date() or (now - written).total_seconds() <= OHLCV_CACHE_TTL_SECONDS
+    return curr_date_dt.date() < now.date() or age_seconds <= OHLCV_CACHE_TTL_SECONDS
 
 
 def load_ohlcv(symbol: str, curr_date: str, fill_gaps: bool = True) -> pd.DataFrame:

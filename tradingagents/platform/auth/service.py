@@ -7,7 +7,7 @@ import hashlib
 import re
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from enum import Enum
 from uuid import UUID, uuid4
 
@@ -15,6 +15,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.platform.persistence.models import OwnerRow, OwnerSessionRow
 
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")

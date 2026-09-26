@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     ArtifactManifest,
     AssetClass,
     DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionStatus,
     InstrumentAliasContract,
     InstrumentContract,
+    LedgerTransaction,
     PolicyContract,
     PortfolioSnapshot,
     RunManifest,
@@ -27,9 +31,11 @@ from tradingagents.contracts import (
 
 from .models import (
     ArtifactRow,
+    DecisionLifecycleEventRow,
     DecisionRow,
     InstrumentAliasRow,
     InstrumentRow,
+    LedgerTransactionRow,
     PolicyRow,
     PortfolioSnapshotRow,
     RunRow,
@@ -69,8 +75,9 @@ def _same_payload(row, contract: BaseModel) -> bool:
 
 
 class PlatformRepository:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, *, artifact_store=None):
         self.session = session
+        self.artifact_store = artifact_store
 
     def add_instrument(self, contract: InstrumentContract) -> InstrumentContract:
         existing = self.session.get(InstrumentRow, contract.instrument_id)
@@ -339,10 +346,14 @@ class PlatformRepository:
         return ArtifactManifest.model_validate(row.payload) if row else None
 
     def save_run(self, contract: RunManifest) -> RunManifest:
+        contract = RunManifest.model_validate(contract.model_dump())
         row = self.session.get(RunRow, contract.run_id)
         now = datetime.now(UTC)
         if row:
             previous = RunManifest.model_validate(row.payload)
+            mutable_fields = {"status", "started_at", "completed_at", "error_code", "error_message"}
+            if previous.model_dump(exclude=mutable_fields) != contract.model_dump(exclude=mutable_fields):
+                raise ImmutableRecordConflict("run inputs are immutable across lifecycle transitions")
             if (
                 previous.owner_id != contract.owner_id
                 or previous.instrument_id != contract.instrument_id
@@ -396,6 +407,14 @@ class PlatformRepository:
         return tuple(RunManifest.model_validate(row.payload) for row in rows)
 
     def add_decision(self, contract: DecisionCandidate) -> DecisionCandidate:
+        contract = DecisionCandidate.model_validate(contract.model_dump())
+        run = self.get_run(contract.run_id, contract.owner_id)
+        if run is None or run.instrument_id != contract.instrument_id or run.analysis_as_of != contract.as_of:
+            raise ValueError("decision does not match its owner run")
+        if contract.status is DecisionStatus.APPROVED:
+            raise ValueError("approval must be recorded through lifecycle events")
+        if contract.status is DecisionStatus.READY_FOR_APPROVAL:
+            self._validate_decision_sources(contract)
         existing = self.session.get(DecisionRow, contract.decision_id)
         if existing:
             if not _same_payload(existing, contract):
@@ -429,6 +448,138 @@ class PlatformRepository:
         )
         return DecisionCandidate.model_validate(row.payload) if row else None
 
+    def add_decision_event(self, contract: DecisionLifecycleEvent) -> DecisionLifecycleEvent:
+        from tradingagents.platform.decisions import DecisionLifecycle
+
+        contract = DecisionLifecycleEvent.model_validate(contract.model_dump())
+        row = self.session.scalar(select(DecisionRow).where(
+            DecisionRow.decision_id == contract.decision_id,
+            DecisionRow.owner_id == contract.owner_id,
+        ).with_for_update())
+        if row is None:
+            raise ValueError("decision not found")
+        existing = self.session.get(DecisionLifecycleEventRow, contract.event_id)
+        if existing:
+            if not _same_payload(existing, contract):
+                raise ImmutableRecordConflict("decision event already has different content")
+            return contract
+        decision = DecisionCandidate.model_validate(row.payload)
+        if contract.to_status is DecisionStatus.APPROVED:
+            run = self.get_run(decision.run_id, decision.owner_id)
+            if run is None or run.status is not RunStatus.SUCCEEDED:
+                raise InvalidStateTransition("approval requires a successfully completed analysis run")
+        history = self.list_decision_events(contract.decision_id, contract.owner_id)
+        if history and contract.occurred_at <= max(item.occurred_at for item in history):
+            raise InvalidStateTransition("event must follow the previous event timestamp")
+        new_status = DecisionLifecycle().apply(decision, (*history, contract))
+        if contract.from_status.value != row.status:
+            raise InvalidStateTransition("decision state changed")
+        if contract.to_status in {DecisionStatus.READY_FOR_APPROVAL, DecisionStatus.APPROVED}:
+            self._validate_decision_sources(decision)
+        previous_updated_at = row.updated_at
+        result = self.session.execute(update(DecisionRow).where(
+            DecisionRow.decision_id == contract.decision_id,
+            DecisionRow.owner_id == contract.owner_id,
+            DecisionRow.status == contract.from_status.value,
+            DecisionRow.updated_at == previous_updated_at,
+        ).values(status=new_status.value, updated_at=datetime.now(UTC)))
+        if result.rowcount != 1:
+            raise InvalidStateTransition("concurrent decision transition")
+        self.session.add(
+            DecisionLifecycleEventRow(
+                event_id=contract.event_id,
+                decision_id=contract.decision_id,
+                owner_id=contract.owner_id,
+                schema_version=contract.schema_version,
+                from_status=contract.from_status.value,
+                to_status=contract.to_status.value,
+                occurred_at=contract.occurred_at,
+                payload=_payload(contract),
+                created_at=datetime.now(UTC),
+            )
+        )
+        self.session.flush()
+        return contract
+
+    def _validate_decision_sources(self, decision: DecisionCandidate) -> None:
+        from tradingagents.contracts.decisions import require_decision_readiness
+
+        require_decision_readiness(decision)
+        run = self.get_run(decision.run_id, decision.owner_id)
+        if run is None or run.instrument_id != decision.instrument_id:
+            raise ValueError("decision owner run mismatch")
+        for evidence in decision.evidence:
+            source = self.get_snapshot(evidence.snapshot_id)
+            if (
+                source is None or source.snapshot_id not in run.snapshot_ids
+                or source.instrument_id != decision.instrument_id
+                or source.content_hash != evidence.content_hash
+                or source.vendor != evidence.source_name
+                or source.source_end != evidence.source_at
+                or source.retrieved_at != evidence.observed_at
+                or source.as_of > decision.as_of
+                or source.quality_status.value != "OK"
+            ):
+                raise ValueError("decision evidence does not match persisted run source")
+        check = decision.policy_checks[0]
+        policy = self.get_policy(check.policy_id, check.policy_version, decision.owner_id)
+        instrument = self.get_instrument(decision.instrument_id)
+        if policy is None or policy.effective_at > decision.as_of or instrument is None or policy.asset_class != instrument.asset_class:
+            raise ValueError("decision policy is not eligible for this owner instrument")
+        self._validate_decision_risk(decision, policy, instrument)
+
+    def _validate_decision_risk(self, decision, policy, instrument) -> None:
+        from tradingagents.platform.risk import RiskEngine, RiskProposal
+
+        portfolio = (
+            self.get_portfolio_snapshot(decision.portfolio_snapshot_id, decision.owner_id)
+            if decision.portfolio_snapshot_id is not None else None
+        )
+        if portfolio is None or portfolio.as_of != decision.as_of:
+            raise ValueError("decision requires an owner portfolio snapshot at its as_of")
+        classifications = {}
+        for position in portfolio.positions:
+            held = self.get_instrument(position.instrument_id)
+            if held is None:
+                raise ValueError("portfolio instrument classification is unavailable")
+            classifications[position.instrument_id] = held.asset_class
+        from tradingagents.platform.risk.provenance import replay_correlations
+
+        correlations = replay_correlations(self, decision, portfolio, policy)
+        assessment = RiskEngine().evaluate(
+            portfolio=portfolio, policy=policy,
+            proposal=RiskProposal(
+                instrument_id=instrument.instrument_id, asset_class=instrument.asset_class,
+                tradability=instrument.tradability, target_weight=decision.target_weight,
+                data_quality=decision.data_quality, position_asset_classes=classifications,
+                correlations=correlations,
+            ),
+        )
+        current_weight = next((p.weight for p in portfolio.positions
+                               if p.instrument_id == decision.instrument_id), 0.0)
+        expected = {item.check_id: item for item in assessment.checks}
+        supplied = {item.check_id: item for item in decision.policy_checks}
+        if (not assessment.passed or expected != supplied
+                or decision.current_weight != current_weight
+                or decision.max_allowed_weight != assessment.max_allowed_weight):
+            raise ValueError("decision risk assessment does not match persisted inputs")
+
+    def list_decision_events(
+        self, decision_id: UUID, owner_id: UUID
+    ) -> tuple[DecisionLifecycleEvent, ...]:
+        rows = self.session.scalars(
+            select(DecisionLifecycleEventRow)
+            .where(
+                DecisionLifecycleEventRow.decision_id == decision_id,
+                DecisionLifecycleEventRow.owner_id == owner_id,
+            )
+            .order_by(
+                DecisionLifecycleEventRow.occurred_at,
+                DecisionLifecycleEventRow.event_id,
+            )
+        ).all()
+        return tuple(DecisionLifecycleEvent.model_validate(row.payload) for row in rows)
+
     def list_decisions(
         self, owner_id: UUID, *, limit: int = 50
     ) -> tuple[DecisionCandidate, ...]:
@@ -461,6 +612,41 @@ class PlatformRepository:
         )
         self.session.flush()
         return contract
+
+    def add_ledger_transaction(self, contract: LedgerTransaction) -> LedgerTransaction:
+        contract = LedgerTransaction.model_validate(contract.model_dump())
+        existing = self.session.get(LedgerTransactionRow, contract.transaction_id)
+        if existing:
+            if not _same_payload(existing, contract):
+                raise ImmutableRecordConflict("transaction_id already has different content")
+            return contract
+        self.session.add(
+            LedgerTransactionRow(
+                transaction_id=contract.transaction_id,
+                ledger_id=contract.ledger_id,
+                owner_id=contract.owner_id,
+                schema_version=contract.schema_version,
+                transaction_type=contract.transaction_type.value,
+                occurred_at=contract.occurred_at,
+                payload=_payload(contract),
+                created_at=datetime.now(UTC),
+            )
+        )
+        self.session.flush()
+        return contract
+
+    def list_ledger_transactions(
+        self, ledger_id: UUID, owner_id: UUID
+    ) -> tuple[LedgerTransaction, ...]:
+        rows = self.session.scalars(
+            select(LedgerTransactionRow)
+            .where(
+                LedgerTransactionRow.ledger_id == ledger_id,
+                LedgerTransactionRow.owner_id == owner_id,
+            )
+            .order_by(LedgerTransactionRow.occurred_at, LedgerTransactionRow.transaction_id)
+        ).all()
+        return tuple(LedgerTransaction.model_validate(row.payload) for row in rows)
 
     def get_portfolio_snapshot(
         self, portfolio_id: UUID, owner_id: UUID

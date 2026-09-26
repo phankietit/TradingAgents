@@ -7,10 +7,11 @@ import json
 import math
 import statistics
 from collections.abc import Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     ArtifactKind,
     BenchmarkComparison,

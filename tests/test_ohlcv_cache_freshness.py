@@ -21,7 +21,7 @@ STALE = su.OHLCV_CACHE_TTL_SECONDS + 60
 def _write(tmp_path, name="AAPL-YFin-data.csv", age_seconds=0.0, last_date="2026-07-17"):
     f = tmp_path / name
     pd.DataFrame({"Date": [last_date], "Close": [100.0]}).to_csv(f, index=False)
-    written = NOW.timestamp() - age_seconds
+    written = NOW.to_pydatetime().timestamp() - age_seconds
     os.utime(f, (written, written))
     return f
 
@@ -99,7 +99,7 @@ def test_one_cache_file_per_symbol_across_days(tmp_path, monkeypatch):
         monkeypatch.setattr(su.pd.Timestamp, "today", staticmethod(lambda now=now: now))
         su.load_ohlcv("AAPL", "2026-07-17")
         written = list(tmp_path.glob("AAPL-*.csv"))
-        os.utime(written[0], (now.timestamp(), now.timestamp()))
+        os.utime(written[0], (now.to_pydatetime().timestamp(), now.to_pydatetime().timestamp()))
 
     assert len(downloads) == 3, "each new day refetches"
     assert [p.name for p in tmp_path.iterdir()] == ["AAPL-YFin-data.csv"]

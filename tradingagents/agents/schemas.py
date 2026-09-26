@@ -20,8 +20,9 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import Literal
+from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # LLMs sometimes write a placeholder string ("None", "N/A", ...) into an optional
 # numeric field instead of omitting it. Coerce those to None so the structured
@@ -218,6 +219,12 @@ def render_trader_proposal(proposal: TraderProposal) -> str:
 # ---------------------------------------------------------------------------
 
 
+class DecisionEvidenceClaim(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    claim: str = Field(min_length=1, max_length=20000)
+    snapshot_ids: tuple[UUID, ...] = Field(min_length=1, max_length=16)
+
+
 class PortfolioDecision(BaseModel):
     """Structured output produced by the Portfolio Manager.
 
@@ -226,6 +233,15 @@ class PortfolioDecision(BaseModel):
     output instructions, so the prompt body only needs to convey context and
     the rating-scale guidance.
     """
+
+    model_config = ConfigDict(extra="forbid")
+    evidence_claims: tuple[DecisionEvidenceClaim, ...] = Field(default=(), max_length=100,
+        description="For snapshot runs, cite snapshot IDs for the exact investment_thesis text and each risk and invalidation condition. Do not invent sources.")
+
+    confidence: float | None = Field(default=None, ge=0, le=1, allow_inf_nan=False,
+                                    description="Uncalibrated confidence; omit if unsupported by evidence.")
+    risks: tuple[str, ...] = Field(default=(), description="Specific evidence-based risks; never invent missing evidence.")
+    invalidation_conditions: tuple[str, ...] = Field(default=(), description="Conditions that would invalidate the thesis.")
 
     rating: PortfolioRating = Field(
         description=(
