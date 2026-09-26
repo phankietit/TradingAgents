@@ -3,10 +3,11 @@ from uuid import uuid4
 
 import pytest
 
+from tests.test_decision_lifecycle import _approval
 from tests.test_platform_persistence import _instrument
 from tests.test_risk_engine import NOW
 from tests.test_risk_provenance import setup_risk
-from tradingagents.contracts import AssetClass, NormalizedTimeSeries, RunStatus
+from tradingagents.contracts import AssetClass, DecisionStatus, NormalizedTimeSeries, RunStatus
 from tradingagents.contracts.runs import DecisionRunInputs
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.evaluation.calendar import evaluation_session_window
@@ -80,6 +81,24 @@ def test_owner_receipt_reconstructs_returns_and_calendar_evidence(tmp_path):
         with pytest.raises(ValueError, match="unavailable"):
             service.verify(artifact.artifact_id, uuid4())
     database.dispose()
+
+
+@pytest.mark.parametrize("status", [DecisionStatus.REJECTED, DecisionStatus.EXPIRED, DecisionStatus.REVIEW])
+def test_research_receipt_is_not_rewritten_by_later_owner_actions(tmp_path, status):
+    database, store, request = setup_evaluation(tmp_path)
+    try:
+        with database.session() as session:
+            repo = PlatformRepository(session, artifact_store=store)
+            service = PersistedEvaluationService(ArtifactService(store, repo))
+            artifact = service.create(request)
+            original = service.verify(artifact.artifact_id, request.owner_id)
+            decision = repo.get_decision(request.cells[0].decision_id, request.owner_id)
+            repo.add_decision_event(_approval(decision, to_status=status))
+            assert service.verify(artifact.artifact_id, request.owner_id) == original
+            assert service.create(request) == artifact
+            assert original.evaluation.scored_cells == 1
+    finally:
+        database.dispose()
 
 
 @pytest.mark.parametrize("case", ["owner", "source", "future", "duplicate"])

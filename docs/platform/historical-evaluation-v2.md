@@ -6,6 +6,13 @@ input hash. Caller-supplied returns remain `reproducible=False`: IDs and a
 claimed hash alone are not source replay evidence. Canonical input order and
 content-derived evaluation IDs make identical inputs deterministic.
 
+The evaluated subject is the **immutable original research candidate**, not the
+owner's later approval/rejection history. Later review, rejection or expiry does
+not erase a valid original research observation or rewrite an existing receipt.
+This avoids retrospectively selecting only favorable owner actions. Use the
+decision lifecycle API for current approval state; these scores must not be
+presented as approved-decision, executed-trade or owner-portfolio performance.
+
 `snapshot_outcome` derives returns from hash-verified daily asset and benchmark
 series with matching currency/price basis. It rejects invalid source windows,
 future retrieval, non-OK quality, missing expected closes and identity mismatch.
