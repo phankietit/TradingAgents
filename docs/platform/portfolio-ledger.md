@@ -15,5 +15,14 @@ snapshot ID, content hash and quality status. Open holdings require an explicit
 sharing a timestamp require a distinct `sequence` to establish accounting
 order. Standalone fee events reduce realized P&L. Deterministic snapshot IDs and
 hashes make identical replay idempotent; future events do not affect historical
-snapshots. SQLite tests cover immutable persistence and owner isolation;
-PostgreSQL and valuation-service integration remain milestone gates.
+snapshots. SQLite tests cover immutable persistence and owner isolation.
+
+`PortfolioLedgerService` resolves quotes by explicit snapshot IDs from the same
+owner's immutable artifact store, verifies hashes/provenance/currency and the
+evaluation cutoff, and uses reported close (not adjusted close) to value actual
+held units. Snapshot coverage must exactly match open holdings; missing owner
+history is not silently treated as a flat book. Only supported investable
+instruments may appear in imported ledger history. The resulting snapshot is
+persisted idempotently for use by the risk pipeline. These are accounting
+snapshots, not simulated fills or portfolio backtest performance. PostgreSQL
+evidence remains a milestone gate.

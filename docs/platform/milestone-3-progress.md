@@ -37,10 +37,13 @@ following missing integration and correctness requirements.
 - PLAN-034: timestamped/quality-checked quotes, explicit freshness limits,
   simultaneous-event sequencing, complete event/quote hashes and deterministic
   snapshot IDs are implemented. SQLite tests verify immutable writes and owner
-  isolation. Persisted quote resolution and PostgreSQL evidence remain.
+  isolation. The valuation service now resolves hash-verified owner snapshots,
+  enforces source cutoffs and raw-close pricing, and persists replay idempotently.
+  PostgreSQL evidence remains.
 - PLAN-035: validate classification/correlation coverage, reconciled accounting,
   effective policy and all limits. Coverage fixes now have targeted regression
-  tests; integration with the decision factory remains to be verified.
+  tests; snapshot-worker integration now covers the decision factory through
+  readiness and owner approval. PostgreSQL verification remains.
 - PLAN-036: readiness, matching policy, owner/run source checks, idempotent
   events and transactional projection writes now have SQLite integration tests.
   Authenticated state/transition API wiring is covered by tests for sessions,
