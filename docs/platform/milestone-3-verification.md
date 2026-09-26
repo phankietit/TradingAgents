@@ -25,7 +25,7 @@ Python 3.10 container verification was BLOCKED by an unavailable Docker credenti
 helper; the UTC regression test is not cross-version runtime evidence.
 
 GitHub OAuth was rechecked and still lacks `workflow`. Cross-version CI, PR,
-merge and post-fix security review remain outstanding. Configuration audit
+merge and security report finalization remain outstanding. Configuration audit
 confirmed that receipt replay reuses recorded research, not full LLM configuration
 or response replay; the evaluation contract now states this explicitly.
 
@@ -48,7 +48,40 @@ or response replay; the evaluation contract now states this explicitly.
   only in the ignored isolated environment; project requirements are unchanged.
 - Post-fix source review scan: `d7d39786-dbad-4ed6-ae6f-1fbb232c66a4`, fixed
   range `8364663..b87190c`, 21 runtime files plus changed tests/docs. Discovery
-  has no candidate vulnerabilities; final canonical report is still pending.
+  evidence is retained, but final canonical report is BLOCKED. The initial
+  draft calls were rejected for host-owned coverage fields; completion then
+  failed with `scan-manifest.json: expected a file inside the scan directory`.
+  A subsequent continuation saved the semantic checkpoint and final unsealed
+  draft using only accepted fields. No completion retry, replacement scan,
+  manual canonical-file edit or completed-scan conclusion was made.
+
+## Requirement-to-evidence handoff
+
+These rows describe local implementation evidence, not release/merge approval.
+The current code is identical to tested `129696b`; subsequent commits are docs.
+
+| Requirement | Local evidence | Status |
+| --- | --- | --- |
+| PLAN-030 engine adapter and CLI compatibility | `8705d5d`; `test_analysis_engine.py`, `test_analysis_job_handler.py`, `test_worker_runtime.py` | PASS |
+| PLAN-031 stock/ETF/reference/BTC/ETH profiles | `8bcc6e5`; `test_asset_analysis_profiles.py`, snapshot context regression | PASS |
+| PLAN-032 strict narrative; invalid output REVIEW | `1a99164`; `test_strict_decision_factory.py`, `test_snapshot_decision_worker.py` | PASS |
+| PLAN-033 immutable claim/source/hash/time evidence | `70caaea`; `test_evidence_graph.py`, owner-bound snapshot worker tests | PASS |
+| PLAN-034 deterministic owner-scoped immutable ledger | `dd84942`; `test_portfolio_ledger.py`, `test_portfolio_valuation_service.py`, PostgreSQL replay | PASS |
+| PLAN-035 deterministic weights, concentration, exposure, correlation, turnover and data quality | `fa3a8a0`; `test_risk_engine.py`, `test_risk_provenance.py`, PostgreSQL replay | PASS |
+| PLAN-036 human approval and audit lifecycle | `ebc2e39`; `test_decision_lifecycle.py`, `test_decision_event_persistence.py`, `test_decision_api.py`, PostgreSQL concurrent events | PASS |
+| PLAN-037 recorded-source historical replay, not portfolio backtest | `8e4bea1` plus `1137a55`/`1313253`; calendar/outcome/persisted-evaluation tests, PostgreSQL replay | PASS |
+| Separate sequential ticket commits and documentation | Eight initial commits above, subsequent integration/fix commits, corresponding platform docs | PASS |
+| Full local regression, PostgreSQL migrations and rollback | 1228 tests + 88 subtests at `129696b`; dedicated synthetic DB removed | PASS |
+| Supported Python 3.10–3.13 CI | Workflow present; cannot upload branch with current OAuth grant | BLOCKED |
+| Final security report | Semantic evidence recovered; finalization previously errored, no sealed post-fix report | BLOCKED |
+| Fork PR, review and merge | No remote feature branch or PR; `origin/main` remains `f76c353` | BLOCKED |
+
+Resume on this same worktree/branch. Obtain GitHub `workflow` authorization,
+push without removing the CI change, create and attach the fork PR, inspect its
+actual matrix results and address failures. Resolve the security finalization
+error through the existing scan's supported recovery path. Only then can the
+remaining review/merge gate be considered. Do not recreate implemented tickets,
+rewrite old sealed evidence, or call this milestone complete.
 
 At `a96ff29becce19ae0d552f6b39f1195fe9260d49`, source-review follow-ups now
 reject future-observed quotes/evidence at pure-library boundaries, require a
@@ -108,8 +141,9 @@ gate to bypass the GitHub permission failure.
 2. Functional review follow-ups are implemented at `129696b`; verify the
    supported Python matrix in CI. Full LLM invocation replay is not claimed;
    the documented receipt contract covers immutable recorded research only.
-3. Run dependency/secret checks and a post-fix candidate security review with
-   accurate coverage metadata. Preserve the sealed old-SHA scan unchanged.
+3. Dependency/secret checks and post-fix source review are recorded above.
+   Resolve the failed canonical security finalization; preserve the existing
+   scan and the sealed old-SHA scan unchanged.
 4. Complete acceptance review, triage any findings, rerun gates after fixes,
    obtain cross-version CI evidence, refresh this receipt/tracker and merge only
    with passing in-scope gates.

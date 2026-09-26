@@ -25,9 +25,11 @@ receipt for all remaining functional and evidence tasks.
 Latest runtime checkpoint: `129696b` passes 1228 tests and 88 subtests with
 PostgreSQL (2 optional provider skips). Snapshot asset guidance, exception log
 redaction, UTC compatibility and research-receipt lifecycle regression tests are
-implemented. Installed package refresh/smoke passes. See the verification receipt
-for exact commands and limitations. Post-fix security review, dependency/secret
-checks, cross-version CI and PR/merge are still outstanding.
+implemented. Installed package refresh/smoke and scoped dependency/secret checks
+pass. Post-fix source review evidence is saved, but its report finalization
+failed and remains BLOCKED. See the verification receipt's requirement table
+for exact evidence and limitations. Cross-version CI and PR/merge remain
+BLOCKED by missing GitHub `workflow` authorization; milestone is incomplete.
 
 - PLAN-030/031: durable research handler now runs AnalysisEngine and atomically
   persists report plus REVIEW candidate, with idempotent completion recovery
