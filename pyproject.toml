@@ -38,6 +38,7 @@ dev = [
     "pytest-subtests>=0.13",
 ]
 platform = [
+    "exchange-calendars==4.12",
     "alembic>=1.13,<2.0",
     "fastapi>=0.115,<1.0",
     "psycopg[binary]>=3.2,<4.0",

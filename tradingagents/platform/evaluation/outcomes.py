@@ -15,6 +15,26 @@ from tradingagents.contracts import (
 from .service import EvaluationObservation
 
 
+def calendar_snapshot_outcome(*, decision, instrument, benchmark_instrument, asset,
+                              benchmark, holding_sessions, evaluated_at):
+    """Return an outcome plus exact calendar windows needed for persisted replay."""
+    from .calendar import evaluation_session_window
+
+    if instrument.instrument_id != decision.instrument_id or benchmark_instrument.instrument_id != benchmark[1].instrument_id:
+        raise ValueError("evaluation calendar instrument identity mismatch")
+    windows = tuple(evaluation_session_window(instrument=item, decision_at=decision.as_of,
+        holding_sessions=holding_sessions, evaluated_at=evaluated_at)
+        for item in (instrument, benchmark_instrument))
+    if windows[0].session_closes != windows[1].session_closes:
+        raise ValueError("asset and benchmark evaluation calendars do not align")
+    observation = snapshot_outcome(decision=decision, asset=asset, benchmark=benchmark,
+        session_closes=windows[0].session_closes, evaluated_at=evaluated_at)
+    binding = {"outcome_hash": observation.outcome_hash,
+               "calendar_hashes": [window.content_hash for window in windows]}
+    digest = "sha256:" + hashlib.sha256(json.dumps(binding, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return observation.model_copy(update={"outcome_hash": digest}), windows
+
+
 def snapshot_outcome(
     *, decision: DecisionCandidate,
     asset: tuple[SnapshotManifest, NormalizedTimeSeries],

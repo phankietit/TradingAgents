@@ -56,7 +56,9 @@ following missing integration and correctness requirements.
 - PLAN-037: hash-verified snapshot outcome helper, duplicate/future outcome
   rejection, canonical ordering and deterministic evaluation IDs have targeted
   tests. Caller-supplied returns remain `reproducible=False`. Owner-scoped
-  persisted replay and verified calendar integration remain.
+  persisted replay remains. Calendar integration now uses a pinned exchange
+  calendar library, verifies asset/benchmark alignment, and hashes exact session
+  windows into outcomes; tests cover DST, holidays, early closes and 24/7 data.
 - Run PostgreSQL upgrade/schema parity/rollback, persistence integration,
   clean installation, full regression and scoped security checks after fixes.
 - Update README, consolidate the changelog, produce a candidate-SHA receipt,
