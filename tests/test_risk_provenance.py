@@ -18,8 +18,8 @@ from tradingagents.platform.risk import RiskEngine, RiskProposal
 from tradingagents.platform.risk.provenance import replay_correlations
 
 
-def setup_risk(tmp_path):
-    database, original = seed(tmp_path)
+def setup_risk(tmp_path, *, database_url=None):
+    database, original = seed(tmp_path, database_url=database_url)
     store = LocalArtifactStore(tmp_path / "risk-blobs")
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)

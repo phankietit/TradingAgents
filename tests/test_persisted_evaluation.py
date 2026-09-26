@@ -19,8 +19,8 @@ from tradingagents.platform.market_data import TimeSeriesSnapshotService
 from tradingagents.platform.persistence import PlatformRepository
 
 
-def setup_evaluation(tmp_path):
-    database, store, seeded = setup_risk(tmp_path)
+def setup_evaluation(tmp_path, *, database_url=None):
+    database, store, seeded = setup_risk(tmp_path, database_url=database_url)
     evaluated_at = NOW + timedelta(days=7)
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)

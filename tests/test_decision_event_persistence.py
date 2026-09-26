@@ -14,8 +14,8 @@ from tradingagents.platform.persistence import Database, PlatformRepository, upg
 from tradingagents.platform.risk import RiskEngine, RiskProposal
 
 
-def seed(tmp_path):
-    url = f"sqlite:///{tmp_path / 'decisions.db'}"
+def seed(tmp_path, *, database_url=None):
+    url = database_url or f"sqlite:///{tmp_path / 'decisions.db'}"
     upgrade_database(url)
     database = Database(url)
     owner = uuid4()

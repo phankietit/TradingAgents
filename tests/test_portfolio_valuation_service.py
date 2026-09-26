@@ -13,8 +13,8 @@ from tradingagents.platform.persistence import Database, PlatformRepository, upg
 from tradingagents.platform.portfolio.service import PortfolioLedgerService
 
 
-def setup_valuation(tmp_path, *, foreign_source=False, retrieval=NOW):
-    url = f"sqlite:///{tmp_path / 'valuation.db'}"
+def setup_valuation(tmp_path, *, foreign_source=False, retrieval=NOW, database_url=None):
+    url = database_url or f"sqlite:///{tmp_path / 'valuation.db'}"
     upgrade_database(url)
     database = Database(url)
     store = LocalArtifactStore(tmp_path / "artifacts")
