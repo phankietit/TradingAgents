@@ -565,6 +565,7 @@ class PlatformRepository:
         return contract
 
     def add_ledger_transaction(self, contract: LedgerTransaction) -> LedgerTransaction:
+        contract = LedgerTransaction.model_validate(contract.model_dump())
         existing = self.session.get(LedgerTransactionRow, contract.transaction_id)
         if existing:
             if not _same_payload(existing, contract):

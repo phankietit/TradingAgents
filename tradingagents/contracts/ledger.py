@@ -8,7 +8,19 @@ from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
 
-from .base import NonEmptyText, VersionedContract
+from .base import ContentHash, NonEmptyText, StrictContract, VersionedContract
+from .data import DataQualityStatus
+
+
+class ValuationQuote(StrictContract):
+    instrument_id: UUID
+    currency: NonEmptyText
+    price: Decimal = Field(ge=0, allow_inf_nan=False)
+    source_at: AwareDatetime
+    observed_at: AwareDatetime
+    snapshot_id: UUID
+    content_hash: ContentHash
+    quality_status: DataQualityStatus
 
 
 class LedgerTransactionType(str, Enum):
@@ -25,6 +37,7 @@ class LedgerTransaction(VersionedContract):
     ledger_id: UUID
     owner_id: UUID
     occurred_at: AwareDatetime
+    sequence: int = Field(default=0, ge=0, strict=True)
     transaction_type: LedgerTransactionType
     currency: NonEmptyText
     instrument_id: UUID | None = None
@@ -65,4 +78,8 @@ class LedgerTransaction(VersionedContract):
             raise ValueError("cash transaction requires cash_amount")
         if trade and self.cash_amount is not None:
             raise ValueError("trade cash value is derived from quantity and unit_price")
+        if not trade and self.fee_amount != 0:
+            raise ValueError("cash-event fees must be explicit FEE transactions")
+        if self.transaction_type is LedgerTransactionType.DIVIDEND and (self.quantity is not None or self.unit_price is not None):
+            raise ValueError("dividends cannot contain quantity or unit_price")
         return self

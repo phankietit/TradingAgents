@@ -5,16 +5,19 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import UUID, uuid5
 
 from tradingagents.contracts import (
     CashBalance,
+    DataQualityStatus,
     LedgerTransaction,
     LedgerTransactionType,
     PortfolioSnapshot,
     PositionSnapshot,
 )
+from tradingagents.contracts.ledger import ValuationQuote
 
 
 @dataclass
@@ -33,14 +36,25 @@ class PortfolioLedger:
         owner_id: UUID,
         base_currency: str,
         transactions: tuple[LedgerTransaction, ...],
-        prices: dict[UUID, Decimal],
-        as_of,
+        prices: dict[UUID, ValuationQuote],
+        as_of: datetime,
+        max_price_age: timedelta | None = None,
     ) -> PortfolioSnapshot:
+        if as_of.tzinfo is None or as_of.utcoffset() is None:
+            raise ValueError("ledger as_of requires timezone")
+        as_of = as_of.astimezone(UTC)
+        if max_price_age is not None and max_price_age < timedelta(0):
+            raise ValueError("max_price_age must be nonnegative")
+        transactions = tuple(LedgerTransaction.model_validate(item.model_dump()) for item in transactions)
+        prices = {key: ValuationQuote.model_validate(value.model_dump() if isinstance(value, ValuationQuote) else value) for key, value in prices.items()}
         cash = Decimal("0")
         realized = Decimal("0")
         positions: dict[UUID, _Position] = {}
         seen: set[UUID] = set()
-        ordered = sorted(transactions, key=lambda item: (item.occurred_at, str(item.transaction_id)))
+        ordered = sorted(transactions, key=lambda item: (item.occurred_at, item.sequence))
+        ordering_keys = [(item.occurred_at, item.sequence) for item in ordered]
+        if len(ordering_keys) != len(set(ordering_keys)):
+            raise ValueError("ambiguous transaction order; set distinct sequence for simultaneous events")
         for entry in ordered:
             if entry.transaction_id in seen:
                 raise ValueError("duplicate ledger transaction")
@@ -56,6 +70,8 @@ class PortfolioLedger:
                 cash += entry.cash_amount
             elif kind in {LedgerTransactionType.CASH_WITHDRAWAL, LedgerTransactionType.FEE}:
                 cash -= entry.cash_amount
+                if kind is LedgerTransactionType.FEE:
+                    realized -= entry.cash_amount
             elif kind is LedgerTransactionType.DIVIDEND:
                 cash += entry.cash_amount
                 realized += entry.cash_amount
@@ -84,7 +100,14 @@ class PortfolioLedger:
                 continue
             if instrument_id not in prices:
                 raise ValueError(f"missing valuation price for {instrument_id}")
-            values[instrument_id] = position.quantity * prices[instrument_id]
+            quote = ValuationQuote.model_validate(prices[instrument_id])
+            if quote.instrument_id != instrument_id or quote.currency != base_currency:
+                raise ValueError("valuation quote identity/currency mismatch")
+            if quote.quality_status is not DataQualityStatus.OK or quote.source_at > as_of or quote.observed_at < quote.source_at:
+                raise ValueError("valuation quote is not point-in-time eligible")
+            if max_price_age is None or as_of - quote.source_at > max_price_age:
+                raise ValueError("valuation requires an explicit freshness limit and fresh prices")
+            values[instrument_id] = position.quantity * quote.price
             unrealized += values[instrument_id] - position.cost
         nav = cash + sum(values.values(), Decimal("0"))
         position_snapshots = tuple(
@@ -92,7 +115,7 @@ class PortfolioLedger:
                 instrument_id=instrument_id,
                 quantity=positions[instrument_id].quantity,
                 average_price=positions[instrument_id].cost / positions[instrument_id].quantity,
-                market_price=prices[instrument_id],
+                market_price=prices[instrument_id].price,
                 market_value=value,
                 weight=float(value / nav) if nav else 0.0,
             )
@@ -102,12 +125,14 @@ class PortfolioLedger:
             "ledger_id": str(ledger_id),
             "owner_id": str(owner_id),
             "as_of": as_of.isoformat(),
-            "transactions": [str(item.transaction_id) for item in ordered if item.occurred_at <= as_of],
-            "prices": {str(key): str(value) for key, value in sorted(prices.items(), key=lambda item: str(item[0]))},
+            "base_currency": base_currency,
+            "max_price_age_seconds": max_price_age.total_seconds() if max_price_age is not None else None,
+            "transactions": [item.model_dump(mode="json") for item in ordered if item.occurred_at <= as_of],
+            "prices": {str(key): prices[key].model_dump(mode="json") for key in sorted(values, key=str)},
         }
         digest = hashlib.sha256(json.dumps(canonical, sort_keys=True).encode()).hexdigest()
         return PortfolioSnapshot(
-            portfolio_id=uuid4(),
+            portfolio_id=uuid5(ledger_id, digest),
             owner_id=owner_id,
             as_of=as_of,
             base_currency=base_currency,

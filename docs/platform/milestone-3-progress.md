@@ -19,9 +19,10 @@ following missing integration and correctness requirements.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
   artifact persistence are implemented with nine targeted tests. Integration
   with the decision-producing worker and PostgreSQL verification remain.
-- PLAN-034: validate valuation timestamps, transaction ordering, finite decimal
-  amounts and complete event hashes; test durable ledger owner isolation,
-  idempotency and immutable history.
+- PLAN-034: timestamped/quality-checked quotes, explicit freshness limits,
+  simultaneous-event sequencing, complete event/quote hashes and deterministic
+  snapshot IDs are implemented. SQLite tests verify immutable writes and owner
+  isolation. Persisted quote resolution and PostgreSQL evidence remain.
 - PLAN-035: validate classification/correlation coverage, reconciled accounting,
   effective policy and all limits. Coverage fixes now have targeted regression
   tests; integration with the decision factory remains to be verified.
