@@ -18,6 +18,8 @@ from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.portfolio import PortfolioContext
 
+from .profiles import resolve_analysis_profile, select_analysts
+
 
 class AnalysisRequest(BaseModel):
     """Validated, provider-neutral input to one research run."""
@@ -26,7 +28,7 @@ class AnalysisRequest(BaseModel):
 
     instrument: InstrumentContract
     analysis_date: date
-    selected_analysts: tuple[str, ...] = Field(min_length=1)
+    selected_analysts: tuple[str, ...] | None = None
     portfolio: PortfolioContext | None = None
     config_overrides: Mapping[str, Any] = Field(default_factory=dict)
 
@@ -39,6 +41,8 @@ class AnalysisResult(BaseModel):
     instrument: InstrumentContract
     analysis_date: date
     selected_analysts: tuple[str, ...]
+    profile_name: str
+    reference_only: bool
     final_state: dict[str, Any]
     narrative_signal: str
 
@@ -59,26 +63,26 @@ class AnalysisEngine:
         self._graph_factory = graph_factory
 
     def analyze(self, request: AnalysisRequest) -> AnalysisResult:
+        profile = resolve_analysis_profile(request.instrument)
+        analysts = select_analysts(profile, request.selected_analysts)
         config = deepcopy(self._base_config)
         config.update(deepcopy(dict(request.config_overrides)))
         graph = self._graph_factory(
-            selected_analysts=request.selected_analysts,
+            selected_analysts=analysts,
             config=config,
         )
         final_state, signal = graph.propagate(
             request.instrument.canonical_symbol,
             request.analysis_date.isoformat(),
-            asset_type=self._legacy_asset_type(request.instrument),
+            asset_type=profile.legacy_asset_type,
             portfolio=request.portfolio,
         )
         return AnalysisResult(
             instrument=request.instrument,
             analysis_date=request.analysis_date,
-            selected_analysts=request.selected_analysts,
+            selected_analysts=analysts,
+            profile_name=profile.name,
+            reference_only=not profile.investable,
             final_state=dict(final_state),
             narrative_signal=str(signal),
         )
-
-    @staticmethod
-    def _legacy_asset_type(instrument: InstrumentContract) -> str:
-        return "crypto" if instrument.asset_class.value == "crypto" else "stock"

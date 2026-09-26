@@ -154,6 +154,8 @@ def build_instrument_context(
     identity it did not have on the analysis date.
     """
     is_crypto = asset_type == "crypto"
+    is_etf = asset_type == "etf"
+    is_reference = asset_type == "reference"
     instrument_label = "asset" if is_crypto else "instrument"
     context = (
         f"The {instrument_label} to analyze is `{ticker}`. "
@@ -194,6 +196,17 @@ def build_instrument_context(
         context += (
             " Treat it as a crypto asset rather than a company, and do not "
             "assume company fundamentals are available."
+        )
+    elif is_etf:
+        context += (
+            " Treat it as an ETF: focus on holdings, concentration, sector exposure, "
+            "flows, tracking characteristics, breadth, and macro regime. Do not apply "
+            "company balance-sheet reasoning."
+        )
+    elif is_reference:
+        context += (
+            " Treat it as reference-only market context. Do not describe it as an "
+            "investable holding or turn the analysis into an order proposal."
         )
     return context
 
@@ -272,6 +285,5 @@ def create_msg_delete():
         return {"messages": removal_operations + [placeholder]}
 
     return delete_messages
-
 
 
