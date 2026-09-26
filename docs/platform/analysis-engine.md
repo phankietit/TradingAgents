@@ -28,3 +28,20 @@ instruments remain non-investable context.
 fields such as model-authored target weights, invalid JSON, missing fields, or
 ineligible data fail closed to status/rating `REVIEW`. Narrative output never
 authorizes portfolio math or approval.
+
+## Durable worker adapter
+
+`platform.jobs.analysis.AnalysisJobHandler` can be registered for
+`JobKind.ANALYSIS_RUN` on `JobWorker`. It validates the queued payload against
+the owner-scoped run manifest, pins provider/model/analyst inputs from that run,
+executes the graph outside database transactions, and writes one immutable
+research report plus candidate atomically. Deterministic run-derived IDs allow
+a retry after output commit to reuse the result without another model call.
+Cancellation and lease validity are checked before execution and publication.
+
+This initial handler preserves useful legacy research, but marks source
+attestation `UNVERIFIED` and the candidate `REVIEW` with no target weight.
+Legacy graph tools do not yet attest all reads to immutable run snapshots;
+the handler does not fabricate claim links from a list of available snapshots.
+Snapshot-attested graph execution, evidence/risk orchestration, periodic lease
+renewal during long calls and worker command wiring remain integration work.

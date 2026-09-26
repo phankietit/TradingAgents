@@ -23,6 +23,8 @@
   absent, incomplete or overreaching payloads cannot become platform decisions.
 - Recompute decision readiness/approval risk against persisted owner portfolio,
   policy and instrument classifications; reject unbound or forged PASS checks.
+- Add durable research-handler persistence with retry reuse and cancellation;
+  unattested legacy graph output remains REVIEW rather than approval-ready.
 
 All notable changes to TradingAgents are documented here.
 

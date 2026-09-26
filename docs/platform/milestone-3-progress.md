@@ -12,11 +12,14 @@ following missing integration and correctness requirements.
 
 ## Remaining completion checks
 
-- PLAN-030/031: connect the adapter to the durable worker path; verify real
-  graph profile/tool enforcement, snapshot context, and CLI compatibility.
+- PLAN-030/031: durable research handler now runs AnalysisEngine and atomically
+  persists report plus REVIEW candidate, with idempotent completion recovery
+  and cancellation tests. Snapshot-attested execution, complete profile/tool
+  enforcement, long-call lease renewal and worker command wiring remain.
 - PLAN-032: PM structured payload is now retained separately from CLI prose;
   AnalysisEngine validates the narrative and rejects missing/extra fields.
-  Connect this payload to the candidate factory in the durable worker;
+  Durable handler passes this payload to the candidate factory; legacy tool
+  reads remain unattested, so its candidates intentionally remain REVIEW;
   evidence/complete policy checks/weights are now required at factory readiness;
   previously persisted review candidates remain readable.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound
