@@ -31,6 +31,25 @@ or response replay; the evaluation contract now states this explicitly.
 
 ## Previous follow-up checkpoint
 
+### Dependency and secret-check follow-up at `b87190c`
+
+- PASS: `pip-audit==2.10.1` in the isolated installed-package environment,
+  `python -m pip_audit --progress-spinner off`: no known vulnerabilities found.
+  This audits resolved packages in that environment, not every permitted future
+  dependency resolution or every supported Python version. No packages were
+  automatically upgraded and no vulnerability fix option was used.
+- PASS (scoped): `detect-secrets==1.5.0`,
+  `detect-secrets scan --no-verify` scanned the Git-tracked working tree.
+  Twenty detections were limited to test fixture values and synthetic CI
+  PostgreSQL credentials. Context inspection found no production credential
+  reference among them. Values were not printed or network-verified. This is
+  not a Git-history scan and does not inspect ignored environment files.
+- PASS: `python -m pip check` after installing audit tooling. Tooling exists
+  only in the ignored isolated environment; project requirements are unchanged.
+- Post-fix source review scan: `d7d39786-dbad-4ed6-ae6f-1fbb232c66a4`, fixed
+  range `8364663..b87190c`, 21 runtime files plus changed tests/docs. Discovery
+  has no candidate vulnerabilities; final canonical report is still pending.
+
 At `a96ff29becce19ae0d552f6b39f1195fe9260d49`, source-review follow-ups now
 reject future-observed quotes/evidence at pure-library boundaries, require a
 successful analysis run before approval, and contain lease-loss races during
