@@ -56,3 +56,56 @@ it('withholds missing prices and identifies reference-only instruments', async (
   expect(await screen.findByText(/context for research, not an investable/)).toBeTruthy();
   expect(screen.queryByRole('button', { name: /AAPL/ })).toBeNull();
 });
+
+it('sends an explicit time window and benchmark to the backend without local recomputation', async () => {
+  const fetch = setup(); const user = userEvent.setup(); render(<Markets />);
+  await screen.findByText('Snapshot quality: STALE');
+  await user.click(screen.getByText('Time window & benchmark'));
+  await user.type(screen.getByLabelText('Snapshot cutoff (ISO timezone)'), '2026-09-23T12:00:00Z');
+  await user.type(screen.getByLabelText('Start (ISO timezone)'), '2026-09-20T00:00:00Z');
+  await user.type(screen.getByLabelText('End (ISO timezone)'), '2026-09-23T00:00:00Z');
+  await user.selectOptions(screen.getByLabelText('Benchmark'), 'nq-id');
+  await user.click(screen.getByRole('button', {name:'Apply saved-data query'}));
+  expect(fetch.mock.calls.some(([url]) => url.includes('benchmark_instrument_id=nq-id') && url.includes('as_of=2026-09-23T12%3A00%3A00Z') && url.includes('start=2026-09-20T00%3A00%3A00Z'))).toBe(true);
+  await user.click(screen.getByRole('button', {name:'Reset query'}));
+  expect((screen.getByLabelText('Start (ISO timezone)') as HTMLInputElement).value).toBe('');
+});
+
+it('rejects timestamps without timezone before requesting a different price window', async () => {
+  const fetch = setup(); const user = userEvent.setup(); render(<Markets />);
+  await screen.findByText('Snapshot quality: STALE');
+  await user.click(screen.getByText('Time window & benchmark'));
+  await user.type(screen.getByLabelText('Start (ISO timezone)'), '2026-09-20T00:00:00');
+  await user.click(screen.getByRole('button', {name:'Apply saved-data query'}));
+  expect(screen.getByRole('alert').textContent).toContain('ISO timestamp with timezone');
+  expect(fetch.mock.calls.some(([url]) => url.includes('start='))).toBe(false);
+});
+
+it('shows backend comparison metrics only when benchmark provenance is present', async () => {
+  const response = { ...saved, benchmark_snapshot: saved.snapshot, view: { ...saved.view,
+    benchmark: { benchmark_instrument_id: 'nq-id', aligned_observations: 2, asset_return: .01,
+      benchmark_return: .02, excess_return: -.01, correlation: null, annualized_tracking_error: .03 } } };
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/timeseries') ? response : url.includes('/watchlist?') ? [] : [apple, reference]))));
+  render(<Markets />);
+  expect(await screen.findByRole('region', {name:'Saved benchmark comparison'})).toBeTruthy();
+  expect(screen.getByText('-1.00%')).toBeTruthy();
+  expect(screen.getByText(/Benchmark is not quality-OK/)).toBeTruthy();
+});
+
+it('withholds malformed price payloads without a blank page or synthetic metrics', async () => {
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/timeseries') ? { snapshot: null, view: {} } : url.includes('/watchlist?') ? [] : [apple]))));
+  render(<Markets />);
+  expect(await screen.findByText('Price history unavailable')).toBeTruthy();
+  expect(screen.queryByRole('img')).toBeNull();
+  expect(screen.queryByText('0.00%')).toBeNull();
+});
+
+it('does not show benchmark metrics when the comparison has no source manifest', async () => {
+  const response = { ...saved, view: { ...saved.view, benchmark: { benchmark_instrument_id: 'nq-id',
+    aligned_observations: 2, asset_return: .01, benchmark_return: .02, excess_return: -.01,
+    correlation: null, annualized_tracking_error: .03 } } };
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/timeseries') ? response : url.includes('/watchlist?') ? [] : [apple, reference]))));
+  render(<Markets />);
+  expect(await screen.findByText('Benchmark provenance unavailable; comparison withheld.')).toBeTruthy();
+  expect(screen.queryByText('-1.00%')).toBeNull();
+});

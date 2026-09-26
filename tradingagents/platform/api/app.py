@@ -553,8 +553,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
             )
             series = slice_time_series(series, start=start, end=end)
             benchmark = None
+            benchmark_snapshot = None
             if benchmark_instrument_id is not None:
-                _benchmark_snapshot, benchmark = snapshots.load(
+                benchmark_snapshot, benchmark = snapshots.load(
                     owner_id=owner.owner_id,
                     instrument_id=benchmark_instrument_id,
                     dataset=dataset,
@@ -572,7 +573,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=str(error),
             ) from error
-        return TimeSeriesResponse(snapshot=snapshot, view=view)
+        return TimeSeriesResponse(snapshot=snapshot, view=view, benchmark_snapshot=benchmark_snapshot)
 
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",

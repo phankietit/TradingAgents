@@ -357,6 +357,33 @@ def test_run_artifact_discovery_excludes_storage_and_other_owners(api_context):
     assert client.get(f"/api/v1/runs/{uuid4()}/artifacts").status_code == 404
 
 
+def test_benchmark_response_includes_owner_readable_provenance(api_context):
+    client = api_context["client"]
+    instrument = api_context["instrument"]
+    owner_id = api_context["principal"].owner_id
+    benchmark = instrument.model_copy(update={"instrument_id": uuid4(), "symbol": "SPY",
+        "canonical_symbol": "SPY", "display_name": "Synthetic benchmark", "asset_class": AssetClass.ETF})
+    with client.app.state.database.session() as session:
+        repo = PlatformRepository(session)
+        repo.add_instrument(benchmark)
+        service = TimeSeriesSnapshotService(repo, ArtifactService(client.app.state.artifact_store, repo))
+        _, series = service.load(owner_id=owner_id, instrument_id=instrument.instrument_id,
+                                 dataset="ohlcv.daily", as_of=NOW)
+        source = service.persist(owner_id=owner_id,
+            series=series.model_copy(update={"instrument_id": benchmark.instrument_id}),
+            vendor="SYNTHETIC BENCHMARK", retrieved_at=NOW)
+    _login(client)
+    path = f"/api/v1/instruments/{instrument.instrument_id}/timeseries"
+    response = client.get(path, params={"benchmark_instrument_id": str(benchmark.instrument_id)})
+    assert response.status_code == 200
+    assert response.json()["benchmark_snapshot"] == source.model_dump(mode="json")
+    assert response.json()["view"]["benchmark"]["aligned_observations"] == 2
+    assert response.json()["view"]["benchmark"]["excess_return"] == 0
+    assert client.get(path).json()["benchmark_snapshot"] is None
+    assert client.get(path, params={"benchmark_instrument_id": str(benchmark.instrument_id),
+                                   "as_of": (NOW - timedelta(hours=2)).isoformat()}).status_code == 404
+
+
 def test_snapshot_run_inputs_are_owner_validated_and_idempotent(api_context):
     client = api_context["client"]
     _login(client)

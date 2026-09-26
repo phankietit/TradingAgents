@@ -70,6 +70,8 @@ def main():
                         help="Run durable jobs with synthetic graph output; never calls models/vendors")
     parser.add_argument("--built-web", action="store_true",
                         help="Serve the existing web/dist build and API together on 127.0.0.1:8000")
+    parser.add_argument("--all-assets", action="store_true",
+                        help="Seed labelled synthetic daily charts for ETF, BTC/ETH and NQ/ES QA")
     args = parser.parse_args()
     cache = Path(__file__).resolve().parents[1] / ".cache"
     cache.mkdir(exist_ok=True)
@@ -95,6 +97,21 @@ def main():
         artifacts = ArtifactService(LocalArtifactStore(directory / "artifacts"), repository)
         source = TimeSeriesSnapshotService(repository, artifacts).persist(
             owner_id=owner.owner_id, series=series, vendor="SYNTHETIC LOCAL QA — NOT MARKET DATA", retrieved_at=now)
+        if args.all_assets:
+            bases = {"SPY": 500, "QQQ": 430, "BTC-USD": 60000, "ETH-USD": 3000,
+                     "NQ=F": 20000, "ES=F": 5000}
+            for asset in master.list():
+                if asset.canonical_symbol not in bases:
+                    continue
+                scale = bases[asset.canonical_symbol] / 180
+                fixture_bars = [{**bar, **{key: round(bar[key] * scale, 2)
+                    for key in ("open", "high", "low", "close")}} for bar in bars]
+                fixture_series = normalize_time_series(instrument=asset, dataset="ohlcv.daily",
+                    interval=PriceInterval.ONE_DAY, as_of=now,
+                    annualization_periods=365 if asset.asset_class.value == "crypto" else 252,
+                    bars=fixture_bars)
+                TimeSeriesSnapshotService(repository, artifacts).persist(owner_id=owner.owner_id,
+                    series=fixture_series, vendor="SYNTHETIC LOCAL QA — NOT MARKET DATA", retrieved_at=now)
         ledger_id = uuid4()
         repository.add_ledger_transaction(LedgerTransaction(transaction_id=uuid4(), ledger_id=ledger_id,
             owner_id=owner.owner_id, occurred_at=now - timedelta(days=62), transaction_type="cash_deposit",

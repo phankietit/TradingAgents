@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ApiError, errorMessage, mutate } from './api';
-import { instruments, number, percent, timestamp, useResource } from './data';
+import { instruments, number, percent, priceResponse, timestamp, useResource } from './data';
 import type { Instrument, SeriesResponse } from './data';
 
 const groups = ['All assets', 'Stocks', 'ETFs', 'Crypto', 'Index references'] as const;
@@ -41,18 +41,39 @@ export default function Markets() {
         {source.data?.length === (onlyWatched ? 200 : 500) ? <p className="warning">Display limit reached; this list may be incomplete.</p> : null}
       </section>
       {instrument ? <InstrumentDetail key={instrument.instrument_id} instrument={instrument} version={version}
+        catalog={catalog.data ?? []}
         watched={watchlist.data?.some(item => item.instrument_id === instrument.instrument_id)} watchlistError={watchlist.error}
         onWatchlistChange={refresh} /> : <section className="empty-state"><h2>Select an instrument</h2><p>Price history and source details will appear here when saved data is available.</p></section>}
     </div>
   </>;
 }
 
-function InstrumentDetail({ instrument, watched, watchlistError, version, onWatchlistChange }: {
-  instrument: Instrument; watched: boolean | undefined; watchlistError: unknown; version: number; onWatchlistChange: () => void;
+function InstrumentDetail({ instrument, catalog, watched, watchlistError, version, onWatchlistChange }: {
+  instrument: Instrument; catalog: Instrument[]; watched: boolean | undefined; watchlistError: unknown; version: number; onWatchlistChange: () => void;
 }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
-  const series = useResource<SeriesResponse>(`/instruments/${encodeURIComponent(instrument.instrument_id)}/timeseries`, version);
+  const [cutoff, setCutoff] = useState('');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const [benchmark, setBenchmark] = useState('');
+  const [applied, setApplied] = useState('');
+  const [queryError, setQueryError] = useState('');
+  const [queryVersion, setQueryVersion] = useState(0);
+  const series = useResource<SeriesResponse>(`/instruments/${encodeURIComponent(instrument.instrument_id)}/timeseries${applied ? `?${applied}` : ''}`, version + queryVersion, priceResponse);
+  function applyWindow(event: React.FormEvent) {
+    event.preventDefault();
+    if ([cutoff, start, end].some(value => value && (!Number.isFinite(Date.parse(value)) || !/(?:Z|[+-]\d{2}:\d{2})$/i.test(value)))) {
+      setQueryError('Use an ISO timestamp with timezone, for example 2026-09-01T00:00:00Z.'); return;
+    }
+    if (start && end && Date.parse(start) > Date.parse(end)) { setQueryError('Start must not be after end.'); return; }
+    const query = new URLSearchParams();
+    if (cutoff) query.set('as_of', cutoff);
+    if (start) query.set('start', start);
+    if (end) query.set('end', end);
+    if (benchmark) query.set('benchmark_instrument_id', benchmark);
+    setQueryError(''); setApplied(query.toString()); setQueryVersion(value => value + 1);
+  }
   async function toggleWatchlist() {
     if (watched === undefined) return;
     setPending(true); setError('');
@@ -67,12 +88,21 @@ function InstrumentDetail({ instrument, watched, watchlistError, version, onWatc
     {instrument.tradability === 'reference_only' ? <p className="notice warning">Reference only — context for research, not an investable or executable instrument.</p> : null}
     {instrument.asset_class === 'crypto' ? <p className="notice">Crypto · 24/7 market calendar. Separate allocation and policy limits apply.</p> : null}
     {error || watchlistError ? <p role="alert" className="danger">{error || `Watchlist unavailable. ${errorMessage(watchlistError)}`}</p> : null}
-    {series.loading ? <p role="status">Loading saved price history…</p> : series.error ? <div className="empty-state" role="status"><h2>Price history unavailable</h2><p>{series.error instanceof ApiError && series.error.status === 404 ? 'No owner-readable price snapshot is available. Ingest market data before analysis; no substitute prices are shown.' : errorMessage(series.error)}</p></div>
-      : series.data ? <PriceHistory data={series.data} /> : null}
+    <details className="market-query"><summary>Time window & benchmark</summary><form onSubmit={applyWindow}>
+      <p className="muted caption">Daily saved prices only. Blank cutoff uses the latest eligible saved snapshot. Dates require an explicit timezone; calculations and benchmark alignment stay on the backend.</p>
+      <div className="form-grid"><label>Snapshot cutoff (ISO timezone)<input value={cutoff} onChange={event => setCutoff(event.target.value)} placeholder="Latest available" /></label>
+        <label>Start (ISO timezone)<input value={start} onChange={event => setStart(event.target.value)} placeholder="All saved history" /></label>
+        <label>End (ISO timezone)<input value={end} onChange={event => setEnd(event.target.value)} placeholder="Through snapshot" /></label></div>
+      <label>Benchmark<select value={benchmark} onChange={event => setBenchmark(event.target.value)}><option value="">No comparison</option>{catalog.filter(item => item.instrument_id !== instrument.instrument_id && item.quote_currency === instrument.quote_currency).map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol}{item.canonical_symbol === instrument.benchmark_symbol ? ' · configured benchmark' : ''}</option>)}</select></label>
+      {queryError ? <p role="alert" className="danger">{queryError}</p> : null}
+      <div className="section-actions"><button type="submit">Apply saved-data query</button><button type="button" onClick={() => { setCutoff(''); setStart(''); setEnd(''); setBenchmark(''); setApplied(''); setQueryError(''); setQueryVersion(value => value + 1); }}>Reset query</button></div>
+    </form></details>
+    {series.loading ? <p role="status">Loading saved price history…</p> : series.error ? <div className="empty-state" role="status"><h2>Price history unavailable</h2><p>{series.error instanceof ApiError && series.error.status === 404 ? 'No owner-readable price snapshot is available for the asset or benchmark at this cutoff. Ingest market data before analysis; no substitute prices are shown.' : series.error instanceof ApiError && series.error.status === 422 ? 'The requested window or comparison is unavailable. Check dates, matching currency/interval and at least two aligned observations; no substitute comparison is shown.' : errorMessage(series.error)}</p></div>
+      : series.data ? <PriceHistory key={applied} data={series.data} catalog={catalog} /> : null}
   </section>;
 }
 
-function PriceHistory({ data }: { data: SeriesResponse }) {
+function PriceHistory({ data, catalog }: { data: SeriesResponse; catalog: Instrument[] }) {
   const { snapshot, view } = data;
   const [showTable, setShowTable] = useState(false);
   const [page, setPage] = useState(0);
@@ -109,5 +139,13 @@ function PriceHistory({ data }: { data: SeriesResponse }) {
     <details className="provenance"><summary>Source & provenance</summary><dl>
       <dt>Vendor / dataset</dt><dd>{snapshot.vendor} / {snapshot.dataset}</dd><dt>As of</dt><dd>{timestamp(snapshot.as_of)}</dd><dt>Retrieved</dt><dd>{timestamp(snapshot.retrieved_at)}</dd><dt>Source window</dt><dd>{timestamp(snapshot.source_start)} — {timestamp(snapshot.source_end)}</dd><dt>Snapshot</dt><dd className="mono">{snapshot.snapshot_id}</dd><dt>Content hash</dt><dd className="mono">{snapshot.content_hash}</dd>
     </dl><p className="muted">Quality belongs to this saved snapshot, not a live-feed freshness guarantee. Analysis checks freshness again at its selected timestamp.</p></details>
+    {view.benchmark ? <section className="benchmark-panel" aria-label="Saved benchmark comparison"><h3>Benchmark · {catalog.find(item => item.instrument_id === view.benchmark!.benchmark_instrument_id)?.canonical_symbol ?? view.benchmark.benchmark_instrument_id}</h3>
+      {!data.benchmark_snapshot ? <p className="warning">Benchmark provenance unavailable; comparison withheld.</p> : <>
+        <p className="muted">{view.benchmark.aligned_observations} aligned observations · {data.benchmark_snapshot.vendor} · Quality {data.benchmark_snapshot.quality_status}</p>
+        {data.benchmark_snapshot.quality_status !== 'OK' ? <p className="warning">Benchmark is not quality-OK. These are saved descriptive metrics, not an eligible investment conclusion.</p> : null}
+        <dl><dt>Asset aligned return</dt><dd>{percent(view.benchmark.asset_return)}</dd><dt>Benchmark return</dt><dd>{percent(view.benchmark.benchmark_return)}</dd><dt>Excess return</dt><dd>{percent(view.benchmark.excess_return)}</dd><dt>Correlation</dt><dd>{view.benchmark.correlation === null ? 'Unavailable' : number(view.benchmark.correlation, 4)}</dd><dt>Tracking error (annualized)</dt><dd>{percent(view.benchmark.annualized_tracking_error)}</dd></dl>
+        <details><summary>Benchmark provenance</summary><dl><dt>Snapshot</dt><dd className="mono">{data.benchmark_snapshot.snapshot_id}</dd><dt>As of</dt><dd>{timestamp(data.benchmark_snapshot.as_of)}</dd><dt>Retrieved</dt><dd>{timestamp(data.benchmark_snapshot.retrieved_at)}</dd><dt>Source through</dt><dd>{timestamp(data.benchmark_snapshot.source_end)}</dd><dt>Hash</dt><dd className="mono">{data.benchmark_snapshot.content_hash}</dd></dl></details>
+      </>}
+    </section> : null}
   </>;
 }

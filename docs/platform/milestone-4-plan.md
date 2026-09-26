@@ -156,8 +156,19 @@ missing series has no synthetic production fallback. IAB real API/SQLite/artifac
 integration verified with an explicitly labelled synthetic fixture, desktop
 1280×720 and narrow 390×844 (no document overflow), login/save/reload/table/
 reference-missing/logout. 13 frontend tests, build and lint PASS. Further work:
-analysis handoff, benchmark/date controls, screener integration and broader
+screening integration and broader
 failure/accessibility acceptance. This is not live-provider evidence.
+
+Updated checkpoint: analysis handoff and explicit saved-data cutoff/start/end
+and benchmark controls implemented. API exposes benchmark provenance; frontend
+withholds missing provenance or malformed prices. IAB built desktop: AAPL–SPY
+25-point comparison/source hash, missing benchmark without fallback, six ETF/
+crypto/futures-reference charts and NQ/BTC/SPY synthetic worker profiles PASS.
+Reference risk-input control remains disabled. Narrow 390px crypto controls,
+keyboard focus and no overflow PASS; console clean. Normalized synthetic series
+do not prove real vendor, market calendar-session, or futures roll coverage.
+API/time-series gate: 35 PASS, one PostgreSQL skip UNVERIFIED.
+Frontend gate: 39 tests, lint/typecheck/build PASS. No paid provider calls.
 
 Native-design comparison: rail/layout, exact neutral-dark palette, tabular metrics,
 labelled source state, responsive stacked controls and table overflow inspected.

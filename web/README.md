@@ -78,6 +78,10 @@ This creates a new ignored database/store and uses labelled synthetic graph
 output; it does not load owner records or call models/vendors. Never point the
 fixture script at an owner database. Stop with Ctrl-C; fixture data is retained
 for inspection. This is not a populated investment product or live-data demo.
+Add `--all-assets` only for cross-asset QA: it seeds labelled synthetic daily
+series for SPY/QQQ, BTC/ETH and NQ/ES, in addition to AAPL. Values are scaled
+fixtures, not real market returns, calendar-session coverage or futures roll
+history. Original missing-data checks can still use the default AAPL-only mode.
 
 Built-mode QA: 1280×720 IAB login → saved AAPL → CSRF watchlist save → reload
 and session restoration → logout PASS, no console/CSP errors or framework
@@ -153,3 +157,18 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   REVIEW decision → reload PASS; Enter opens preview/disclosure, visible focus,
   no document overflow, console/CSP errors or framework overlay. 34 frontend
   tests plus lint/typecheck/build PASS. This remains offline fixture evidence.
+- Market query checkpoint: an explicit daily saved-data cutoff/start/end and
+  benchmark selector sends the window to the existing backend. Asset/benchmark
+  return, correlation and tracking error are never recomputed in React.
+  Benchmark provenance is required before comparison metrics are shown. Malformed
+  price payloads are withheld rather than crashing the workspace; invalid local
+  timestamps stop submission. Missing benchmark coverage does not fall back to
+  an unrelated source. Editing query fields does not fetch until Apply is clicked.
+  Built IAB 1280×720: AAPL–SPY window gives 25 aligned observations with source
+  hash; unavailable ^GSPC comparison has no fabricated chart/metrics. SPY/QQQ,
+  BTC/ETH and ES/NQ show their instrument calendars and reference/crypto labels.
+  Synthetic worker runs produce profiles etf, large-cap-crypto and
+  futures-reference; NQ portfolio input is disabled and report remains reference
+  only. At 390×844 the crypto query form stacks, Enter/focus works, and document
+  width stays 390px. No console warnings/errors. These are normalized synthetic
+  chart/profile checks, not live-provider, roll-series or calendar-vintage proof.

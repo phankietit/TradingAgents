@@ -67,6 +67,14 @@ bound `X-CSRF-Token`. The API derives owner identity only from the authenticated
 session. It rejects future analysis dates and unsupported/duplicate analyst
 sets before enqueueing a durable job.
 
+Time-series comparisons now include nullable `benchmark_snapshot` provenance
+beside `snapshot` and `view`; absent when no benchmark was requested. The
+benchmark uses the same owner-readable artifact checks, cutoff and requested
+window as the asset. It is not fetched from a provider on demand. Missing
+snapshots remain 404; invalid dates, incompatible interval/currency or insufficient
+alignment remain 422. Both asset and benchmark metadata describe saved snapshots,
+not a current live-feed freshness guarantee.
+
 ## Workspace discovery (M4)
 
 Watchlist: `GET /api/v1/watchlist` returns owner-saved instrument contracts,

@@ -70,6 +70,7 @@ class AnalysisProfileResponse(ApiModel):
 class TimeSeriesResponse(ApiModel):
     snapshot: SnapshotManifest
     view: TimeSeriesView
+    benchmark_snapshot: SnapshotManifest | None = None
 
 
 class SnapshotDiscoveryResponse(ApiModel):
