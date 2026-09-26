@@ -15,7 +15,9 @@ following missing integration and correctness requirements.
 - PLAN-030/031: durable research handler now runs AnalysisEngine and atomically
   persists report plus REVIEW candidate, with idempotent completion recovery
   and cancellation tests. Snapshot-attested execution, complete profile/tool
-  enforcement, long-call lease renewal and worker command wiring remain.
+  enforcement and worker command wiring remain. Long calls now renew leases;
+  publication uses a transaction-level lease/cancellation fence, with tests for
+  reclaim races and renewal-thread cleanup.
 - PLAN-032: PM structured payload is now retained separately from CLI prose;
   AnalysisEngine validates the narrative and rejects missing/extra fields.
   Durable handler passes this payload to the candidate factory; legacy tool

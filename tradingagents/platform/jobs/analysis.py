@@ -83,7 +83,7 @@ class AnalysisJobHandler:
             "structured_narrative": raw or None,
             "snapshot_attestation": "UNVERIFIED",
         }
-        with self.database.session() as session:
+        with context.publication_session() as session:
             repository = PlatformRepository(session, artifact_store=self.artifact_store)
             ArtifactService(self.artifact_store, repository).create(
                 artifact_id=report_id, owner_id=run.owner_id, run_id=run.run_id,

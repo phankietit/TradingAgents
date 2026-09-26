@@ -44,4 +44,9 @@ attestation `UNVERIFIED` and the candidate `REVIEW` with no target weight.
 Legacy graph tools do not yet attest all reads to immutable run snapshots;
 the handler does not fabricate claim links from a list of available snapshots.
 Snapshot-attested graph execution, evidence/risk orchestration, periodic lease
-renewal during long calls and worker command wiring remain integration work.
+renewal is now handled by the worker; worker command wiring remains integration
+work. Renewal uses a separate short-lived session every third of the lease.
+Report/candidate publication fences the current lease and cancellation status
+inside its write transaction. A stale worker cannot publish or fail a job that
+has been reclaimed by another worker. Synchronous model calls are not forcibly
+terminated on cancellation; their result is withheld at publication.
