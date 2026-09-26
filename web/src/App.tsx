@@ -3,11 +3,12 @@ import { SessionBoundary } from './auth';
 import { errorMessage } from './api';
 import type { Owner } from './api';
 import Markets from './Markets';
+import Analysis from './Analysis';
 
 const pages = ['Markets', 'Analysis', 'Portfolio', 'Decisions'] as const;
 type Page = typeof pages[number];
 function currentPage(): Page | null {
-  const slug = window.location.hash.slice(1) || '/markets';
+  const slug = window.location.hash.slice(1).split('?')[0] || '/markets';
   return pages.find(page => `/${page.toLowerCase()}` === slug) ?? null;
 }
 
@@ -40,7 +41,7 @@ function Workspace({ owner, logout }: { owner: Owner; logout: () => Promise<void
     <main id="main-content" tabIndex={-1}>
       <header className="workspace-header"><h1>{page ?? 'Page not found'}</h1><span className="muted">Local research workspace</span></header>
       <div className="page-content">
-        {page === 'Markets' ? <Markets /> : <section className="empty-state"><h2>{page ? `${page} workspace is being connected` : 'This workspace does not exist'}</h2>
+        {page === 'Markets' ? <Markets /> : page === 'Analysis' ? <Analysis /> : <section className="empty-state"><h2>{page ? `${page} workspace is being connected` : 'This workspace does not exist'}</h2>
           <p>{page ? 'Session authentication is active. Data views are not available in this implementation checkpoint.' : 'Choose a workspace from the navigation.'}</p>
         </section>}
       </div>

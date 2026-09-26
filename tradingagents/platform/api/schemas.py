@@ -61,6 +61,12 @@ class InstrumentDetailResponse(ApiModel):
     aliases: tuple[InstrumentAliasContract, ...]
 
 
+class AnalysisProfileResponse(ApiModel):
+    name: str
+    allowed_analysts: tuple[str, ...]
+    investable: bool
+
+
 class TimeSeriesResponse(ApiModel):
     snapshot: SnapshotManifest
     view: TimeSeriesView

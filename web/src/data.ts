@@ -54,5 +54,5 @@ export const percent = (value: number) => Number.isFinite(value) ? `${number(val
 export function timestamp(value: string | null): string {
   if (!value) return 'Unavailable';
   const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace('.000Z', ' UTC') : 'Invalid timestamp';
+  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, ' UTC') : 'Invalid timestamp';
 }

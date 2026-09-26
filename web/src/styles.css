@@ -45,6 +45,23 @@ h2 { font-size: 18px; font-weight: 550; }
 .workspace-footer { color: var(--muted); font-size: 12px; padding: 16px 24px; border-top: 1px solid var(--border); }
 .skip-link { position: absolute; left: 16px; top: -100px; padding: 12px; background: #151c25; color: var(--accent); z-index: 10; }
 .skip-link:focus { top: 8px; }
+.section-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 8px 0 20px; }
+.section-actions p { margin: 0; flex: 1; }
+.action-link { display: inline-block; color: #0b0e13; background: var(--accent); padding: 9px 14px; border-radius: 6px; font-weight: 600; text-decoration: none; }
+.analysis-form { border-block: 1px solid var(--border); padding: 24px 0; margin-bottom: 24px; }
+.analysis-form > fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.source-role { min-width: 0; border: 1px solid var(--border); margin: 16px 0; padding: 12px 16px; }
+.source-role legend { color: var(--accent); padding: 0 8px; text-transform: capitalize; }
+.source-option { display: flex; gap: 12px; align-items: start; margin: 12px 0; font-weight: 400; }
+.source-option input { width: 16px; flex: 0 0 16px; margin: 4px 0 0; }
+.source-option small { display: block; margin-top: 4px; color: var(--muted); }
+.event-list { padding-left: 20px; }
+.event-list li { padding: 8px 0; }
+.event-list time { display: block; font-size: 12px; color: var(--muted); }
+.artifact-list { list-style: none; padding: 0; }
+.artifact-list li { display: grid; gap: 8px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.artifact-list a { color: var(--accent); }
 .caption { font-size: 12px; }
 .warning { color: #efc16d; }
 .mono { font-family: ui-monospace, monospace; overflow-wrap: anywhere; }
@@ -87,6 +104,7 @@ summary { cursor: pointer; color: var(--accent); padding: 8px 0; }
 dl { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; font-size: 12px; }
 dt { color: var(--muted); } dd { margin: 0; }
 @media (max-width: 900px) {
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
   .market-layout { grid-template-columns: minmax(0, 1fr); }
   .instrument-list { border-right: 0; border-bottom: 1px solid var(--border); padding: 16px 0; }
   .instrument-list ul { max-height: 260px; overflow-y: auto; }

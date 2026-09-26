@@ -2,7 +2,9 @@
 
 This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
-backend metrics and source provenance. Analysis, portfolio and decisions remain
+backend metrics and source provenance. Analysis now supports snapshot selection,
+explicit cost authorization, durable queue submission, SSE progress, cancellation,
+new-attempt configuration and artifact downloads. Portfolio and decisions remain
 pending. Do not describe this checkpoint as the completed M4 product.
 
 ## Development
@@ -54,3 +56,8 @@ development server or use it as a production deployment.
   Each run creates a new ignored `.cache/web-fixture-*` database and artifacts.
   This server never starts a worker or calls a vendor/model. The synthetic vendor
   label is visible beside the chart. This is integration evidence, not live data.
+- Analysis IAB check: Markets Analyze → choose market snapshot → explicit queue
+  authorization → real queued run → cancel → SSE `run.cancelled`. No worker or
+  model ran. Browser logs had no app errors. Generated report/risk/decision paths
+  remain UNVERIFIED. Unit tests cover disabled stale inputs, required consent and
+  stable idempotency keys after failed unchanged submissions.

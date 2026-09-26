@@ -78,6 +78,7 @@ from tradingagents.platform.persistence import (
 )
 
 from .schemas import (
+    AnalysisProfileResponse,
     ArtifactMetadataResponse,
     CsrfResponse,
     DecisionStateResponse,
@@ -486,6 +487,22 @@ def create_app(settings: ApiSettings) -> FastAPI:
             instrument=instrument,
             aliases=repository.list_instrument_aliases(instrument.instrument_id),
         )
+
+    @app.get(f"{API_PREFIX}/instruments/{{instrument_id}}/analysis-profile",
+             response_model=AnalysisProfileResponse, tags=["instruments"])
+    def analysis_profile(instrument_id: UUID, _owner: OwnerDependency, session: SessionDependency) -> AnalysisProfileResponse:
+        from tradingagents.platform.analysis.profiles import resolve_analysis_profile
+
+        instrument = PlatformRepository(session).get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        try:
+            profile = resolve_analysis_profile(instrument)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail="unsupported analysis profile") from error
+        return AnalysisProfileResponse(name=profile.name, allowed_analysts=tuple(
+            role for role in profile.allowed_analysts if role in settings.allowed_analysts
+        ), investable=profile.investable)
 
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/timeseries",

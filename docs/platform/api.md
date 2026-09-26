@@ -57,6 +57,10 @@ test rollback only on a disposable database, never on owner data without approva
 
 Authenticated read-only routes:
 
+- `GET /api/v1/instruments/{instrument_id}/analysis-profile` returns the existing
+  deterministic asset profile, allowed analysts intersected with server settings,
+  and investability. UI choices do not override this backend contract.
+
 - `GET /api/v1/portfolios` and `/portfolios/{portfolio_id}` return persisted
   owner snapshots, not frontend-recomputed balances.
 - `GET /api/v1/policies` (optional `asset_class`) and

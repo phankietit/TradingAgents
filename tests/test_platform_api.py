@@ -185,6 +185,16 @@ def _run_payload(instrument_id):
 
 
 @pytest.mark.unit
+def test_analysis_profile_is_authenticated_and_uses_backend_roles(api_context):
+    client = api_context["client"]
+    path = f"/api/v1/instruments/{api_context['instrument'].instrument_id}/analysis-profile"
+    assert client.get(path).status_code == 401
+    _login(client)
+    assert client.get(path).json() == {"name": "equity", "allowed_analysts": ["market", "social", "news", "fundamentals"], "investable": True}
+    assert client.get(f"/api/v1/instruments/{uuid4()}/analysis-profile").status_code == 404
+
+
+@pytest.mark.unit
 def test_watchlist_is_persistent_idempotent_and_csrf_protected(api_context):
     client = api_context["client"]
     instrument_id = api_context["instrument"].instrument_id

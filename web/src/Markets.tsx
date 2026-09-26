@@ -63,7 +63,7 @@ function InstrumentDetail({ instrument, watched, watchlistError, version, onWatc
   return <section className="instrument-detail" aria-label={`${instrument.canonical_symbol} details`}>
     <div className="detail-heading"><div><h2>{instrument.canonical_symbol} <span className="muted">{instrument.display_name}</span></h2>
       <p className="muted caption">{instrument.venue} · {instrument.quote_currency} · {instrument.session_calendar} · {instrument.timezone}</p></div>
-      <button onClick={toggleWatchlist} disabled={pending || watched === undefined}>{pending ? 'Saving…' : watched ? 'Remove from watchlist' : 'Add to watchlist'}</button></div>
+      <div className="section-actions"><button onClick={toggleWatchlist} disabled={pending || watched === undefined}>{pending ? 'Saving…' : watched ? 'Remove from watchlist' : 'Add to watchlist'}</button><a className="action-link" href={`#/analysis?instrument=${encodeURIComponent(instrument.instrument_id)}`}>Analyze</a></div></div>
     {instrument.tradability === 'reference_only' ? <p className="notice warning">Reference only — context for research, not an investable or executable instrument.</p> : null}
     {instrument.asset_class === 'crypto' ? <p className="notice">Crypto · 24/7 market calendar. Separate allocation and policy limits apply.</p> : null}
     {error || watchlistError ? <p role="alert" className="danger">{error || `Watchlist unavailable. ${errorMessage(watchlistError)}`}</p> : null}

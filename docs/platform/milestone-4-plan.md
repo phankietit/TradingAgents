@@ -160,7 +160,16 @@ data cannot look like real quotes. No generated concept exists by owner choice.
 
 ### M4-ANALYSIS — real durable analysis workflow
 
-Status: planned. Depends on M4-MARKETS.
+Status: in-progress. Depends on M4-MARKETS.
+
+Checkpoint: backend analyst-profile endpoint, Markets handoff, snapshot selection,
+explicit cost consent, idempotent enqueue, run history/SSE, cancel/new attempt and
+artifact downloads. 16 frontend tests and 24 API tests PASS; build/lint PASS.
+IAB real API/database fixture: enqueue → queued → cancel → terminal SSE verified.
+No worker/model call made. Remaining: dataset-to-role suitability, full risk-input
+configuration, provider-readiness display, inline safe report/decision inspection,
+worker/result integration and full negative/browser acceptance. Do not call this
+completed analysis capability from queue/cancel evidence alone.
 
 - Form selects permitted analysts and eligible immutable inputs; exact as-of and
   cost/provider readiness are visible before any invocation.

@@ -1,0 +1,46 @@
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, it, vi } from 'vitest';
+import RunForm from './RunForm';
+const catalog = [{ instrument_id: 'aapl', canonical_symbol: 'AAPL', display_name: 'Apple', asset_class: 'equity', tradability: 'investable', venue: 'NASDAQ', quote_currency: 'USD', timezone: 'America/New_York', session_calendar: 'XNAS', benchmark_symbol: 'SPY' }];
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
+const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [] };
+afterEach(() => vi.unstubAllGlobals());
+function setup(stale = false) {
+  const fetch = vi.fn(async (url: string) => {
+    if (url.includes('/analysis-profile')) return json({ name: 'equity', allowed_analysts: ['market', 'news'], investable: true });
+    if (url.includes('/snapshots?')) return json([{ ...source, metadata_eligible: !stale, ineligibility_reasons: stale ? ['stale'] : [] }]);
+    if (url.endsWith('/auth/csrf')) return json({ csrf_token: 'test-csrf' });
+    return json({}, 503);
+  });
+  vi.stubGlobal('fetch', fetch); return fetch;
+}
+it('requires evidence and explicit paid-call authorization', async () => {
+  setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const group = await screen.findByRole('group', { name: 'market analyst' });
+  expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(await within(group).findByRole('checkbox'));
+  expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
+  expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(false);
+});
+it('disables stale evidence', async () => {
+  setup(true); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const group = await screen.findByRole('group', { name: 'market analyst' });
+  expect((await within(group).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
+});
+it('reuses idempotency key on unchanged failed submission', async () => {
+  const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const group = await screen.findByRole('group', { name: 'market analyst' });
+  await user.click(await within(group).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
+  await user.click(screen.getByRole('button', { name: 'Queue analysis' }));
+  await screen.findByRole('alert');
+  await user.click(screen.getByRole('button', { name: 'Queue analysis' }));
+  await screen.findByRole('alert');
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  const submissions = calls.filter(([url]) => url.endsWith('/runs'));
+  expect(submissions).toHaveLength(2);
+  expect(submissions[0][1].headers).toEqual(submissions[1][1].headers);
+  expect(JSON.parse(submissions[0][1].body as string).selected_analysts).toEqual(['market']);
+});
