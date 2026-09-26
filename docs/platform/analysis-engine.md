@@ -80,5 +80,21 @@ checks and writes evidence/report/candidate in one fenced transaction.
 Only complete eligible narrative/evidence and passing deterministic checks can
 yield `READY_FOR_APPROVAL`; approval still requires a separate owner event.
 Reference profiles remain non-investable. Source binding proves provenance,
-not that every model inference is correct. Worker command wiring and live
-provider evidence remain separate gates.
+not that every model inference is correct. Live provider evidence remains a
+separate gate.
+
+## Local worker command
+
+After installing the `platform` extra and applying database migrations, set
+`TRADINGAGENTS_DATABASE_URL` and `TRADINGAGENTS_ARTIFACT_ROOT` to the same private
+database/artifact location as the API. Provider credentials remain server-side.
+Run `tradingagents-worker --once` for at most one eligible job, or
+`tradingagents-worker` for continuous processing. The module equivalent is
+`python -m tradingagents.platform.jobs.runtime --once`.
+
+The command performs no migration and exposes no network listener. Idle polling
+is configurable with `--poll-seconds`; SIGINT/SIGTERM stop claiming new jobs
+and allow the current call to finish. Runtime cache/reports live below the
+configured artifact root. It does not add providers, change policy limits or
+submit orders. Use a dedicated local test database for command smoke tests;
+`--once` is not a dry run when eligible jobs are present.

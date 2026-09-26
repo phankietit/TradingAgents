@@ -17,7 +17,9 @@ following missing integration and correctness requirements.
   and cancellation tests. A snapshot-only engine/real graph path now validates
   source bytes/times and disables live tools/memory/logs. Worker snapshot
   selection and evidence/risk orchestration are now connected through immutable
-  run inputs and the authenticated API; command wiring remains. Long calls now renew leases;
+  run inputs and the authenticated API. The worker command supports one-shot
+  and continuous processing with explicit private storage; empty-queue smoke
+  and shutdown tests pass. Long calls now renew leases;
   publication uses a transaction-level lease/cancellation fence, with tests for
   reclaim races and renewal-thread cleanup.
 - PLAN-032: PM structured payload is now retained separately from CLI prose;
