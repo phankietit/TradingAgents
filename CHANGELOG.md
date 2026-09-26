@@ -14,6 +14,8 @@
   position, NAV, and realized/unrealized P&L replay; no broker or order path.
 - Add a versioned deterministic risk engine for data quality, tradability,
   weights, concentration, exposure, turnover, correlation, and cash limits.
+- Add an append-only decision lifecycle with actor/reason/policy audit and
+  matching-owner human approval enforcement.
 
 All notable changes to TradingAgents are documented here.
 

@@ -14,6 +14,7 @@ from tradingagents.contracts import (
     ArtifactManifest,
     AssetClass,
     DecisionCandidate,
+    DecisionLifecycleEvent,
     InstrumentAliasContract,
     InstrumentContract,
     LedgerTransaction,
@@ -28,6 +29,7 @@ from tradingagents.contracts import (
 
 from .models import (
     ArtifactRow,
+    DecisionLifecycleEventRow,
     DecisionRow,
     InstrumentAliasRow,
     InstrumentRow,
@@ -430,6 +432,44 @@ class PlatformRepository:
             )
         )
         return DecisionCandidate.model_validate(row.payload) if row else None
+
+    def add_decision_event(self, contract: DecisionLifecycleEvent) -> DecisionLifecycleEvent:
+        existing = self.session.get(DecisionLifecycleEventRow, contract.event_id)
+        if existing:
+            if not _same_payload(existing, contract):
+                raise ImmutableRecordConflict("decision event already has different content")
+            return contract
+        self.session.add(
+            DecisionLifecycleEventRow(
+                event_id=contract.event_id,
+                decision_id=contract.decision_id,
+                owner_id=contract.owner_id,
+                schema_version=contract.schema_version,
+                from_status=contract.from_status.value,
+                to_status=contract.to_status.value,
+                occurred_at=contract.occurred_at,
+                payload=_payload(contract),
+                created_at=datetime.now(UTC),
+            )
+        )
+        self.session.flush()
+        return contract
+
+    def list_decision_events(
+        self, decision_id: UUID, owner_id: UUID
+    ) -> tuple[DecisionLifecycleEvent, ...]:
+        rows = self.session.scalars(
+            select(DecisionLifecycleEventRow)
+            .where(
+                DecisionLifecycleEventRow.decision_id == decision_id,
+                DecisionLifecycleEventRow.owner_id == owner_id,
+            )
+            .order_by(
+                DecisionLifecycleEventRow.occurred_at,
+                DecisionLifecycleEventRow.event_id,
+            )
+        ).all()
+        return tuple(DecisionLifecycleEvent.model_validate(row.payload) for row in rows)
 
     def list_decisions(
         self, owner_id: UUID, *, limit: int = 50

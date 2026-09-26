@@ -23,11 +23,42 @@ class DecisionRating(str, Enum):
 
 
 class DecisionStatus(str, Enum):
+    DRAFT = "draft"
     REVIEW = "review"
     READY_FOR_APPROVAL = "ready_for_approval"
     APPROVED = "approved"
     REJECTED = "rejected"
     EXPIRED = "expired"
+
+
+class DecisionActorType(str, Enum):
+    OWNER = "owner"
+    SYSTEM = "system"
+
+
+class DecisionLifecycleEvent(VersionedContract):
+    event_id: UUID
+    decision_id: UUID
+    owner_id: UUID
+    from_status: DecisionStatus
+    to_status: DecisionStatus
+    actor_id: UUID | None = None
+    actor_type: DecisionActorType
+    reason: NonEmptyText
+    occurred_at: AwareDatetime
+    policy_id: UUID | None = None
+    policy_version: str | None = Field(default=None, min_length=1, max_length=64)
+
+    @model_validator(mode="after")
+    def validate_audit_authority(self):
+        if self.actor_type is DecisionActorType.OWNER and self.actor_id != self.owner_id:
+            raise ValueError("owner lifecycle action requires the matching owner actor")
+        if self.to_status is DecisionStatus.APPROVED:
+            if self.actor_type is not DecisionActorType.OWNER:
+                raise ValueError("only the human owner may approve a decision")
+            if self.policy_id is None or self.policy_version is None:
+                raise ValueError("approval requires the exact policy version")
+        return self
 
 
 class DecisionCandidate(VersionedContract):
@@ -52,9 +83,9 @@ class DecisionCandidate(VersionedContract):
 
     @model_validator(mode="after")
     def enforce_decision_boundary(self):
-        if self.status is DecisionStatus.REVIEW and self.rating is not DecisionRating.REVIEW:
+        if self.status in {DecisionStatus.DRAFT, DecisionStatus.REVIEW} and self.rating is not DecisionRating.REVIEW:
             raise ValueError("review decisions must use the Review rating")
-        if self.status is not DecisionStatus.REVIEW and self.rating is DecisionRating.REVIEW:
+        if self.status not in {DecisionStatus.DRAFT, DecisionStatus.REVIEW} and self.rating is DecisionRating.REVIEW:
             raise ValueError("Review rating requires review status")
         if (
             self.target_weight is not None

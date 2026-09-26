@@ -21,7 +21,13 @@ from .data_health import (
     DataHealthReport,
     DataHealthSummary,
 )
-from .decisions import DecisionCandidate, DecisionRating, DecisionStatus
+from .decisions import (
+    DecisionActorType,
+    DecisionCandidate,
+    DecisionLifecycleEvent,
+    DecisionRating,
+    DecisionStatus,
+)
 from .equity_etf import (
     DatasetCoverage,
     EquityETFDataset,
@@ -107,6 +113,7 @@ CONTRACT_REGISTRY = {
         DataHealthReport,
         EvidenceGraph,
         LedgerTransaction,
+        DecisionLifecycleEvent,
     )
 }
 
@@ -130,6 +137,8 @@ __all__ = [
     "DataHealthReport",
     "DataHealthSummary",
     "DecisionCandidate",
+    "DecisionActorType",
+    "DecisionLifecycleEvent",
     "DecisionRating",
     "DecisionStatus",
     "DerivedFactorSnapshot",
