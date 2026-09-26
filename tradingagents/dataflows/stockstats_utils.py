@@ -187,10 +187,19 @@ def _cache_is_fresh(data_file, curr_date_dt, now) -> bool:
     whose ``Close`` is not the closing price, and row inspection cannot tell it
     from a final one (#1150).
     """
-    written = pd.Timestamp.fromtimestamp(os.path.getmtime(data_file))
+    # Compare epoch seconds first, then project the age onto the caller's
+    # ``now`` clock. Pandas 3 treats a naive Timestamp.timestamp() as UTC while
+    # ``Timestamp.fromtimestamp`` applies the host timezone; round-tripping an
+    # mtime through both can shift the apparent write time by the UTC offset and
+    # make a stale file look newer than ``now``. Deriving the wall-clock write
+    # time from the epoch age is timezone-stable and keeps tests/runtime aligned.
+    age_seconds = now.timestamp() - os.path.getmtime(data_file)
+    if age_seconds < 0:
+        return False
+    written = now - pd.Timedelta(seconds=age_seconds)
     if written.date() != now.date():
         return False
-    return curr_date_dt.date() < now.date() or (now - written).total_seconds() <= OHLCV_CACHE_TTL_SECONDS
+    return curr_date_dt.date() < now.date() or age_seconds <= OHLCV_CACHE_TTL_SECONDS
 
 
 def load_ohlcv(symbol: str, curr_date: str, fill_gaps: bool = True) -> pd.DataFrame:
