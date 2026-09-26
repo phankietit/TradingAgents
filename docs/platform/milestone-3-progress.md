@@ -6,14 +6,17 @@ Branch: `feature/TA-030-analysis-engine`.
 
 The initial ticket commits provide services and contracts. They are **not yet
 completion evidence** for the integrated milestone. The full local suite at
-`587f449` passed 1082 tests with 14 skips; that result does not establish the
+`37d9193` passed 1124 tests with 14 skips and 88 subtests; that result predates
+the structured graph bridge and does not establish the
 following missing integration and correctness requirements.
 
 ## Remaining completion checks
 
 - PLAN-030/031: connect the adapter to the durable worker path; verify real
   graph profile/tool enforcement, snapshot context, and CLI compatibility.
-- PLAN-032: connect validated structured graph output to the candidate factory;
+- PLAN-032: PM structured payload is now retained separately from CLI prose;
+  AnalysisEngine validates the narrative and rejects missing/extra fields.
+  Connect this payload to the candidate factory in the durable worker;
   evidence/complete policy checks/weights are now required at factory readiness;
   previously persisted review candidates remain readable.
 - PLAN-033: deterministic IDs/hash, source-time validation and owner/run-bound

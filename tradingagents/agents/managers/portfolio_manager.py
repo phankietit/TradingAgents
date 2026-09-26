@@ -78,12 +78,21 @@ Write these sections, in this order, starting with the rating on its own line:
 
 {NO_EXTERNAL_TOOLS}{get_language_instruction()}"""
 
+        structured_decision = None
+
+        def capture_decision(value):
+            nonlocal structured_decision
+            # Revalidate even model instances: model_copy can bypass validators.
+            validated = PortfolioDecision.model_validate(value.model_dump())
+            structured_decision = validated.model_dump(mode="json")
+
         final_trade_decision = invoke_structured_or_freetext(
             structured_llm,
             llm,
             prompt,
             render_pm_decision,
             "Portfolio Manager",
+            on_structured=capture_decision,
         )
 
         new_risk_debate_state = {
@@ -102,6 +111,7 @@ Write these sections, in this order, starting with the rating on its own line:
         return {
             "risk_debate_state": new_risk_debate_state,
             "final_trade_decision": final_trade_decision,
+            "structured_decision": structured_decision,
         }
 
     return portfolio_manager_node

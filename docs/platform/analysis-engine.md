@@ -3,7 +3,16 @@
 `AnalysisEngine` is the stable platform boundary around the existing
 `TradingAgentsGraph`. It validates an instrument/date/analyst request, creates a
 run-scoped graph configuration, and returns the raw research state plus the
-narrative rating.
+narrative rating. The Portfolio Manager also retains its validated structured
+payload separately from Markdown. Free-text fallback explicitly clears that
+payload; JSON-looking prose is never reparsed as a decision.
+
+The adapter exposes `decision_payload` only when the structured result contains
+a valid rating, thesis, confidence, non-empty risks and invalidation conditions.
+Legacy outputs missing these additive fields remain readable Markdown but have
+no platform decision payload. Confidence is model-reported, not calibrated.
+No additional model call is introduced; the existing one-call structured path
+and single free-text retry remain. Provider cost/latency are not live-verified.
 
 The Typer CLI and public `TradingAgentsGraph.propagate()` API are unchanged.
 The adapter does not calculate target weights, waive policies, approve a

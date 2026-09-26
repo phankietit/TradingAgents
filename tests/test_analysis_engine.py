@@ -48,6 +48,7 @@ def test_analysis_engine_wraps_graph_without_changing_legacy_contract():
     assert calls["init"]["config"]["max_debate_rounds"] == 1
     assert calls["propagate"] == (("AAPL", "2026-09-25"), {"asset_type": "stock", "portfolio": None})
     assert result.narrative_signal == "Hold"
+    assert result.decision_payload is None
 
 
 @pytest.mark.unit
@@ -69,3 +70,28 @@ def test_analysis_engine_routes_crypto_through_existing_crypto_mode():
     )
     AnalysisEngine(base_config={}, graph_factory=FakeGraph).analyze(request)
     assert calls["propagate"][1]["asset_type"] == "crypto"
+
+
+@pytest.mark.parametrize("mutation,valid", [
+    ({}, True), ({"confidence": None}, False), ({"risks": []}, False),
+    ({"target_weight": .9}, False), ({"investment_thesis": "   "}, False),
+])
+def test_only_complete_structured_narrative_reaches_adapter(mutation, valid):
+    payload = {"rating": "Buy", "executive_summary": "Research only",
+               "investment_thesis": "Evidence-based thesis", "confidence": .7,
+               "risks": ["Earnings miss"], "invalidation_conditions": ["Margin decline"],
+               **mutation}
+
+    class FakeGraph:
+        def __init__(self, **kwargs):
+            pass
+
+        def propagate(self, *args, **kwargs):
+            return {"structured_decision": payload, "final_trade_decision": "Buy"}, "Buy"
+
+    result = AnalysisEngine(graph_factory=FakeGraph).analyze(
+        AnalysisRequest(instrument=_instrument(), analysis_date=date(2026, 9, 25)))
+    assert (result.decision_payload is not None) is valid
+    if valid:
+        assert result.decision_payload.thesis == "Evidence-based thesis"
+        assert "target_weight" not in result.decision_payload.model_dump()

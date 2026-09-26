@@ -546,3 +546,26 @@ def test_the_trader_names_the_levels_it_did_not_give():
     for field in ("Entry Price", "Stop Loss", "Position Sizing"):
         assert field in rendered
     assert rendered.lower().count("not provided") == 3
+
+
+def test_pm_retains_structured_payload_without_parsing_prose():
+    from tests.test_memory_log import _make_pm_state, _structured_pm_llm
+
+    decision = PortfolioDecision(rating=PortfolioRating.BUY, executive_summary="Summary",
+                                 investment_thesis="Thesis", confidence=.7,
+                                 risks=("Risk",), invalidation_conditions=("Condition",))
+    result = create_portfolio_manager(_structured_pm_llm({}, decision))(_make_pm_state())
+    assert result["structured_decision"] == decision.model_dump(mode="json")
+    assert "**Rating**: Buy" in result["final_trade_decision"]
+
+
+def test_pm_free_text_fallback_clears_structured_payload():
+    from tests.test_memory_log import _make_pm_state
+
+    llm = MagicMock()
+    llm.with_structured_output.side_effect = NotImplementedError
+    llm.invoke.return_value = MagicMock(content='{"rating":"Buy","confidence":1}')
+    state = {**_make_pm_state(), "structured_decision": {"rating": "Buy"}}
+    result = create_portfolio_manager(llm)(state)
+    assert result["structured_decision"] is None
+    assert result["final_trade_decision"] == llm.invoke.return_value.content

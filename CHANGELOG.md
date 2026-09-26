@@ -16,8 +16,11 @@
   weights, concentration, exposure, turnover, correlation, and cash limits.
 - Add an append-only decision lifecycle with actor/reason/policy audit and
   matching-owner human approval enforcement.
-- Add reproducible historical decision evaluation v2 with immutable input and
-  outcome hashes, while explicitly prohibiting portfolio-performance claims.
+- Add deterministic historical decision evaluation v2 and hash-verified
+  snapshot outcome calculations. Caller-supplied returns are explicitly not
+  certified reproducible, and portfolio-performance claims remain prohibited.
+- Retain validated Portfolio Manager narrative separately from CLI Markdown;
+  absent, incomplete or overreaching payloads cannot become platform decisions.
 
 All notable changes to TradingAgents are documented here.
 

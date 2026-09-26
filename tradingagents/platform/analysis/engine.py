@@ -13,11 +13,13 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from tradingagents.agents.schemas import PortfolioDecision
 from tradingagents.contracts import InstrumentContract
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.portfolio import PortfolioContext
 
+from .decisions import StructuredDecisionNarrative
 from .profiles import resolve_analysis_profile, select_analysts
 
 
@@ -45,6 +47,7 @@ class AnalysisResult(BaseModel):
     reference_only: bool
     final_state: dict[str, Any]
     narrative_signal: str
+    decision_payload: StructuredDecisionNarrative | None = None
 
 
 GraphFactory = Callable[..., TradingAgentsGraph]
@@ -77,6 +80,21 @@ class AnalysisEngine:
             asset_type=profile.legacy_asset_type,
             portfolio=request.portfolio,
         )
+        decision_payload = None
+        raw_decision = final_state.get("structured_decision")
+        if raw_decision is not None:
+            try:
+                parsed = PortfolioDecision.model_validate(raw_decision)
+                decision_payload = StructuredDecisionNarrative.model_validate({
+                    "rating": parsed.rating.value,
+                    "confidence": parsed.confidence,
+                    "thesis": parsed.investment_thesis,
+                    "risks": parsed.risks,
+                    "invalidation_conditions": parsed.invalidation_conditions,
+                })
+            except (ValueError, TypeError):
+                # Never parse prose or invent missing confidence/risk fields.
+                pass
         return AnalysisResult(
             instrument=request.instrument,
             analysis_date=request.analysis_date,
@@ -85,4 +103,5 @@ class AnalysisEngine:
             reference_only=not profile.investable,
             final_state=dict(final_state),
             narrative_signal=str(signal),
+            decision_payload=decision_payload,
         )
