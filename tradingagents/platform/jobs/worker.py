@@ -173,13 +173,17 @@ class JobWorker:
             with self.database.session() as session:
                 return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except JobCancellationRequested:
-            with self.database.session() as session:
-                timestamp = self.clock()
-                cancelled = DurableJobQueue(session).acknowledge_cancel(
-                    job.job_id, self.worker_id, now=timestamp
-                )
-                self._record_job_state(session, cancelled, timestamp)
-                return cancelled
+            try:
+                with self.database.session() as session:
+                    timestamp = self.clock()
+                    cancelled = DurableJobQueue(session).acknowledge_cancel(
+                        job.job_id, self.worker_id, now=timestamp
+                    )
+                    self._record_job_state(session, cancelled, timestamp)
+                    return cancelled
+            except JobLeaseError:
+                with self.database.session() as session:
+                    return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except Exception as exc:
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
             try:

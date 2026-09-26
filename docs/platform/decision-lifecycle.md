@@ -1,5 +1,11 @@
 # Decision lifecycle
 
+Approval additionally requires the analysis run to have completed successfully.
+If cancellation wins after report publication but before job completion, the
+immutable research candidate remains available for audit but cannot be approved.
+Its original status is not permission to approve; the persisted run gate is
+rechecked when the owner submits the transition.
+
 Decision state changes are append-only audit events. The deterministic lifecycle
 supports draft/review/readiness followed by owner approval, rejection, or
 expiry. Every event records actor, reason, timestamp, and the exact policy

@@ -8,13 +8,13 @@ import pytest
 from tests.test_decision_lifecycle import NOW, _approval, _decision
 from tests.test_platform_persistence import _instrument, _run
 from tests.test_risk_engine import _policy, _portfolio
-from tradingagents.contracts import DataQualityStatus, DecisionStatus, SnapshotManifest
+from tradingagents.contracts import DataQualityStatus, DecisionStatus, RunStatus, SnapshotManifest
 from tradingagents.platform.decisions import DecisionLifecycle
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 from tradingagents.platform.risk import RiskEngine, RiskProposal
 
 
-def seed(tmp_path, *, database_url=None):
+def seed(tmp_path, *, database_url=None, run_status=RunStatus.SUCCEEDED):
     url = database_url or f"sqlite:///{tmp_path / 'decisions.db'}"
     upgrade_database(url)
     database = Database(url)
@@ -54,7 +54,25 @@ def seed(tmp_path, *, database_url=None):
         repository.add_policy(policy)
         repository.add_portfolio_snapshot(portfolio)
         repository.add_decision(decision)
+        if run_status is not RunStatus.QUEUED:
+            run = run.model_copy(update={"status": RunStatus.RUNNING, "started_at": NOW})
+            repository.save_run(run)
+            if run_status is not RunStatus.RUNNING:
+                repository.save_run(run.model_copy(update={"status": run_status, "completed_at": NOW,
+                    "error_code": "TEST_FAILURE" if run_status is RunStatus.FAILED else None}))
     return database, decision
+
+
+@pytest.mark.parametrize("run_status", [RunStatus.QUEUED, RunStatus.RUNNING, RunStatus.CANCELLED, RunStatus.FAILED])
+def test_unfinished_or_unsuccessful_run_cannot_be_approved(tmp_path, run_status):
+    database, decision = seed(tmp_path, run_status=run_status)
+    try:
+        with pytest.raises(ValueError, match="successfully completed"), database.session() as session:
+            PlatformRepository(session).add_decision_event(_approval(decision))
+        with database.session() as session:
+            assert PlatformRepository(session).list_decision_events(decision.decision_id, decision.owner_id) == ()
+    finally:
+        database.dispose()
 
 
 def test_approval_is_persisted_once_and_terminal_conflict_rolls_back(tmp_path):

@@ -463,6 +463,10 @@ class PlatformRepository:
                 raise ImmutableRecordConflict("decision event already has different content")
             return contract
         decision = DecisionCandidate.model_validate(row.payload)
+        if contract.to_status is DecisionStatus.APPROVED:
+            run = self.get_run(decision.run_id, decision.owner_id)
+            if run is None or run.status is not RunStatus.SUCCEEDED:
+                raise InvalidStateTransition("approval requires a successfully completed analysis run")
         history = self.list_decision_events(contract.decision_id, contract.owner_id)
         if history and contract.occurred_at <= max(item.occurred_at for item in history):
             raise InvalidStateTransition("event must follow the previous event timestamp")

@@ -15,8 +15,8 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "missing_citation", "unknown_citation", "model_weight"])
-def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, case):
+@pytest.mark.parametrize("case", ["valid", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
+def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)
@@ -59,13 +59,26 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, case):
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Buy"
 
     handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=Graph))
+    if case == "cancel_after_publish":
+        complete = DurableJobQueue.complete
+
+        def cancel_before_complete(self, job_id, *args, **kwargs):
+            self.request_cancel(job_id, run.owner_id, now=NOW)
+            return complete(self, job_id, *args, **kwargs)
+
+        monkeypatch.setattr(DurableJobQueue, "complete", cancel_before_complete)
     worker = JobWorker(database, worker_id="snapshot-worker", handlers={JobKind.ANALYSIS_RUN: handler}, clock=lambda: NOW)
     job = worker.run_once()
-    assert job.status is JobStatus.SUCCEEDED
+    assert job.status is (JobStatus.CANCELLED if case == "cancel_after_publish" else JobStatus.SUCCEEDED)
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)
         decision = repo.get_decision(uuid5(run.run_id, "decision-v1"), run.owner_id)
-        if case == "valid":
+        if case == "cancel_after_publish":
+            assert decision.status is DecisionStatus.READY_FOR_APPROVAL  # Immutable original research.
+            with pytest.raises(ValueError, match="successfully completed"):
+                repo.add_decision_event(_approval(decision))
+            assert repo.list_decision_events(decision.decision_id, run.owner_id) == ()
+        elif case == "valid":
             assert decision.status is DecisionStatus.READY_FOR_APPROVAL
             assert decision.target_weight == .3  # Owner input, not model output.
             assert len(job.output_artifact_ids) == 2

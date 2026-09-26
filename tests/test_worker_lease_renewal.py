@@ -7,6 +7,7 @@ import pytest
 from tests.test_durable_jobs import NOW, _database, _enqueue
 from tradingagents.contracts import JobKind, JobStatus
 from tradingagents.platform.jobs import DurableJobQueue, JobWorker
+from tradingagents.platform.jobs.worker import JobCancellationRequested
 
 
 def test_long_handler_renews_lease_and_stops_renewal_thread(tmp_path, monkeypatch):
@@ -69,3 +70,28 @@ def test_stale_worker_cannot_publish_or_fail_reclaimed_job(tmp_path, failure):
     assert result.lease_owner == "replacement"
     assert result.attempt == 2
     database.dispose()
+
+
+def test_cancel_acknowledgement_after_recovery_does_not_crash_worker(tmp_path):
+    database, owner, run = _database(tmp_path)
+    job = _enqueue(database, owner, run)
+    timestamp = [NOW]
+
+    def handler(job, context):
+        with database.session() as session:
+            DurableJobQueue(session).request_cancel(job.job_id, owner, now=timestamp[0])
+        timestamp[0] += timedelta(minutes=2)
+        with database.session() as session:
+            recovered = DurableJobQueue(session).recover_expired(now=timestamp[0])
+            assert recovered[0].status is JobStatus.CANCELLED
+        raise JobCancellationRequested("cancellation observed before lease recovery")
+
+    worker = JobWorker(database, worker_id="cancel-race", handlers={JobKind.ANALYSIS_RUN: handler},
+                       lease_for=timedelta(minutes=1), clock=lambda: timestamp[0])
+    try:
+        result = worker.run_once()
+        assert result.job_id == job.job_id
+        assert result.status is JobStatus.CANCELLED
+        assert worker.run_once() is None
+    finally:
+        database.dispose()

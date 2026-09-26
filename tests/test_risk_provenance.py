@@ -11,6 +11,7 @@ from tests.test_decision_lifecycle import _approval
 from tests.test_evaluation_outcomes import _snapshot
 from tests.test_platform_persistence import _instrument, _run
 from tests.test_risk_engine import NOW, _policy
+from tradingagents.contracts import RunStatus
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.market_data.timeseries import TimeSeriesSnapshotService
 from tradingagents.platform.persistence import PlatformRepository
@@ -70,6 +71,10 @@ def test_multi_asset_risk_is_replayed_before_readiness_and_approval(tmp_path):
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)
         repo.add_decision(candidate)
+        run = repo.get_run(candidate.run_id, candidate.owner_id)
+        run = run.model_copy(update={"status": RunStatus.RUNNING, "started_at": NOW})
+        repo.save_run(run)
+        repo.save_run(run.model_copy(update={"status": RunStatus.SUCCEEDED, "completed_at": NOW}))
         repo.add_decision_event(_approval(candidate))
     database.dispose()
 
