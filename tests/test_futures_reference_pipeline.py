@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     DataQualityStatus,

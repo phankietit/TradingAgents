@@ -5,12 +5,13 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from threading import Event, Thread
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType, RunStatus
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.observability import MetricsRegistry

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import JobKind, JobRecord, JobStatus
 from tradingagents.platform.persistence.models import JobRow
 

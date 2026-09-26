@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID, uuid5
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     CashBalance,
     DataQualityStatus,

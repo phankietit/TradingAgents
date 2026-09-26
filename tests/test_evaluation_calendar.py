@@ -1,8 +1,9 @@
-from datetime import UTC, datetime
+from datetime import datetime
 
 import pytest
 
 from tests.test_analysis_engine import _instrument
+from tradingagents._compat import UTC
 from tradingagents.contracts import AssetClass
 from tradingagents.platform.evaluation.calendar import evaluation_session_window
 

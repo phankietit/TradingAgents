@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     InstrumentContract,

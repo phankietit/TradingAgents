@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID, uuid5
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     DataQualityStatus,
     EvidenceClaim,

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
+
+from tradingagents._compat import UTC
 
 from .base import ContentHash, NonEmptyText, StrictContract, VersionedContract
 from .data import EvidenceReference

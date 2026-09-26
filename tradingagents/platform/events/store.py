@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID, uuid4
 
 from pydantic import JsonValue
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import RunEvent, RunEventType
 from tradingagents.platform.persistence.models import RunEventRow, RunRow
 

@@ -26,6 +26,10 @@ instruments remain non-investable context.
 Snapshot-only runs retain the same asset-specific prose constraints alongside
 canonical metadata; they do not bypass ETF/reference guidance. Structured-call
 fallback logs contain exception types only, never provider or validation payloads.
+Platform UTC timestamps use the standard `timezone.utc` identity through a
+compatibility alias, avoiding Python 3.11-only `datetime.UTC` imports while
+retaining the package's declared Python 3.10+ support. Cross-version runtime
+verification is a separate CI gate.
 
 `DecisionCandidateFactory` accepts only the strict narrative schema. Unknown
 fields such as model-authored target weights, invalid JSON, missing fields, or

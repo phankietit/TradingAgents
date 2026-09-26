@@ -1,8 +1,9 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import DataQualityStatus, EvidenceGraph, SnapshotManifest
 from tradingagents.platform.analysis import EvidenceGraphBuilder
 

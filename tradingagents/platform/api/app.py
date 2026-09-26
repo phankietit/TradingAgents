@@ -11,7 +11,7 @@ import secrets
 import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
 
@@ -33,6 +33,7 @@ from fastapi.security import APIKeyCookie
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     TERMINAL_RUN_EVENTS,
     AssetClass,

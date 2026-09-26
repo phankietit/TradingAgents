@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 from sqlalchemy import func, select
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     InstrumentContract,

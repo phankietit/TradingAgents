@@ -2,12 +2,13 @@
 
 import hashlib
 import json
-from datetime import UTC, timedelta
+from datetime import timedelta
 from importlib.metadata import version
 
 import exchange_calendars
 from pydantic import AwareDatetime, BaseModel, ConfigDict
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import AssetClass, InstrumentContract
 
 

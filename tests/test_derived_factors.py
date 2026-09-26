@@ -5,11 +5,12 @@ from __future__ import annotations
 import math
 import os
 import statistics
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     DataQualityStatus,

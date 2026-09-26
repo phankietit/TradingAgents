@@ -1,9 +1,9 @@
 """Durable research handler; unattested legacy graph data cannot authorize readiness."""
 
 import json
-from datetime import UTC
 from uuid import uuid5
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import ArtifactKind
 from tradingagents.platform.analysis import (
     AnalysisEngine,

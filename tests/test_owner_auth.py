@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
 
+from tradingagents._compat import UTC
 from tradingagents.platform.auth import (
     BootstrapClosed,
     InvalidCredentials,

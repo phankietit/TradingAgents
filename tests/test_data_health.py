@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import DataHealthProbe, DataQualityStatus
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.data_health import DataHealthEngine

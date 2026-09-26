@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 from pydantic import ValidationError
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     CONTRACT_REGISTRY,
     AssetClass,

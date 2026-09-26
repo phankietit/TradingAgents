@@ -2,8 +2,9 @@
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import datetime
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     DataQualityStatus,
     DecisionCandidate,

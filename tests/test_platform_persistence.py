@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import create_engine, inspect, text
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     AssetClass,
     CashBalance,

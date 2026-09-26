@@ -1,9 +1,10 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import uuid4
 
 import pytest
 
 from tests.decision_fixtures import ready_inputs
+from tradingagents._compat import UTC
 from tradingagents.contracts import DataQualityStatus, DecisionRating, DecisionStatus
 from tradingagents.platform.analysis import DecisionCandidateFactory
 

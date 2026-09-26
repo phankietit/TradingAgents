@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from io import StringIO
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 
+from tradingagents._compat import UTC
 from tradingagents.contracts import (
     ArtifactKind,
     AssetClass,
