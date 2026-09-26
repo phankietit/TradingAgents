@@ -13,9 +13,9 @@ class DecisionEvaluation(VersionedContract):
     decision_id: UUID
     evaluated_at: AwareDatetime
     holding_period_days: int = Field(gt=0)
-    raw_return: float
-    benchmark_return: float
-    alpha_return: float
+    raw_return: float = Field(ge=-1, allow_inf_nan=False)
+    benchmark_return: float = Field(ge=-1, allow_inf_nan=False)
+    alpha_return: float = Field(allow_inf_nan=False)
     outcome_snapshot_ids: tuple[UUID, ...] = Field(min_length=1)
     outcome_hash: ContentHash
     directional_hit: bool | None
@@ -34,7 +34,7 @@ class HistoricalEvaluation(VersionedContract):
     scored_cells: int = Field(ge=0)
     review_cells: int = Field(ge=0)
     directional_hit_rate: float | None = Field(default=None, ge=0.0, le=1.0)
-    reproducible: bool = True
+    reproducible: bool = False
     portfolio_performance_claim: bool = False
 
     @model_validator(mode="after")

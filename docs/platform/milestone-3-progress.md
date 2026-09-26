@@ -32,8 +32,10 @@ following missing integration and correctness requirements.
   CSRF, actor spoofing, policy mismatch, state projection and retry behavior.
   Policy-assessment provenance and concurrent PostgreSQL validation remain
   before approval enforcement is complete.
-- PLAN-037: derive outcomes from validated immutable price snapshots and
-  calendars; reject duplicate/future outcomes; verify deterministic replay.
+- PLAN-037: hash-verified snapshot outcome helper, duplicate/future outcome
+  rejection, canonical ordering and deterministic evaluation IDs have targeted
+  tests. Caller-supplied returns remain `reproducible=False`. Owner-scoped
+  persisted replay and verified calendar integration remain.
 - Run PostgreSQL upgrade/schema parity/rollback, persistence integration,
   clean installation, full regression and scoped security checks after fixes.
 - Update README, consolidate the changelog, produce a candidate-SHA receipt,

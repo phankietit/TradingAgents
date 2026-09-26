@@ -77,3 +77,29 @@ def test_outcome_known_at_or_before_decision_is_rejected():
             universe=("AAPL",), benchmark="SPY", config_hash=HASH,
             created_at=NOW + timedelta(days=8),
         )
+
+
+def test_duplicate_cells_and_future_outcomes_are_rejected():
+    decision = _decision()
+    observation = _observation(decision)
+    common = {"universe": ("AAPL",), "benchmark": "SPY", "config_hash": HASH,
+              "created_at": NOW + timedelta(days=8)}
+    with pytest.raises(ValueError, match="duplicate decision"):
+        HistoricalEvaluationService().build(decisions=(decision, decision), observations=(), **common)
+    with pytest.raises(ValueError, match="duplicate outcome"):
+        HistoricalEvaluationService().build(decisions=(decision,), observations=(observation, observation), **common)
+    with pytest.raises(ValueError, match="future"):
+        HistoricalEvaluationService().build(decisions=(decision,), observations=(observation,),
+                                             **{**common, "created_at": NOW + timedelta(days=1)})
+
+
+def test_evaluation_hash_does_not_depend_on_input_order():
+    first, second = _decision(), _decision()
+    observations = (_observation(first), _observation(second))
+    common = {"benchmark": "SPY", "config_hash": HASH, "created_at": NOW + timedelta(days=8)}
+    one = HistoricalEvaluationService().build(decisions=(first, second), observations=observations,
+                                               universe=("AAPL", "MSFT"), **common)
+    two = HistoricalEvaluationService().build(decisions=(second, first), observations=tuple(reversed(observations)),
+                                               universe=("MSFT", "AAPL"), **common)
+    assert one == two
+    assert one.reproducible is False  # caller-supplied returns are not verified source replay
