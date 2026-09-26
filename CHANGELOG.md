@@ -6,6 +6,8 @@
   research runtime while preserving the CLI and programmatic graph API.
 - Add enforced equity, ETF, reference-market, and BTC/ETH analysis profiles so
   incompatible analysts and company-specific prompts cannot cross asset types.
+- Add fail-closed structured decision conversion: invalid or overreaching model
+  output becomes `REVIEW`, never an executable default or implicit `Hold`.
 
 All notable changes to TradingAgents are documented here.
 

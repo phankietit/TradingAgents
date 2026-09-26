@@ -14,3 +14,8 @@ Asset profiles are deterministic. Equities may use market, social, news, and
 fundamentals analysts; ETFs and reference indices/futures exclude company
 fundamentals; BTC and ETH use market/social/news on the crypto path. Reference
 instruments remain non-investable context.
+
+`DecisionCandidateFactory` accepts only the strict narrative schema. Unknown
+fields such as model-authored target weights, invalid JSON, missing fields, or
+ineligible data fail closed to status/rating `REVIEW`. Narrative output never
+authorizes portfolio math or approval.

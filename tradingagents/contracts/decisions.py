@@ -14,6 +14,7 @@ from .policy import PolicyCheck, PolicyResult
 
 
 class DecisionRating(str, Enum):
+    REVIEW = "Review"
     BUY = "Buy"
     OVERWEIGHT = "Overweight"
     HOLD = "Hold"
@@ -51,6 +52,10 @@ class DecisionCandidate(VersionedContract):
 
     @model_validator(mode="after")
     def enforce_decision_boundary(self):
+        if self.status is DecisionStatus.REVIEW and self.rating is not DecisionRating.REVIEW:
+            raise ValueError("review decisions must use the Review rating")
+        if self.status is not DecisionStatus.REVIEW and self.rating is DecisionRating.REVIEW:
+            raise ValueError("Review rating requires review status")
         if (
             self.target_weight is not None
             and self.max_allowed_weight is not None

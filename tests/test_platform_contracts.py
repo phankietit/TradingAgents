@@ -124,6 +124,12 @@ def _decision(**overrides):
 
 
 @pytest.mark.unit
+def test_review_status_cannot_hide_a_tradeable_rating():
+    with pytest.raises(ValidationError, match="Review rating"):
+        _decision(status=DecisionStatus.REVIEW)
+
+
+@pytest.mark.unit
 def test_decision_always_requires_human_approval():
     with pytest.raises(ValidationError, match="literal_error"):
         _decision(requires_human_approval=False)
