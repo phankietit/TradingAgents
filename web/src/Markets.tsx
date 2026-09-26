@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ApiError, errorMessage, mutate } from './api';
 import { instruments, number, percent, priceResponse, timestamp, useResource } from './data';
 import type { Instrument, SeriesResponse } from './data';
+import StockScreener from './StockScreener';
 
 const groups = ['All assets', 'Stocks', 'ETFs', 'Crypto', 'Index references'] as const;
 const groupOf = (item: Instrument) => item.asset_class === 'equity' ? 'Stocks' : item.asset_class === 'etf' ? 'ETFs'
@@ -14,6 +15,7 @@ export default function Markets() {
   const [group, setGroup] = useState<string>('All assets');
   const [search, setSearch] = useState('');
   const [onlyWatched, setOnlyWatched] = useState(false);
+  const [screening, setScreening] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const source = onlyWatched ? watchlist : catalog;
   const visible = (source.data ?? []).filter(item => (group === 'All assets' || groupOf(item) === group)
@@ -28,6 +30,8 @@ export default function Markets() {
       <button onClick={refresh}>Reload saved data</button>
     </div>
     <p className="muted caption">Saved snapshots · Not a live price feed. Reload reads the database; it does not call a market-data or model provider.</p>
+    <button onClick={() => setScreening(value => !value)} aria-expanded={screening}>{screening ? 'Close screened candidates' : 'View screened candidates'}</button>
+    {screening ? <StockScreener /> : null}
     <div className="market-layout">
       <section className="instrument-list" aria-label="Instruments">
         <div className="list-heading">Instruments <span>{visible.length}</span></div>

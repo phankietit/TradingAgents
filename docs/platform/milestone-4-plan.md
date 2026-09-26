@@ -272,6 +272,15 @@ Status: planned. Depends on all tickets above.
 
 ## Completion audit
 
+Saved-screener checkpoint: owner-scoped read-only list/detail API and Markets
+panel implemented. Saved ranking, exclusions, immutable policy/hashes/source IDs
+and explicit analysis handoff are verified with isolated synthetic fixtures.
+7 scoped backend tests and 45 frontend tests PASS; the scoped PostgreSQL case
+remains UNVERIFIED. Built IAB desktop/narrow, keyboard, console and no-auto-enqueue
+checks PASS. This does not change owner screening policy or prove live coverage.
+Final candidate regression, readiness/job/valuation detail, security review and
+PR/merge gates remain open; M4 is not complete at this checkpoint.
+
 M4 is not done from a build or fixture-only screenshot. Prove the integrated
 owner workflow and all required error states, record actual data/provider limits,
 and verify PR merge. Missing live credentials must be reported accurately rather

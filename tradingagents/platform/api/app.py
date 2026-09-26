@@ -52,6 +52,7 @@ from tradingagents.contracts import (
     RunEventType,
     RunManifest,
     RunStatus,
+    StockUniverseSnapshot,
     Tradability,
 )
 from tradingagents.platform.artifacts import (
@@ -77,6 +78,7 @@ from tradingagents.platform.persistence import (
     Database,
     PlatformRepository,
 )
+from tradingagents.platform.screening import DeterministicStockScreener
 
 from .schemas import (
     AnalysisProfileResponse,
@@ -397,6 +399,28 @@ def create_app(settings: ApiSettings) -> FastAPI:
         ):
             raise HTTPException(status_code=403, detail="CSRF validation failed")
         return CsrfResponse(csrf_token=csrf_cookie)
+
+    @app.get(f"{API_PREFIX}/screenings", response_model=list[ArtifactMetadataResponse], tags=["screening"])
+    def screening_history(owner: OwnerDependency, session: SessionDependency,
+                          limit: int = Query(default=50, ge=1, le=200),
+                          offset: int = Query(default=0, ge=0, le=100_000)):
+        return [ArtifactMetadataResponse.model_validate({key: value for key, value in item.model_dump().items()
+                if key in ArtifactMetadataResponse.model_fields})
+                for item in PlatformRepository(session).list_screening_artifacts(
+                    owner.owner_id, available_at=_now(settings), limit=limit, offset=offset)]
+
+    @app.get(f"{API_PREFIX}/screenings/{{screening_id}}", response_model=StockUniverseSnapshot, tags=["screening"])
+    def screening_detail(screening_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        service = DeterministicStockScreener(ArtifactService(artifact_store, PlatformRepository(session)))
+        try:
+            snapshot = service.load(owner_id=owner.owner_id, screening_snapshot_id=screening_id)
+            if snapshot.as_of > _now(settings) or snapshot.generated_at > _now(settings):
+                raise ValueError("future screening snapshot")
+            return snapshot
+        except LookupError as error:
+            raise HTTPException(status_code=404, detail="screening unavailable") from error
+        except (ArtifactIntegrityError, ValueError) as error:
+            raise HTTPException(status_code=409, detail="screening validation failed") from error
 
     @app.get(f"{API_PREFIX}/watchlist", response_model=list[InstrumentContract], tags=["watchlist"])
     def watchlist(

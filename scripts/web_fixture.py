@@ -7,6 +7,7 @@ No vendor/model is called in either mode. Not an investment dataset.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import tempfile
@@ -25,6 +26,9 @@ from tradingagents.contracts import (
     PolicyContract,
     PriceInterval,
     RunManifest,
+    SnapshotManifest,
+    StockScreenerPolicy,
+    StockScreeningInput,
 )
 from tradingagents.platform.analysis import AnalysisEngine
 from tradingagents.platform.api import ApiSettings, create_app
@@ -36,6 +40,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.market_data import TimeSeriesSnapshotService, normalize_time_series
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 from tradingagents.platform.portfolio.service import PortfolioLedgerService
+from tradingagents.platform.screening import DeterministicStockScreener
 
 
 class SyntheticSnapshotGraph:
@@ -72,6 +77,8 @@ def main():
                         help="Serve the existing web/dist build and API together on 127.0.0.1:8000")
     parser.add_argument("--all-assets", action="store_true",
                         help="Seed labelled synthetic daily charts for ETF, BTC/ETH and NQ/ES QA")
+    parser.add_argument("--screening", action="store_true",
+                        help="Seed a deterministic screening from labelled synthetic input facts")
     args = parser.parse_args()
     cache = Path(__file__).resolve().parents[1] / ".cache"
     cache.mkdir(exist_ok=True)
@@ -97,6 +104,29 @@ def main():
         artifacts = ArtifactService(LocalArtifactStore(directory / "artifacts"), repository)
         source = TimeSeriesSnapshotService(repository, artifacts).persist(
             owner_id=owner.owner_id, series=series, vendor="SYNTHETIC LOCAL QA — NOT MARKET DATA", retrieved_at=now)
+        if args.screening:
+            inputs = []
+            for asset in master.list():
+                if asset.canonical_symbol not in {"AAPL", "SPY"}:
+                    continue
+                facts = {"notice": "SYNTHETIC QA FACTS — NOT INVESTMENT DATA",
+                    "market_cap_usd": 100_000_000_000, "average_dollar_volume_20d_usd": 100_000_000,
+                    "last_price_usd": 100, "history_days": 500, "annualized_volatility": .3}
+                payload = json.dumps(facts, sort_keys=True).encode()
+                manifest = SnapshotManifest(snapshot_id=uuid4(), instrument_id=asset.instrument_id,
+                    dataset="screening.inputs", vendor="SYNTHETIC LOCAL QA — NOT MARKET DATA",
+                    as_of=now, retrieved_at=now, source_start=now, source_end=now,
+                    content_hash="sha256:" + hashlib.sha256(payload).hexdigest(), quality_status="OK")
+                repository.add_snapshot(manifest)
+                artifacts.create(owner_id=owner.owner_id, kind="snapshot_payload", media_type="application/json",
+                    content=payload, snapshot_id=manifest.snapshot_id, instrument_id=asset.instrument_id, created_at=now)
+                inputs.append(StockScreeningInput(instrument=asset, observed_at=now,
+                    source_snapshot_id=manifest.snapshot_id, source_content_hash=manifest.content_hash,
+                    quality_status="OK", **{key: value for key, value in facts.items() if key != "notice"}))
+            screener = DeterministicStockScreener(artifacts)
+            screening = screener.screen(inputs=tuple(inputs),
+                policy=StockScreenerPolicy(policy_id="SYNTHETIC-QA-NOT-OWNER-POLICY"), as_of=now, generated_at=now)
+            screener.persist(owner_id=owner.owner_id, snapshot=screening)
         if args.all_assets:
             bases = {"SPY": 500, "QQQ": 430, "BTC-USD": 60000, "ETH-USD": 3000,
                      "NQ=F": 20000, "ES=F": 5000}

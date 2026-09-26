@@ -130,6 +130,22 @@ silently filtered to a current version; run validation determines temporal
 eligibility. Cross-owner and missing detail IDs both return 404. All data remains
 non-cacheable. These routes do not fetch vendors, trigger LLMs or mutate history.
 
+## Saved stock screenings
+
+- `GET /api/v1/screenings` lists owner-scoped screening artifact metadata with
+  the same bounded `limit`/`offset` contract. Future-created artifacts are omitted;
+  private storage paths and owner identifiers are not returned.
+- `GET /api/v1/screenings/{screening_id}` loads the saved deterministic universe
+  through the existing screener service. Artifact bytes, schema, identity and
+  universe hash are verified. Missing/cross-owner IDs return 404; invalid or
+  future-dated results return 409 without exposing raw payloads.
+
+Neither endpoint reranks candidates, refreshes vendors, changes policy or starts
+analysis. Input hashes and source snapshot IDs support audit; successful loading
+does not independently revalidate original facts or prove current eligibility.
+Operator generation/persistence remains the workflow in
+`deterministic-stock-screener.md`. A new analysis validates its own bound sources.
+
 ## Browser Security
 
 The session cookie is HTTP-only, Secure by default, and SameSite Strict. A

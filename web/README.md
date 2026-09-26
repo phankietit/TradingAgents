@@ -172,3 +172,18 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   only. At 390×844 the crypto query form stacks, Enter/focus works, and document
   width stays 390px. No console warnings/errors. These are normalized synthetic
   chart/profile checks, not live-provider, roll-series or calendar-vintage proof.
+- Saved stock screener checkpoint: Markets → View screened candidates reads
+  owner-scoped immutable rankings, exclusions, policy, input/universe hashes and
+  source IDs. Configure research opens the selected instrument without queuing a
+  run. Missing history, valid empty universes and invalid artifacts are distinct.
+  Generate synthetic screening QA with `--screening` added to the fixture command;
+  its policy is labelled `SYNTHETIC-QA-NOT-OWNER-POLICY`, and its inputs are separate
+  synthetic facts, not measurements inferred from the daily chart.
+  Built-mode IAB at 1280×720 and 390×844 verified AAPL candidate, SPY exclusion,
+  policy disclosure, keyboard switching and AAPL analysis handoff. Screening
+  inputs are disabled as analyst evidence. No document overflow, framework
+  overlay or console warnings/errors. Scoped backend: 7 PASS, 1 PostgreSQL skip;
+  frontend: 45 PASS plus lint/typecheck/build. Live data remains UNVERIFIED.
+  Full local Python regression on Python 3.14.7: 1248 tests and 88 subtests PASS,
+  20 skipped (PostgreSQL, optional Bedrock dependency, live DeepSeek); Ruff and
+  dependency consistency PASS. These skipped gates are not release approval.

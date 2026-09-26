@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from tradingagents._compat import UTC
 from tradingagents.contracts import (
+    ArtifactKind,
     ArtifactManifest,
     AssetClass,
     DecisionCandidate,
@@ -230,6 +231,20 @@ class PlatformRepository:
         rows = self.session.scalars(
             select(ArtifactRow)
             .where(ArtifactRow.owner_id == owner_id, ArtifactRow.run_id == run_id)
+            .order_by(ArtifactRow.created_at.desc(), ArtifactRow.artifact_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(ArtifactManifest.model_validate(row.payload) for row in rows)
+
+    def list_screening_artifacts(
+        self, owner_id: UUID, *, available_at: datetime, limit: int = 50, offset: int = 0,
+    ) -> tuple[ArtifactManifest, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(ArtifactRow)
+            .where(ArtifactRow.owner_id == owner_id,
+                   ArtifactRow.kind == ArtifactKind.SCREENING_SNAPSHOT.value,
+                   ArtifactRow.created_at <= available_at)
             .order_by(ArtifactRow.created_at.desc(), ArtifactRow.artifact_id.desc())
             .limit(limit).offset(offset)
         ).all()
