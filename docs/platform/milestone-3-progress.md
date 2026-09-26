@@ -4,6 +4,12 @@ Scope: PLAN-030 through PLAN-037. PLAN-038 remains outside this milestone.
 Base: `f76c353ee912e6d6d16ff1ba660287a6a383a291`.
 Branch: `feature/TA-030-analysis-engine`.
 
+Policy update, 2026-09-27: the owner now requires local/manual verification
+instead of hosted CI. Repository Actions is disabled. The new M3 workflow
+changes are withdrawn and `scripts/verify-local.sh` provides the local gate.
+See [local policy](local-verification.md). Earlier hosted-CI blocker statements
+below are historical; they do not authorize spending or re-enabling Actions.
+
 The integrated local suite at `8364663` passed 1207 tests with 2 optional skips
 and 88 subtests, including PostgreSQL. Clean non-editable platform installation,
 installed imports/worker smoke, lint and diff checks also pass. See

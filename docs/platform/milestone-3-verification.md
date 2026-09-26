@@ -3,6 +3,17 @@
 This is local backend-foundation evidence, not production readiness or milestone
 completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or orders.
 
+## Owner-approved policy change: local gates instead of hosted CI
+
+On 2026-09-27 the owner explicitly deferred hosted CI for budget reasons.
+Actions is disabled on `phankietit/TradingAgents` (`enabled=false`, read back
+after update). The new M3 workflow edits are withdrawn; the workflow file now
+matches `origin/main`. Use [local verification](local-verification.md) and
+`bash scripts/verify-local.sh` instead. Historical CI/workflow-scope blockers
+below describe the earlier policy, not a current requirement to purchase CI.
+The supported multi-version matrix is UNVERIFIED locally, hosted execution is
+DEFERRED by owner choice. Security report finalization remains separate.
+
 ## Latest follow-up checkpoint
 
 At `129696b5bdd667d4709aa392f83fe4a63078c27d`, snapshot asset guidance,
