@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Breaking changes within the 0.x line are called out explicitly.
 
+## [Unreleased]
+
+### Added
+
+- Canonical instrument master with immutable namespaced aliases for initial US
+  large-cap, ETF, index-reference, NQ/ES-reference, and BTC/ETH identities.
+- Owner-scoped immutable normalized OHLCV snapshots, deterministic return/risk
+  metrics, exact-timestamp benchmark comparison, and authenticated read APIs.
+- Vendor-neutral point-in-time equity/ETF, reference-only NQ/ES, and BTC/ETH
+  snapshot composition with explicit provenance and failure semantics.
+- Deterministic large-cap stock screening, derived momentum/trend/volatility/
+  relative-strength/breadth factors, and a unified six-state data-health
+  engine.
+
+The platform additions are local decision-support foundations. They do not add
+a Web UI, production data vendor, portfolio simulator, broker connectivity,
+order execution, or autonomous trading.
+
 ## [0.5.0] — 2026-09-18
 
 Point-in-time integrity across every dated path, decisions that are recorded as

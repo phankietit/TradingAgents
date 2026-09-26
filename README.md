@@ -374,14 +374,24 @@ What does not vary anymore: the analyzed company identity is resolved determinis
 
 Backtest results are not guaranteed to match any published figure. Returns depend on the model, the temperature, the date range, data quality, and the sampling above. Treat the framework as a research scaffold for studying multi-agent analysis, not as a strategy with a fixed, replicable return.
 
-## Platform foundation API
+## Private platform data foundation
 
 The optional `platform` extra now includes a private, authenticated FastAPI
 foundation for durable analysis jobs and owner-scoped results. It is intended
 for the future Web UI and currently binds locally through `tradingagents-api`.
-There is no Web UI, broker connection, order execution, or autonomous trading
-path in this repository. See `docs/platform/api.md` for the current HTTP and
-runtime contract.
+
+The current platform layer also provides canonical instrument identity,
+immutable normalized price series, vendor-neutral equity/ETF evidence,
+reference-only NQ/ES context, BTC/ETH UTC snapshots, a deterministic large-cap
+stock screener, transparent derived factors, and consistent data-health
+classification. These services operate on explicitly supplied or previously
+stored snapshots; this milestone does not select or configure a production
+market-data vendor.
+
+There is no Web UI, portfolio simulator, broker connection, order execution,
+or autonomous trading path in this repository. See `docs/platform/api.md` and
+the contracts under `docs/platform/` for the current runtime and data
+boundaries.
 
 ## Contributing
 
