@@ -8,6 +8,8 @@
   incompatible analysts and company-specific prompts cannot cross asset types.
 - Add fail-closed structured decision conversion: invalid or overreaching model
   output becomes `REVIEW`, never an executable default or implicit `Hold`.
+- Add a point-in-time evidence graph linking every material claim to immutable
+  source timestamps, snapshot IDs, vendors, and content hashes.
 
 All notable changes to TradingAgents are documented here.
 

@@ -2,6 +2,7 @@
 
 from .decisions import DecisionCandidateFactory, StructuredDecisionNarrative
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
+from .evidence import EvidenceGraphBuilder
 from .profiles import AssetAnalysisProfile, resolve_analysis_profile, select_analysts
 
 __all__ = [
@@ -10,6 +11,7 @@ __all__ = [
     "AnalysisResult",
     "AssetAnalysisProfile",
     "DecisionCandidateFactory",
+    "EvidenceGraphBuilder",
     "StructuredDecisionNarrative",
     "resolve_analysis_profile",
     "select_analysts",

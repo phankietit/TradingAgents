@@ -33,6 +33,7 @@ from .equity_etf import (
     NewsRecord,
 )
 from .events import TERMINAL_RUN_EVENTS, RunEvent, RunEventType
+from .evidence import EvidenceClaim, EvidenceGraph
 from .factors import (
     DerivedFactorSnapshot,
     FactorSeriesInput,
@@ -103,6 +104,7 @@ CONTRACT_REGISTRY = {
         StockUniverseSnapshot,
         DerivedFactorSnapshot,
         DataHealthReport,
+        EvidenceGraph,
     )
 }
 
@@ -131,6 +133,8 @@ __all__ = [
     "DerivedFactorSnapshot",
     "DatasetCoverage",
     "EvidenceReference",
+    "EvidenceClaim",
+    "EvidenceGraph",
     "EquityETFDataset",
     "EquityETFSnapshotBundle",
     "ETFProfile",
