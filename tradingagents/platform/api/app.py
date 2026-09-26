@@ -388,6 +388,29 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(status_code=403, detail="CSRF validation failed")
         return CsrfResponse(csrf_token=csrf_cookie)
 
+    @app.get(f"{API_PREFIX}/watchlist", response_model=list[InstrumentContract], tags=["watchlist"])
+    def watchlist(
+        owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[InstrumentContract, ...]:
+        return PlatformRepository(session).list_watchlist(owner.owner_id, limit=limit, offset=offset)
+
+    @app.put(f"{API_PREFIX}/watchlist/{{instrument_id}}", response_model=StatusResponse, tags=["watchlist"])
+    def watchlist_add(instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency) -> StatusResponse:
+        OwnerAuth(session).lock_owner(owner.owner_id)
+        try:
+            PlatformRepository(session).add_watchlist_entry(owner.owner_id, instrument_id, now=_now(settings))
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail="instrument not found") from error
+        return StatusResponse(status="saved")
+
+    @app.delete(f"{API_PREFIX}/watchlist/{{instrument_id}}", response_model=StatusResponse, tags=["watchlist"])
+    def watchlist_remove(instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency) -> StatusResponse:
+        OwnerAuth(session).lock_owner(owner.owner_id)
+        PlatformRepository(session).remove_watchlist_entry(owner.owner_id, instrument_id)
+        return StatusResponse(status="removed")
+
     @app.get(
         f"{API_PREFIX}/instruments",
         response_model=list[InstrumentContract],

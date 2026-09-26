@@ -7,7 +7,8 @@ from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from tradingagents._compat import UTC
@@ -40,6 +41,7 @@ from .models import (
     PortfolioSnapshotRow,
     RunRow,
     SnapshotRow,
+    WatchlistRow,
 )
 
 ContractT = TypeVar("ContractT", bound=BaseModel)
@@ -232,6 +234,37 @@ class PlatformRepository:
             .limit(limit).offset(offset)
         ).all()
         return tuple(ArtifactManifest.model_validate(row.payload) for row in rows)
+
+    def list_watchlist(
+        self, owner_id: UUID, *, limit: int = 50, offset: int = 0,
+    ) -> tuple[InstrumentContract, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(InstrumentRow).join(WatchlistRow, WatchlistRow.instrument_id == InstrumentRow.instrument_id)
+            .where(WatchlistRow.owner_id == owner_id)
+            .order_by(InstrumentRow.canonical_symbol, InstrumentRow.instrument_id)
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(InstrumentContract.model_validate(row.payload) for row in rows)
+
+    def add_watchlist_entry(self, owner_id: UUID, instrument_id: UUID, *, now: datetime) -> None:
+        if self.get_instrument(instrument_id) is None:
+            raise ValueError("instrument not found")
+        if self.session.get(WatchlistRow, (owner_id, instrument_id)) is not None:
+            return
+        try:
+            with self.session.begin_nested():
+                self.session.add(WatchlistRow(owner_id=owner_id, instrument_id=instrument_id, created_at=now))
+                self.session.flush()
+        except IntegrityError:
+            # Concurrent idempotent PUT may win. Never hide an unrelated failure.
+            if self.session.get(WatchlistRow, (owner_id, instrument_id)) is None:
+                raise
+
+    def remove_watchlist_entry(self, owner_id: UUID, instrument_id: UUID) -> None:
+        self.session.execute(delete(WatchlistRow).where(
+            WatchlistRow.owner_id == owner_id, WatchlistRow.instrument_id == instrument_id,
+        ))
 
     @staticmethod
     def _validate_page(limit: int, offset: int) -> None:

@@ -185,6 +185,37 @@ def _run_payload(instrument_id):
 
 
 @pytest.mark.unit
+def test_watchlist_is_persistent_idempotent_and_csrf_protected(api_context):
+    client = api_context["client"]
+    instrument_id = api_context["instrument"].instrument_id
+    path = f"/api/v1/watchlist/{instrument_id}"
+    assert client.get("/api/v1/watchlist").status_code == 401
+    assert client.put(path, headers={"Origin": ORIGIN}).status_code == 401
+    _login(client)
+    assert client.get("/api/v1/watchlist").json() == []
+    assert client.put(path, headers={"Origin": ORIGIN}).status_code == 403
+    assert client.put(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.put(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.get("/api/v1/watchlist").json() == [api_context["instrument"].model_dump(mode="json")]
+    assert client.get("/api/v1/watchlist", params={"offset": 1}).json() == []
+    assert client.get("/api/v1/watchlist", params={"limit": 201}).status_code == 422
+    assert client.put(f"/api/v1/watchlist/{uuid4()}", headers=_csrf_headers(client)).status_code == 404
+    assert client.post("/api/v1/auth/logout", headers=_csrf_headers(client)).status_code == 200
+    _login(client)
+    assert len(client.get("/api/v1/watchlist").json()) == 1
+    # A different owner cannot read or remove the current owner's entry.
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        assert repository.list_watchlist(uuid4()) == ()
+        repository.remove_watchlist_entry(uuid4(), instrument_id)
+    assert len(client.get("/api/v1/watchlist").json()) == 1
+    assert client.delete(path, headers={"Origin": ORIGIN}).status_code == 403
+    assert client.delete(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.delete(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.get("/api/v1/watchlist").json() == []
+
+
+@pytest.mark.unit
 def test_snapshot_discovery_reports_temporal_eligibility_without_claiming_content_validation(api_context):
     client = api_context["client"]
     instrument_id = api_context["instrument"].instrument_id

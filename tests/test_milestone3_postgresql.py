@@ -13,9 +13,11 @@ from sqlalchemy import inspect
 from tests.test_decision_event_persistence import seed
 from tests.test_decision_lifecycle import _approval
 from tests.test_persisted_evaluation import setup_evaluation
+from tests.test_platform_persistence import NOW, _instrument
 from tests.test_portfolio_valuation_service import setup_valuation
 from tradingagents.contracts import DecisionStatus
 from tradingagents.platform.artifacts import ArtifactService
+from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.evaluation.replay import PersistedEvaluationService
 from tradingagents.platform.persistence import (
     Database,
@@ -49,6 +51,36 @@ def test_migration_schema_parity_and_rollback(postgres_url):
         downgrade_database(postgres_url)
         assert set(inspect(database.engine).get_table_names()) <= {"alembic_version"}
         upgrade_database(postgres_url)
+    finally:
+        database.dispose()
+
+
+def test_concurrent_watchlist_put_and_owner_isolation(postgres_url):
+    database = Database(postgres_url)
+    instrument = _instrument()
+    with database.session() as session:
+        owner = OwnerAuth(session).bootstrap_owner("watchlist@example.com", "synthetic-qa-password")
+        PlatformRepository(session).add_instrument(instrument)
+    barrier = Barrier(2)
+
+    def save(_):
+        barrier.wait(timeout=10)
+        with database.session() as session:
+            OwnerAuth(session).lock_owner(owner.owner_id)
+            PlatformRepository(session).add_watchlist_entry(owner.owner_id, instrument.instrument_id, now=NOW)
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(save, range(2)))
+        with database.session() as session:
+            repository = PlatformRepository(session)
+            assert repository.list_watchlist(owner.owner_id) == (instrument,)
+            assert repository.list_watchlist(uuid4()) == ()
+            repository.remove_watchlist_entry(uuid4(), instrument.instrument_id)
+            assert repository.list_watchlist(owner.owner_id) == (instrument,)
+            repository.remove_watchlist_entry(owner.owner_id, instrument.instrument_id)
+        with database.session() as session:
+            assert PlatformRepository(session).list_watchlist(owner.owner_id) == ()
     finally:
         database.dispose()
 

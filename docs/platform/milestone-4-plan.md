@@ -92,14 +92,18 @@ Status: in-progress. Depends on merged M3.
 
 ### M4-API — owner-scoped workspace discovery
 
-Status: in-progress (CSRF and workspace discovery implemented; watchlist pending). Depends on M4-FOUNDATION.
+Status: in-progress (backend implemented; integrated browser acceptance pending). Depends on M4-FOUNDATION.
 
 Discovery checkpoint: bounded owner portfolio/policy list/detail, run artifact
 metadata without storage paths, and owner-readable snapshot discovery with shared
 temporal/freshness metadata checks. Content integrity is explicitly still checked
 at run creation. API/persistence/snapshot-analysis tests: 38 PASS, PostgreSQL gate
 skipped (UNVERIFIED; no schema migration in this checkpoint). Browser consumers
-and persisted watchlist remain pending.
+remain pending. Persisted watchlist now uses migration `0010_owner_watchlist`
+and owner-scoped idempotent PUT/DELETE. Watchlist/API/persistence SQLite gate:
+32 PASS, one optional PostgreSQL skip. Separate disposable PostgreSQL gate:
+6 PASS including schema parity, upgrade/rollback, concurrent watchlist PUT,
+owner isolation and existing M3 ledger/approval checks. No owner data reset.
 
 - Add only necessary typed list/detail endpoints for portfolio snapshots, policy,
   snapshot metadata/eligibility and run artifact manifests, with pagination/bounds.

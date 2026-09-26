@@ -45,6 +45,16 @@ sets before enqueueing a durable job.
 
 ## Workspace discovery (M4)
 
+Watchlist: `GET /api/v1/watchlist` returns owner-saved instrument contracts,
+alphabetically ordered, with the same bounded `limit`/`offset` pagination below.
+`PUT /api/v1/watchlist/{instrument_id}` saves an existing instrument and
+`DELETE /api/v1/watchlist/{instrument_id}` removes only that owner's bookmark.
+Both are idempotent, session/CSRF/Origin protected and serialized with the owner
+lock. Watching an index reference does not make it investable. No portfolio,
+decision, evidence or instrument history is deleted. Apply migration
+`0010_owner_watchlist` before using these routes. Downgrade drops bookmarks;
+test rollback only on a disposable database, never on owner data without approval.
+
 Authenticated read-only routes:
 
 - `GET /api/v1/portfolios` and `/portfolios/{portfolio_id}` return persisted
