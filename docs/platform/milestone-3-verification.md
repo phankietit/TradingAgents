@@ -5,6 +5,32 @@ completion. PLAN-030 through PLAN-037; no Web UI, paper simulator, broker or ord
 
 ## Latest follow-up checkpoint
 
+At `129696b5bdd667d4709aa392f83fe4a63078c27d`, snapshot asset guidance,
+structured-call log redaction, Python 3.10-compatible UTC imports and immutable
+research receipt tests are implemented. Full regression with a dedicated
+PostgreSQL 16 container passes **1228 tests and 88 subtests**, 2 optional provider
+skips and 22 warnings (26.07s). Command:
+`TEST_POSTGRES_URL=<disposable-test-db> .venv/bin/python -m pytest -q --disable-warnings`.
+Ruff and diff checks pass. The owned `ta-m3-pg-20260927-refresh` container was
+stopped and removed after verifying its task label; its synthetic tmpfs data
+is discarded. No user database was changed.
+
+The existing isolated non-editable install was refreshed with
+`python -m pip install --no-deps --force-reinstall '.[platform]'` and
+`python -m pip check` passes. Installed imports outside the checkout and worker
+help pass. This is an install refresh, not a newly created environment.
+An initial smoke command used the wrong public import path; the verified class
+path is `tradingagents.platform.evaluation.replay.PersistedEvaluationService`.
+Python 3.10 container verification was BLOCKED by an unavailable Docker credential
+helper; the UTC regression test is not cross-version runtime evidence.
+
+GitHub OAuth was rechecked and still lacks `workflow`. Cross-version CI, PR,
+merge and post-fix security review remain outstanding. Configuration audit
+confirmed that receipt replay reuses recorded research, not full LLM configuration
+or response replay; the evaluation contract now states this explicitly.
+
+## Previous follow-up checkpoint
+
 At `a96ff29becce19ae0d552f6b39f1195fe9260d49`, source-review follow-ups now
 reject future-observed quotes/evidence at pure-library boundaries, require a
 successful analysis run before approval, and contain lease-loss races during
@@ -60,11 +86,9 @@ gate to bypass the GitHub permission failure.
 
 1. Owner authorizes the current GitHub credential for workflow updates, then
    retry the same branch push and create/attach the draft PR.
-2. Finish remaining functional review follow-ups: snapshot profiles must carry
-   ETF/reference narrative guidance; sanitize structured-call exception text;
-   explicitly document/test evaluation of immutable original research versus
-   later owner lifecycle actions. Audit full worker configuration reproducibility
-   and Python 3.10 compatibility (existing `datetime.UTC` imports need checking).
+2. Functional review follow-ups are implemented at `129696b`; verify the
+   supported Python matrix in CI. Full LLM invocation replay is not claimed;
+   the documented receipt contract covers immutable recorded research only.
 3. Run dependency/secret checks and a post-fix candidate security review with
    accurate coverage metadata. Preserve the sealed old-SHA scan unchanged.
 4. Complete acceptance review, triage any findings, rerun gates after fixes,

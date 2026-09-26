@@ -39,6 +39,12 @@ creation with identical inputs is idempotent. This proves deterministic replay
 of recorded research, not that a model historically predicted future prices or
 that its pretrained knowledge is point-in-time isolated.
 
+The run's `config_hash` identifies the API-selected provider, model names,
+prompt version and analyst selection. It is not a complete worker configuration
+snapshot: defaults, provider sampling behavior and environment may differ on a
+later invocation. Receipt replay reuses immutable research outputs; it does not
+rerun the LLM or claim identical model responses from that hash.
+
 `REVIEW`/draft decisions are counted but never scored, including legacy review
 records that retain a directional rating. Outcomes must become knowable
 after the decision `as_of` and no later than the evaluation clock. Duplicate
