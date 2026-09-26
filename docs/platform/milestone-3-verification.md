@@ -14,6 +14,14 @@ below describe the earlier policy, not a current requirement to purchase CI.
 The supported multi-version matrix is UNVERIFIED locally, hosted execution is
 DEFERRED by owner choice. Security report finalization remains separate.
 
+Local script evidence at clean `d3b0fa0ba6107b5d8502810c700b7579fd85ed4e`:
+`bash scripts/verify-local.sh` PASS on Python 3.14.7; lint, `pip check`, pytest
+and diff check pass. Pytest: 1211 passed, 19 skipped, 22 warnings, 88 subtests,
+20.38s. Seventeen skips are PostgreSQL (not selected in default mode); two are
+optional providers. `bash -n` passes; unsupported argument and unacknowledged
+PostgreSQL mode refuse execution. Repository Actions permissions read back
+`enabled=false`, and the run list was empty. No hosted workflow was triggered.
+
 ## Latest follow-up checkpoint
 
 At `129696b5bdd667d4709aa392f83fe4a63078c27d`, snapshot asset guidance,
