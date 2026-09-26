@@ -128,6 +128,22 @@ class PortfolioSnapshotRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class LedgerTransactionRow(Base):
+    __tablename__ = "ledger_transactions"
+    __table_args__ = (
+        Index("ix_ledger_transactions_owner_ledger_time", "owner_id", "ledger_id", "occurred_at"),
+    )
+
+    transaction_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ledger_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    schema_version: Mapped[str] = mapped_column(String(16), nullable=False)
+    transaction_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class PolicyRow(Base):
     __tablename__ = "policies"
     __table_args__ = (Index("ix_policies_owner_effective", "owner_id", "effective_at"),)

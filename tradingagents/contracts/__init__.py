@@ -59,6 +59,7 @@ from .instruments import (
     normalize_instrument_alias,
 )
 from .jobs import JobKind, JobRecord, JobStatus
+from .ledger import LedgerTransaction, LedgerTransactionType
 from .policy import PolicyCheck, PolicyContract, PolicyResult
 from .portfolio import CashBalance, PortfolioSnapshot, PositionSnapshot
 from .runs import RunManifest, RunStatus
@@ -105,6 +106,7 @@ CONTRACT_REGISTRY = {
         DerivedFactorSnapshot,
         DataHealthReport,
         EvidenceGraph,
+        LedgerTransaction,
     )
 }
 
@@ -155,6 +157,8 @@ __all__ = [
     "JobKind",
     "JobRecord",
     "JobStatus",
+    "LedgerTransaction",
+    "LedgerTransactionType",
     "PolicyCheck",
     "PolicyContract",
     "PolicyResult",

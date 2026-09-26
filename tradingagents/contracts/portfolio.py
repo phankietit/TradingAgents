@@ -32,6 +32,8 @@ class PortfolioSnapshot(VersionedContract):
     cash: tuple[CashBalance, ...]
     positions: tuple[PositionSnapshot, ...]
     net_asset_value: Decimal = Field(ge=0)
+    realized_pnl: Decimal = Decimal("0")
+    unrealized_pnl: Decimal = Decimal("0")
     content_hash: ContentHash
 
     @model_validator(mode="after")

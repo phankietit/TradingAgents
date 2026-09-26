@@ -10,6 +10,8 @@
   output becomes `REVIEW`, never an executable default or implicit `Hold`.
 - Add a point-in-time evidence graph linking every material claim to immutable
   source timestamps, snapshot IDs, vendors, and content hashes.
+- Add an immutable owner-scoped portfolio ledger with deterministic cash,
+  position, NAV, and realized/unrealized P&L replay; no broker or order path.
 
 All notable changes to TradingAgents are documented here.
 

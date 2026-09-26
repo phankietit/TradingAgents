@@ -16,6 +16,7 @@ from tradingagents.contracts import (
     DecisionCandidate,
     InstrumentAliasContract,
     InstrumentContract,
+    LedgerTransaction,
     PolicyContract,
     PortfolioSnapshot,
     RunManifest,
@@ -30,6 +31,7 @@ from .models import (
     DecisionRow,
     InstrumentAliasRow,
     InstrumentRow,
+    LedgerTransactionRow,
     PolicyRow,
     PortfolioSnapshotRow,
     RunRow,
@@ -461,6 +463,40 @@ class PlatformRepository:
         )
         self.session.flush()
         return contract
+
+    def add_ledger_transaction(self, contract: LedgerTransaction) -> LedgerTransaction:
+        existing = self.session.get(LedgerTransactionRow, contract.transaction_id)
+        if existing:
+            if not _same_payload(existing, contract):
+                raise ImmutableRecordConflict("transaction_id already has different content")
+            return contract
+        self.session.add(
+            LedgerTransactionRow(
+                transaction_id=contract.transaction_id,
+                ledger_id=contract.ledger_id,
+                owner_id=contract.owner_id,
+                schema_version=contract.schema_version,
+                transaction_type=contract.transaction_type.value,
+                occurred_at=contract.occurred_at,
+                payload=_payload(contract),
+                created_at=datetime.now(UTC),
+            )
+        )
+        self.session.flush()
+        return contract
+
+    def list_ledger_transactions(
+        self, ledger_id: UUID, owner_id: UUID
+    ) -> tuple[LedgerTransaction, ...]:
+        rows = self.session.scalars(
+            select(LedgerTransactionRow)
+            .where(
+                LedgerTransactionRow.ledger_id == ledger_id,
+                LedgerTransactionRow.owner_id == owner_id,
+            )
+            .order_by(LedgerTransactionRow.occurred_at, LedgerTransactionRow.transaction_id)
+        ).all()
+        return tuple(LedgerTransaction.model_validate(row.payload) for row in rows)
 
     def get_portfolio_snapshot(
         self, portfolio_id: UUID, owner_id: UUID

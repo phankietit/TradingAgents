@@ -325,7 +325,7 @@ def test_private_contracts_require_matching_owner(tmp_path):
         instrument_id=instrument.instrument_id,
         as_of=NOW,
         status=DecisionStatus.REVIEW,
-        rating=DecisionRating.HOLD,
+        rating=DecisionRating.REVIEW,
         confidence=0.6,
         thesis="Valuation and quality are balanced.",
         risks=("Multiple compression",),
