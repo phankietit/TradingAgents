@@ -22,6 +22,15 @@ transitions validate source identities/hashes/times against persisted run
 snapshots and resolve the policy by owner and version. Concurrent PostgreSQL
 verification remains a milestone gate.
 
+New ready writes and approval transitions require `portfolio_snapshot_id` to
+resolve to the same owner's immutable portfolio at the decision timestamp.
+Risk is recomputed with persisted policy parameters and instrument-master
+classifications. Every supplied policy check (including observed values),
+current weight and maximum allowed weight must match that recomputation.
+Missing portfolio provenance cannot be repaired by a caller's PASS flags.
+Correlation-dependent proposals currently remain blocked until source-bound
+correlation replay is integrated; an omitted correlation is never assumed safe.
+
 The authenticated API exposes `GET /api/v1/decisions/{id}/state` with the
 immutable candidate, current projected status, and audit events.
 `POST /api/v1/decisions/{id}/transitions` accepts an event ID, expected status,

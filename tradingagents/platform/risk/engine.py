@@ -63,6 +63,9 @@ class RiskEngine:
         proposal: RiskProposal,
         policy: PolicyContract,
     ) -> RiskAssessment:
+        portfolio = PortfolioSnapshot.model_validate(portfolio.model_dump())
+        proposal = RiskProposal.model_validate(proposal.model_dump())
+        policy = PolicyContract.model_validate(policy.model_dump())
         if policy.owner_id != portfolio.owner_id:
             raise ValueError("policy and portfolio owners must match")
         if policy.asset_class is not proposal.asset_class:

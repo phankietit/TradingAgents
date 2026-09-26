@@ -21,6 +21,8 @@
   certified reproducible, and portfolio-performance claims remain prohibited.
 - Retain validated Portfolio Manager narrative separately from CLI Markdown;
   absent, incomplete or overreaching payloads cannot become platform decisions.
+- Recompute decision readiness/approval risk against persisted owner portfolio,
+  policy and instrument classifications; reject unbound or forged PASS checks.
 
 All notable changes to TradingAgents are documented here.
 

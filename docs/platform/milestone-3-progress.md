@@ -33,8 +33,10 @@ following missing integration and correctness requirements.
   events and transactional projection writes now have SQLite integration tests.
   Authenticated state/transition API wiring is covered by tests for sessions,
   CSRF, actor spoofing, policy mismatch, state projection and retry behavior.
-  Policy-assessment provenance and concurrent PostgreSQL validation remain
-  before approval enforcement is complete.
+  Ready writes/approvals now recompute risk against an owner-scoped portfolio,
+  policy and instrument master, rejecting forged checks/weights. Source-bound
+  correlation replay and concurrent PostgreSQL validation remain before
+  approval enforcement is complete.
 - PLAN-037: hash-verified snapshot outcome helper, duplicate/future outcome
   rejection, canonical ordering and deterministic evaluation IDs have targeted
   tests. Caller-supplied returns remain `reproducible=False`. Owner-scoped

@@ -407,6 +407,8 @@ class PlatformRepository:
             raise ValueError("decision does not match its owner run")
         if contract.status is DecisionStatus.APPROVED:
             raise ValueError("approval must be recorded through lifecycle events")
+        if contract.status is DecisionStatus.READY_FOR_APPROVAL:
+            self._validate_decision_sources(contract)
         existing = self.session.get(DecisionRow, contract.decision_id)
         if existing:
             if not _same_payload(existing, contract):
@@ -514,6 +516,41 @@ class PlatformRepository:
         instrument = self.get_instrument(decision.instrument_id)
         if policy is None or policy.effective_at > decision.as_of or instrument is None or policy.asset_class != instrument.asset_class:
             raise ValueError("decision policy is not eligible for this owner instrument")
+        self._validate_decision_risk(decision, policy, instrument)
+
+    def _validate_decision_risk(self, decision, policy, instrument) -> None:
+        from tradingagents.platform.risk import RiskEngine, RiskProposal
+
+        portfolio = (
+            self.get_portfolio_snapshot(decision.portfolio_snapshot_id, decision.owner_id)
+            if decision.portfolio_snapshot_id is not None else None
+        )
+        if portfolio is None or portfolio.as_of != decision.as_of:
+            raise ValueError("decision requires an owner portfolio snapshot at its as_of")
+        classifications = {}
+        for position in portfolio.positions:
+            held = self.get_instrument(position.instrument_id)
+            if held is None:
+                raise ValueError("portfolio instrument classification is unavailable")
+            classifications[position.instrument_id] = held.asset_class
+        # Until source-bound correlation replay is supplied, missing coverage
+        # deliberately produces REVIEW. Never trust caller-authored correlations.
+        assessment = RiskEngine().evaluate(
+            portfolio=portfolio, policy=policy,
+            proposal=RiskProposal(
+                instrument_id=instrument.instrument_id, asset_class=instrument.asset_class,
+                tradability=instrument.tradability, target_weight=decision.target_weight,
+                data_quality=decision.data_quality, position_asset_classes=classifications,
+            ),
+        )
+        current_weight = next((p.weight for p in portfolio.positions
+                               if p.instrument_id == decision.instrument_id), 0.0)
+        expected = {item.check_id: item for item in assessment.checks}
+        supplied = {item.check_id: item for item in decision.policy_checks}
+        if (not assessment.passed or expected != supplied
+                or decision.current_weight != current_weight
+                or decision.max_allowed_weight != assessment.max_allowed_weight):
+            raise ValueError("decision risk assessment does not match persisted inputs")
 
     def list_decision_events(
         self, decision_id: UUID, owner_id: UUID
