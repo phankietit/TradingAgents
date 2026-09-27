@@ -136,6 +136,8 @@ class AnalysisEngine:
                 schema = SnapshotPortfolioDecision if request.snapshot_context is not None else PortfolioDecision
                 parsed = schema.model_validate(raw_decision)
                 if request.snapshot_context is not None:
+                    if config.get("output_language") in ("English and Vietnamese", "Vietnamese") and parsed.localized_report is None:
+                        validation_issues.append("report_translation_unavailable")
                     # Retain schema-valid references even when publication
                     # fails. They are audit evidence, never a valid decision.
                     quantitative_references = parsed.observed_numbers

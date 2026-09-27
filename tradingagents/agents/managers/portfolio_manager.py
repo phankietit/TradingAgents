@@ -23,11 +23,22 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_portfolio_manager(llm, *, research_only=False):
-    from tradingagents.agents.research_schemas import SnapshotPortfolioDecision
+def create_portfolio_manager(llm, *, research_only=False, snapshot_reports=None):
+    from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
 
-    schema = SnapshotPortfolioDecision if research_only else PortfolioDecision
+    schema = CanonicalSnapshotDecision if research_only else PortfolioDecision
     structured_llm = bind_structured(llm, schema, "Portfolio Manager")
+    fact_sources, snapshot_ids = {}, set()
+    if snapshot_reports is not None:
+        import json
+
+        from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+
+        for report in snapshot_reports.values():
+            for source in json.loads(report):
+                snapshot_ids.add(source["snapshot_id"])
+                if source["provenance"]["dataset"] == "ohlcv.daily":
+                    fact_sources[source["snapshot_id"]] = SnapshotMarketFacts(source)
 
     def portfolio_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
@@ -110,14 +121,12 @@ Write these sections, in this order, starting with the rating on its own line:
                        "be labelled conditional, not observed. No sizing or execution instructions.")
             prompt += ("\nUse observed_numbers to reference every observed numeric claim using "
                        "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
-                       "passed by analysts; do not invent IDs. If bilingual output was requested, "
-                       "localized_report is required with complete en and vi Markdown reports. "
-                       "Keep canonical structured fields in English and preserve all numbers, dates "
-                       "and currency symbols verbatim in the Vietnamese translation. Translate one "
-                       "paragraph at a time; each number must occur the same number of times in both "
-                       "languages. Do not add or remove numbered headings. Prefer concise paragraphs "
-                       "and unnumbered headings. Round monetary/percentage observations to 2 decimals "
-                       "in BOTH prose and observed_numbers, setting decimal_places=2; never copy "
+                       "passed by analysts; do not invent IDs. Write canonical structured fields in English "
+                       "only. Set localized_report=null; a separate presentation stage handles translation. "
+                       "Include the strongest opposing case and coverage limitations within investment_thesis. "
+                       "Use concise paragraphs with descriptive headings, not numbered headings. "
+                       "Round monetary/percentage observations to 2 decimals in prose and observed_numbers, "
+                       "setting decimal_places=2; never copy "
                        "floating-point noise from the catalog. Preserve the sign and units. "
                        "Do not invent conditional price targets as observed facts.")
             prompt += ("\nEDITORIAL CONTRACT: Write for a financially literate person, not a software "
@@ -137,11 +146,12 @@ Write these sections, in this order, starting with the rating on its own line:
             nonlocal structured_decision
             # Revalidate even model instances: model_copy can bypass validators.
             validated = schema.model_validate(value.model_dump())
-            if research_only:
-                from tradingagents.dataflows.config import get_config
+            if research_only and snapshot_reports is not None:
+                from tradingagents.platform.analysis.research_validation import (
+                    validate_canonical_report,
+                )
 
-                if get_config().get("output_language") == "English and Vietnamese" and validated.localized_report is None:
-                    raise ValueError("bilingual research requires both saved report languages")
+                validate_canonical_report(validated, fact_sources, snapshot_ids)
             structured_decision = validated.model_dump(mode="json")
 
         final_trade_decision = invoke_structured_or_freetext(
@@ -154,6 +164,12 @@ Write these sections, in this order, starting with the rating on its own line:
             repair_schema=schema if research_only else None,
             diagnostics=diagnostics,
         )
+
+        if research_only and structured_decision is not None:
+            from tradingagents.agents.utils.report_localization import reader_report
+
+            canonical = schema.model_validate(structured_decision)
+            final_trade_decision = reader_report(canonical)
 
         new_risk_debate_state = {
             "judge_decision": final_trade_decision,

@@ -55,7 +55,9 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
                 "TraderProposal": {"action": "Hold", "reasoning": "Research only"},
                 "PortfolioDecision": {"rating": "Hold", "executive_summary": "Research only",
                     "investment_thesis": "Snapshot thesis", "confidence": .5,
-                    "risks": ["Coverage risk"], "invalidation_conditions": ["New information"]},
+                        "risks": ["Coverage risk"], "invalidation_conditions": ["New information"],
+                        "evidence_claims": [{"claim": claim, "snapshot_ids": [str(inputs.by_analyst["market"][0].manifest.snapshot_id)]}
+                            for claim in ("Snapshot thesis", "Coverage risk", "New information")]},
             }
             return SimpleNamespace(invoke=lambda prompt: (structured_prompts.append(prompt)
                 or schema.model_validate(values[schema.__name__])))
@@ -107,7 +109,7 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
     completed = [payload["stage"] for kind, payload in events if kind == "stage.completed"]
     expected_analysts = ["Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst"] if all_roles else ["Market Analyst"]
     assert completed == [*expected_analysts, "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
-                         "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager"]
+                         "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Report presentation"]
     assert all(set(payload) == {"stage"} for _, payload in events)
     assert observer.receipt()["usage"]["status"] == "incomplete"  # fake model has no provider usage
 

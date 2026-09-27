@@ -50,6 +50,13 @@ SnapshotPortfolioDecision = create_model(
     observed_numbers=(tuple[ObservedNumber, ...], Field(default=(), max_length=100,
         description="For each observed quantitative fact used in the final report, cite its exact snapshot_id and fact_id from verified fact_catalog, with value and rounding. Never create a fact_id.")),
 )
+# New generation is canonical English only. The historical schema above remains
+# readable; localization is a separate, number-protected presentation stage.
+CanonicalSnapshotDecision = create_model(
+    "PortfolioDecision", __base__=SnapshotPortfolioDecision,
+    localized_report=(Literal[None], Field(default=None,
+        description="Must be null. A separate protected translation stage handles presentation.")),
+)
 SnapshotResearchPlan = create_model(
     "ResearchPlan", __base__=ResearchPlan,
     strategic_actions=(Text, Field(description="Conditional research scenarios and evidence to monitor. No quantities, sizing, allocation percentages or derivative strategies.")),

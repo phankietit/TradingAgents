@@ -34,9 +34,26 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | PASS local; live valid-report acceptance FAIL |
 | R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS receipt and Draft PR #7; overall release DEFERRED |
 
-Overall goal is not complete. The explicitly approved extra BTC execution also
-failed report acceptance. No further model execution is authorized in this
-handoff, and no validation gate has been relaxed to promote the failed output.
+Overall goal is not complete. The previous extra BTC execution failed report
+acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
+renewed implementation and live-test authorization for BTC, AAPL and NQ, including
+the operational research journey and final decision-report presentation.
+
+### Renewed acceptance scope
+
+- Validate canonical financial content before a separate, bounded localization
+  stage. Protect quantitative tokens in translation; never weaken publication
+  validation to make a model response pass. Preserve every research/debate role.
+- Present a clear prepare → research → validation → review journey using real
+  events. Keep diagnostic details secondary and distinguish processing success
+  from a financially usable report.
+- Make summaries, evidence, opposing views, risks, invalidation and coverage easy
+  to navigate on desktop/mobile in both languages; retain original agent reports.
+- Run live BTC, Apple and NQ using the existing MiniMax configuration. NQ remains
+  reference-only. Record exact inputs, coverage, usage, output checks and limits;
+  do not imply that a price-only run includes fundamentals, news or macro data.
+- Verify locally without CI, update Draft PR #7 and its exact-SHA receipt. No
+  broker, new provider, risk-limit change, historical rewrite or public deployment.
 
 ## Flow parity contract
 

@@ -52,6 +52,7 @@ class GraphSetup:
         tool_nodes: dict[str, ToolNode],
         conditional_logic: ConditionalLogic,
         analyst_nodes: dict | None = None,
+        snapshot_reports: dict | None = None,
     ):
         """Initialize with required components."""
         self.quick_thinking_llm = quick_thinking_llm
@@ -59,6 +60,7 @@ class GraphSetup:
         self.tool_nodes = tool_nodes
         self.conditional_logic = conditional_logic
         self.analyst_nodes = analyst_nodes
+        self.snapshot_reports = snapshot_reports
 
     def setup_graph(
         self, selected_analysts=("market", "social", "news", "fundamentals")
@@ -94,7 +96,8 @@ class GraphSetup:
         aggressive_analyst = create_aggressive_debator(self.quick_thinking_llm)
         neutral_analyst = create_neutral_debator(self.quick_thinking_llm)
         conservative_analyst = create_conservative_debator(self.quick_thinking_llm)
-        portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm, **scoped_options)
+        portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm,
+            **scoped_options, **({"snapshot_reports": self.snapshot_reports} if self.snapshot_reports is not None else {}))
 
         # Create workflow
         workflow = StateGraph(AgentState)
@@ -161,6 +164,13 @@ class GraphSetup:
                 RISK_ANALYSIS_PATH_MAP,
             )
 
-        workflow.add_edge("Portfolio Manager", END)
+        if self.analyst_nodes is not None:
+            from tradingagents.agents.utils.report_localization import create_report_presentation
+
+            workflow.add_node("Report presentation", create_report_presentation(self.deep_thinking_llm))
+            workflow.add_edge("Portfolio Manager", "Report presentation")
+            workflow.add_edge("Report presentation", END)
+        else:
+            workflow.add_edge("Portfolio Manager", END)
 
         return workflow

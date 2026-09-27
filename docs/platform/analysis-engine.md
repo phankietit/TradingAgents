@@ -145,3 +145,24 @@ and allow the current call to finish. Runtime cache/reports live below the
 configured artifact root. It does not add providers, change policy limits or
 submit orders. Use a dedicated local test database for command smoke tests;
 `--once` is not a dry run when eligible jobs are present.
+# Canonical report and protected presentation (2026-09-27)
+
+Snapshot Portfolio Manager generation now produces canonical English structured
+research only. Before its one bounded repair, numeric references, financial
+amount coverage, authority checks and exact material-claim citations are checked
+against the immutable inputs. Repair receives the rejected schema-valid candidate
+and allowlisted failure codes; it cannot change source data or bypass the gates.
+
+After the complete research/risk graph, the `Report presentation` node translates
+the accepted reader-facing report when Vietnamese is requested. Application-owned
+anchors protect every digit (prices, percentages, dates, indicator periods and
+horizons). Missing, duplicate, unknown anchors or new numeric tokens reject the
+translation. Restoration is deterministic and the existing EN/VI parity gate
+still applies. Translation uses the same configured deep model, one structured
+attempt plus at most one repair, with normal usage/cancellation accounting. This
+adds up to two model calls; it never restarts earlier research solely for language.
+
+Missing translation withholds bilingual/VI publication. Canonical evidence and
+diagnostics remain inspectable. Historical reports and the legacy CLI contract
+are unchanged. Numeric identity/provenance checks do not prove qualitative
+entailment, translation fidelity, profitability or approval; human review remains.

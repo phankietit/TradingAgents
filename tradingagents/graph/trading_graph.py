@@ -173,6 +173,7 @@ class TradingAgentsGraph:
             self.conditional_logic,
             analyst_nodes=snapshot_analyst_nodes(self.quick_thinking_llm, snapshot_reports)
             if self.snapshot_mode else None,
+            snapshot_reports=snapshot_reports,
         )
 
         self.propagator = Propagator(

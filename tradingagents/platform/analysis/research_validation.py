@@ -7,10 +7,43 @@ required; a valid citation alone is not proof that a thesis follows from it.
 
 import re
 from collections import Counter
+from contextlib import suppress
 from decimal import Decimal, InvalidOperation
 
 UUID_PATTERN = re.compile(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", re.I)
 NUMBER_PATTERN = re.compile(r"(?<![\w])[-+]?\d+(?:,\d{3})*(?:\.\d+)?%?")
+
+PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_requires_verified_reference",
+    "research_authority_requires_review", "material_claim_citation_mismatch", "unknown_snapshot_reference"})
+
+
+class PublicationValidationError(ValueError):
+    def __init__(self, issues):
+        self.issues = tuple(sorted(set(issues) & PUBLICATION_CODES))
+        super().__init__("research publication checks failed")
+
+
+def validate_canonical_report(decision, fact_sources, snapshot_ids):
+    """Reuse publication gates before bounded PM repair; never rewrite a claim."""
+    catalog = {key: source.fact_catalog() for key, source in fact_sources.items()}
+    for claim in decision.observed_numbers:
+        source = fact_sources.get(str(claim.snapshot_id))
+        if source is not None:
+            with suppress(ValueError, KeyError, IndexError):
+                catalog[str(claim.snapshot_id)][claim.fact_id] = source.resolve_fact(claim.fact_id)
+    text = "\n".join([decision.executive_summary, decision.investment_thesis,
+        *decision.risks, *decision.invalidation_conditions, decision.time_horizon or ""])
+    issues = scope_issues(text) + validate_numeric_claims(decision.observed_numbers, catalog)
+    if unsupported_financial_numbers(text, decision.observed_numbers):
+        issues.append("financial_number_requires_verified_reference")
+    material = {decision.investment_thesis, *decision.risks, *decision.invalidation_conditions}
+    claims = [item.claim for item in decision.evidence_claims]
+    if set(claims) != material or len(claims) != len(material):
+        issues.append("material_claim_citation_mismatch")
+    if any(str(source) not in snapshot_ids for item in decision.evidence_claims for source in item.snapshot_ids):
+        issues.append("unknown_snapshot_reference")
+    if issues:
+        raise PublicationValidationError(issues)
 
 
 def number_tokens(text: str) -> Counter:
