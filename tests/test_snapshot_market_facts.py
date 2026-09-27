@@ -111,6 +111,17 @@ def test_band_distance_does_not_reverse_the_percentage_denominator(monkeypatch):
     assert catalog["indicator.boll_lb.latest_close_distance_magnitude_pct"] == pytest.approx(25)
 
 
+def test_only_price_unit_indicators_are_normalized_by_the_close():
+    facts = SnapshotMarketFacts(source())
+    catalog = facts.fact_catalog()
+    assert "indicator.rsi" in catalog
+    assert "indicator.rsi.pct_of_latest_close" not in catalog
+    assert facts.resolve_fact("indicator.rsi.pct_of_latest_close") is None
+    assert catalog["indicator.atr.pct_of_latest_close"] == pytest.approx(
+        catalog["indicator.atr"] / catalog["latest.close"] * 100)
+    assert facts.summary()["calculation_version"] == "snapshot-market-facts-v4"
+
+
 def test_future_payload_cannot_hide_behind_valid_manifest():
     value = source()
     value["provenance"]["source_end"] = value["data"]["bars"][-2]["timestamp"]

@@ -172,3 +172,20 @@ browser acceptance must pass before completion can be claimed.
   identifiers enter diagnostics; provider prose and private values do not.
   It also catches the reciprocal upper-band and generic percentage-move forms
   observed in the rejected repair. No claim or fact is silently rewritten.
+- PASS: clean `93e3411a0c32f7388b75b8fe0635ddce1ea40c07`, full local gate:
+  1,389 tests + 88 subtests, 20 classified skips, 42.97 seconds.
+- Publication component replay on that candidate passed canonical validation
+  and EN/VI numeric/terminology checks after one bounded financial repair.
+  Usage: 59,811 tokens (17,833 input + 41,978 output), three calls. Manual
+  review confirmed correction of the observed reciprocal/drawdown errors and
+  crossover/volatility substitutions. Vietnamese wording remained overly literal;
+  final editorial and whole-run acceptance were not claimed. The saved QA blob
+  remains separate from registered analysis/decision history.
+- A separate unit audit found RSI had been divided by the quote-currency close
+  in the catalog. Snapshot facts v4 withholds that dimensionally invalid ratio,
+  retaining raw RSI and valid price-unit ratios. No source candle, snapshot or
+  historical report is rewritten. Targeted unit/catalog/translation checks pass.
+  Binding instructions now state each reciprocal fact ID's exact meaning.
+- Translation-only follow-up targets financial Vietnamese wording, retaining
+  the accepted canonical report, numerical anchors, opposing case and conditions.
+  It is not another research or whole-graph run.

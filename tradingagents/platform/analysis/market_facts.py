@@ -109,7 +109,7 @@ class SnapshotMarketFacts:
         high_index = max(range(n), key=lambda i: self.bars[i].high)
         high = self.bars[high_index].high
         return {
-            "calculation_version": "snapshot-market-facts-v3",
+            "calculation_version": "snapshot-market-facts-v4",
             "snapshot_id": self.snapshot_id, "provenance": self.provenance,
             "fact_catalog": self.fact_catalog(),
             "quote_currency": self.series.quote_currency,
@@ -155,7 +155,10 @@ class SnapshotMarketFacts:
         for name in DEFAULT_SNAPSHOT_INDICATORS:
             value = facts.get(f"indicator.{name}")
             if value is not None:
-                facts[f"indicator.{name}.pct_of_latest_close"] = value / latest.close * 100
+                # RSI is a dimensionless oscillator, not an amount in quote
+                # currency. Dividing it by the close is not a price percentage.
+                if self._fact_unit(f"indicator.{name}") == "price":
+                    facts[f"indicator.{name}.pct_of_latest_close"] = value / latest.close * 100
                 if name in {"close_10_ema", "close_50_sma", "close_200_sma", "boll", "boll_ub", "boll_lb"}:
                     facts[f"indicator.{name}.distance_from_latest_close_pct"] = (value / latest.close - 1) * 100
                     if value > 0:

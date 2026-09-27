@@ -126,6 +126,13 @@ snapshot_id, verified fact_id and decimal_places. Do NOT put values in bindings.
 Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
 For close C and reference R, price premium over R is (C/R - 1)*100,
 but a move from C to R is (R/C - 1)*100. Never reuse the former for the latter.
+Exact ID meanings:
+- indicator.NAME.latest_close_vs_indicator_pct: signed (C/R - 1)*100.
+- indicator.NAME.latest_close_distance_magnitude_pct: absolute (C/R - 1)*100.
+- indicator.NAME.distance_from_latest_close_pct: signed (R/C - 1)*100.
+- calc.abs_pct_change(indicator.NAME,latest.close): absolute (R/C - 1)*100.
+- observed_window.latest_close_vs_high_pct: signed change relative to window high.
+- observed_window.drawdown_magnitude_pct: positive magnitude below window high.
 For a magnitude below a level, use a positive magnitude, not a signed negative
 return followed by 'below'. A percentage_relation_requires_review failure means
 the prose and chosen fact disagree about direction or denominator; correct the

@@ -21,6 +21,9 @@ Breaking changes within the 0.x line are called out explicitly.
   compilation, and known Vietnamese volatility/volume/liquidity and
   crossover/divergence substitutions. These bounded checks are not a claim of
   complete semantic verification; financial human review remains required.
+- Snapshot facts v4 no longer divide dimensionless RSI by the quote-currency
+  close. Raw RSI and valid price-unit ratios remain available; old saved reports
+  and their numerical evidence are not rewritten.
 - Separate analysis setup, actual-event progress and report reading; add
   summary/history/research/verification sections and a compact mobile run picker.
   Read-only polling no longer blanks the report, and deep links retain run identity.

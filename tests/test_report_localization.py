@@ -45,7 +45,11 @@ def test_translation_is_saved_separately_and_cannot_mutate_canonical_decision():
     protected, _ = protect_quantities(reader_report(canonical))
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda _: schema(vi=protected.replace("Price-only evidence", "Chỉ có dữ liệu giá")))
+            def invoke(prompt):
+                assert "phạm vi dữ liệu" in prompt and "not as a word-for-word translation" in prompt
+                assert "retaining every opposing argument and condition" in prompt
+                return schema(vi=protected.replace("Price-only evidence", "Chỉ có dữ liệu giá"))
+            return SimpleNamespace(invoke=invoke)
         def invoke(self, _):
             pytest.fail("valid translation must not trigger repair")
     result = localize_report(Model(), canonical, [])
