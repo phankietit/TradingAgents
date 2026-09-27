@@ -156,3 +156,19 @@ browser acceptance must pass before completion can be claimed.
   prose, select another fact, relax schema validation or remove research roles.
   Other qualitative entailment and translation quality still require review.
   Initial targeted regression: 45 PASS; final candidate/live evidence pending.
+- PASS: clean `1e72eb2cd4b3249083784c38b18b8070e862ead0`, full local gate:
+  1,386 tests + 88 subtests, 20 classified skips, 47.05 seconds.
+  The candidate wheel was installed into the isolated core environment;
+  report/compiler, CLI and graph imports passed before platform dependencies
+  were added. After installing the declared platform extra, API/worker imports
+  and `pip check` passed. No owner runtime dependency was changed. Wheel hash:
+  `3ee4dbad1a217308db58beb8dc4d6cc5168466d883e0e1be6d20108bd9f9e7c7`.
+- FAIL: bounded financial replay on `1e72eb2` was correctly withheld by
+  `percentage_relation_requires_review`, including after its one repair.
+  Usage: 47,471 tokens (15,012 input + 32,459 output), two calls; translation
+  was not called. This is fail-closed evidence, not usable-report acceptance.
+- Follow-up reports all affected placeholder keys together, rather than a
+  generic error or one mismatch at a time. Only syntax-validated placeholder
+  identifiers enter diagnostics; provider prose and private values do not.
+  It also catches the reciprocal upper-band and generic percentage-move forms
+  observed in the rejected repair. No claim or fact is silently rewritten.

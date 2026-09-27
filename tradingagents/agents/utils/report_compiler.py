@@ -20,25 +20,29 @@ def validate_percentage_context(prose, binding, value):
     """
     anchor = re.escape("{{" + binding["key"] + "}}")
     fact_id = binding["fact_id"]
+    def reject():
+        raise PublicationValidationError(["percentage_relation_requires_review"], binding_keys=(binding["key"],))
     if not fact_id.endswith("pct"):
         return
     if value < 0 and re.search(anchor + r"\s*%\s*(?:below|under)\b", prose, re.I):
-        raise PublicationValidationError(["percentage_relation_requires_review"])
-    # This family measures the close relative to an indicator, not a move
-    # from the close to that indicator. The reciprocal denominators differ.
-    if not fact_id.endswith((".latest_close_distance_magnitude_pct", ".latest_close_vs_indicator_pct")):
-        return
-    if re.search(anchor + r"\s*%\s*(?:drawdown|drop|decline|fall|retracement)\s+from\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
-        raise PublicationValidationError(["percentage_relation_requires_review"])
-    indicator = fact_id.split(".")[1]
+        reject()
     labels = {"close_10_ema":r"(?:10[- ](?:day[- ])?EMA|EMA[- ]?10)",
               "close_50_sma":r"(?:50[- ](?:day[- ])?SMA|SMA[- ]?50)",
               "close_200_sma":r"(?:200[- ](?:day[- ])?SMA|SMA[- ]?200)",
               "boll_ub":r"upper Bollinger band", "boll_lb":r"lower Bollinger band"}
-    label = labels.get(indicator)
+    label = labels.get(fact_id.split(".")[1]) if fact_id.startswith("indicator.") else None
+    if fact_id.endswith(".distance_from_latest_close_pct") and label and re.search(
+            anchor + r"\s*%\s*(?:below|above)\s+(?:the\s+)?" + label, prose, re.I):
+        reject()
+    # This family measures the close relative to an indicator, not a move
+    # from the close to that indicator. The reciprocal denominators differ.
+    if not fact_id.endswith((".latest_close_distance_magnitude_pct", ".latest_close_vs_indicator_pct")):
+        return
+    if re.search(anchor + r"\s*%\s*(?:drawdown|drop|decline|fall|retracement|move|change)\s+from\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
+        reject()
     if label and re.search(label + r"\s+is\s+(?:currently\s+)?" + anchor
             + r"\s*%\s*(?:below|above)\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
-        raise PublicationValidationError(["percentage_relation_requires_review"])
+        reject()
 
 
 def compile_report(raw, facts):
@@ -63,6 +67,7 @@ def compile_report(raw, facts):
     bindings = data.pop("quantity_bindings")
     values = {}
     observations = []
+    relation_failures = []
     for binding in bindings:
         key = binding["key"]
         source = facts.get(binding["snapshot_id"])
@@ -71,7 +76,10 @@ def compile_report(raw, facts):
             raise PublicationValidationError(["quantity_binding_duplicate"])
         if value is None:
             raise PublicationValidationError(["quantity_binding_unknown_fact"])
-        validate_percentage_context(prose, binding, value)
+        try:
+            validate_percentage_context(prose, binding, value)
+        except PublicationValidationError as error:
+            relation_failures.extend(error.binding_keys)
         number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
         if not number.is_finite():
             raise PublicationValidationError(["numeric_claim_not_supported"])
@@ -80,6 +88,8 @@ def compile_report(raw, facts):
             {name: binding[name] for name in ("snapshot_id", "fact_id", "decimal_places")}
             | {"value": float(number)}
         )
+    if relation_failures:
+        raise PublicationValidationError(["percentage_relation_requires_review"], binding_keys=relation_failures)
     used = set()
 
     def render(value):

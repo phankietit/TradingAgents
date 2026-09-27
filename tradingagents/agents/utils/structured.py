@@ -187,4 +187,6 @@ def _safe_diagnostic(agent: str, error: Exception, phase: str) -> dict:
     from tradingagents.platform.analysis.research_validation import PublicationValidationError
     if isinstance(error, PublicationValidationError):
         diagnostic["checks"] = list(error.issues)
+        if error.binding_keys:
+            diagnostic["binding_keys"] = list(error.binding_keys)
     return diagnostic

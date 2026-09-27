@@ -22,8 +22,11 @@ PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_
 
 
 class PublicationValidationError(ValueError):
-    def __init__(self, issues):
+    def __init__(self, issues, *, binding_keys=()):
         self.issues = tuple(sorted(set(issues) & PUBLICATION_CODES))
+        # Placeholder IDs only, never arbitrary provider text or source values.
+        self.binding_keys = tuple(sorted({key for key in binding_keys
+            if isinstance(key, str) and re.fullmatch(r"Q[A-Z]{1,5}", key)}))[:100]
         super().__init__("research publication checks failed")
 
 

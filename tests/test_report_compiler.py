@@ -144,11 +144,14 @@ def test_binding_diagnostics_identify_repair_without_weakening_gate(mutation, co
     ("The close is {{QA}}% below the window high.", "observed_window.latest_close_vs_high_pct", -1.24),
     ("The 50-SMA is currently {{QA}}% below the latest close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
     ("A move to the SMA would represent a {{QA}}% drawdown from the current close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
+    ("A move to the SMA would represent a {{QA}}% move from the current close.", "indicator.close_50_sma.latest_close_vs_indicator_pct", 5.98),
+    ("The close sits {{QA}}% below the upper Bollinger band.", "indicator.boll_ub.distance_from_latest_close_pct", 1.49),
 ])
 def test_reproduced_percentage_semantic_errors_fail_closed(prose, fact, value):
     with pytest.raises(PublicationValidationError) as error:
         validate_percentage_context(prose, {"key":"QA", "fact_id":fact}, value)
     assert error.value.issues == ("percentage_relation_requires_review",)
+    assert error.value.binding_keys == ("QA",)
 
 
 def test_percentage_guard_tracks_binding_not_coincidentally_equal_numbers():
@@ -158,3 +161,23 @@ def test_percentage_guard_tracks_binding_not_coincidentally_equal_numbers():
         {"key":"QA", "fact_id":"observed_window.drawdown_magnitude_pct"}, 1.24)
     validate_percentage_context("The 50-SMA is currently {{QA}}% below the latest close.",
         {"key":"QA", "fact_id":"calc.abs_pct_change(indicator.close_50_sma,latest.close)"}, 5.64)
+    validate_percentage_context("The upper Bollinger band is {{QA}}% above the latest close.",
+        {"key":"QA", "fact_id":"indicator.boll_ub.distance_from_latest_close_pct"}, 1.49)
+
+
+def test_all_affected_bindings_are_reported_without_raw_provider_text():
+    from tradingagents.agents.utils.structured import _safe_diagnostic
+
+    raw, data = draft()
+    raw["risks"][0]["claim"] = "The close is {{QB}}% below the window high. The 50-SMA is currently {{QC}}% below the latest close."
+    raw["quantity_bindings"].extend([
+        {**raw["quantity_bindings"][0], "key":"QB", "fact_id":"observed_window.latest_close_vs_high_pct"},
+        {**raw["quantity_bindings"][0], "key":"QC", "fact_id":"indicator.close_50_sma.latest_close_distance_magnitude_pct"},
+    ])
+    with pytest.raises(PublicationValidationError) as error:
+        compile_report(raw, {data["snapshot_id"]:SnapshotMarketFacts(data)})
+    assert error.value.binding_keys == ("QB", "QC")
+    diagnostic = _safe_diagnostic("Review", error.value, "publication")
+    assert diagnostic["binding_keys"] == ["QB", "QC"]
+    safe = PublicationValidationError(["percentage_relation_requires_review"], binding_keys=["QA", "private-token-value"])
+    assert safe.binding_keys == ("QA",)
