@@ -13,6 +13,7 @@ import Decisions from './Decisions';
 import ArtifactPreview from './ArtifactPreview';
 import { number, timestamp } from './data';
 import { qualityLabel, reviewStatus, riskReason } from './financialLabels';
+import { profileLabel } from './researchLabels';
 
 afterEach(() => { vi.unstubAllGlobals(); window.location.hash = ''; });
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
@@ -62,6 +63,9 @@ it('preserves six data failure states, exact decimals, UTC and private source te
   expect(riskReason('max_position_weight', 'FAIL', 'max_position_weight FAIL')).toContain('không đáp ứng');
   expect(riskReason('max_correlation', 'REVIEW', 'Private original reason')).toBe('Private original reason');
   expect(t('__proto__')).toBe('__proto__');
+  expect(profileLabel('large-cap-crypto')).toBe('Tiền mã hóa vốn hóa lớn');
+  expect(profileLabel('futures-reference')).toContain('chỉ tham chiếu');
+  expect(profileLabel('__proto__')).toBe('Chưa xác định loại nghiên cứu');
 });
 
 it('preserves bilingual report content across UI languages while rendering safe Markdown', async () => {

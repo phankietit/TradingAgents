@@ -8,3 +8,10 @@ export function researchLabel(role: string): string {
 export function datasetLabel(dataset: string): string {
   return dataset === 'ohlcv.daily' ? t('Daily prices & volume') : dataset;
 }
+
+export function profileLabel(profile: string): string {
+  const labels: Record<string, string> = { equity: 'Equity research', etf: 'ETF research',
+    'large-cap-crypto': 'Large-cap crypto', 'cash-index-reference': 'Index reference',
+    'futures-reference': 'Futures reference only' };
+  return Object.hasOwn(labels, profile) ? t(labels[profile]) : t('Research profile unavailable');
+}

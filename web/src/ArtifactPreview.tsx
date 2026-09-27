@@ -2,7 +2,7 @@ import { t, useLocale } from './i18n';
 import { useEffect, useState } from 'react';
 import { ApiError, errorMessage, request } from './api';
 import { timestamp } from './data';
-import { researchLabel } from './researchLabels';
+import { profileLabel, researchLabel } from './researchLabels';
 import ResearchMarkdown from './ResearchMarkdown';
 import ResearchChart, { reportHistories, type ReportHistory } from './ResearchChart';
 
@@ -104,7 +104,7 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
   return <section className="artifact-preview" aria-label={`${t(artifact.kind.replaceAll('_', ' '))} preview`}>
     <p className="muted caption">{t("Immutable research artifact · Not current approval state. Text is displayed without executing HTML or external content.")}</p>
     {data.type === 'report' ? <>
-      <p>{t("Profile:")} {t(data.profile)} {t("· Analysts:")} {data.analysts.map(researchLabel).join(', ')}</p>
+      <p>{t("Profile:")} {profileLabel(data.profile)} {t("· Analysts:")} {data.analysts.map(researchLabel).join(', ')}</p>
       {data.referenceOnly ? <p className="warning">{t("Reference only — not investable.")}</p> : null}
       <p>{t("Snapshot attestation:")} {data.attestation}</p>
       {data.histories.map(history => <ResearchChart key={history.snapshot_id} history={history} />)}

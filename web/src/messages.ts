@@ -284,4 +284,8 @@ export const vietnamese: Record<string, string> = {
   'analysis report': 'báo cáo phân tích', 'decision evidence': 'căn cứ quyết định', 'preview': 'xem trước',
   'BUY': 'Mua (BUY)', 'SELL': 'Bán (SELL)', 'HOLD': 'Nắm giữ (HOLD)', 'REVIEW': 'Cần xem xét (REVIEW)',
   'equity': 'Cổ phiếu', 'etf': 'Quỹ ETF', 'crypto': 'Tiền mã hóa', 'index': 'Chỉ số', 'futures_reference': 'Tham chiếu hợp đồng tương lai',
+  'Equity research': 'Phân tích cổ phiếu', 'ETF research': 'Phân tích quỹ ETF',
+  'Large-cap crypto': 'Tiền mã hóa vốn hóa lớn', 'Index reference': 'Chỉ số tham chiếu',
+  'Futures reference only': 'Hợp đồng tương lai — chỉ tham chiếu',
+  'Research profile unavailable': 'Chưa xác định loại nghiên cứu',
 };
