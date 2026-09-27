@@ -214,7 +214,12 @@ entailment or the investment conclusion. Live acceptance of this changed
 presentation contract is still UNVERIFIED.
 
 After the complete research/risk graph, the `Report presentation` node translates
-the accepted reader-facing report when Vietnamese is requested. Application-owned
+the accepted reader-facing report when Vietnamese is requested. Translation is
+block-addressed: every supplied paragraph, risk, invalidation and horizon has a
+required stable ID. Missing, duplicate, invented or empty blocks fail closed.
+The application owns section headings/order, and protected quantities cannot
+move to a different block. A bounded editorial check rejects reproduced literal
+calques; it is not a claim of universal translation fidelity. Application-owned
 anchors protect every digit (prices, percentages, dates, indicator periods and
 horizons). Missing, duplicate, unknown anchors or new numeric tokens reject the
 translation. Restoration is deterministic and the existing EN/VI parity gate

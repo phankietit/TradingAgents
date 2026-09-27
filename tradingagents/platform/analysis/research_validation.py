@@ -22,7 +22,9 @@ PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_
     "quantity_binding_duplicate", "quantity_binding_unknown_fact", "quantity_binding_missing",
     "quantity_binding_unused", "quantity_anchor_malformed", "percentage_relation_requires_review",
     "translation_terminology_mismatch", "percentage_statement_requires_standalone_anchor",
-    "percentage_statement_unsupported", "quantity_binding_unit_mismatch"})
+    "percentage_statement_unsupported", "quantity_binding_unit_mismatch",
+    "translation_block_mismatch", "translation_block_structure_mismatch",
+    "translation_editorial_requires_review"})
 
 
 class PublicationValidationError(ValueError):

@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from tests.test_report_compiler import draft
+from tests.test_report_localization import translated_blocks
 from tradingagents.agents.utils.quantitative_statements import percentage_statement
 from tradingagents.agents.utils.report_compiler import compile_report
 from tradingagents.agents.utils.report_localization import (
@@ -116,13 +117,12 @@ def test_presentation_restores_verified_relationship_without_model_translation()
     number = format(Decimal(str(observed.value)).quantize(Decimal(".01")), "f")
     en = percentage_statement(observed.fact_id, number)
     vi = percentage_statement(observed.fact_id, number, vi=True)
-    protected, _ = protect_quantities(english, {en:vi})
     class Model:
         def with_structured_output(self, schema):
             def invoke(prompt):
                 assert "complete verified financial statement" in prompt
                 assert en not in prompt
-                return schema(vi=protected)
+                return schema(blocks=translated_blocks(prompt))
             return SimpleNamespace(invoke=invoke)
         def invoke(self, _):
             pytest.fail("valid protected presentation must not need repair")

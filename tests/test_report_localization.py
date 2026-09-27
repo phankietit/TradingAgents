@@ -10,6 +10,7 @@ from tradingagents.agents.utils.report_localization import (
     protect_quantities,
     reader_report,
     restore_quantities,
+    validate_editorial_quality,
     validate_financial_terms,
 )
 
@@ -20,6 +21,11 @@ def decision():
         investment_thesis="Price-only evidence, with a contrary momentum signal.",
         risks=["Missing macro evidence"], invalidation_conditions=["If the trend reverses"],
         time_horizon="3–6 months")
+
+
+def translated_blocks(prompt):
+    source = json.loads(prompt.split("<translation_blocks>\n", 1)[1].split("\n</translation_blocks>", 1)[0])
+    return [{"block_id":item["block_id"], "vi":item["en"]} for item in source]
 
 
 def test_roundtrip_protects_prices_signed_percentages_dates_and_indicator_digits():
@@ -67,13 +73,15 @@ def test_translation_rejects_changed_quantities(mutation):
 def test_translation_is_saved_separately_and_cannot_mutate_canonical_decision():
     canonical = decision()
     original = canonical.model_dump()
-    protected, _ = protect_quantities(reader_report(canonical))
     class Model:
         def with_structured_output(self, schema):
             def invoke(prompt):
                 assert "phạm vi dữ liệu" in prompt and "not as a word-for-word translation" in prompt
                 assert "retaining every opposing argument and condition" in prompt
-                return schema(vi=protected.replace("Price-only evidence", "Chỉ có dữ liệu giá"))
+                blocks = translated_blocks(prompt)
+                for block in blocks:
+                    block["vi"] = block["vi"].replace("Price-only evidence", "Chỉ có dữ liệu giá")
+                return schema(blocks=blocks)
             return SimpleNamespace(invoke=invoke)
         def invoke(self, _):
             pytest.fail("valid translation must not trigger repair")
@@ -87,10 +95,10 @@ def test_translation_has_one_bounded_repair_then_fails_closed():
     calls, diagnostics = [], []
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda _: schema(vi="Made up 25%"))
+            return SimpleNamespace(invoke=lambda _: schema(blocks=[{"block_id":"BA", "vi":"Made up 25%"}]))
         def invoke(self, prompt):
             calls.append(prompt)
-            return AIMessage(content=json.dumps({"vi": "Still invented 30%"}))
+            return AIMessage(content=json.dumps({"blocks":[{"block_id":"BA", "vi":"Still invented 30%"}]}))
     assert localize_report(Model(), decision(), diagnostics) is None
     assert len(calls) == 1 and len(diagnostics) == 2
 
@@ -115,3 +123,81 @@ def test_distinct_financial_terms_and_genuine_liquidity_divergence_are_allowed()
     validate_financial_terms("Volume expands; volatility rises; MACD crosses signal.",
                              "Khối lượng giao dịch tăng; biến động tăng; MACD giao cắt đường tín hiệu.")
     validate_financial_terms("No liquidity or divergence evidence.", "Chưa có bằng chứng thanh khoản hay phân kỳ.")
+
+
+@pytest.mark.parametrize("text", ["Bộ xu hướng còn nguyên vẹn.", "Không có so sánh biên.",
+    "Tư thế phù hợp là giữ vị thế.", "Chế độ thông tin mỏng.", "Khối lượng trên thanh giảm.",
+    "Diễn biến trùng phùng với phá vỡ hỗ trợ.", "Tại thời điểm của bộ dữ liệu tại thời điểm phân tích."])
+def test_reproduced_editorial_calques_require_review(text):
+    with pytest.raises(ValueError):
+        validate_editorial_quality(text)
+
+
+@pytest.mark.parametrize("mutation", ["missing", "duplicate", "unknown", "cross_block", "empty", "heading"])
+def test_translation_cannot_omit_merge_or_move_evidence_between_blocks(mutation):
+    bad = None
+    class Model:
+        def with_structured_output(self, schema):
+            def invoke(prompt):
+                nonlocal bad
+                blocks = translated_blocks(prompt)
+                if mutation == "missing":
+                    blocks.pop()
+                elif mutation == "duplicate":
+                    blocks.append(blocks[0].copy())
+                elif mutation == "unknown":
+                    blocks[0]["block_id"] = "BZZZ"
+                elif mutation == "cross_block":
+                    from tradingagents.agents.utils.report_localization import ANCHOR
+                    anchor = ANCHOR.search(blocks[0]["vi"]).group()
+                    blocks[0]["vi"] = blocks[0]["vi"].replace(anchor, "")
+                    blocks[1]["vi"] += anchor
+                elif mutation == "empty":
+                    blocks[1]["vi"] = " "
+                else:
+                    blocks[1]["vi"] = "## Injected section\n" + blocks[1]["vi"]
+                bad = {"blocks":blocks}
+                return schema.model_validate(bad)
+            return SimpleNamespace(invoke=invoke)
+        def invoke(self, _):
+            return AIMessage(content=json.dumps(bad))
+    diagnostics = []
+    assert localize_report(Model(), decision(), diagnostics) is None
+    assert len(diagnostics) == 2
+
+
+def test_output_order_is_owned_by_source_not_translator():
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt: schema(blocks=list(reversed(translated_blocks(prompt)))))
+        def invoke(self, _):
+            pytest.fail("correct unordered blocks do not need repair")
+    result = localize_report(Model(), decision(), [])
+    assert result.vi.index("## Tóm tắt") < result.vi.index("## Luận điểm đầu tư") < result.vi.index("## Rủi ro")
+    assert result.vi.count("## Điều kiện mất hiệu lực") == 1
+
+
+def test_editorial_failure_uses_existing_single_repair_without_changing_source():
+    canonical = decision().model_copy(update={"investment_thesis":"The trend structure remains intact."})
+    before = canonical.model_dump()
+    corrected = None
+    calls = []
+    class Model:
+        def with_structured_output(self, schema):
+            def invoke(prompt):
+                nonlocal corrected
+                blocks = translated_blocks(prompt)
+                blocks[1]["vi"] = "Bộ xu hướng vẫn còn nguyên vẹn."
+                corrected = {"blocks":[dict(block) for block in blocks]}
+                corrected["blocks"][1]["vi"] = "Cấu trúc xu hướng vẫn được duy trì."
+                return schema(blocks=blocks)
+            return SimpleNamespace(invoke=invoke)
+        def invoke(self, prompt):
+            calls.append(prompt)
+            assert "translation_editorial_requires_review" in prompt
+            return AIMessage(content=json.dumps(corrected))
+    diagnostics = []
+    result = localize_report(Model(), canonical, diagnostics)
+    assert "Cấu trúc xu hướng vẫn được duy trì." in result.vi
+    assert canonical.model_dump() == before
+    assert len(calls) == 1 and len(diagnostics) == 1

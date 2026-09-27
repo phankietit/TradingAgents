@@ -10,6 +10,9 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Translate research in identified blocks, preserving source-owned sections,
+  order and per-block quantities. Reject omitted/duplicate blocks and reproduced
+  literal Vietnamese calques within the existing bounded repair budget.
 - Render percentage relationships from verified fact IDs as complete EN/VI
   statements; reject numeric anchors reattached to arbitrary comparison prose.
   Preserve research interpretations and historical reports. Live acceptance is
