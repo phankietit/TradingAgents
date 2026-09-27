@@ -48,6 +48,8 @@ class AnalysisJobHandler:
             }
             if run.decision_inputs is not None:
                 expected_payload["decision_inputs"] = run.decision_inputs.model_dump(mode="json")
+            if run.report_language is not None:
+                expected_payload["report_language"] = run.report_language
             if job.payload != expected_payload:
                 raise ValueError("analysis job does not match its immutable run")
             artifacts = ArtifactService(self.artifact_store, repository)
@@ -78,7 +80,9 @@ class AnalysisJobHandler:
             portfolio=portfolio,
             config_overrides={"llm_provider": run.llm_provider,
                               "quick_think_llm": run.quick_model,
-                              "deep_think_llm": run.deep_model},
+                              "deep_think_llm": run.deep_model,
+                              **({"output_language": {"en": "English", "vi": "Vietnamese", "en-vi": "English and Vietnamese"}[run.report_language]}
+                                 if run.report_language is not None else {})},
         ))
         context.raise_if_cancelled()
         context.heartbeat()  # Reject a lost/expired lease before publishing.
@@ -92,6 +96,7 @@ class AnalysisJobHandler:
             "narrative": result.final_state.get("final_trade_decision", result.narrative_signal),
             "structured_narrative": raw or None,
             "snapshot_attestation": "PASS" if snapshot_context is not None else "UNVERIFIED",
+            "report_language": run.report_language,
         }
         with context.publication_session() as session:
             repository = PlatformRepository(session, artifact_store=self.artifact_store)

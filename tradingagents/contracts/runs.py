@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
@@ -64,6 +64,8 @@ class RunManifest(VersionedContract):
     deep_model: NonEmptyText
     config_hash: ContentHash
     prompt_version: NonEmptyText
+    # None preserves legacy worker-configured output; explicit selections are immutable.
+    report_language: Literal["en", "vi", "en-vi"] | None = None
     snapshot_ids: tuple[UUID, ...] = ()
     decision_inputs: DecisionRunInputs | None = None
     error_code: str | None = None

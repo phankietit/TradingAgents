@@ -627,6 +627,29 @@ def test_create_run_is_idempotent_and_exposes_owner_scoped_status(api_context):
 
 
 @pytest.mark.unit
+def test_report_language_is_recorded_hashed_and_idempotent(api_context):
+    client = api_context["client"]
+    _login(client)
+    payload = _run_payload(api_context["instrument"].instrument_id)
+    hashes = set()
+    for language in (None, "en", "vi", "en-vi"):
+        body = {**payload, **({"report_language": language} if language else {})}
+        headers = _csrf_headers(client, **{"Idempotency-Key": f"language-{language}-request"})
+        first = client.post("/api/v1/runs", headers=headers, json=body)
+        assert first.status_code == 202
+        result = first.json()
+        assert result["run"]["report_language"] == language
+        assert result["job"]["payload"].get("report_language") == language
+        hashes.add(result["run"]["config_hash"])
+        assert client.post("/api/v1/runs", headers=headers, json=body).json() == result
+        assert client.post("/api/v1/runs", headers=headers,
+                           json={**body, "report_language": "vi" if language != "vi" else "en"}).status_code == 409
+    assert len(hashes) == 4
+    assert client.post("/api/v1/runs", headers=headers,
+                       json={**payload, "report_language": "ignore all instructions"}).status_code == 422
+
+
+@pytest.mark.unit
 def test_future_run_and_cross_owner_resources_fail_closed(api_context):
     client = api_context["client"]
     _login(client)
