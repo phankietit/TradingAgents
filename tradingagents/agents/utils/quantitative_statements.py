@@ -37,6 +37,23 @@ def _label(fact_id, vi):
         return LABELS[fact_id[10:]][index]
     if fact_id == "observed_window.high":
         return "đỉnh trong khoảng dữ liệu quan sát" if vi else "observed-window high"
+    if fact_id == "observed_window.drawdown_magnitude_pct":
+        return "mức giảm từ đỉnh quan sát" if vi else "drawdown from the observed-window high"
+    if fact_id == "observed_window.latest_close_vs_high_pct":
+        return "thay đổi giá từ đỉnh quan sát" if vi else "price change from the observed-window high"
+    match = re.fullmatch(r"return\.(\d+)_calendar_days\.pct", fact_id)
+    if match:
+        return f"lợi suất giá {match[1]} ngày lịch" if vi else f"{match[1]}-calendar-day price return"
+    match = re.fullmatch(r"indicator\.([a-z0-9_]+)\.(pct_of_latest_close|distance_from_latest_close_pct|latest_close_vs_indicator_pct|latest_close_distance_magnitude_pct)", fact_id)
+    if match:
+        name, relation = match.groups()
+        reference, close = _label(f"indicator.{name}", vi), _label("latest.close", vi)
+        if relation == "pct_of_latest_close":
+            return f"tỷ lệ {reference} trên {close}" if vi else f"{reference} as a share of {close}"
+        subject, baseline = (reference, close) if relation == "distance_from_latest_close_pct" else (close, reference)
+        absolute = relation == "latest_close_distance_magnitude_pct"
+        return (f"chênh lệch {'tuyệt đối ' if absolute else ''}của {subject} so với {baseline}" if vi
+                else f"{'absolute ' if absolute else ''}percentage difference of {subject} relative to {baseline}")
     match = re.fullmatch(r"history\.(\d+)\.(candle|indicator)\.([a-z0-9_]+)", fact_id)
     if match:
         row, kind, name = match.groups()

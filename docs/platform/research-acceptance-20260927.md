@@ -248,3 +248,25 @@ browser acceptance must pass before completion can be claimed.
   evaluated before further expensive whole-graph retries; it must preserve
   original research arguments and cannot rewrite a model conclusion to pass.
   This is pending design/implementation, not an implemented capability.
+
+## Deterministic percentage relationships
+
+- Implemented on `f9102587bb3ffe00c38c62b59026146e6a37da74`: percentage
+  placeholders now represent complete statements. The compiler selects subject,
+  denominator, sign and unit from the verified fact ID, not free-form prose.
+  It refuses embedded percentage anchors and a ratio/price fact relabeled `%`.
+  Exact generated statements have code-owned Vietnamese equivalents and are
+  protected as entire statements during presentation. Generic pattern-based
+  percentage interpretation was removed from the new compilation path.
+- Material interpretation, opposing arguments, risks and invalidations remain
+  model-authored, source-linked and subject to review. The change does not
+  shorten the original graph, rewrite historical reports, guarantee qualitative
+  entailment or override any portfolio policy.
+- PASS: full local regression at this candidate: 1,420 tests + 88 subtests,
+  20 classified skips, 42.85 seconds; Ruff passed. Tests include all percentage
+  IDs in the current catalog, reciprocal subject/baseline distinctions, custom
+  history/window calculation labels, unit-bypass rejection and deterministic
+  EN/VI presentation without model translation of the relationship.
+- Live component acceptance remains UNVERIFIED pending the bounded financial
+  review/presentation replay. This does not replace full BTC/AAPL/NQ, browser or
+  PostgreSQL acceptance.

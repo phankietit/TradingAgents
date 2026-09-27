@@ -30,6 +30,8 @@ from tradingagents.platform.analysis.research_validation import (
     "calc.abs_pct_change(indicator.close_10_ema,latest.close)",
     "calc.pct_change(latest.volume,history.0.candle.volume)",
     "calc.abs_pct_change(latest.close,window.30.candle.high.max)",
+    "calc.pct_change(return.30_calendar_days.pct,return.7_calendar_days.pct)",
+    "calc.abs_pct_change(indicator.atr.pct_of_latest_close,return.30_calendar_days.pct)",
 ])
 def test_typed_percentage_statements_preserve_values_and_locale_numbers(fact):
     en = percentage_statement(fact, "1.68")
