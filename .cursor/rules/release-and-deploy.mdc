@@ -1,0 +1,43 @@
+---
+description: TradingAgents PR, upstream sync, release classification, and deployment gates.
+alwaysApply: false
+---
+
+# TradingAgents Release And Deploy
+
+Read `docs/ops/release-readiness.md` and name the release class before claiming
+readiness.
+
+## Release Classes
+
+- Research package/CLI.
+- Private platform.
+- Paper decision system.
+- Live decision support.
+- Live execution (not currently approved).
+
+Do not promote evidence from one class to another.
+
+## PR Requirements
+
+- Summary and explicit scope.
+- Current branch and base.
+- Linked issue when applicable.
+- Verification commands and statuses.
+- Data/LLM/risk/security impact.
+- Current capability versus future work.
+- Blockers, deferrals, and owner actions.
+
+## Release Requirements
+
+- Fixed reviewed SHA and clean candidate state.
+- Current scope-appropriate verification.
+- Docs/changelog match behavior.
+- No secrets or local/private runtime artifacts.
+- Exact deployment/publication state and limitations.
+
+## Hard Stops
+
+Explicit user approval is required for public deployment, production environment
+changes, performance publication, paper/live broker connection, any order, or a
+production-ready declaration with unresolved P0 gates.

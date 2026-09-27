@@ -1,0 +1,42 @@
+---
+description: TradingAgents worktree ownership, upstream sync, and conflict rules.
+alwaysApply: false
+---
+
+# TradingAgents Agent Coordination
+
+## Product Work
+
+Use a separate worktree from current `origin/main`:
+
+```bash
+git fetch origin --prune
+git worktree add ../TradingAgents-TA-<N>-<slug> -b feature/TA-<N>-<slug> origin/main
+```
+
+Docs/rules-only work may occur in the root checkout only when explicitly scoped.
+
+## Ownership
+
+- Read `docs/ops/in-progress.md` before editing when concurrent agents or
+  worktrees are active, and record the owned scope once execution begins.
+- Inspect existing worktrees and dirty files before editing.
+- Do not overwrite another task's branch, worktree, files, or runtime artifacts.
+- If scopes overlap, stop and resolve ownership before continuing.
+- Preserve user changes; do not reset or clean them away.
+
+## Upstream
+
+- `origin` is the user's fork; `upstream` is the external project.
+- Sync upstream on `chore/sync-upstream-YYYYMMDD` only.
+- Do not combine upstream sync with product features or fixes.
+- Record upstream and resulting SHAs, conflicts, resolutions, and full regression
+  evidence.
+
+## Before PR
+
+- Fetch and compare with current `origin/main`.
+- Rebase/merge only according to branch ownership and user direction.
+- Run scope-appropriate gates and `git diff --check`.
+- Use `--force-with-lease` only on an owned rebased feature branch; never on
+  `main` or a shared branch.

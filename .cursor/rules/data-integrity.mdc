@@ -1,0 +1,35 @@
+---
+description: Point-in-time, provenance, market-data, vendor, and snapshot rules.
+alwaysApply: true
+---
+
+# TradingAgents Data Integrity
+
+Read `docs/ops/data-integrity.md` for any data, vendor, cache, analysis-date,
+backtest, or evidence change.
+
+## Non-Negotiable Rules
+
+- Historical inputs must be knowable at the analysis `as_of`.
+- Use filing/publication timestamps, not fiscal/event dates alone.
+- Keep `NO_DATA`, `STALE`, `UNAVAILABLE`, `COVERAGE_GAP`, and `INVALID`
+  semantically distinct.
+- Never silently call an unconfigured fallback vendor.
+- Never estimate missing values or turn source absence into neutral sentiment.
+- Preserve canonical symbol, venue, asset type, currency, timezone, source, and
+  timestamp metadata.
+- Do not overwrite snapshots used by recorded decisions.
+- Current-only identity or feeds used near historical runs must be labeled or
+  withheld.
+
+## Required Change Evidence
+
+Document source, time semantics, coverage, fallback, cache/snapshot behavior,
+failure behavior, and tests preventing look-ahead. Live provider evidence is
+separate from mocked/local evidence.
+
+## Hard Stop
+
+Stop before weakening a point-in-time check, changing historical records,
+adding a production vendor, or publishing performance from unreproducible
+inputs without explicit approval.

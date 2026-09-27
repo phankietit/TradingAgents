@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a reproducible defect in current TradingAgents behavior.
+title: "[TA-] fix: "
+labels:
+  - "type:bug"
+body:
+  - type: markdown
+    attributes:
+      value: Do not include API keys, account identifiers, or private portfolio data.
+  - type: input
+    id: version
+    attributes:
+      label: Commit or version
+      description: Full commit SHA or package version where the defect occurs.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Agents and prompts
+        - Market data and vendors
+        - LLM providers
+        - Portfolio and risk
+        - Backtest and evaluation
+        - CLI and reporting
+        - Web or infrastructure
+        - Security
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed behavior
+      description: What happened, including exact error text with secrets redacted.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Exact commands, symbol/asset type, analysis date, and configuration names. Redact values.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and environment
+      description: OS, Python, provider/model/vendor, branch/SHA, and PASS/FAIL/BLOCKED/UNVERIFIED status.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed secrets and private portfolio/account data.
+          required: true
+        - label: I identified whether this affects point-in-time, risk policy, or human approval.
+          required: true
