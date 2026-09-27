@@ -119,9 +119,37 @@ below are satisfied. No production deployment or live trading is in scope.
   external run above, `Results/invalid-output-review.png`.
 - Initial fixture TTL of ten seconds was rejected by the existing auth minimum.
   Fixture validation was corrected to 300–43200 seconds, with boundary tests;
-  no auth protection was relaxed. Actual five-minute expiry browser observation
-  remains in progress, not yet a PASS. Failed-graph retry/exhaustion mode is
+  no auth protection was relaxed. Actual five-minute expiry is verified below.
+  Failed-graph retry/exhaustion mode is
   available but its browser check has not yet been run.
+
+## Session expiry, cancellation and operator docs — 2026-09-27
+
+- Runtime code: clean `8056c54`; subsequent `b5e0f5f` changes documentation only.
+  Continued the existing fixture process/tab without restarting its session.
+  Login observed at 00:36:42 UTC with 300-second TTL; at 00:41:48 UTC the next
+  analysis polling request had returned the UI to sign-in, with private content
+  unmounted. Signing in again restored the workspace. **PASS** for real TTL
+  expiry on request, not a guarantee of a client-side idle-screen timeout.
+- **PASS:** queued a fresh synthetic run with worker absent, cancelled it,
+  opened `Configure new attempt`, verified sources/cost authorization unchecked
+  and queue disabled, then explicitly configured and queued a separate run.
+  Reload showed three history rows: seed, cancelled run and distinct new queued
+  run. Cancellation did not rewrite history or silently execute a retry.
+- IAB `http://127.0.0.1:8000`, correct page identity, no blank/error overlay,
+  empty warning/error console. Screenshots retained in the external run above:
+  `Results/session-ttl-expired.png`, `Results/cancel-new-attempt.png`.
+  Temporary tab and fixture process stopped normally; synthetic DB retained.
+- README/CHANGELOG now describe the implemented local Web UI, not a future UI.
+  [Startup guide](local-web-startup.md) documents explicit storage/migration/owner
+  bootstrap, separate frontend build and worker opt-in, ingestion/cadence and
+  no-order boundaries. Fresh-DB bootstrap example smoke passed outside checkout
+  against the clean installed package: one synthetic owner and nine instrument
+  identities. No existing owner database was touched.
+- **PASS:** `npm audit --omit=dev` and `npm audit`: zero reported vulnerabilities
+  for the locked dependency tree at this date. Not a guarantee against unknown
+  vulnerabilities. Python advisory scan remains **UNVERIFIED**: `pip_audit` is
+  not installed in the developer environment; dependency consistency did pass.
 
 ## Remaining M4 acceptance gates
 
