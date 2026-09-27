@@ -270,3 +270,21 @@ browser acceptance must pass before completion can be claimed.
 - Live component acceptance remains UNVERIFIED pending the bounded financial
   review/presentation replay. This does not replace full BTC/AAPL/NQ, browser or
   PostgreSQL acceptance.
+- Follow-up result: the replay started on `f910258` successfully converted the
+  retained draft to standalone percentage statements and bilingual presentation
+  after one bounded financial format repair. Usage: 56,564 tokens (20,327 input
+  + 36,237 output), three calls. QA blob:
+  `sha256/7d/58/7d588e7f4a1b76a1d889fbe223ca94528d816b8667ba369c76152bcb9578aab9`.
+  Manual check: generated percentage sentences keep their intended denominator
+  and their deterministic Vietnamese counterparts. The report remains complete
+  with opposing case, coverage limitations, risks and invalidations. Snapshot
+  replay also confirms the stated rising moving averages at both one- and
+  five-observation comparisons and the mixed recent close sequence.
+  **Editorial acceptance remains FAIL**: surrounding Vietnamese prose is still
+  overly literal and some terms are awkward. Adjacent qualitative interpretation
+  still requires human review; this is not full report or product acceptance.
+- PASS: `c42372e` extends labels for verified derived-percentage operands without
+  restricting the existing calculation grammar. Full local regression: 1,422
+  tests + 88 subtests, 20 classified skips, 42.93 seconds; Ruff passed. This later
+  change was not separately live-replayed; live evidence above belongs to the
+  loaded `f910258` candidate. No new whole-graph run was opened this continuation.
