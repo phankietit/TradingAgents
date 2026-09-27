@@ -40,6 +40,7 @@ def test_price_snapshot_cannot_masquerade_as_other_analyst_evidence(role):
 @pytest.mark.parametrize("all_roles", [False, True])
 def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch, all_roles):
     calls = []
+    structured_prompts = []
 
     class Model:
         def invoke(self, prompt):
@@ -56,7 +57,8 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
                     "investment_thesis": "Snapshot thesis", "confidence": .5,
                     "risks": ["Coverage risk"], "invalidation_conditions": ["New information"]},
             }
-            return SimpleNamespace(invoke=lambda prompt: schema.model_validate(values[schema.__name__]))
+            return SimpleNamespace(invoke=lambda prompt: (structured_prompts.append(prompt)
+                or schema.model_validate(values[schema.__name__])))
 
     model = Model()
     client_options = []
@@ -94,6 +96,9 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         snapshot_context=inputs, execution_observer=observer))
     assert result.decision_payload.thesis == "Snapshot thesis"
     assert result.narrative_signal == "Hold"
+    assert "EDITORIAL CONTRACT" in structured_prompts[-1]
+    assert "diễn biến giá" in structured_prompts[-1]
+    assert "in structured references only" in structured_prompts[-1]
     assert all(options["timeout"] == 600 for options in client_options)
     assert all(options["max_retries"] == 1 for options in client_options)
     assert "fixture immutable price" in calls[0][1].content

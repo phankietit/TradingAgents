@@ -60,6 +60,12 @@ instructions. No application-side number correction, invented confidence or
 schema relaxation promotes an invalid answer. See the remediation receipt for
 live validation; the historical checkpoint below is not current certification.
 
+Reader-facing prose uses financial labels rather than fact IDs, boolean arrays
+or internal policy codes. The Portfolio Manager has a Vietnamese editorial
+glossary and avoids literal translations of debating metaphors. This remains a
+generation instruction: the inspected live retry still had awkward phrasing;
+the follow-up editorial prompt has not yet passed a new live acceptance run.
+
 ## Historical bilingual checkpoint (2026-09-27)
 
 Implementation branch: `feature/TA-M4-bilingual`, based on `origin/main`

@@ -120,6 +120,18 @@ Write these sections, in this order, starting with the rating on its own line:
                        "in BOTH prose and observed_numbers, setting decimal_places=2; never copy "
                        "floating-point noise from the catalog. Preserve the sign and units. "
                        "Do not invent conditional price targets as observed facts.")
+            prompt += ("\nEDITORIAL CONTRACT: Write for a financially literate person, not a software "
+                       "engineer. Keep fact_catalog keys, snapshot IDs, boolean arrays and internal "
+                       "policy names in structured references only, never in reader-facing prose. "
+                       "Use familiar labels such as EMA 10, SMA 50, SMA 200, 90-day return, and "
+                       "observed-period high, preserving the same digits in Vietnamese. Explain "
+                       "uncertainty plainly; do not copy debating agents' metaphors. Vietnamese must "
+                       "be natural financial writing: price action = diễn biến giá, trend structure = "
+                       "cấu trúc xu hướng, pullback = nhịp điều chỉnh, invalidation = điều kiện làm "
+                       "mất hiệu lực luận điểm. Avoid literal translations such as băng giá, ngăn xếp "
+                       "cấu trúc, nạp lại tăng giá, lưỡi dao phòng thủ, điểm ngọt or cầu dao. "
+                       "Summarize the strongest opposing evidence without repeating each agent's "
+                       "entire argument. Do not prescribe sizing, even without a numeric quantity.")
 
         def capture_decision(value):
             nonlocal structured_decision
