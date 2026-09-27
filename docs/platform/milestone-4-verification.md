@@ -30,6 +30,26 @@ below are satisfied. No production deployment or live trading is in scope.
 - GitHub repository Actions permission read via `gh api`: `enabled=false`.
   No workflow run was triggered or required.
 
+## Non-editable installation — 2026-09-27
+
+- Source: clean `feature/TA-M4-local-web-ui`,
+  `a5f4574effdabd7a7255b79b0486a1435b4c82a6`; Python 3.14.7 on macOS.
+- Fresh venv in external managed run
+  `/Volumes/Data/codex-builds/TradingAgents/feature-TA-M4-local-web-ui/20260927T002717Z-16831`.
+  Temporary files and pip cache stayed within this run. Installation used
+  `pip install '/absolute/path/to/TradingAgents[platform]'`, not editable mode.
+  Install log and resolved dependency snapshot are retained under `Logs/`.
+- **PASS:** `pip check`; imports of `tradingagents`, `cli.main`, API runtime and
+  worker runtime from installed `site-packages`, checked with isolated Python
+  (`-I`) outside the source checkout; CLI and worker `--help` entrypoints.
+- **PASS:** installed migrations on a new disposable SQLite file; API test-client
+  `/health/live` and `/health/ready` return 200; separately built `web/dist`
+  serves HTML at `/`; anonymous `/api/v1/runs` returns 401; empty worker processes
+  no job; migration rollback succeeds. No owner database was accessed.
+- Scope: packaging/import and local in-process smoke, not browser/network-server,
+  PostgreSQL, paid-provider or fresh-dependency full-regression proof. The web
+  build remains a separate operator artifact, not part of the Python wheel.
+
 ## Evidence already implemented (scope matters)
 
 - Built loopback web/API, session/CSRF, watchlist and source discovery: implemented
@@ -43,7 +63,7 @@ below are satisfied. No production deployment or live trading is in scope.
   not backfilled. Missing receipts stay unavailable, not inferred from current data.
 - Model configuration disclosure explicitly reports service/provider liveness as
   UNVERIFIED. It is not an authenticated connectivity or capability probe.
-- Latest frontend checkpoint: 74 tests, lint/typecheck/build PASS. Precise decimal
+- Latest frontend checkpoint: 77 tests, lint/typecheck/build PASS. Precise decimal
   display, invalid portfolio/policy responses and view-level recovery are tested;
   injected render failures have component evidence, not browser evidence yet.
 
@@ -58,7 +78,8 @@ below are satisfied. No production deployment or live trading is in scope.
    cancellation/new attempt, approval failure/conflict and recovery. Existing
    unit/API evidence remains useful but is not a substitute for browser checks.
 3. **UNVERIFIED — final candidate verification:** rerun frontend/backend gates
-   on the final code candidate; isolated non-editable install/import/CLI smoke;
+   on the final code candidate; repeat clean-install smoke if packaging changes
+   after the successful installation receipt above;
    final manual security, dependency and tracked-secret review with findings.
 4. **UNVERIFIED — delivery documentation:** reconcile README, CHANGELOG, startup,
    ingestion/cadence guidance and ticket statuses with actual runtime behavior.
