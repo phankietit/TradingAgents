@@ -63,7 +63,7 @@ below are satisfied. No production deployment or live trading is in scope.
   not backfilled. Missing receipts stay unavailable, not inferred from current data.
 - Model configuration disclosure explicitly reports service/provider liveness as
   UNVERIFIED. It is not an authenticated connectivity or capability probe.
-- Latest frontend checkpoint: 82 tests, lint/typecheck/build PASS. Precise decimal
+- Latest frontend checkpoint: 83 tests, lint/typecheck/build PASS. Precise decimal
   display, invalid portfolio/policy responses and view-level recovery are tested;
   injected render failures have component evidence, not browser evidence yet.
 
@@ -92,6 +92,36 @@ below are satisfied. No production deployment or live trading is in scope.
 - Mismatched-response injection remains component-only evidence. Approval-specific
   conflict, time-based expiry and the rest of the browser failure matrix below
   still require their own evidence; this checkpoint does not close the matrix.
+
+## Invalid output, missing and stale sources — 2026-09-27
+
+- Source: `08a1fb3` plus accompanying fixture, decision copy and tests. Fixture
+  modes never call models/vendors, always create a new DB, and leave normal API
+  configuration unchanged. The invalid graph is also tested through the real
+  worker/risk/decision pipeline; it produces REVIEW with no target allocation.
+- **PASS — browser:** built UI → AAPL source selection → enqueue → real worker
+  with invalid synthetic graph → report → exact linked decision. Processing
+  completed, but output stayed `Needs review` and approval remained disabled.
+  Reload retained the same decision. Default copy explains that no usable
+  investment conclusion was produced; original validation detail is collapsed.
+- **PASS — missing source:** selecting BTC in the AAPL-only fixture showed
+  unavailable price history, no chart or substituted prices. Returning to AAPL
+  restored its saved chart.
+- **PASS — stale source:** setting maximum source age to zero in an unsent QA
+  form returned the actual API `stale` reason, disabled the source checkbox and
+  left queueing disabled. No risk policy or persisted source was changed.
+- **PASS:** 83 frontend tests, ESLint, TypeScript/Vite build (`index-hqog1lhq.js`);
+  `bash scripts/verify-local.sh`: Ruff, pip check, **1266 tests + 88 subtests**,
+  28.77 seconds, 22 warnings. The 20 skipped gates (18 PostgreSQL, optional
+  Bedrock and live DeepSeek) remain UNVERIFIED for this run.
+- Invalid-output browser console had no error/warning; nonblank decision page,
+  no framework overlay, persisted selected identity confirmed. Screenshot:
+  external run above, `Results/invalid-output-review.png`.
+- Initial fixture TTL of ten seconds was rejected by the existing auth minimum.
+  Fixture validation was corrected to 300–43200 seconds, with boundary tests;
+  no auth protection was relaxed. Actual five-minute expiry browser observation
+  remains in progress, not yet a PASS. Failed-graph retry/exhaustion mode is
+  available but its browser check has not yet been run.
 
 ## Remaining M4 acceptance gates
 

@@ -28,6 +28,13 @@ it('renders narrative as text and disables approval for REVIEW', async () => {
   expect(document.querySelector('script')).toBeNull();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
 });
+it('explains unusable output while preserving original validation detail collapsed', async () => {
+  setup(false,{...candidate,thesis:'Structured decision unavailable; manual review is required.',risks:['Schema validation failed: ValidationError'],invalidation_conditions:['Supply a schema-valid decision payload.']});
+  render(<Decisions />);
+  expect(await screen.findByText('No usable investment conclusion was produced. Manual review is required.')).toBeTruthy();
+  expect(screen.getByText('Schema validation failed: ValidationError').closest('details')?.open).toBe(false);
+  expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+});
 it('presents financial risk percentages without changing review eligibility',async()=>{
   const value={...candidate,policy_checks:[{check_id:'max_position_weight',policy_id:'p',policy_version:'1',result:'PASS',blocking:true,reason:'Within allocation limit',observed_value:0.2,limit_value:0.3}]};
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/state') ? {candidate:value,current_status:'review',events:[]} : url.includes('/decisions?') ? [value] : url.includes('/runs/') ? {status:'succeeded'} : []))));

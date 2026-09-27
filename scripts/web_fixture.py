@@ -68,6 +68,28 @@ class SyntheticSnapshotGraph:
                 "structured_decision": narrative}, "Hold"
 
 
+class InvalidSyntheticGraph(SyntheticSnapshotGraph):
+    """Exercise the real invalid-output-to-REVIEW path without a model call."""
+
+    def propagate_snapshots(self, *args, **kwargs):
+        return {"final_trade_decision": "SYNTHETIC INVALID OUTPUT — NO MODEL CALL",
+                "structured_decision": {"rating": "not-a-valid-rating"}}, "Review"
+
+
+class FailedSyntheticGraph(SyntheticSnapshotGraph):
+    """Exercise durable retry/exhaustion without contacting a provider."""
+
+    def propagate_snapshots(self, *args, **kwargs):
+        raise RuntimeError("SYNTHETIC LOCAL QA failure — no provider was contacted")
+
+
+def fixture_session_seconds(value):
+    seconds = int(value)
+    if not 300 <= seconds <= 43200:
+        raise argparse.ArgumentTypeError("fixture session duration must be 300–43200 seconds")
+    return seconds
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--synthetic-local-only", action="store_true", required=True)
@@ -79,7 +101,13 @@ def main():
                         help="Seed labelled synthetic daily charts for ETF, BTC/ETH and NQ/ES QA")
     parser.add_argument("--screening", action="store_true",
                         help="Seed a deterministic screening from labelled synthetic input facts")
+    parser.add_argument("--graph-result", choices=("valid", "invalid", "failed"), default="valid",
+                        help="Synthetic worker outcome; invalid exercises REVIEW, failed exercises retries")
+    parser.add_argument("--session-seconds", type=fixture_session_seconds, default=43200,
+                        help="Synthetic-only session TTL for browser expiry QA (300–43200)")
     args = parser.parse_args()
+    if args.graph_result != "valid" and not args.fixture_worker:
+        parser.error("--graph-result requires --fixture-worker")
     cache = Path(__file__).resolve().parents[1] / ".cache"
     cache.mkdir(exist_ok=True)
     directory = Path(tempfile.mkdtemp(prefix="web-fixture-", dir=cache))
@@ -179,7 +207,8 @@ def main():
     if args.fixture_worker:
         worker_database = Database(url)
         handler = AnalysisJobHandler(worker_database, LocalArtifactStore(directory / "artifacts"),
-                                    engine=AnalysisEngine(graph_factory=SyntheticSnapshotGraph))
+            engine=AnalysisEngine(graph_factory={"valid": SyntheticSnapshotGraph,
+                "invalid": InvalidSyntheticGraph, "failed": FailedSyntheticGraph}[args.graph_result]))
         worker = JobWorker(worker_database, worker_id="synthetic-local-qa",
                            handlers={JobKind.ANALYSIS_RUN: handler})
 
@@ -196,6 +225,7 @@ def main():
             allowed_origin="http://127.0.0.1:8000" if args.built_web else "http://127.0.0.1:5173",
             web_root=Path(__file__).resolve().parents[1] / "web" / "dist" if args.built_web else None,
             secure_cookies=False,
+            session_ttl=timedelta(seconds=args.session_seconds),
             llm_provider="synthetic-local-qa", quick_model="fixture", deep_model="fixture")),
             host="127.0.0.1", port=8000, access_log=False)
     finally:

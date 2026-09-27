@@ -83,6 +83,15 @@ series for SPY/QQQ, BTC/ETH and NQ/ES, in addition to AAPL. Values are scaled
 fixtures, not real market returns, calendar-session coverage or futures roll
 history. Original missing-data checks can still use the default AAPL-only mode.
 
+Failure QA remains opt-in and synthetic: add `--graph-result invalid` together
+with `--fixture-worker` to publish an unusable output through the real REVIEW
+path, or `--graph-result failed` to exercise durable retry/exhaustion. Neither
+graph has a live-provider fallback. `--session-seconds 300` uses the existing
+minimum five-minute session lifetime to test actual expiry; it does not change
+normal API settings or bypass authentication rules. Each invocation creates a
+new isolated database. Reusing a browser cookie from a stopped fixture does not
+authenticate it against the new fixture; sign in again.
+
 Built-mode QA: 1280×720 IAB login → saved AAPL → CSRF watchlist save → reload
 and session restoration → logout PASS, no console/CSP errors or framework
 overlay. Static/API gate: 43 tests PASS, including no API-to-HTML fallback,

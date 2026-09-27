@@ -64,6 +64,8 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
   if (state.data && !candidate) return <p role="alert" className="danger">The returned research does not match the selected decision. Refresh decisions to try again. Review actions are unavailable.</p>;
   if (state.error || !candidate || !state.data) return <p role="alert" className="danger">{errorMessage(state.error)}</p>;
   const current = state.data.current_status;
+  const invalidNarrative = candidate.thesis === 'Structured decision unavailable; manual review is required.'
+    && candidate.risks.includes('Schema validation failed: ValidationError');
   const instrumentName = catalog.find(item => item.instrument_id === candidate.instrument_id)?.canonical_symbol ?? 'Instrument name unavailable';
   const policies = new Set(candidate.policy_checks.map(check => `${check.policy_id}:${check.policy_version}`));
   const runMatches = run.data?.run_id === candidate.run_id && run.data?.instrument_id === candidate.instrument_id
@@ -74,8 +76,9 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
     <h2>{instrumentName} · {candidate.rating} <span className="muted">· Research rating</span></h2>
     <p className="notice">Your review: <strong>{reviewStatus(current)}</strong></p>
     <p className="muted">As of {timestamp(candidate.as_of)} · Data quality: {qualityLabel(candidate.data_quality)}</p>
-    <h3>Investment thesis</h3><p className="narrative">{candidate.thesis}</p>
-    <div className="review-columns"><section><h3>Key risks</h3><ul>{candidate.risks.map((text, i) => <li key={i}>{text}</li>)}</ul></section><section><h3>What would invalidate this thesis?</h3><ul>{candidate.invalidation_conditions.map((text, i) => <li key={i}>{text}</li>)}</ul></section></div>
+    <h3>Investment thesis</h3><p className="narrative">{invalidNarrative ? 'No usable investment conclusion was produced. Manual review is required.' : candidate.thesis}</p>
+    {invalidNarrative ? <p className="warning">The research output did not pass validation. Do not use it to make an investment decision. Start a new analysis only after the underlying issue is resolved.</p> : <div className="review-columns"><section><h3>Key risks</h3><ul>{candidate.risks.map((text, i) => <li key={i}>{text}</li>)}</ul></section><section><h3>What would invalidate this thesis?</h3><ul>{candidate.invalidation_conditions.map((text, i) => <li key={i}>{text}</li>)}</ul></section></div>}
+    {invalidNarrative ? <details><summary>Validation details</summary><p>{candidate.thesis}</p><ul>{candidate.risks.map((text,i)=><li key={i}>{text}</li>)}</ul><ul>{candidate.invalidation_conditions.map((text,i)=><li key={i}>{text}</li>)}</ul></details> : null}
     <details><summary>Research context &amp; audit</summary><p>At publication: {reviewStatus(candidate.status)}. Your review status may have changed since then.</p><p>Model confidence: {percent(candidate.confidence)} · Uncalibrated, not a probability of profit.</p><dl><dt>Decision ID</dt><dd className="mono">{candidate.decision_id}</dd><dt>Research ID</dt><dd className="mono">{candidate.run_id}</dd></dl></details>
     <div className="metrics"><div><span>Current weight</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>Owner target</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>Maximum allowed</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div>
     <h3>Portfolio risk checks</h3>

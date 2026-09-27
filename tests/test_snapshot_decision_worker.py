@@ -15,7 +15,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "fixture_graph", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -58,9 +58,9 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 payload["target_weight"] = .99
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Buy"
 
-    if case == "fixture_graph":
-        from scripts.web_fixture import SyntheticSnapshotGraph
-        graph_factory = SyntheticSnapshotGraph
+    if case in {"fixture_graph", "invalid_fixture_graph"}:
+        from scripts.web_fixture import InvalidSyntheticGraph, SyntheticSnapshotGraph
+        graph_factory = InvalidSyntheticGraph if case == "invalid_fixture_graph" else SyntheticSnapshotGraph
         assert not hasattr(graph_factory, "propagate")  # No live-tool fallback.
     else:
         graph_factory = Graph
