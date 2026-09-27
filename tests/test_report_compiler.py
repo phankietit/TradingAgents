@@ -111,3 +111,30 @@ def test_unknown_material_source_is_not_invented_during_compilation():
     result = compile_report(raw, facts)
     with pytest.raises(PublicationValidationError):
         validate_canonical_report(result, facts, set(facts))
+
+
+@pytest.mark.parametrize("mutation,code", [
+    ("unused", "quantity_binding_unused"),
+    ("missing", "quantity_binding_missing"),
+    ("duplicate", "quantity_binding_duplicate"),
+    ("unknown", "quantity_binding_unknown_fact"),
+    ("malformed", "quantity_anchor_malformed"),
+])
+def test_binding_diagnostics_identify_repair_without_weakening_gate(mutation, code):
+    raw, data = draft()
+    if mutation == "unused":
+        raw["quantity_bindings"].append({**raw["quantity_bindings"][0], "key":"QB"})
+    elif mutation == "missing":
+        raw["quantity_bindings"] = []
+    elif mutation == "duplicate":
+        raw["quantity_bindings"].append(copy.deepcopy(raw["quantity_bindings"][0]))
+    elif mutation == "unknown":
+        raw["quantity_bindings"][0]["fact_id"] = "untrusted-secret-like-unknown-id"
+    else:
+        raw["executive_summary"] += " {{Qbad}}"
+    before = copy.deepcopy(raw)
+    with pytest.raises(PublicationValidationError) as failure:
+        compile_report(raw, {data["snapshot_id"]:SnapshotMarketFacts(data)})
+    assert failure.value.issues == (code,)
+    assert "untrusted-secret" not in str(failure.value)
+    assert raw == before

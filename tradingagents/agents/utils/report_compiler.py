@@ -38,8 +38,10 @@ def compile_report(raw, facts):
         key = binding["key"]
         source = facts.get(binding["snapshot_id"])
         value = source.resolve_fact(binding["fact_id"]) if source is not None else None
-        if key in values or value is None:
-            raise PublicationValidationError(["numeric_claim_not_supported"])
+        if key in values:
+            raise PublicationValidationError(["quantity_binding_duplicate"])
+        if value is None:
+            raise PublicationValidationError(["quantity_binding_unknown_fact"])
         number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
         if not number.is_finite():
             raise PublicationValidationError(["numeric_claim_not_supported"])
@@ -56,13 +58,13 @@ def compile_report(raw, facts):
             def replace(match):
                 key = match.group(1)
                 if key not in values:
-                    raise PublicationValidationError(["numeric_claim_not_supported"])
+                    raise PublicationValidationError(["quantity_binding_missing"])
                 used.add(key)
                 return values[key]
 
             result = ANCHOR.sub(replace, value)
             if "{{" in result or "}}" in result:
-                raise PublicationValidationError(["numeric_claim_not_supported"])
+                raise PublicationValidationError(["quantity_anchor_malformed"])
             return result
         if isinstance(value, list):
             return [render(item) for item in value]
@@ -72,7 +74,7 @@ def compile_report(raw, facts):
 
     data = render(data)
     if used != set(values):
-        raise PublicationValidationError(["numeric_claim_not_supported"])
+        raise PublicationValidationError(["quantity_binding_unused"])
     data["observed_numbers"] = observations
     return CanonicalSnapshotDecision.model_validate(data)
 
@@ -81,6 +83,13 @@ BINDING_INSTRUCTIONS = """
 QUANTITY CONTRACT: Write ALL monetary amounts, percentages and calculated quantities as
 placeholders {{QA}}, {{QB}}, etc.; create quantity_bindings with key QA/QB, exact
 snapshot_id, verified fact_id and decimal_places. Do NOT put values in bindings.
+Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
+Every binding must appear in the prose, and every placeholder must have exactly
+one binding. Do not copy the entire catalog into bindings. An unused-binding
+failure means remove only an unreferenced binding, NOT its supported arguments
+or opposing evidence. An unknown-fact failure means use an exact supplied ID,
+never invent an alias. A missing-binding failure means bind the actual referenced
+quantity. A malformed-anchor failure means fix placeholder syntax only.
 Example prose: 'The close was ${{QA}}.' Bind QA to latest.close from the supplied
 snapshot. Keep currency/% outside the placeholder. Reuse each binding consistently
 in source-linked claim objects. Leave observed_numbers empty and price_target null. Application

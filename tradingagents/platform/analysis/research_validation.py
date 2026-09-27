@@ -15,7 +15,9 @@ NUMBER_PATTERN = re.compile(r"(?<![\w])[-+]?\d+(?:,\d{3})*(?:\.\d+)?%?")
 
 PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_requires_verified_reference",
     "research_authority_requires_review", "material_claim_citation_mismatch", "unknown_snapshot_reference",
-    "translation_anchor_mismatch", "translation_numeric_token_added", "translation_reserved_anchor"})
+    "translation_anchor_mismatch", "translation_numeric_token_added", "translation_reserved_anchor",
+    "quantity_binding_duplicate", "quantity_binding_unknown_fact", "quantity_binding_missing",
+    "quantity_binding_unused", "quantity_anchor_malformed"})
 
 
 class PublicationValidationError(ValueError):

@@ -94,3 +94,23 @@ and cash index `^NDX` is pending. No model quota was consumed by this preflight.
 
 Goal remains active. Valid final reports, financial/language review and remaining
 browser acceptance must pass before completion can be claimed.
+
+## Fixed-candidate follow-up
+
+- PASS: clean `678fe00edb1c4b7ec0d23b735142b7df25037f47`,
+  `bash scripts/verify-local.sh`: 1,372 tests + 88 subtests, 20 skips,
+  400.01 seconds. Ruff/dependency checks passed. Eighteen PostgreSQL skips
+  remain BLOCKED by the local VM issue; Bedrock and DeepSeek remain UNVERIFIED.
+- FAIL: publication-only AAPL replay on that candidate used 137,442 reported
+  tokens (70,794 input + 66,648 output), four calls. Canonical report and
+  translation were not accepted. Unused quantity bindings were reported with
+  an overly generic numeric error; the repair also violated uppercase key
+  syntax. No source evidence or historical artifact was rewritten.
+- Follow-up separates allowlisted binding failure codes and explicitly states
+  placeholder syntax and one-to-one usage. All previous rejection conditions
+  remain; the compiler never silently removes unsupported claims or bindings.
+  Targeted compiler, financial-stage and structured-agent tests: 64 PASS.
+- Further browser verification is BLOCKED: in-app browser could not verify its
+  admin-enforced policy for localhost. No security bypass or indirect browser
+  access was attempted. Earlier screenshots/interaction receipts remain scoped
+  to their original candidate; no final valid-report screenshot is claimed.
