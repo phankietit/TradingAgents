@@ -176,6 +176,26 @@ below are satisfied. No production deployment or live trading is in scope.
   This is limited manual-pattern evidence, not exhaustive secret detection or
   completion of the pending security source review. `gitleaks` was unavailable.
 
+## Readable saved portfolio limits — 2026-09-27
+
+- Source: `9b1aef6` plus accompanying frontend-only patch. Snapshot selectors
+  show time/currency/record number instead of truncated internal IDs; values
+  submitted remain exact original IDs. Portfolio copy describes historical
+  valuations. Known policy limits display financial labels and percentages;
+  correlation remains a coefficient. Invalid values are unavailable, not zero.
+  Original parameters and policy identity remain in collapsed audit details.
+- **PASS:** 85 component/unit tests, ESLint, TypeScript/Vite build. Built assets
+  `index-C5vKVsWv.js` and `index-Cr-i7T3Z.css`. No backend/risk-policy changes.
+- **PASS:** built UI with isolated `--all-assets --screening` synthetic fixture,
+  real local session/API/SQLite. Desktop 1280×720 and narrow 390×844 inspected;
+  policy table wraps its labels rather than clipping financial values. Keyboard
+  Enter opens disclosure with visible focus, original JSON remains collapsed,
+  page width equals 390px, console warnings/errors empty. Title and URL checked.
+  Screenshots in external QA run above: `Results/portfolio-policy-finance.png`
+  and `Results/portfolio-policy-narrow.png`. Tab and fixture stopped normally.
+- Manual follow-up review: display-only allowlisted labels/formatting and CSS;
+  no new HTML sinks, endpoint, provider, authentication or mutation behavior.
+
 ## Remaining M4 acceptance gates
 
 1. **UNVERIFIED — finance-first final UX:** all four workspaces must meet the

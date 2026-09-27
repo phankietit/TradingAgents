@@ -35,3 +35,11 @@ it('withholds malformed portfolio payload instead of treating it as zero or cras
   expect(screen.queryByRole('region',{name:'Portfolio holdings'})).toBeNull();
   expect(screen.queryByText('private-source-content')).toBeNull();
 });
+it('summarizes financial policy limits without hiding original parameters or inventing zeros',async()=>{
+  vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.includes('/policies') ? [{policy_id:'policy-fixture',policy_version:'1',name:'Synthetic policy',asset_class:'equity',effective_at:'2026-09-01T00:00:00Z',parameters:{max_position_weight:.3,max_correlation:.8,min_cash_weight:null,unknown_setting:'preserved'}}] : []))));
+  render(<Portfolio />);
+  expect(await screen.findByText('30.00%')).toBeTruthy();
+  expect(screen.getByText('0.8')).toBeTruthy();
+  expect(screen.getByText('Unavailable — check policy details')).toBeTruthy();
+  expect(screen.getByText(/"unknown_setting": "preserved"/).closest('details')?.open).toBe(false);
+});

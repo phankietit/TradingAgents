@@ -118,6 +118,9 @@ caption { text-align: left; padding: 12px 0; color: var(--muted); }
 th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
 th { font-weight: 500; color: var(--muted); }
 th:first-child { text-align: left; }
+.policy-limits table { table-layout: fixed; }
+.policy-limits th, .policy-limits td { white-space: normal; overflow-wrap: anywhere; }
+.policy-limits th:first-child { width: 62%; }
 .pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
 .provenance { border-top: 1px solid var(--border); margin-top: 32px; padding-top: 20px; }
 summary { cursor: pointer; color: var(--accent); padding: 8px 0; }

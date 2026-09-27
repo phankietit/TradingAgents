@@ -15,6 +15,29 @@ export interface PortfolioSnapshot {
 }
 export interface Policy { policy_id: string; policy_version: string; name: string; asset_class: string; effective_at: string; parameters: Record<string, unknown> }
 
+const policyFields: [string, string, 'percent' | 'number' | 'seconds'][] = [
+  ['max_position_weight','Maximum position allocation','percent'],
+  ['max_asset_class_weight','Maximum asset-class allocation','percent'],
+  ['max_gross_exposure','Maximum total exposure','percent'],
+  ['max_turnover','Maximum portfolio turnover','percent'],
+  ['min_cash_weight','Minimum cash reserve','percent'],
+  ['max_correlation','Maximum holding correlation','number'],
+  ['correlation_periods','Correlation observation periods','number'],
+  ['correlation_max_age_seconds','Maximum correlation source age','seconds'],
+];
+function PolicyLimits({policy}: {policy: Policy}) {
+  const fields=policyFields.filter(([key])=>Object.hasOwn(policy.parameters,key));
+  return <>
+    {fields.length ? <div className="table-scroll policy-limits" role="region" aria-label={`${policy.name} limits`} tabIndex={0}><table><thead><tr><th>Risk limit</th><th>Saved value</th></tr></thead><tbody>{fields.map(([key,label,unit])=>{
+      const value=policy.parameters[key];
+      const valid=(typeof value==='number' || typeof value==='string' && value.trim()!=='') && Number.isFinite(Number(value));
+      return <tr key={key}><th scope="row">{label}</th><td>{!valid ? 'Unavailable — check policy details' : unit==='percent' ? percent(Number(value)) : `${value}${unit==='seconds' ? ' seconds' : ''}`}</td></tr>;
+    })}</tbody></table></div> : <p className="warning">No recognized financial limits to summarize. Inspect the saved policy details before relying on it.</p>}
+    <p className="muted">Read-only saved limits, not a new policy or a risk-check result. Correlation is a coefficient, not a percentage.</p>
+    <details><summary>Policy audit details</summary><p className="mono">{policy.policy_id}</p><pre className="safe-text">{JSON.stringify(policy.parameters,null,2)}</pre><p>All original parameters, including settings not summarized above.</p></details>
+  </>;
+}
+
 /** Format persisted decimal strings without binary floating-point portfolio math. */
 export function decimal(value: string | null | undefined): string {
   const plain = plainDecimal(value);
@@ -30,11 +53,11 @@ export default function Portfolio() {
   const [selected, setSelected] = useState('');
   const current = snapshots.data?.find(item => item.portfolio_id === selected) ?? snapshots.data?.[0];
   return <>
-    <div className="section-actions"><p className="muted">Immutable portfolio snapshots · Backend valuations, not a live account balance.</p><button onClick={() => setVersion(value => value + 1)}>Reload portfolio</button></div>
+    <div className="section-actions"><p className="muted">Saved portfolio valuations · Historical records, not a live account balance.</p><button onClick={() => setVersion(value => value + 1)}>Reload portfolio</button></div>
     {snapshots.loading ? <p role="status">Loading portfolio snapshots…</p> : snapshots.error ? <p role="alert" className="danger">{errorMessage(snapshots.error)}</p>
       : !current ? <section className="empty-state"><h2>No portfolio snapshot</h2><p>Import the owner ledger and create a valued snapshot through the backend portfolio workflow. Missing valuation is not shown as zero.</p></section>
       : <>
-        <label className="snapshot-selector">Portfolio snapshot<select value={current.portfolio_id} onChange={event => setSelected(event.target.value)}>{snapshots.data?.map(item => <option key={item.portfolio_id} value={item.portfolio_id}>{timestamp(item.as_of)} · {item.portfolio_id.slice(0, 8)}</option>)}</select></label>
+        <label className="snapshot-selector">Portfolio snapshot<select value={current.portfolio_id} onChange={event => setSelected(event.target.value)}>{snapshots.data?.map((item,index) => <option key={item.portfolio_id} value={item.portfolio_id}>{timestamp(item.as_of)} · {item.base_currency} · Record {index+1}</option>)}</select></label>
         <p className="muted">Valued as of {timestamp(current.as_of)} · Base currency {current.base_currency}</p>
         <div className="metrics portfolio-metrics"><div><span>Net asset value · {current.base_currency}</span><strong>{decimal(current.net_asset_value)}</strong></div>
           <div><span>Realized P/L · {current.base_currency}</span><strong>{decimal(current.realized_pnl)}</strong></div><div><span>Unrealized P/L · {current.base_currency}</span><strong>{decimal(current.unrealized_pnl)}</strong></div></div>
@@ -53,7 +76,7 @@ export default function Portfolio() {
     <section className="policy-section"><h2>Policy versions</h2><p className="muted">Read-only policy history. Each decision binds an exact version; this is not a permission to change risk limits.</p>
       {policies.loading ? <p role="status">Loading policies…</p> : policies.error ? <p role="alert" className="danger">{errorMessage(policies.error)}</p>
         : !policies.data?.length ? <p className="muted">No owner policy is configured. Approval-ready risk evaluation requires a governed policy.</p>
-        : policies.data.map(policy => <details key={`${policy.policy_id}:${policy.policy_version}`} className="provenance"><summary>{policy.name} · v{policy.policy_version} · {policy.asset_class}</summary><p>Effective {timestamp(policy.effective_at)}</p><pre className="safe-text">{JSON.stringify(policy.parameters, null, 2)}</pre></details>)}
+        : policies.data.map(policy => <details key={`${policy.policy_id}:${policy.policy_version}`} className="provenance"><summary>{policy.name} · v{policy.policy_version} · {policy.asset_class}</summary><p>Effective {timestamp(policy.effective_at)}</p><PolicyLimits policy={policy} /></details>)}
     </section>
   </>;
 }
