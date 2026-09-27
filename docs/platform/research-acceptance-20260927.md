@@ -380,3 +380,37 @@ browser acceptance must pass before completion can be claimed.
   repeated verbs; maintain the RSI midline meaning; retain all numbers, opposing
   arguments and coverage limitations. These are review criteria, not a claim
   that keyword matching proves translation fidelity.
+
+## Full BTC replay at the qualifier-guidance candidate
+
+- Exact clean candidate: `5bbbdeef434fd20deba6d7fcb961fa53b3034531`.
+  PASS local: 1,465 tests + 88 subtests, 20 classified skips, 115.64 seconds;
+  Ruff passed. This supersedes the targeted-only evidence for this candidate.
+- Live full snapshot-bound engine replay completed Market Analyst, Bull, Bear,
+  Research Manager, Trader, Aggressive, Conservative, Neutral, Portfolio Manager,
+  Financial validation and Report presentation. The selected analyst coverage
+  was `market` only, at source cutoff `2026-09-27T07:34:48.337854+00:00`.
+  No unavailable news/social/fundamental role was fabricated or silently claimed
+  as present. This remains a backend replay, not fresh ingestion/queue/UI QA.
+- QA blob:
+  `sha256/84/8d/848ddc26a23a10c0ce9f3f19c161f4794089c0c416864625c8b14a9a014fc486`.
+  Usage: 480,325 tokens (328,512 input + 151,813 output), 14 calls. Provider cost
+  was not reported. Trader used its bounded JSON repair; financial publication
+  recorded a standalone-percentage-anchor failure before successful repair.
+  Final automatic validation issues were empty, and a bilingual Hold research
+  payload was produced. Neither means semantic or editorial acceptance.
+- **Manual acceptance FAIL**: the English report asserts that extended trend
+  structures historically have a higher probability of mean reversion without
+  presenting a corresponding empirical study/backtest; tax-driven exits are
+  also asserted as a likely explanation despite market-only coverage. The
+  Vietnamese summary translates `preserve optionality` as `duy trì quyền chọn`,
+  incorrectly introducing an options meaning, and retains substantial literal
+  jargon. No universal semantic-fidelity claim is justified by numeric parity.
+- This failure is retained as evidence, not registered as a new user decision or
+  used to rewrite any existing report. No additional paid replay was opened.
+- Source-path audit also confirms that the web `prepare-data` handler currently
+  persists daily prices only. Dataset mappings and snapshot analyst readers for
+  news/social/fundamentals do not implement acquisition of those sources. R04
+  must close this ingestion gap, including asset-specific source coverage and
+  provenance, before full-source parity can be claimed. A market-only replay is
+  not a substitute for that requirement.
