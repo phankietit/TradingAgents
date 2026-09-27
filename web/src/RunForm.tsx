@@ -5,6 +5,7 @@ import { timestamp, useResource } from './data';
 import type { Instrument, Snapshot } from './data';
 import type { Policy, PortfolioSnapshot } from './Portfolio';
 import ResearchSetup from './ResearchSetup';
+import { portfolioSnapshots, policyHistory } from './portfolioData';
 
 export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
@@ -25,8 +26,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const [policyKey, setPolicyKey] = useState('');
   const [target, setTarget] = useState('');
   const [riskSources, setRiskSources] = useState<Record<string, string>>({});
-  const portfolios = useResource<PortfolioSnapshot[]>('/portfolios?limit=200');
-  const policies = useResource<Policy[]>('/policies?limit=200');
+  const portfolios = useResource<PortfolioSnapshot[]>('/portfolios?limit=200', 0, portfolioSnapshots);
+  const policies = useResource<Policy[]>('/policies?limit=200', 0, policyHistory);
   const portfolio = portfolios.data?.find(item => item.portfolio_id === portfolioId);
   const asset = catalog.find(item => item.instrument_id === instrumentId);
   const policy = policies.data?.find(item => `${item.policy_id}:${item.policy_version}` === policyKey && item.asset_class === asset?.asset_class && Date.parse(item.effective_at) <= Date.parse(asOf));

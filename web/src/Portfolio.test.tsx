@@ -6,6 +6,10 @@ it('formats exact decimal values without rounding through floats', () => {
   expect(decimal('123456789123456789.123456')).toBe('123,456,789,123,456,789.123456');
   expect(decimal(null)).toBe('Unavailable');
   expect(decimal('')).toBe('Unavailable');
+  expect(decimal('1E-8')).toBe('0.00000001');
+  expect(decimal('1.234E+4')).toBe('12,340');
+  expect(decimal('0E-8')).toBe('0.00000000');
+  expect(decimal('1e9999999')).toBe('Unavailable');
 });
 it('shows missing portfolio rather than zero valuation', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('[]')));
@@ -22,4 +26,12 @@ it('renders stored cash NAV and missing cost basis', async () => {
   expect(await screen.findByText('10,000.01')).toBeTruthy();
   expect(screen.getByText('Unavailable')).toBeTruthy();
   expect(screen.getByRole('region', { name: 'Portfolio holdings' })).toBeTruthy();
+});
+it('withholds malformed portfolio payload instead of treating it as zero or crashing', async()=>{
+  vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.includes('/portfolios') ? {unexpected:'private-source-content'} : []))));
+  render(<Portfolio />);
+  expect(await screen.findByRole('alert')).toBeTruthy();
+  expect(screen.queryByText('No portfolio snapshot')).toBeNull();
+  expect(screen.queryByRole('region',{name:'Portfolio holdings'})).toBeNull();
+  expect(screen.queryByText('private-source-content')).toBeNull();
 });

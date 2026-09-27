@@ -3,6 +3,8 @@ import { errorMessage } from './api';
 import { instruments, percent, timestamp, useResource } from './data';
 import type { Instrument } from './data';
 import ValuationSources from './ValuationSources';
+import { portfolioSnapshots, policyHistory } from './portfolioData';
+import { plainDecimal } from './decimal';
 
 export interface PortfolioSnapshot {
   portfolio_id: string; as_of: string; base_currency: string; net_asset_value: string;
@@ -15,15 +17,16 @@ export interface Policy { policy_id: string; policy_version: string; name: strin
 
 /** Format persisted decimal strings without binary floating-point portfolio math. */
 export function decimal(value: string | null | undefined): string {
-  if (value === null || value === undefined || !/^-?\d+(\.\d+)?$/.test(value)) return 'Unavailable';
-  const [integer, fraction] = value.split('.');
+  const plain = plainDecimal(value);
+  if (plain === null) return 'Unavailable';
+  const [integer, fraction] = plain.split('.');
   return integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (fraction ? `.${fraction}` : '');
 }
 export default function Portfolio() {
   const [version, setVersion] = useState(0);
-  const snapshots = useResource<PortfolioSnapshot[]>('/portfolios?limit=200', version);
+  const snapshots = useResource<PortfolioSnapshot[]>('/portfolios?limit=200', version, portfolioSnapshots);
   const catalog = useResource<Instrument[]>('/instruments?limit=500', 0, instruments);
-  const policies = useResource<Policy[]>('/policies?limit=200', version);
+  const policies = useResource<Policy[]>('/policies?limit=200', version, policyHistory);
   const [selected, setSelected] = useState('');
   const current = snapshots.data?.find(item => item.portfolio_id === selected) ?? snapshots.data?.[0];
   return <>

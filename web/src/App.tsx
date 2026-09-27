@@ -6,6 +6,7 @@ import Markets from './Markets';
 import Analysis from './Analysis';
 import Portfolio from './Portfolio';
 import Decisions from './Decisions';
+import ViewBoundary from './ViewBoundary';
 
 const pages = ['Markets', 'Analysis', 'Portfolio', 'Decisions'] as const;
 type Page = typeof pages[number];
@@ -43,9 +44,11 @@ function Workspace({ owner, logout }: { owner: Owner; logout: () => Promise<void
     <main id="main-content" tabIndex={-1}>
       <header className="workspace-header"><h1>{page ?? 'Page not found'}</h1><span className="muted">Local research workspace</span></header>
       <div className="page-content">
+        <ViewBoundary key={page}>
         {page === 'Markets' ? <Markets /> : page === 'Analysis' ? <Analysis /> : page === 'Portfolio' ? <Portfolio /> : page === 'Decisions' ? <Decisions /> : <section className="empty-state"><h2>This workspace does not exist</h2>
           <p>{page ? 'Session authentication is active. Data views are not available in this implementation checkpoint.' : 'Choose a workspace from the navigation.'}</p>
         </section>}
+        </ViewBoundary>
       </div>
       <footer className="workspace-footer">Decision support · No order execution</footer>
     </main>

@@ -229,3 +229,14 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   PostgreSQL/optional Bedrock/live DeepSeek limitations). IAB desktop/390px:
   source price 198.02 USD matches the synthetic AAPL holding, vendor/time visible,
   keyboard disclosure and console checks PASS. No live market validation.
+- Display safety: portfolio/policy response shapes are validated before rendering
+  and before use in risk configuration; invalid responses are distinct from empty
+  holdings. Decimal strings (including scientific notation for small crypto
+  quantities) are expanded without binary floating-point portfolio calculations.
+  Render failures keep navigation/logout outside the failed view; explicit retry
+  remounts only the view, and caught-error console reporting is generic/redacted.
+  74 frontend tests plus lint/typecheck/build PASS. Component tests cover invalid
+  arrays/amounts/weights, duplicate holdings, exact precision and explicit boundary
+  recovery. IAB desktop verified valid fixture NAV/holdings and reload without
+  console errors. Browser fault injection and final all-workspace QA remain open;
+  component failure tests are not presented as live browser fault evidence.

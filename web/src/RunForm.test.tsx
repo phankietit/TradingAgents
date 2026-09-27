@@ -8,7 +8,7 @@ const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', ven
 afterEach(() => vi.unstubAllGlobals());
 function setup(stale = false) {
   const fetch = vi.fn(async (url: string) => {
-    if (url.includes('/portfolios?')) return json([{ portfolio_id: 'portfolio1', as_of: '2026-09-01T00:00:00Z', base_currency: 'USD', positions: [] }]);
+    if (url.includes('/portfolios?')) return json([{ portfolio_id: 'portfolio1', as_of: '2026-09-01T00:00:00Z', base_currency: 'USD', positions: [], cash: [], net_asset_value:'10000',realized_pnl:'0',unrealized_pnl:'0',content_hash:'fixture-hash' }]);
     if (url.includes('/policies?')) return json([{ policy_id: 'policy1', policy_version: '1', name: 'Fixture policy', asset_class: 'equity', effective_at: '2026-08-01T00:00:00Z', parameters: {} }]);
     if (url.includes('/analysis-profile')) return json({ name: 'equity', allowed_analysts: ['market', 'news'], investable: true });
     if (url.includes('/snapshots?')) return json([{ ...source, metadata_eligible: !stale, ineligibility_reasons: stale ? ['stale'] : [] }]);
