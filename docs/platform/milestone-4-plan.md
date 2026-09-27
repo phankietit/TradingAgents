@@ -278,6 +278,11 @@ Status: planned. Depends on all tickets above.
 
 ## Completion audit
 
+The consolidated current evidence and remaining gates are tracked in
+`milestone-4-verification.md`. Earlier ticket paragraphs are chronological
+checkpoints, not claims about the final candidate. The local PostgreSQL full
+regression now passes; final-candidate repetition and delivery gates remain open.
+
 Saved-screener checkpoint: owner-scoped read-only list/detail API and Markets
 panel implemented. Saved ranking, exclusions, immutable policy/hashes/source IDs
 and explicit analysis handoff are verified with isolated synthetic fixtures.

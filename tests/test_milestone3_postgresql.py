@@ -26,6 +26,7 @@ from tradingagents.platform.persistence import (
     upgrade_database,
 )
 from tradingagents.platform.persistence.models import Base, DecisionRow
+from tradingagents.platform.portfolio.evidence import load_valuation_evidence
 from tradingagents.platform.portfolio.service import PortfolioLedgerService
 
 pytestmark = pytest.mark.integration
@@ -127,6 +128,11 @@ def test_owner_ledger_snapshot_replay_on_postgresql(tmp_path, postgres_url):
             repo = PlatformRepository(session)
             assert PortfolioLedgerService(ArtifactService(store, repo)).replay(**args) == result
             assert repo.get_portfolio_snapshot(result.portfolio_id, uuid4()) is None
+            evidence = load_valuation_evidence(ArtifactService(store, repo), result, args["owner_id"])
+            assert evidence.portfolio_content_hash == result.content_hash
+            assert evidence.sources[0].quote.price == result.positions[0].market_price
+            assert evidence.sources[0].quote.snapshot_id == next(iter(args["price_snapshot_ids"].values()))
+            assert load_valuation_evidence(ArtifactService(store, repo), result, uuid4()) is None
     finally:
         database.dispose()
 
