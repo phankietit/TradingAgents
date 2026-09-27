@@ -384,13 +384,26 @@ It uses saved evidence, not a live trading feed. See the
 [local startup guide](docs/platform/local-web-startup.md) and
 [web build and verification guide](web/README.md).
 
+The local UI supports **English / Tiếng Việt** with a persistent VI/EN switch.
+New research offers English, Vietnamese or bilingual English–Vietnamese reports
+(bilingual is the web form default). The language choice is recorded on each
+run; changing the UI language never translates or overwrites saved analysis.
+Bilingual generation can consume more output tokens and still needs human
+translation/financial review. See [language behavior](docs/platform/bilingual.md).
+
 The current platform layer also provides canonical instrument identity,
 immutable normalized price series, vendor-neutral equity/ETF evidence,
 reference-only NQ/ES context, BTC/ETH UTC snapshots, a deterministic large-cap
 stock screener, transparent derived factors, and consistent data-health
 classification. These services operate on explicitly supplied or previously
 stored snapshots; this milestone does not select or configure a production
-market-data vendor.
+market-data vendor. The web now also offers **Prepare latest prices** using the
+existing Yahoo/yfinance integration for AAPL, SPY/QQQ, cash indices and BTC/ETH.
+It verifies five years of completed daily sessions using the original engine's
+shared history window, saves immutable evidence, then
+requires separate paid-AI consent. It is not automatic news/fundamental/macro
+ingestion or a historical-vintage feed; NQ/ES preparation remains unsupported.
+See [data preparation](docs/platform/data-preparation.md).
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked

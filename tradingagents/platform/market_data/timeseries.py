@@ -231,6 +231,7 @@ class TimeSeriesSnapshotService:
         vendor: str,
         retrieved_at: datetime,
         snapshot_id: UUID | None = None,
+        source_metadata: Mapping[str, Any] | None = None,
     ) -> SnapshotManifest:
         payload = json.dumps(
             series.model_dump(mode="json"),
@@ -254,6 +255,7 @@ class TimeSeriesSnapshotService:
             content_hash=content_hash,
             quality_status=DataQualityStatus.OK,
             metadata={
+                **(source_metadata or {}),
                 "interval": series.interval.value,
                 "timezone": series.timezone,
                 "quote_currency": series.quote_currency,

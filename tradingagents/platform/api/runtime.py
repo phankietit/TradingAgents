@@ -34,12 +34,24 @@ def _boolean(environ: Mapping[str, str], name: str, *, default: bool) -> bool:
 
 def load_api_settings(environ: Mapping[str, str] | None = None) -> ApiSettings:
     source = environ if environ is not None else os.environ
+    # Persist the operator's model selection on each run; the worker consumes
+    # that manifest rather than substituting its own model environment.
+    model_settings = {
+        field: source[name].strip()
+        for field, name in (
+            ("llm_provider", "TRADINGAGENTS_LLM_PROVIDER"),
+            ("quick_model", "TRADINGAGENTS_QUICK_THINK_LLM"),
+            ("deep_model", "TRADINGAGENTS_DEEP_THINK_LLM"),
+        )
+        if source.get(name, "").strip()
+    }
     return ApiSettings(
         database_url=_required(source, "TRADINGAGENTS_DATABASE_URL"),
         artifact_root=Path(_required(source, "TRADINGAGENTS_ARTIFACT_ROOT")),
         allowed_origin=_required(source, "TRADINGAGENTS_ALLOWED_ORIGIN"),
         secure_cookies=_boolean(source, "TRADINGAGENTS_SECURE_COOKIES", default=True),
         web_root=Path(source["TRADINGAGENTS_WEB_ROOT"]) if source.get("TRADINGAGENTS_WEB_ROOT", "").strip() else None,
+        **model_settings,
     )
 
 

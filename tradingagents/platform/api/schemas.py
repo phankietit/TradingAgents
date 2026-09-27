@@ -27,6 +27,16 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PrepareDataResponse(ApiModel):
+    status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
+                    "rate_limited", "unavailable", "busy", "cooldown"]
+    snapshot: SnapshotManifest | None = None
+    analysis_as_of: AwareDatetime
+    reused: bool = False
+    retry_after_seconds: int = Field(default=0, ge=0, le=120)
+    last_failure: Literal["no_data", "stale", "coverage_gap", "rate_limited", "unavailable"] | None = None
+
+
 class LoginRequest(ApiModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=1024)
@@ -107,6 +117,7 @@ class RunCreateRequest(ApiModel):
     analysis_as_of: AwareDatetime
     selected_analysts: tuple[str, ...] = Field(min_length=1, max_length=4)
     decision_inputs: DecisionRunInputs | None = None
+    report_language: Literal["en", "vi", "en-vi"] | None = None
 
     @model_validator(mode="after")
     def validate_snapshot_roles(self):
