@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add a structured current-vintage Yahoo news collector with publication and
+  retrieval provenance and explicit failure/coverage states. This is adapter
+  groundwork; web collection, persistence and full-source analyst parity are
+  not yet implemented by this change. Legacy CLI behavior is unchanged.
+
 - Validate complete MiniMax JSON text responses against the bound schema before
   requesting format repair; keep publication gates and retry/usage accounting.
   Reject prose fragments, failed tool-call recovery, duplicate JSON fields and

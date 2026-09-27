@@ -244,3 +244,23 @@ still run. Wire-mocked tests verify one request/one usage record on valid input
 and no more than the original two attempts on rejection. Live cost savings
 remain UNVERIFIED; this does not change provider, model, thinking configuration,
 tool-choice support, graph roles or readiness requirements.
+
+## Non-price acquisition status
+
+The web preparation endpoint currently captures prices only. Existing readers
+for news/fundamentals/social snapshots do not establish automatic acquisition.
+`dataflows.platform_news.collect_yahoo_news` is adapter groundwork for explicit
+Yahoo selection, not yet wired to web preparation or snapshot persistence.
+It returns structured articles with instrument identity, requested window,
+publication timestamps, retrieval timestamp, URL and publisher. Source text is
+untrusted evidence. No article URL is fetched by this collector.
+
+The collector has no historical as-of argument: today's article contents cannot
+be backdated using their original publication dates. It distinguishes empty
+reachable feeds, unavailable requests, malformed records and out-of-window
+coverage. A malformed record prevents the batch being marked usable. An OK
+result means eligible articles exist, not exhaustive coverage of the requested
+week. The downstream integration must retain `recent_feed_not_exhaustive`,
+persist a new immutable owner-bound artifact, and select a run cutoff no earlier
+than retrieval. Fundamentals, social and macro acquisition remain separate
+unfinished work; this adapter must not cause them to be labeled available.
