@@ -40,7 +40,9 @@ def validate_percentage_context(prose, binding, value):
         return
     if re.search(anchor + r"\s*%\s*(?:drawdown|drop|decline|fall|retracement|move|change)\s+from\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
         reject()
-    if label and re.search(label + r"\s+is\s+(?:currently\s+)?" + anchor
+    if label and re.search(label
+            + r"(?:\s+at\s+\$?\{\{Q[A-Z]{1,5}\}\})?\s+(?:is|sits|lies|stands)\s+"
+            + r"(?:(?:currently|only|just)\s+)*" + anchor
             + r"\s*%\s*(?:below|above)\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
         reject()
 

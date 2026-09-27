@@ -143,6 +143,7 @@ def test_binding_diagnostics_identify_repair_without_weakening_gate(mutation, co
 @pytest.mark.parametrize("prose,fact,value", [
     ("The close is {{QA}}% below the window high.", "observed_window.latest_close_vs_high_pct", -1.24),
     ("The 50-SMA is currently {{QA}}% below the latest close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
+    ("The 10-day EMA at ${{QB}} sits only {{QA}}% below the close as nearest support.", "indicator.close_10_ema.latest_close_vs_indicator_pct", 1.68),
     ("A move to the SMA would represent a {{QA}}% drawdown from the current close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
     ("A move to the SMA would represent a {{QA}}% move from the current close.", "indicator.close_50_sma.latest_close_vs_indicator_pct", 5.98),
     ("The close sits {{QA}}% below the upper Bollinger band.", "indicator.boll_ub.distance_from_latest_close_pct", 1.49),

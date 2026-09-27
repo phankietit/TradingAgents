@@ -214,3 +214,26 @@ browser acceptance must pass before completion can be claimed.
   reduces the reproduced period/percentage confusion without rewriting the
   canonical conclusion or removing any research stage. It is not a universal
   semantic guarantee; live editorial acceptance remains UNVERIFIED.
+- PASS: `f70907f5dd47ed58311790e60136dc926be097c0`, local regression 1,396
+  tests + 88 subtests, 20 classified skips, 254.86 seconds; Ruff passed.
+  The 20 skips remain 18 unavailable PostgreSQL gates and two optional-provider
+  checks, not implicit passes.
+- Translation-only replay on that SHA preserved the canonical report and
+  corrected the observed indicator/percentage attachment after one bounded JSON
+  repair: 20,264 tokens (9,053 input + 11,211 output), two calls. Remaining
+  Vietnamese phrasing is still awkward; editorial readiness remains UNVERIFIED.
+  QA blob: `sha256/4d/9c/4d9cca7344a396a4c0c8961d33b14899f571653a556fb1d3fd5a5d7497a1c1ba`.
+  This component replay does not prove whole-graph or browser acceptance.
+- Full AAPL engine replay on immutable existing market snapshots, candidate
+  `f70907f5dd47ed58311790e60136dc926be097c0`, completed the original available
+  market-only research/debate graph, financial validation and EN/VI presentation.
+  Schema/source/numeric gates returned no issues and a decision payload.
+  Usage: 430,934 tokens (269,994 input + 160,940 output), 15 calls.
+  **Manual financial acceptance: FAIL**. The thesis described the EMA as
+  1.68% below the close using a fact measuring the close above EMA; the reciprocal
+  denominator differs. The observed `EMA at $... sits only ...% below the close`
+  wording is now included in the bounded relation guard. Translation remains
+  overly literal and editorial acceptance is FAIL. Automated success was not
+  promoted to readiness, no registered run was rewritten or added, and this
+  replay does not test current-data ingestion, durable queue or browser UX.
+  QA blob: `sha256/49/6b/496b75fa468735b1878e55d89e6d6b32124fcd7231d83c7b8f7838b3f63346a4`.
