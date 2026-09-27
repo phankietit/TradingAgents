@@ -1,7 +1,7 @@
 # R01–R14 verification receipt
 
 Candidate branch: `fix/TA-R01-research-quality`.
-Backend checkpoint: `fdc3700cb7aedd1f414ac9237a6fec6cd5e9eb53`.
+Backend checkpoint: `e3c269725bf109436091408cfb6b2acd179caa1a`.
 Frontend/readability checkpoint: `6621fb8` (backend behavior unchanged).
 Runtime: macOS, Python 3.14.7, Node 26.8.1, npm 11.19.0.
 No hosted CI, broker, public deployment, provider replacement or policy change.
@@ -10,7 +10,7 @@ No hosted CI, broker, public deployment, provider replacement or policy change.
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| Full regression including PostgreSQL 16 | PASS | fdc3700, tracked code clean (receipt draft untracked): `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`; 1348 passed, 88 subtests, 2 optional-provider skips, 22 warnings, 44.34s |
+| Full regression including PostgreSQL 16 | PASS | Clean e3c2697: `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`; 1350 passed, 88 subtests, 2 optional-provider skips, 22 warnings, 48.26s |
 | Ruff, dependency consistency, diff whitespace | PASS | Included in the exact-SHA local script |
 | Frontend lockfile install | PASS | `npm ci --ignore-scripts`; 284 packages installed; npm audit reports zero known vulnerabilities, not a security certification |
 | TypeScript, Vite build, ESLint | PASS | Local production build; initial JS about 285KB uncompressed, route/report chunks split |
@@ -53,8 +53,24 @@ and was explicitly disclosed. None evaluated an owner portfolio or placed orders
   fdc3700 restores a bounded 600-second allowance, retaining one SDK retry and
   the graph's boundary-checked run budget. No output truncation or reduced
   debate depth was introduced.
-- Attempt 3 at fdc3700 began 06:20:45 UTC: **UNVERIFIED**, still running. It is
-  the final retry for this job; no automatic extra paid run is created.
+- Attempt 3 at fdc3700, 06:20:45–06:32:44 UTC: all nine stages completed and
+  bilingual numeric parity passed after one schema repair. Report acceptance
+  **FAIL**: `financial_number_requires_verified_reference`, no structured
+  decision published. Artifact `832ae89a-bf8a-5ef7-99c8-7d8e95b960a9` remains
+  immutable. Usage: 233251 input / 139898 output / 373149 total, ten calls.
+  Manual review found reversed Bollinger percentage denominators and unnatural
+  Vietnamese with internal fact IDs. cbfc947 adds explicit reciprocal formulas
+  and preserves rejected quantitative references for future audit; e3c2697 adds
+  the editorial contract. Neither rewrites or approves the failed report.
+- This run's reported usage across attempts is 629515 tokens, with attempt 2
+  incomplete because the timed-out call returned no usage. This is a lower
+  bound, not total billed quota or dollars.
+- The owner explicitly approved one additional BTC execution after these
+  fixes. API was restarted at e3c2697 and the new run will use that checkpoint.
+  No further automatic paid analysis is authorized if it fails.
+  Run `f3d03960-c88a-4b22-a111-0516f37a2c74`, job
+  `ff4f2e50-07b3-4d12-bec4-f8f641f66196`, submitted through the actual UI after
+  price preparation. The worker is invoked with `--once`, not a retry loop.
 
 ## Operational and review boundaries
 
@@ -98,4 +114,6 @@ owner tabs and portfolio records were preserved.
   `remediation-mobile-decisions.png` and `remediation-desktop-progress.png`.
   They are UI evidence, not proof that the pending live report is valid.
 
-Final live report acceptance remains UNVERIFIED while attempt 3 runs.
+Final live report acceptance remains UNVERIFIED pending the separately approved
+post-fix BTC run. Saved EN/VI switching was verified on the rejected report;
+that proves presentation behavior, not research validity or translation quality.
