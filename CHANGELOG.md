@@ -10,6 +10,10 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Render percentage relationships from verified fact IDs as complete EN/VI
+  statements; reject numeric anchors reattached to arbitrary comparison prose.
+  Preserve research interpretations and historical reports. Live acceptance is
+  not implied by local compiler/presentation regression tests.
 - Use one numeric lexer for protected translation and parity checks, including
   indicator periods, dates and ranges; preserve strict rejection of changed values.
 - Compile final report quantities from immutable snapshot bindings, with a

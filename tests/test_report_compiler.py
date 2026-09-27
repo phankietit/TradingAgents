@@ -7,7 +7,7 @@ import pytest
 from tests.test_financial_validation_stage import candidate
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
-from tradingagents.agents.utils.report_compiler import compile_report, validate_percentage_context
+from tradingagents.agents.utils.report_compiler import compile_report
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
@@ -149,21 +149,13 @@ def test_binding_diagnostics_identify_repair_without_weakening_gate(mutation, co
     ("The close sits {{QA}}% below the upper Bollinger band.", "indicator.boll_ub.distance_from_latest_close_pct", 1.49),
 ])
 def test_reproduced_percentage_semantic_errors_fail_closed(prose, fact, value):
+    raw, data = draft()
+    raw["risks"][0]["claim"] = prose.replace("{{QA}}", "{{QC}}")
+    raw["quantity_bindings"].append({**raw["quantity_bindings"][0], "key":"QC", "fact_id":fact})
     with pytest.raises(PublicationValidationError) as error:
-        validate_percentage_context(prose, {"key":"QA", "fact_id":fact}, value)
-    assert error.value.issues == ("percentage_relation_requires_review",)
-    assert error.value.binding_keys == ("QA",)
-
-
-def test_percentage_guard_tracks_binding_not_coincidentally_equal_numbers():
-    validate_percentage_context("Price is {{QA}}% above its SMA; return {{QB}}%.",
-        {"key":"QA", "fact_id":"indicator.close_50_sma.latest_close_distance_magnitude_pct"}, 5.98)
-    validate_percentage_context("The close is {{QA}}% below the window high.",
-        {"key":"QA", "fact_id":"observed_window.drawdown_magnitude_pct"}, 1.24)
-    validate_percentage_context("The 50-SMA is currently {{QA}}% below the latest close.",
-        {"key":"QA", "fact_id":"calc.abs_pct_change(indicator.close_50_sma,latest.close)"}, 5.64)
-    validate_percentage_context("The upper Bollinger band is {{QA}}% above the latest close.",
-        {"key":"QA", "fact_id":"indicator.boll_ub.distance_from_latest_close_pct"}, 1.49)
+        compile_report(raw, {data["snapshot_id"]:SnapshotMarketFacts(data)})
+    assert error.value.issues == ("percentage_statement_requires_standalone_anchor",)
+    assert error.value.binding_keys == ("QC",)
 
 
 def test_all_affected_bindings_are_reported_without_raw_provider_text():

@@ -4,47 +4,16 @@ import re
 from decimal import Decimal
 
 from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, SnapshotReportDraft
+from tradingagents.agents.utils.quantitative_statements import (
+    is_percentage_fact,
+    percentage_statement,
+)
 from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
     unsupported_financial_numbers,
 )
 
 ANCHOR = re.compile(r"\{\{(Q[A-Z]{1,5})\}\}")
-
-
-def validate_percentage_context(prose, binding, value):
-    """Reject reproduced relation errors, not claim universal semantic proof.
-
-    Check the original placeholder, not its rendered number: two unrelated facts
-    can round to the same value. Never rewrite a claim or select a different fact.
-    """
-    anchor = re.escape("{{" + binding["key"] + "}}")
-    fact_id = binding["fact_id"]
-    def reject():
-        raise PublicationValidationError(["percentage_relation_requires_review"], binding_keys=(binding["key"],))
-    if not fact_id.endswith("pct"):
-        return
-    if value < 0 and re.search(anchor + r"\s*%\s*(?:below|under)\b", prose, re.I):
-        reject()
-    labels = {"close_10_ema":r"(?:10[- ](?:day[- ])?EMA|EMA[- ]?10)",
-              "close_50_sma":r"(?:50[- ](?:day[- ])?SMA|SMA[- ]?50)",
-              "close_200_sma":r"(?:200[- ](?:day[- ])?SMA|SMA[- ]?200)",
-              "boll_ub":r"upper Bollinger band", "boll_lb":r"lower Bollinger band"}
-    label = labels.get(fact_id.split(".")[1]) if fact_id.startswith("indicator.") else None
-    if fact_id.endswith(".distance_from_latest_close_pct") and label and re.search(
-            anchor + r"\s*%\s*(?:below|above)\s+(?:the\s+)?" + label, prose, re.I):
-        reject()
-    # This family measures the close relative to an indicator, not a move
-    # from the close to that indicator. The reciprocal denominators differ.
-    if not fact_id.endswith((".latest_close_distance_magnitude_pct", ".latest_close_vs_indicator_pct")):
-        return
-    if re.search(anchor + r"\s*%\s*(?:drawdown|drop|decline|fall|retracement|move|change)\s+from\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
-        reject()
-    if label and re.search(label
-            + r"(?:\s+at\s+\$?\{\{Q[A-Z]{1,5}\}\})?\s+(?:is|sits|lies|stands)\s+"
-            + r"(?:(?:currently|only|just)\s+)*" + anchor
-            + r"\s*%\s*(?:below|above)\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
-        reject()
 
 
 def compile_report(raw, facts):
@@ -69,6 +38,7 @@ def compile_report(raw, facts):
     bindings = data.pop("quantity_bindings")
     values = {}
     observations = []
+    percentage_keys = set()
     relation_failures = []
     for binding in bindings:
         key = binding["key"]
@@ -78,20 +48,32 @@ def compile_report(raw, facts):
             raise PublicationValidationError(["quantity_binding_duplicate"])
         if value is None:
             raise PublicationValidationError(["quantity_binding_unknown_fact"])
-        try:
-            validate_percentage_context(prose, binding, value)
-        except PublicationValidationError as error:
-            relation_failures.extend(error.binding_keys)
         number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
         if not number.is_finite():
             raise PublicationValidationError(["numeric_claim_not_supported"])
         values[key] = format(number, "f")
+        if not is_percentage_fact(binding["fact_id"]) and re.search(
+                re.escape("{{" + key + "}}") + r"\s*(?:%|percent\b|per\s+cent\b)", prose, re.I):
+            raise PublicationValidationError(["quantity_binding_unit_mismatch"], binding_keys=(key,))
+        if is_percentage_fact(binding["fact_id"]):
+            percentage_keys.add(key)
+            # A percentage is a complete fact sentence, not a number that the
+            # model may attach to the reciprocal relationship in free prose.
+            for occurrence in re.finditer(re.escape("{{" + key + "}}"), prose):
+                before, after = prose[:occurrence.start()], prose[occurrence.end():]
+                if ((before.strip() and not re.search(r"(?:[.!?]\s*|\n[ \t]*)$", before))
+                        or (after.strip() and not after.startswith((".", "\n")))):
+                    relation_failures.append(key)
+            try:
+                values[key] = percentage_statement(binding["fact_id"], values[key])
+            except ValueError:
+                raise PublicationValidationError(["percentage_statement_unsupported"], binding_keys=(key,)) from None
         observations.append(
             {name: binding[name] for name in ("snapshot_id", "fact_id", "decimal_places")}
             | {"value": float(number)}
         )
     if relation_failures:
-        raise PublicationValidationError(["percentage_relation_requires_review"], binding_keys=relation_failures)
+        raise PublicationValidationError(["percentage_statement_requires_standalone_anchor"], binding_keys=relation_failures)
     used = set()
 
     def render(value):
@@ -102,6 +84,8 @@ def compile_report(raw, facts):
                 if key not in values:
                     raise PublicationValidationError(["quantity_binding_missing"])
                 used.add(key)
+                if key in percentage_keys and match.string[match.end():].startswith("."):
+                    return values[key].removesuffix(".")
                 return values[key]
 
             result = ANCHOR.sub(replace, value)
@@ -125,6 +109,16 @@ BINDING_INSTRUCTIONS = """
 QUANTITY CONTRACT: Write ALL monetary amounts, percentages and calculated quantities as
 placeholders {{QA}}, {{QB}}, etc.; create quantity_bindings with key QA/QB, exact
 snapshot_id, verified fact_id and decimal_places. Do NOT put values in bindings.
+PERCENTAGE STATEMENTS: Each percentage binding MUST occupy a complete standalone
+sentence: '{{QA}}.' with NO surrounding percentage sign, subject, comparison,
+direction, unit or other words in that sentence. The application renders the
+entire verified relationship in English and Vietnamese, choosing the subject,
+reference and denominator ONLY from the fact ID. This includes calendar returns,
+indicator percentages, drawdown and calc.pct_change/abs_pct_change. Retain ALL
+material comparisons by selecting the correct fact IDs, not by dropping them.
+Keep the associated financial interpretation, opposing case and uncertainty in
+separate sentences. Do not negate, quote as false or contradict the observation.
+Non-percentage price/volume bindings remain inline numeric anchors as before.
 Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
 For close C and reference R, price premium over R is (C/R - 1)*100,
 but a move from C to R is (R/C - 1)*100. Never reuse the former for the latter.
@@ -136,17 +130,20 @@ Exact ID meanings:
 - observed_window.latest_close_vs_high_pct: signed change relative to window high.
 - observed_window.drawdown_magnitude_pct: positive magnitude below window high.
 For a magnitude below a level, use a positive magnitude, not a signed negative
-return followed by 'below'. A percentage_relation_requires_review failure means
-the prose and chosen fact disagree about direction or denominator; correct the
-fact reference or relationship, not the underlying market values.
+return followed by 'below'. A percentage_statement_requires_standalone_anchor
+failure means move the percentage anchor into its own complete sentence without
+words or %. Preserve the interpretation in adjacent prose. Do not change the
+underlying market values or remove inconvenient evidence.
 Every binding must appear in the prose, and every placeholder must have exactly
 one binding. Do not copy the entire catalog into bindings. An unused-binding
 failure means remove only an unreferenced binding, NOT its supported arguments
 or opposing evidence. An unknown-fact failure means use an exact supplied ID,
 never invent an alias. A missing-binding failure means bind the actual referenced
 quantity. A malformed-anchor failure means fix placeholder syntax only.
-Example prose: 'The close was ${{QA}}.' Bind QA to latest.close from the supplied
-snapshot. Keep currency/% outside the placeholder. Reuse each binding consistently
+Example prose: 'The close was ${{QA}}. {{QB}}. Momentum remains positive.' Bind QA
+to latest.close and QB to return.30_calendar_days.pct from the supplied snapshot.
+Keep currency outside non-percentage placeholders. NEVER append % to a percentage
+placeholder; its complete sentence owns the unit and relationship. Reuse each binding consistently
 in source-linked claim objects. Leave observed_numbers empty and price_target null. Application
 code resolves all quantities; do not calculate or copy numeric observations into
 prose, INCLUDING approximate or conditional quantities. Do not replace a bound

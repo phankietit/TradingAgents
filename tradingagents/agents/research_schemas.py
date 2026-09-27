@@ -103,7 +103,7 @@ SnapshotReportDraft = create_model(
     evidence_claims=(tuple[DecisionEvidenceClaim, ...], Field(default=(), max_length=0,
         description="Leave empty. Application compiles exact citations from thesis, risk and invalidation objects; do not duplicate prose.")),
     quantity_bindings=(tuple[QuantityBinding, ...], Field(default=(), max_length=100,
-        description="Use {{QA}}, {{QB}}, etc. in prose. Bind each placeholder to an immutable fact ID; the application resolves and rounds its value. Never supply numeric values yourself.")),
+        description="Bind {{QA}} etc. to immutable fact IDs, never supplied values. Every percentage anchor must be a complete standalone sentence '{{QA}}.' without an extra % sign or comparison words; code renders its whole relationship. Non-percentage anchors remain inline numbers.")),
     observed_numbers=(tuple[ObservedNumber, ...], Field(default=(), max_length=0,
         description="Leave empty. Application-generated from quantity_bindings.")),
     price_target=(Literal[None], Field(default=None)),

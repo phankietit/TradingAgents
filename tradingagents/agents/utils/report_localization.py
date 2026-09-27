@@ -8,10 +8,12 @@ The model receives protected text, not a second request for financial analysis.
 import re
 import unicodedata
 from collections import Counter
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from tradingagents.agents.research_schemas import LocalizedResearchReport
+from tradingagents.agents.utils.quantitative_statements import percentage_statement
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
 from tradingagents.platform.analysis.research_validation import (
     NUMBER_PATTERN,
@@ -21,7 +23,7 @@ from tradingagents.platform.analysis.research_validation import (
 ANCHOR = re.compile(r"⟦Q[A-Z]+⟧")
 # Protect every digit, including indicator names and dates. No locale-specific
 # number parsing or arithmetic is delegated to the translator.
-INDICATOR = r"(?:\b(?:SMA|EMA)\s*\d+\b|\b\d+[-–](?:SMA|EMA)\b)"
+INDICATOR = r"(?:\b(?:SMA|EMA)\s*\d+\b|\b\d+[-–](?:day\s+)?(?:SMA|EMA)\b)"
 QUANTITY = re.compile(INDICATOR + "|" + NUMBER_PATTERN.pattern, re.I)
 
 
@@ -40,17 +42,20 @@ def _letters(index):
             return result
 
 
-def protect_quantities(text):
+def protect_quantities(text, statements=None):
     if ANCHOR.search(text):
         raise PublicationValidationError(["translation_reserved_anchor"])
     values = {}
+    statements = statements or {}
 
     def replace(match):
         key = "⟦Q" + _letters(len(values)) + "⟧"
-        values[key] = match.group()
+        values[key] = statements.get(match.group(), match.group())
         return key
 
-    return QUANTITY.sub(replace, text), values
+    pattern = re.compile("|".join(re.escape(value) for value in sorted(statements, key=len, reverse=True))
+                         + "|(?i:" + QUANTITY.pattern + ")") if statements else QUANTITY
+    return pattern.sub(replace, text), values
 
 
 def restore_quantities(text, values):
@@ -83,8 +88,20 @@ def reader_report(decision):
 
 def localize_report(llm, decision, diagnostics):
     english = reader_report(decision)
-    protected, values = protect_quantities(english)
-    roles = {key: ("complete moving-average name" if re.fullmatch(INDICATOR, value, re.I)
+    statements = {}
+    for observed in decision.observed_numbers:
+        number = format(Decimal(str(observed.value)).quantize(Decimal(1).scaleb(-observed.decimal_places)), "f")
+        try:
+            en = percentage_statement(observed.fact_id, number)
+            if en:
+                statements[en] = percentage_statement(observed.fact_id, number, vi=True)
+        except ValueError:
+            # Legacy reports remain readable. Only exact deterministic sentences
+            # are protected as statements; never reinterpret historical prose.
+            continue
+    protected, values = protect_quantities(english, statements)
+    roles = {key: ("complete verified financial statement" if value in statements.values()
+                   else "complete moving-average name" if re.fullmatch(INDICATOR, value, re.I)
                    else "percentage" if value.endswith("%") else "number or date/range")
              for key, value in values.items()}
     accepted = None
@@ -103,6 +120,8 @@ def localize_report(llm, decision, diagnostics):
         "that have distinct anchors. Never spell an anchor as words. Keep Markdown headings and lists. "
         "Some anchors replace a COMPLETE indicator name, not its period alone. Never attach a "
         "percentage anchor to SMA/EMA as a period, or use an indicator anchor as an amount. "
+        "Other anchors replace complete verified financial statements; keep these as standalone "
+        "sentences, without negating, qualifying or inserting words inside them. "
         "Anchor roles (metadata only, do not include in the report): " + str(roles) + ". "
         "Terminology is mandatory: volatility = biến động; volume = khối lượng giao dịch; "
         "liquidity = thanh khoản; cross/crossover = giao cắt; divergence = phân kỳ. "

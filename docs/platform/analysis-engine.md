@@ -196,6 +196,23 @@ citations against immutable inputs. Its bounded repair receives the rejected
 candidate and allowlisted failure codes; it cannot change source data or bypass
 the gates. This is separate from the manager's schema-format repair budget.
 
+Percentage bindings now occupy standalone sentence anchors (`{{QA}}.`). The
+compiler renders the complete relationship from the verified fact ID: subject,
+reference, denominator, sign, unit and rounding. This replaces the previous
+pattern-based check of arbitrary percentage prose. Non-percentage bindings
+remain inline. The model still supplies all interpretations, opposing arguments,
+risks and invalidations; it must not remove a comparison just to satisfy the
+format. Unsupported templates or anchors embedded in comparison prose fail
+closed. Calendar returns, window drawdown, indicator-relative percentages and
+verified `calc.pct_change`/`calc.abs_pct_change` operands are covered.
+
+Exact compiler-owned percentage sentences have deterministic Vietnamese
+equivalents and are protected as entire statements during model translation.
+Historical free-form reports are not retroactively rewritten. This guarantees
+the rendered relationship's numerical meaning, not the surrounding narrative's
+entailment or the investment conclusion. Live acceptance of this changed
+presentation contract is still UNVERIFIED.
+
 After the complete research/risk graph, the `Report presentation` node translates
 the accepted reader-facing report when Vietnamese is requested. Application-owned
 anchors protect every digit (prices, percentages, dates, indicator periods and
