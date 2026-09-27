@@ -87,14 +87,16 @@ class AnalysisEngine:
         config.update(deepcopy(dict(request.config_overrides)))
         snapshot_options = {}
         fact_catalog = {}
+        fact_sources = {}
         if request.snapshot_context is not None:
             if request.snapshot_context.as_of.date() != request.analysis_date:
                 raise ValueError("snapshot clock does not match analysis date")
             snapshot_options["snapshot_reports"] = request.snapshot_context.reports(
                 request.instrument.instrument_id, analysts)
-            fact_catalog = {source["snapshot_id"]: SnapshotMarketFacts(source).fact_catalog()
+            fact_sources = {source["snapshot_id"]: SnapshotMarketFacts(source)
                 for source in json.loads(snapshot_options["snapshot_reports"].get("market", "[]"))
                 if source["provenance"]["dataset"] == "ohlcv.daily"}
+            fact_catalog = {key: source.fact_catalog() for key, source in fact_sources.items()}
             if request.execution_observer is not None:
                 snapshot_options["execution_observer"] = request.execution_observer
         graph = self._graph_factory(
@@ -132,6 +134,12 @@ class AnalysisEngine:
                 schema = SnapshotPortfolioDecision if request.snapshot_context is not None else PortfolioDecision
                 parsed = schema.model_validate(raw_decision)
                 if request.snapshot_context is not None:
+                    # Historical tool results retain explicit immutable IDs;
+                    # validate them by replay, not by a lossy latest-only catalog.
+                    for claim in parsed.observed_numbers:
+                        source = fact_sources.get(str(claim.snapshot_id))
+                        if source is not None:
+                            fact_catalog[str(claim.snapshot_id)][claim.fact_id] = source.resolve_fact(claim.fact_id)
                     text = "\n".join([parsed.executive_summary, parsed.investment_thesis, *parsed.risks, *parsed.invalidation_conditions,
                                       *([parsed.localized_report.en, parsed.localized_report.vi] if parsed.localized_report else [])])
                     validation_issues.extend(scope_issues(text))

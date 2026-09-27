@@ -15,6 +15,7 @@ class RunEventType(str, Enum):
     RUN_STARTED = "run.started"
     STAGE_STARTED = "stage.started"
     STAGE_COMPLETED = "stage.completed"
+    MODEL_USAGE = "model.usage"
     ARTIFACT_CREATED = "artifact.created"
     DECISION_READY = "decision.ready"
     RUN_RETRYING = "run.retrying"

@@ -125,7 +125,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       {preparationProgress.waiting ? <p>{t(preparationProgress.reason === 'cooldown' ? 'Waiting for the local download cooldown.' : preparationProgress.reason === 'rate_limited' ? 'Yahoo is limiting requests.' : 'Data is not ready yet. Retrying automatically.')} {t('Next check in')} {preparationProgress.remaining} {t('seconds')}.</p> : <p>{t('Downloading and checking prices…')}</p>}
       <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
     </section> : null}
-    <ResearchSetup />
+    <p className="muted">{t('Build a research brief from verified market evidence. Review the coverage before starting AI analysis.')}</p>
     <label>{t('Report language')}<select value={reportLanguage} disabled={pending || preparing} onChange={event => {
       setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
     }}>
@@ -174,6 +174,10 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
           asOf={asOf} maxAge={Number(policy?.parameters.correlation_max_age_seconds ?? 0)} selected={riskSources[id] ?? ''}
           onChange={value => { setRiskSources(previous => ({ ...previous, [id]: value })); setConfirmed(false); }} />)}</> : null}
     </section> : null}
+    <section className="coverage-overview"><h3>{t('Research coverage')}</h3><div className="coverage-grid">{profile.data?.allowed_analysts.map(role => <div key={role}><span>{researchLabel(role)}</span><strong className={selectedRoles.includes(role) ? 'coverage-included' : 'muted'}>{selectedRoles.includes(role) ? t('Included') : t('Not included')}</strong></div>)}</div>
+      {profile.data && selectedRoles.length < profile.data.allowed_analysts.length ? <p className="muted caption">{t('This is a limited-scope report. Missing research areas will remain unavailable, not filled in by AI.')}</p> : null}
+    </section>
+    <details className="source-inspector"><summary>{t('Inspect or change evidence sources')}</summary>
     {profile.data?.allowed_analysts.map(role => <fieldset key={role} className="source-role"><legend>{researchLabel(role)}</legend>
       {!discovery.data?.some(item => item.supported_analysts.includes(role)) ? <p className="muted">{t("No suitable saved sources for this research area. It will not be included.")}</p> : discovery.data.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}
@@ -184,6 +188,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       </label>)}
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
+    </details>
     <h3>{t('2. Review sources and authorize AI')}</h3>
     {!selectedRoles.length ? <p className="warning">{t('To continue, prepare latest prices above or select an eligible saved source. No AI analysis has been submitted.')}</p> : null}
     {selectedRoles.some(role => sources[role].some(id => !eligible.has(id))) ? <p className="warning">{t('A selected source is not eligible for this research time. Prepare current prices or change the selection.')}</p> : null}
@@ -192,6 +197,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     {!confirmed && selectedRoles.length > 0 ? <p className="muted">{t('One final step: authorize the AI run above to enable submission.')}</p> : null}
     {error ? <p role="alert" className="notice danger">{t(error)}  {t("Retrying unchanged inputs reuses the same request key.")}</p> : null}
     <div className="section-actions"><button className="primary" disabled={!ready}>{pending ? t("Submitting…") : t("Queue analysis")}</button><button type="button" onClick={onClose}>{t("Close configuration")}</button></div>
+    <details><summary>{t('Processing setup')}</summary><ResearchSetup /></details>
     </fieldset>
   </form>;
 }

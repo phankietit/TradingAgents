@@ -1,14 +1,15 @@
 import { t, useLocale } from './i18n';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { SessionBoundary } from './auth';
 import { errorMessage } from './api';
 import type { Owner } from './api';
-import Markets from './Markets';
-import Analysis from './Analysis';
-import Portfolio from './Portfolio';
-import Decisions from './Decisions';
 import ViewBoundary from './ViewBoundary';
 import LanguageSwitch from './LanguageSwitch';
+
+const Markets = lazy(() => import('./Markets'));
+const Analysis = lazy(() => import('./Analysis'));
+const Portfolio = lazy(() => import('./Portfolio'));
+const Decisions = lazy(() => import('./Decisions'));
 
 const pages = ['Markets', 'Analysis', 'Portfolio', 'Decisions'] as const;
 const descriptions = {
@@ -53,10 +54,11 @@ function Workspace({ owner, logout }: { owner: Owner; logout: () => Promise<void
       <header className="workspace-header"><div><p className="eyebrow">{t('YOUR RESEARCH WORKSPACE')}</p><h1>{t(page ?? 'Page not found')}</h1>{page ? <p className="page-description">{t(descriptions[page])}</p> : null}</div><LanguageSwitch /></header>
       <div className="page-content">
         <ViewBoundary key={page}>
+        <Suspense fallback={<p role="status">{t('Loading…')}</p>}>
         {page === 'Markets' ? <Markets /> : page === 'Analysis' ? <Analysis /> : page === 'Portfolio' ? <Portfolio /> : page === 'Decisions' ? <Decisions /> : <section className="empty-state"><h2>{t("This workspace does not exist")}</h2>
           <p>{page ? t("Session authentication is active. Data views are not available in this implementation checkpoint.") : t("Choose a workspace from the navigation.")}</p>
         </section>}
-        </ViewBoundary>
+        </Suspense></ViewBoundary>
       </div>
       <footer className="workspace-footer">{t("Decision support · No order execution")}</footer>
     </main>

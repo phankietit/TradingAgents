@@ -28,7 +28,7 @@ class ResearchObserver(BaseCallbackHandler):
         self.completed = []
         self.seen_model_runs = set()
         self.usage = {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0,
-                      "model_calls": 0, "calls_with_usage": 0}
+                      "model_calls": 0, "calls_with_usage": 0, "failed_calls": 0}
         self.lock = Lock()
         self.clock = clock
         self.started = clock()
@@ -74,6 +74,21 @@ class ResearchObserver(BaseCallbackHandler):
                 for key in ("input_tokens", "output_tokens", "total_tokens"):
                     self.usage[key] += usage[key]
                 self.usage["calls_with_usage"] += 1
+            receipt = self.receipt()["usage"]
+        # Save the cumulative per-attempt receipt after every model completion,
+        # not just successful publication. Failed attempts still consumed quota.
+        self.emit("model.usage", {"usage": receipt})
+
+    def on_llm_error(self, error, *, run_id, **kwargs):
+        with self.lock:
+            if run_id in self.seen_model_runs:
+                return
+            self.seen_model_runs.add(run_id)
+            self.usage["model_calls"] += 1
+            self.usage["failed_calls"] += 1
+            receipt = self.receipt()["usage"]
+        # Providers may charge failed calls without returning usage. No zero-cost claim.
+        self.emit("model.usage", {"usage": receipt})
 
     def receipt(self):
         return {"completed_stages": list(self.completed),

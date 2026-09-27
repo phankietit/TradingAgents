@@ -145,6 +145,12 @@ class AnalysisJobHandler:
                          "all_profile_roles_present": set(run.selected_analysts) == set(resolve_analysis_profile(instrument).allowed_analysts)},
             "market_facts": [source.summary() for source in market_sources],
             "market_history": [source.chart() for source in market_sources],
+            "research_sections": {key: result.final_state[key] for key in (
+                "market_report", "sentiment_report", "news_report", "fundamentals_report",
+                "investment_plan", "trader_investment_plan")
+                if isinstance(result.final_state.get(key), str)},
+            "debate_sections": {key: result.final_state.get(key, {}).get("history", "")
+                for key in ("investment_debate_state", "risk_debate_state")},
         }
         with context.publication_session() as session:
             repository = PlatformRepository(session, artifact_store=self.artifact_store)

@@ -1,5 +1,12 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'Build a research brief from verified market evidence. Review the coverage before starting AI analysis.': 'Tạo báo cáo từ nguồn thị trường đã kiểm tra. Xem phạm vi dữ liệu trước khi bắt đầu phân tích AI.',
+  'Research coverage': 'Phạm vi nghiên cứu',
+  'Included': 'Đã chọn',
+  'Not included': 'Chưa có trong phân tích',
+  'This is a limited-scope report. Missing research areas will remain unavailable, not filled in by AI.': 'Báo cáo có phạm vi giới hạn. AI không được tự bổ sung những nội dung chưa có dữ liệu.',
+  'Inspect or change evidence sources': 'Xem hoặc thay đổi nguồn dữ liệu',
+  'Processing setup': 'Thiết lập xử lý',
   'This report has unresolved validation findings. It is available for inspection, not an approved investment conclusion.': 'Báo cáo còn vấn đề chưa đạt kiểm chứng. Có thể đọc để kiểm tra, chưa phải kết luận đầu tư đã được phê duyệt.',
   'Validation & model usage': 'Kiểm chứng và mức sử dụng AI',
   'No automated finding recorded. Human financial review remains required.': 'Không ghi nhận cảnh báo tự động. Vẫn cần bạn đánh giá nội dung tài chính.',
@@ -265,6 +272,8 @@ export const vietnamese: Record<string, string> = {
   'Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.': 'Chọn ngôn ngữ cho phân tích mới. Báo cáo song ngữ có thể dùng nhiều token đầu ra hơn. Đổi ngôn ngữ giao diện không dịch lại báo cáo đã lưu.',
   'Original report · Language requested:': 'Báo cáo gốc · Ngôn ngữ yêu cầu:', 'Legacy / not recorded': 'Bản cũ / chưa ghi nhận',
   'Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.': 'Giữ nguyên nội dung phân tích gốc. Lựa chọn ngôn ngữ hướng dẫn AI tạo báo cáo; độ chính xác bản dịch vẫn cần bạn kiểm tra.',
+  'The model response did not pass the report format checks. The saved market chart remains available; no validated conclusion was published.': 'Kết quả AI chưa đạt kiểm tra định dạng báo cáo. Bạn vẫn có thể xem biểu đồ dữ liệu đã lưu; chưa có kết luận đạt kiểm chứng.',
+  'Inspect the unvalidated model response': 'Xem phản hồi AI chưa đạt kiểm chứng',
   'analysis report': 'báo cáo phân tích', 'decision evidence': 'căn cứ quyết định', 'preview': 'xem trước',
   'BUY': 'Mua (BUY)', 'SELL': 'Bán (SELL)', 'HOLD': 'Nắm giữ (HOLD)', 'REVIEW': 'Cần xem xét (REVIEW)',
   'equity': 'Cổ phiếu', 'etf': 'Quỹ ETF', 'crypto': 'Tiền mã hóa', 'index': 'Chỉ số', 'futures_reference': 'Tham chiếu hợp đồng tương lai',

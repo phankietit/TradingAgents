@@ -9,7 +9,9 @@ import json
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 
+from tradingagents.agents.schemas import SentimentReport, render_sentiment_report
 from tradingagents.agents.utils.agent_utils import get_language_instruction
+from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 
 from .analyst_execution import ANALYST_NODE_SPECS
@@ -48,6 +50,18 @@ ROLE_INSTRUCTIONS = {
 }
 
 
+class SnapshotToolBudgetError(ValueError):
+    """Bounded tool work exhausted; not a vendor outage or missing data."""
+
+
+class SnapshotToolPolicyError(ValueError):
+    """The model requested a tool outside the immutable evidence boundary."""
+
+
+class SnapshotReportFormatError(ValueError):
+    """The model completed without a readable analyst report."""
+
+
 def snapshot_analyst_nodes(llm, reports):
     def create(role, evidence):
         report_key = ANALYST_NODE_SPECS[role].report_key
@@ -80,6 +94,7 @@ def snapshot_analyst_nodes(llm, reports):
         tools = [get_snapshot_candles, get_snapshot_indicator, get_snapshot_return] if markets else []
         by_name = {item.name: item for item in tools}
         model = llm.bind_tools(tools) if tools else llm
+        sentiment_model = bind_structured(llm, SentimentReport, "Sentiment Analyst") if role == "social" else None
         # Summaries do not discard history: the full validated snapshot stays
         # in the tool closures, avoiding a 300KB raw-candle prompt each round.
         supplied = [{**source, "data": markets[source["snapshot_id"]].summary()}
@@ -96,6 +111,9 @@ def snapshot_analyst_nodes(llm, reports):
                     "State the source_end cutoff and any delayed publication metadata prominently; "
                     "never describe delayed evidence as current prices or fill missing candles. "
                     "Use verified calculations for exact returns, indicators and sequence claims. "
+                    "A consecutive/monotonic declining sequence requires EVERY corresponding pair "
+                    "to decline. A mixed sequence is not consecutive decline. Calendar-return "
+                    "start prices come from the return endpoint, never from the observed window high. "
                     "Separate observations from conditional scenarios. "
                     "A five-year observed high is not an all-time high. Timestamp means candle "
                     "close instant; session_date is the trading-day label. Do not confuse them. "
@@ -105,26 +123,33 @@ def snapshot_analyst_nodes(llm, reports):
                     + "\nAnalysis date: " + state["trade_date"] + get_language_instruction())),
                 HumanMessage(content=json.dumps(supplied, ensure_ascii=False, allow_nan=False)),
             ]
+            if role == "social":
+                diagnostics = list(state.get("structured_diagnostics", []))
+                report = invoke_structured_or_freetext(sentiment_model, llm, messages,
+                    render_sentiment_report, "Sentiment Analyst", repair_schema=SentimentReport,
+                    diagnostics=diagnostics)
+                return {report_key: report, "messages": [AIMessage(content=report)],
+                        "structured_diagnostics": diagnostics}
             for _ in range(16):
                 response = model.invoke(messages)
                 calls = getattr(response, "tool_calls", None)
                 if not calls:
                     break
                 if len(calls) > 8:
-                    raise ValueError("snapshot analyst exceeded tool batch budget")
+                    raise SnapshotToolBudgetError("snapshot analyst exceeded tool batch budget")
                 messages.append(response)
                 for call in calls:
                     if call["name"] not in by_name:
-                        raise ValueError("snapshot analyst requested an unapproved tool")
+                        raise SnapshotToolPolicyError("snapshot analyst requested an unapproved tool")
                     try:
                         result = by_name[call["name"]].invoke(call["args"])
                     except (KeyError, ValueError, TypeError):
                         result = {"error": "invalid_snapshot_query", "instruction": "Use a supplied snapshot ID and valid bounded arguments."}
                     messages.append(ToolMessage(content=json.dumps(result, allow_nan=False), tool_call_id=call["id"]))
             else:
-                raise ValueError("snapshot analyst exhausted tool budget without a report")
+                raise SnapshotToolBudgetError("snapshot analyst exhausted tool budget without a report")
             if not isinstance(response.content, str) or not response.content.strip():
-                raise ValueError("snapshot analyst must return nonempty text")
+                raise SnapshotReportFormatError("snapshot analyst must return nonempty text")
             return {report_key: response.content, "messages": [AIMessage(content=response.content)]}
 
         return analyze

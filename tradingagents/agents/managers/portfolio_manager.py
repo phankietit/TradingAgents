@@ -84,18 +84,42 @@ Write these sections, in this order, starting with the rating on its own line:
         structured_decision = None
         diagnostics = list(state.get("structured_diagnostics", []))
         if research_only:
+            # The legacy bilingual suffix asks for both languages in every
+            # field. Snapshot reports have separate locales; do not contradict
+            # that schema with the legacy instruction.
+            prompt = prompt.replace(get_language_instruction(), "")
+            prompt = prompt.replace("final trading decision", "final research assessment")
+            for old, new in {
+                "Strong conviction to enter or add to position": "Strong positive research outlook",
+                "Favorable outlook, gradually increase exposure": "Moderately positive research outlook",
+                "Maintain current position, no action needed": "Balanced or insufficient research evidence",
+                "Reduce exposure, take partial profits": "Moderately negative research outlook",
+                "Exit position or avoid entry": "Strong negative research outlook",
+                "the call and how to act on it": "outlook, supporting evidence, uncertainty and horizon",
+                "Trader's transaction proposal": "Trader's research scenario",
+            }.items():
+                prompt = prompt.replace(old, new)
             prompt = prompt.replace("sized by how decisively it wins", "qualified by the evidence strength")
             prompt += ("\nResearch-only output: include required confidence, at least one risk, "
                        "and at least one invalidation condition. For investment_thesis and every "
                        "risk and invalidation, include an evidence_claim with exactly matching "
-                       "claim text and only supplied snapshot IDs. Hypothetical conditions must "
+                       "claim text and only supplied snapshot IDs. The evidence_claims array must "
+                       "contain EXACTLY the investment_thesis string, each risks string and each "
+                       "invalidation_conditions string, one entry per unique string; no paraphrases "
+                       "or extra entries. Hypothetical conditions must "
                        "be labelled conditional, not observed. No sizing or execution instructions.")
             prompt += ("\nUse observed_numbers to reference every observed numeric claim using "
                        "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
                        "passed by analysts; do not invent IDs. If bilingual output was requested, "
                        "localized_report is required with complete en and vi Markdown reports. "
                        "Keep canonical structured fields in English and preserve all numbers, dates "
-                       "and currency symbols verbatim in the Vietnamese translation.")
+                       "and currency symbols verbatim in the Vietnamese translation. Translate one "
+                       "paragraph at a time; each number must occur the same number of times in both "
+                       "languages. Do not add or remove numbered headings. Prefer concise paragraphs "
+                       "and unnumbered headings. Round monetary/percentage observations to 2 decimals "
+                       "in BOTH prose and observed_numbers, setting decimal_places=2; never copy "
+                       "floating-point noise from the catalog. Preserve the sign and units. "
+                       "Do not invent conditional price targets as observed facts.")
 
         def capture_decision(value):
             nonlocal structured_decision

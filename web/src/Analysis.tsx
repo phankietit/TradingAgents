@@ -49,7 +49,7 @@ export default function Analysis() {
   </>;
 }
 
-const eventNames = ['run.queued', 'run.started', 'stage.started', 'stage.completed', 'artifact.created', 'decision.ready', 'run.retrying', 'run.cancel_requested', 'run.cancelled', 'run.failed', 'run.succeeded'];
+const eventNames = ['run.queued', 'run.started', 'stage.started', 'stage.completed', 'model.usage', 'artifact.created', 'decision.ready', 'run.retrying', 'run.cancel_requested', 'run.cancelled', 'run.failed', 'run.succeeded'];
 function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: string; version: number; onStatus: (id: string, status: string) => void; onChanged: () => void; onRetry: (run: Run) => void }) {
   useLocale();
   const [tick, setTick] = useState(0);
@@ -59,8 +59,9 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   const [streamError, setStreamError] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
+  const [jobStatus, setJobStatus] = useState<string | null>(null);
   const isTerminal = run.data ? terminal(run.data.status) : false;
-  const observedStatus = run.data?.status;
+  const observedStatus = jobStatus ?? run.data?.status;
   useEffect(() => {
     if (observedStatus) onStatus(runId, observedStatus);
   }, [runId, observedStatus, onStatus]);
@@ -95,9 +96,9 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   return <section className="instrument-detail" aria-label={t("Run details")}>
     <h2>{t("Research progress")}</h2>
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
-      <p role="status">{t("Research:")} <strong>{t(processingLabels[run.data.status] ?? 'Status unavailable')}</strong>  {t("· As of")} {timestamp(run.data.analysis_as_of)}</p>
-      <JobProgress runId={runId} version={version + tick} />
-      {!isTerminal && events.some(event => event.stage) ? <p className="stage-indicator" role="status">{t('Current research stage:')} {t([...events].reverse().find(event => event.stage)?.stage ?? '')}</p> : null}
+      <p role="status">{t("Research:")} <strong>{t(processingLabels[jobStatus ?? run.data.status] ?? 'Status unavailable')}</strong>  {t("· As of")} {timestamp(run.data.analysis_as_of)}</p>
+      <JobProgress runId={runId} version={version + tick} onStatus={setJobStatus} />
+      {!isTerminal && jobStatus === 'running' && events.some(event => event.stage) ? <p className="stage-indicator" role="status">{t('Current research stage:')} {t([...events].reverse().find(event => event.stage)?.stage ?? '')}</p> : null}
       {run.data.status === 'queued' ? <p className="notice">{t("Waiting for a worker. Queued does not mean analysis has started.")}</p> : null}
       {run.data.error_code ? <><p className="notice danger">{t("Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.")}</p><details><summary>{t("Failure details")}</summary><p className="mono">{run.data.error_code}</p></details></> : null}
       <p className="muted">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>

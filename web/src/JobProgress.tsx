@@ -1,6 +1,7 @@
 import { t, useLocale } from './i18n';
 import { ApiError, errorMessage } from './api';
 import { timestamp, useResource } from './data';
+import { useEffect } from 'react';
 
 export const processingLabels: Record<string, string> = {
   queued: 'Waiting to start', running: 'In progress', retry_wait: 'Waiting to retry',
@@ -17,9 +18,11 @@ function validate(value: JobState): JobState {
   return value;
 }
 
-export default function JobProgress({runId, version}: {runId: string; version: number}) {
+export default function JobProgress({runId, version, onStatus}: {runId: string; version: number; onStatus?: (status: string) => void}) {
   useLocale();
   const job = useResource<JobState>(`/runs/${encodeURIComponent(runId)}/job`, version, validate);
+  const currentStatus = job.data?.run_id === runId ? job.data.status : undefined;
+  useEffect(() => { if (currentStatus) onStatus?.(currentStatus); }, [currentStatus, onStatus]);
   if (job.loading) return <p role="status">{t("Checking processing status…")}</p>;
   if (job.error || !job.data || job.data.run_id !== runId) return <p className="warning">{t("Processing details unavailable.")} {job.error instanceof ApiError && job.error.status === 404 ? t("No processing record was found for this research.") : t(errorMessage(job.error))}  {t("This does not confirm that research is running.")}</p>;
   const data = job.data;

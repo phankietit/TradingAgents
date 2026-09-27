@@ -64,6 +64,7 @@ class SnapshotMarketFacts:
             value = float(values.iloc[i])
             ready = i + 1 >= WARMUP[name] and isfinite(value)
             rows.append({"closed_at": self.bars[i].timestamp.isoformat(),
+                         "fact_id": f"history.{i}.indicator.{name}",
                          "value": value if ready else None,
                          "status": "available" if ready else "insufficient_warmup"})
         return {"snapshot_id": self.snapshot_id, "indicator": name,
@@ -78,7 +79,7 @@ class SnapshotMarketFacts:
         return {"snapshot_id": self.snapshot_id, "offset": offset,
                 "total_observations": len(self.bars),
                 "next_offset": end if end < len(self.bars) else None,
-                "bars": [self.point(i) for i in range(offset, end)]}
+                "bars": [{**self.point(i), "fact_prefix": f"history.{i}.candle"} for i in range(offset, end)]}
 
     def calendar_return(self, days: int) -> dict:
         if not 1 <= days <= 36500:
@@ -87,6 +88,7 @@ class SnapshotMarketFacts:
         target = end.timestamp - timedelta(days=days)
         candidates = [i for i, b in enumerate(self.bars) if b.timestamp <= target]
         result = {"snapshot_id": self.snapshot_id, "calendar_days": days,
+                  "fact_id": f"return.{days}_calendar_days.pct",
                   "target_closed_at": target.isoformat(),
                   "endpoint_rule": "last_close_on_or_before_calendar_target",
                   "price_basis": self.series.price_basis.value,
@@ -148,7 +150,37 @@ class SnapshotMarketFacts:
         high = max(bar.high for bar in self.bars)
         facts["observed_window.high"] = high
         facts["observed_window.latest_close_vs_high_pct"] = (latest.close / high - 1) * 100
+        facts["observed_window.drawdown_magnitude_pct"] = (1 - latest.close / high) * 100
+        for name in DEFAULT_SNAPSHOT_INDICATORS:
+            value = facts.get(f"indicator.{name}")
+            if value is not None:
+                facts[f"indicator.{name}.pct_of_latest_close"] = value / latest.close * 100
+                if name in {"close_10_ema", "close_50_sma", "close_200_sma", "boll", "boll_ub", "boll_lb"}:
+                    facts[f"indicator.{name}.distance_from_latest_close_pct"] = (value / latest.close - 1) * 100
         return facts
+
+    def resolve_fact(self, fact_id: str):
+        """Replay explicit tool-returned fact IDs without expanding the prompt.
+
+        History indices are immutable snapshot positions, not vendor labels.
+        Unknown IDs and incomplete warmup resolve to no fact, never a default.
+        """
+        import re
+
+        match = re.fullmatch(r"history\.(\d+)\.(candle|indicator)\.([a-z0-9_]+)", fact_id)
+        if match:
+            index, kind, name = int(match[1]), match[2], match[3]
+            if index >= len(self.bars):
+                return None
+            if kind == "candle" and name in {"open", "high", "low", "close", "volume", "adjusted_close"}:
+                return getattr(self.bars[index], name)
+            if kind == "indicator" and name in WARMUP:
+                return self.indicator(name, offset=index, limit=1)["rows"][0]["value"]
+            return None
+        match = re.fullmatch(r"return\.(\d+)_calendar_days\.pct", fact_id)
+        if match and 1 <= int(match[1]) <= 36500:
+            return self.calendar_return(int(match[1]))["return_pct"]
+        return self.fact_catalog().get(fact_id)
 
     def chart(self) -> dict:
         """Full observed history for the saved report, never a live-price query."""

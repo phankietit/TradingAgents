@@ -58,6 +58,14 @@ Write these sections, in this order, starting with the recommendation on its own
 
         diagnostics = list(state.get("structured_diagnostics", []))
         if research_only:
+            for old, new in {
+                "recommend taking or growing the position": "positive research outlook only",
+                "recommend gradually increasing exposure": "moderately positive research outlook only",
+                "recommend maintaining the current position": "balanced or insufficient evidence",
+                "recommend trimming exposure": "moderately negative research outlook only",
+                "recommend exiting or avoiding the position": "negative research outlook only",
+            }.items():
+                prompt = prompt.replace(old, new)
             prompt = prompt.replace("sized by how decisively it wins", "qualified by evidence strength")
             prompt = prompt.replace("concrete steps for the trader, sized against a standard allocation",
                                     "conditional research scenarios and evidence to monitor; no sizing or allocation")

@@ -71,7 +71,11 @@ owner-readable artifacts already listed in the run manifest.
 
 The snapshot path never constructs legacy tool nodes, reads/settles memory,
 resolves a live vendor identity, or writes legacy ticker logs/checkpoints.
-Its model clients are unbound to tools; analyst tool-call responses are errors.
+Market analysts use only the run-bound candle/indicator/return tools. Full
+history is pageable without live vendor reads or prompt truncation. Social
+analysis retains the original SentimentReport schema with bounded repair.
+Unknown tools fail closed; bounded tool-budget and report-format failures are
+distinct exception classes. Other graph roles retain their original sequence.
 Real graph fixture tests cover the full debate/manager path with forbidden
 legacy hooks. They are offline evidence, not live-provider validation.
 
@@ -92,6 +96,25 @@ yield `READY_FOR_APPROVAL`; approval still requires a separate owner event.
 Reference profiles remain non-investable. Source binding proves provenance,
 not that every model inference is correct. Live provider evidence remains a
 separate gate.
+
+Source verification, research-format validity and portfolio approval are
+separate states. A completed job can contain an unvalidated research report.
+Snapshot facts verify declared numeric references and rounding; known authority
+violations and unsupported money/percentage observations withhold a structured
+candidate. These checks are not a general semantic proof of qualitative claims.
+Human financial review remains required. Bilingual reports have canonical
+English fields and saved EN/VI Markdown; numeric tokens must match across
+locales. Switching the interface never invokes AI.
+
+Progress comes from actual graph callbacks, not percentages. Each completed or
+failed model call appends a cumulative `model.usage` receipt for its attempt;
+sum the last receipt per attempt, not every cumulative event. Missing provider
+usage is explicitly incomplete; subscription dollar cost is not inferred.
+An in-flight provider call can still consume quota after cancellation. Snapshot
+runs cap wall time at 1800 seconds and model starts at 128, with 180-second
+provider timeout and one SDK retry by default. Exceeding a budget fails the run,
+never shortens the graph and labels it complete. Reports retain allowlisted
+analyst/research/trader/debate sections, not raw messages or hidden reasoning.
 
 ## Local worker command
 

@@ -186,7 +186,17 @@ class JobWorker:
                 with self.database.session() as session:
                     return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except Exception as exc:
+            from pathlib import Path
+            from traceback import extract_tb
+
             from tradingagents.platform.analysis.observer import ResearchBudgetExceeded
+
+            logger.error("job_handler_failed", extra={
+                "job_id": str(job.job_id), "run_id": str(job.run_id),
+                "error_type": type(exc).__name__,
+                "code_locations": [f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}"
+                                   for frame in extract_tb(exc.__traceback__)[-8:]],
+            })
 
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
             try:

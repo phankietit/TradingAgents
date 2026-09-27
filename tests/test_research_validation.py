@@ -44,3 +44,15 @@ def test_provider_usage_is_reported_without_prompts_or_fabricated_cost():
     usage = observer.receipt()["usage"]
     assert usage["total_tokens"] == 168 and usage["model_calls"] == 1
     assert usage["status"] == "reported" and usage["cost"] is None
+
+
+def test_usage_events_survive_failed_attempt_without_provider_error_content():
+    events = []
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda kind, payload: events.append((kind, payload)))
+    run_id = uuid4()
+    observer.on_llm_error(ValueError("sk-sensitive-provider-message"), run_id=run_id)
+    observer.on_llm_error(ValueError("duplicate"), run_id=run_id)
+    assert len(events) == 1 and events[0][0] == "model.usage"
+    assert events[0][1]["usage"]["failed_calls"] == 1
+    assert events[0][1]["usage"]["status"] == "incomplete"
+    assert "sk-sensitive" not in str(events)

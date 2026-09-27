@@ -87,6 +87,18 @@ def test_indicator_uses_all_history_but_withholds_short_warmup():
         facts.indicator("made_up_indicator")
 
 
+def test_historical_reference_replay_and_derived_distances_are_snapshot_bound():
+    facts = SnapshotMarketFacts(source())
+    assert facts.resolve_fact("history.399.candle.close") == 499
+    row = facts.indicator("close_200_sma", offset=399, limit=1)["rows"][0]
+    assert facts.resolve_fact(row["fact_id"]) == row["value"]
+    assert facts.resolve_fact("history.0.indicator.close_200_sma") is None
+    assert facts.resolve_fact("history.400.candle.close") is None
+    assert facts.resolve_fact("history.1.candle.secret") is None
+    assert facts.resolve_fact("return.365_calendar_days.pct") == facts.calendar_return(365)["return_pct"]
+    assert facts.resolve_fact("indicator.close_200_sma.distance_from_latest_close_pct") == pytest.approx((399.5 / 499 - 1) * 100)
+
+
 def test_future_payload_cannot_hide_behind_valid_manifest():
     value = source()
     value["provenance"]["source_end"] = value["data"]["bars"][-2]["timestamp"]

@@ -75,6 +75,7 @@ def invoke_structured_or_freetext(
     shape). The same value is forwarded to the free-text path so the
     fallback sees the same input the structured call did.
     """
+    repair_feedback = None
     if structured_llm is not None:
         try:
             result = structured_llm.invoke(prompt)
@@ -98,6 +99,7 @@ def invoke_structured_or_freetext(
                     raise
                 if diagnostics is not None:
                     diagnostics.append(_safe_diagnostic(agent_name, exc, "structured"))
+                repair_feedback = _safe_diagnostic(agent_name, exc, "structured")
             logger.warning(
                 "%s: structured-output invocation failed (%s); retrying once as free text",
                 agent_name, type(exc).__name__,
@@ -111,6 +113,14 @@ def invoke_structured_or_freetext(
                        "Use only the same supplied evidence and authority constraints. "
                        "Do not invent missing facts or source IDs.\n"
                        + json.dumps(repair_schema.model_json_schema(), ensure_ascii=False))
+        if repair_feedback:
+            instruction += ("\nThe previous attempt failed these checks: "
+                            + json.dumps(repair_feedback)
+                            + "\nCorrect these fields, not the evidence. For localized_report, translate "
+                            "paragraph by paragraph with exactly the same numeric tokens and counts: "
+                            "copy all digits, signs, decimals, percentages, dates and numbered headings. "
+                            "For observed_numbers use rounded displayed values and decimal_places 0..8; "
+                            "prefer 2 decimal places. Do not copy floating-point noise as display precision.")
         if isinstance(prompt, str):
             repair_prompt = prompt + "\n\n" + instruction
         else:
@@ -140,6 +150,15 @@ def _safe_diagnostic(agent: str, error: Exception, phase: str) -> dict:
     # No raw provider message, input values, URLs, prompts or credentials.
     fields = []
     if isinstance(error, ValidationError):
-        fields = [{"field": ".".join(str(part) for part in item["loc"]),
+        # Extra/mapping keys can themselves contain arbitrary provider text.
+        # Retain schema field names only, never echo unknown field names.
+        from tradingagents.agents.research_schemas import LocalizedResearchReport, ObservedNumber
+        from tradingagents.agents.schemas import PortfolioDecision, ResearchPlan, TraderProposal
+
+        allowed = set().union(*(set(schema.model_fields) for schema in (
+            PortfolioDecision, ResearchPlan, TraderProposal, LocalizedResearchReport, ObservedNumber)))
+        allowed.update({"localized_report", "observed_numbers", "claim", "snapshot_ids"})
+        fields = [{"field": ".".join(str(part) if isinstance(part, int) or part in allowed else "unknown_field"
+                                    for part in item["loc"]),
                    "code": item["type"]} for item in error.errors(include_input=False, include_url=False)]
     return {"agent": agent, "phase": phase, "error_type": type(error).__name__, "fields": fields[:32]}

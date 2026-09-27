@@ -170,6 +170,19 @@ dt { color: var(--muted); } dd { margin: 0; }
 .report-chart figcaption, .chart-scrubber { font-size: 11px; color: var(--muted); }
 .chart-scrubber input { padding: 0; accent-color: #a7b995; min-height: 24px; }
 .instrument-row strong { white-space: nowrap; }
+.analysis-form { border: 1px solid var(--border); border-radius: 14px; padding: 28px; background: #161816; max-width: 1000px; }
+.analysis-form > h2 { font-size: 26px; letter-spacing: -.7px; margin-bottom: 10px; }
+.analysis-form > label { max-width: 340px; }
+.analysis-form > .muted { font-size: 13px; max-width: 76ch; }
+.analysis-form h3 { font-size: 16px; font-weight: 550; }
+.analysis-form .notice { background: #1c201a; border: 1px solid #353e2f; border-radius: 10px; padding: 22px; }
+.analysis-form .notice p { font-size: 13px; }
+.coverage-overview { margin: 28px 0 16px; }
+.coverage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; border: 1px solid var(--border); background: var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 12px; }
+.coverage-grid > div { background: #181b17; padding: 18px; font-size: 12px; }
+.coverage-grid strong { display: block; font-size: 11px; font-weight: 500; margin-top: 7px; }
+.coverage-included { color: #c1d3aa; }
+.source-inspector { margin-bottom: 28px; }
 input, select, textarea, .safe-text { background: #141614; color: #ecece8; }
 .review-columns { gap: 28px; margin: 24px 0; }
 .review-columns h3 { font-size: 14px; font-weight: 550; color: #c5cbbf; }
@@ -206,6 +219,7 @@ input, select, textarea, .safe-text { background: #141614; color: #ecece8; }
   .research-heading h2 { font-size: 30px; }
   .outlook-badge { white-space: normal; max-width: 45%; }
   .artifact-preview { padding: 20px 16px; }
+  .analysis-form { padding: 20px 16px; }
   .workspace-header .language-switch { align-self: flex-end; }
   .rail-caption { display: none; }
   .login .wordmark { margin-bottom: 40px; }

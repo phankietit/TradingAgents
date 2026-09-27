@@ -61,3 +61,16 @@ def test_transport_failure_does_not_spend_a_schema_repair_call():
     with pytest.raises(ConnectionError):
         invoke_structured_or_freetext(SimpleNamespace(invoke=unavailable), SimpleNamespace(invoke=forbidden),
             "Evidence", render_pm_decision, "Portfolio Manager", repair_schema=SnapshotPortfolioDecision)
+
+
+def test_repair_receives_safe_field_feedback_and_does_not_leak_extra_keys():
+    secret = "sk-private-sensitive-field-name"
+    prompts, diagnostics = [], []
+    def broken(_):
+        SnapshotPortfolioDecision.model_validate({**valid(), secret: "private", "confidence": "bad"})
+    invoke_structured_or_freetext(SimpleNamespace(invoke=broken),
+        SimpleNamespace(invoke=lambda prompt: (prompts.append(prompt) or AIMessage(content=json.dumps(valid())))),
+        "Evidence", render_pm_decision, "Portfolio Manager", repair_schema=SnapshotPortfolioDecision,
+        diagnostics=diagnostics)
+    assert "confidence" in prompts[0] and "previous attempt failed" in prompts[0]
+    assert secret not in json.dumps(diagnostics) and secret not in prompts[0]

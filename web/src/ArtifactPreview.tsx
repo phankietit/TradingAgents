@@ -107,7 +107,10 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
       <h4>{t("Research narrative")}</h4>
       <p className="muted caption">{t('Original report · Language requested:')} {t(data.reportLanguage === 'en-vi' ? 'English + Vietnamese' : data.reportLanguage === 'vi' ? 'Vietnamese' : data.reportLanguage === 'en' ? 'English' : 'Legacy / not recorded')}</p>
       {data.localized && data.warning ? <p className="notice warning">{data.warning}</p> : null}
-      <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />
+      {data.issues.includes('structured_output_missing') ? <>
+        <p>{t('The model response did not pass the report format checks. The saved market chart remains available; no validated conclusion was published.')}</p>
+        <details><summary>{t('Inspect the unvalidated model response')}</summary><ResearchMarkdown text={data.narrative} /></details>
+      </> : <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />}
       <p className="muted caption">{t('Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.')}</p>
       <details><summary>{t("Structured research output")}</summary><pre className="safe-text">{JSON.stringify(data.structured ?? null, null, 2)}</pre></details>
       <details><summary>{t('Validation & model usage')}</summary>{data.issues.length ? <ul>{data.issues.map(issue => <li key={issue}>{issue}</li>)}</ul> : <p>{t('No automated finding recorded. Human financial review remains required.')}</p>}
