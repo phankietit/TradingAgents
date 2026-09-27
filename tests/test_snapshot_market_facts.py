@@ -106,7 +106,8 @@ def test_future_payload_cannot_hide_behind_valid_manifest():
         SnapshotMarketFacts(value)
 
 
-def test_snapshot_market_tools_run_without_fetching_live_data():
+@pytest.mark.parametrize("batch_size", [1, 12])
+def test_snapshot_market_tools_run_without_fetching_live_data(batch_size):
     import json
     value = source()
     calls = []
@@ -119,8 +120,8 @@ def test_snapshot_market_tools_run_without_fetching_live_data():
         def invoke(self, messages):
             calls.append(list(messages))
             if len(calls) == 1:
-                return AIMessage(content="", tool_calls=[{"name": "get_snapshot_return", "id": "r1",
-                    "args": {"snapshot_id": value["snapshot_id"], "calendar_days": 365}}])
+                return AIMessage(content="", tool_calls=[{"name": "get_snapshot_return", "id": f"r{i}",
+                    "args": {"snapshot_id": value["snapshot_id"], "calendar_days": 365}} for i in range(batch_size)])
             result = json.loads(messages[-1].content)
             assert result["return_pct"] == pytest.approx((499 / 134 - 1) * 100)
             return AIMessage(content="Evidence-based market report")

@@ -135,7 +135,11 @@ def snapshot_analyst_nodes(llm, reports):
                 calls = getattr(response, "tool_calls", None)
                 if not calls:
                     break
-                if len(calls) > 8:
+                # Eight complementary indicators is an analysis guideline,
+                # not eight queries: full-history paging can legitimately
+                # require many calls per indicator. Bound resource use without
+                # truncating normal five-year, multi-indicator inspection.
+                if len(calls) > 128:
                     raise SnapshotToolBudgetError("snapshot analyst exceeded tool batch budget")
                 messages.append(response)
                 for call in calls:
