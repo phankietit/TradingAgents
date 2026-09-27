@@ -231,3 +231,16 @@ Missing translation withholds bilingual/VI publication. Canonical evidence and
 diagnostics remain inspectable. Historical reports and the legacy CLI contract
 are unchanged. Numeric identity/provenance checks do not prove qualitative
 entailment, translation fidelity, profitability or approval; human review remains.
+
+For MiniMax function-calling schemas, a response containing no tool calls may
+already be one complete JSON object. The client now validates that entire
+content against the same Pydantic schema before spending the existing repair
+attempt. It never extracts a JSON fragment from prose or reasoning, hides a
+failed tool call, or accepts a known truncated/refused response. Explicit
+`include_raw=True` callers retain the original LangChain envelope contract.
+Initial text parsing and format repair share strict object parsing (including
+duplicate-field and non-JSON constant rejection). All publication callbacks
+still run. Wire-mocked tests verify one request/one usage record on valid input
+and no more than the original two attempts on rejection. Live cost savings
+remain UNVERIFIED; this does not change provider, model, thinking configuration,
+tool-choice support, graph roles or readiness requirements.

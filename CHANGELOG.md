@@ -10,6 +10,10 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Validate complete MiniMax JSON text responses against the bound schema before
+  requesting format repair; keep publication gates and retry/usage accounting.
+  Reject prose fragments, failed tool-call recovery, duplicate JSON fields and
+  non-JSON numeric constants. No provider/model or research-flow change.
 - Translate research in identified blocks, preserving source-owned sections,
   order and per-block quantities. Reject omitted/duplicate blocks and reproduced
   literal Vietnamese calques within the existing bounded repair budget.

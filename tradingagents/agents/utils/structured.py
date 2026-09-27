@@ -7,10 +7,10 @@ canonical pattern:
    so the model returns a typed Pydantic instance. If the provider does
    not support structured output (rare; mostly older Ollama models), the
    wrap is skipped and the agent uses free-text generation instead.
-2. At invocation, run the structured call and render the result back to
-   markdown. If the structured call itself fails for any reason
-   (malformed JSON from a weak model, transient provider issue), fall
-   back to a plain ``llm.invoke`` so the pipeline never blocks.
+2. At invocation, validate the structured result and render it. Legacy CLI
+   agents retain their free-text fallback. Snapshot agents pass a repair
+   schema: one strict JSON repair is allowed, failed publication checks remain
+   unvalidated, and transport/auth failures propagate to the durable worker.
 
 Centralising the pattern here keeps the agent factories small and ensures
 all three agents log the same warnings when fallback fires.
@@ -24,6 +24,8 @@ from collections.abc import Callable
 from typing import Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
+
+from tradingagents.llm_clients.structured_content import parse_structured_content
 
 logger = logging.getLogger(__name__)
 
@@ -145,10 +147,7 @@ def invoke_structured_or_freetext(
         try:
             # Accept an optional single JSON fence, never extract a fragment
             # from commentary or fill omitted fields with guessed values.
-            candidate = text.strip()
-            if candidate.startswith("```json\n") and candidate.endswith("\n```"):
-                candidate = candidate[8:-4]
-            result = repair_schema.model_validate_json(candidate)
+            result = parse_structured_content(repair_schema, text)
             rendered = render(result)
             if on_structured is not None:
                 on_structured(result)

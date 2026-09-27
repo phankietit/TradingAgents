@@ -67,6 +67,8 @@ class TestMinimaxStructuredOutputDispatch:
 
     def _bound_kwargs(self, runnable):
         first = runnable.steps[0] if hasattr(runnable, "steps") else runnable
+        if hasattr(first, "steps__"):
+            first = first.steps__["raw"]
         return getattr(first, "kwargs", {})
 
     def test_m2_7_suppresses_tool_choice(self):

@@ -5,11 +5,14 @@ from typing import Any
 from urllib.parse import urlparse
 
 from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
 
 from .api_key_env import get_api_key_env
 from .base_client import BaseLLMClient, normalize_content
 from .capabilities import get_capabilities
+from .structured_content import parse_structured_content
 from .validators import validate_model
 
 
@@ -149,6 +152,46 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
     is handled by the capability dispatch in
     ``NormalizedChatOpenAI.with_structured_output``, not here.
     """
+
+    def with_structured_output(self, schema, *, method=None, **kwargs):
+        resolved = method or get_capabilities(self.model_name).preferred_structured_method
+        if (resolved != "function_calling" or kwargs.get("include_raw")
+                or not isinstance(schema, type) or not issubclass(schema, BaseModel)):
+            return super().with_structured_output(schema, method=method, **kwargs)
+        kwargs.pop("include_raw", None)
+        bound = super().with_structured_output(schema, method=method, include_raw=True, **kwargs)
+
+        def parse(envelope):
+            raw = envelope.get("raw")
+            if not isinstance(raw, AIMessage):
+                raise ValueError("structured response has no assistant message")
+            if (raw.response_metadata.get("finish_reason") in {"length", "content_filter"}
+                    or raw.additional_kwargs.get("refusal")):
+                raise ValueError("structured response is incomplete or refused")
+            if raw.invalid_tool_calls:
+                raise ValueError("schema response contains invalid tool calls")
+            if envelope.get("parsed") is not None:
+                expected_name = schema.model_json_schema().get("title", schema.__name__)
+                if len(raw.tool_calls) != 1 or raw.tool_calls[0].get("name") != expected_name:
+                    raise ValueError("schema response must contain exactly one expected tool call")
+                wire_calls = raw.additional_kwargs.get("tool_calls")
+                if wire_calls:
+                    if len(wire_calls) != 1:
+                        raise ValueError("schema response contains extra tool calls")
+                    arguments = wire_calls[0].get("function", {}).get("arguments")
+                    if isinstance(arguments, str):
+                        return parse_structured_content(schema, arguments)
+                return schema.model_validate(envelope["parsed"])
+            # Never hide a failed/unknown tool call behind unrelated content.
+            if raw.tool_calls or raw.invalid_tool_calls or raw.additional_kwargs.get("tool_calls"):
+                raise ValueError("schema tool response was not valid")
+            # MiniMax cannot be forced to select a specific schema tool. An
+            # unsolicited whole JSON response can satisfy the identical schema
+            # without another LLM invocation. No prose fragments or reasoning
+            # fields are inspected, extracted, logged or stored here.
+            return parse_structured_content(schema, raw.content)
+
+        return bound | RunnableLambda(parse)
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
