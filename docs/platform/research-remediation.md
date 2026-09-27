@@ -14,25 +14,25 @@ platform, with human decision review. No broker or public deployment.
 
 ## Tickets and acceptance
 
-Every ticket carries one type, area and priority below. `planned` does not mean
-implemented. Live provider results are recorded separately from local tests.
+Every ticket carries one type, area and priority below. Statuses distinguish
+implemented local evidence from live acceptance; see the verification receipt.
 
 | ID | Type / area / priority | Dependencies | Acceptance | Status |
 | --- | --- | --- | --- | --- |
 | R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
-| R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | in-progress; unit PASS |
-| R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | in-progress; unit PASS |
-| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | planned |
-| R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | planned |
-| R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | planned |
-| R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | planned |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | planned |
-| R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | planned |
-| R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | planned |
-| R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | planned |
-| R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | planned |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | planned |
-| R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | planned |
+| R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
+| R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures; non-price live UNVERIFIED |
+| R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local; live valid-report acceptance UNVERIFIED |
+| R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS local; qualitative live review UNVERIFIED |
+| R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local + live stage/retry/usage; live completion UNVERIFIED |
+| R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
+| R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
+| R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS local UI; live final report UNVERIFIED |
+| R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local; live bilingual report UNVERIFIED |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | PASS local; earlier live attempts FAIL; final retry UNVERIFIED |
+| R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | UNVERIFIED pending final live acceptance/handoff |
 
 ## Flow parity contract
 
