@@ -414,3 +414,24 @@ browser acceptance must pass before completion can be claimed.
   must close this ingestion gap, including asset-specific source coverage and
   provenance, before full-source parity can be claimed. A market-only replay is
   not a substitute for that requirement.
+
+## R04 Yahoo news acquisition groundwork
+
+- Candidate `50dd0df7e3ddfbfc166f1f6fbb84c97f7989f515` adds structured recent-news
+  collection through the existing Yahoo dataflow. It preserves instrument
+  identity, asset/venue/currency/timezone, publication times, observation times,
+  requested window, publisher and URL. It does not fetch linked article pages.
+- The adapter has no historical as-of argument or fallback provider. Publication
+  after request start is excluded even if retrieval finishes later. Empty,
+  unreachable, malformed and out-of-window feeds have distinct statuses. An
+  eligible feed remains explicitly non-exhaustive; malformed records fail the
+  batch closed rather than silently reducing its claimed coverage.
+- PASS: 41 targeted news tests, 1.73 seconds; full clean-candidate local
+  regression 1,482 tests + 88 subtests, 20 classified skips, 39.94 seconds;
+  Ruff and `git diff --check` passed. The default Yahoo method invocation is
+  mocked; no live provider or AI call was made in this continuation.
+- Remaining R04 work: owner-bound immutable persistence, explicit configured
+  provider selection and API/UI wiring, asset-specific selection, non-price
+  evidence/numerical contracts, fundamentals/social/macro acquisition and live
+  acceptance. This module alone does not enable full-source web analysis. Legacy
+  CLI and historical artifacts are unchanged.
