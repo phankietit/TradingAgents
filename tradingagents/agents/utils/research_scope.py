@@ -18,7 +18,17 @@ Cite supplied snapshot IDs for material observations, risks and thesis premises.
 Historical tool facts may be referenced as history.INDEX.candle.FIELD or
 history.INDEX.indicator.NAME, using the exact immutable index returned by tools.
 Return facts use return.DAYS_calendar_days.pct. Latest indicators and distances
-use the supplied fact_catalog. These are the only numeric reference conventions;
+use the supplied fact_catalog. Derived facts use
+calc.difference(A,B) = A-B; calc.ratio(A,B) = A/B;
+calc.pct_change(A,B) = (A/B-1)*100; calc.abs_pct_change(A,B) is its magnitude;
+calc.atr_distance(A,B) = (A-B)/latest ATR. A and B must be exact existing fact
+IDs in the same snapshot, same units, without nesting or numeric literals.
+Percent-change baselines must be positive. Use the snapshot calculation tool
+to verify derived observations and carry their full IDs into observed_numbers.
+Window extrema use window.N.indicator.NAME.max/min or window.N.candle.FIELD.max/min,
+where N counts the latest stored observations, not calendar days. All N observations
+and indicator warmup must exist; this does not establish an all-time extreme.
+These are the only numeric reference conventions;
 do not invent calculations or IDs. Preserve signed percentage units when citing.
 For "price above/below an indicator", use latest_close_vs_indicator_pct
 (denominator = indicator), or its explicit latest_close_distance_magnitude_pct

@@ -90,6 +90,7 @@ export default function ArtifactPreview({ artifact, runId, defaultOpen = false }
 function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string }) {
   const locale = useLocale();
   const [state, setState] = useState<{ data?: Preview; error?: unknown }>({});
+  const [section, setSection] = useState('summary');
   useEffect(() => {
     const controller = new AbortController();
     request<unknown>(`/artifacts/${encodeURIComponent(artifact.artifact_id)}`, { signal: controller.signal }, MAX_PREVIEW_BYTES)
@@ -101,30 +102,46 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
   if (state.error) return <p role="alert" className="danger">{t("Preview unavailable.")} {t(errorMessage(state.error))}  {t("No report contents are shown.")}</p>;
   if (!state.data) return <p role="status">{t("Loading verified artifact…")}</p>;
   const data = state.data;
+  const rating = data.type === 'report' && data.structured && typeof data.structured === 'object' && !Array.isArray(data.structured)
+    ? (data.structured as JsonObject).rating : null;
+  const outlook = typeof rating === 'string' && ['Buy','Overweight','Hold','Underweight','Sell'].includes(rating) && data.type === 'report' && !data.issues.length ? rating : null;
   return <section className="artifact-preview" aria-label={`${t(artifact.kind.replaceAll('_', ' '))} preview`}>
-    <p className="muted caption">{t("Immutable research artifact · Not current approval state. Text is displayed without executing HTML or external content.")}</p>
     {data.type === 'report' ? <>
-      <p>{t("Profile:")} {profileLabel(data.profile)} {t("· Analysts:")} {data.analysts.map(researchLabel).join(', ')}</p>
+      <header className="report-header"><div><h3>{t('Research brief')}</h3><p className="muted caption">{profileLabel(data.profile)} · {data.analysts.map(researchLabel).join(', ')}</p></div>
+        <span className={data.issues.length || !data.structured ? 'warning' : 'coverage-included'}>{t(data.issues.length || !data.structured ? 'Needs validation' : 'For human review')}</span></header>
       {data.referenceOnly ? <p className="warning">{t("Reference only — not investable.")}</p> : null}
-      <p>{t("Snapshot attestation:")} {data.attestation}</p>
-      {data.histories.map(history => <ResearchChart key={history.snapshot_id} history={history} />)}
       {data.issues.length ? <p className="notice warning">{t('This report has unresolved validation findings. It is available for inspection, not an approved investment conclusion.')}</p> : null}
-      <h4>{t("Research narrative")}</h4>
-      <p className="muted caption">{t('Original report · Language requested:')} {t(data.reportLanguage === 'en-vi' ? 'English + Vietnamese' : data.reportLanguage === 'vi' ? 'Vietnamese' : data.reportLanguage === 'en' ? 'English' : 'Legacy / not recorded')}</p>
+      <nav className="report-navigation" aria-label={t('Report sections')}>
+        {[['summary','Summary'],['prices','Price history'],['research','Research detail'],['audit','Verification']].map(([key,label]) =>
+          <button key={key} aria-pressed={section === key} onClick={() => setSection(key)}>{t(label)}</button>)}
+      </nav>
+      {section === 'prices' ? <section aria-label={t('Price history')}>
+        {data.histories.length ? data.histories.map(history => <ResearchChart key={history.snapshot_id} history={history} />) : <p className="muted">{t('No saved price chart in this report.')}</p>}
+      </section> : null}
+      {section === 'summary' ? <section className="report-reading" aria-label={t('Summary')}>
+      {outlook ? <div className="report-outlook"><span>{t('Research outlook')}</span><strong>{t(outlook)}</strong><small>{t('Research assessment, not an instruction to trade.')}</small></div> : null}
       {data.localized && data.warning ? <p className="notice warning">{data.warning}</p> : null}
       {data.issues.includes('structured_output_missing') ? <>
         <p>{t('The model response did not pass the report format checks. The saved market chart remains available; no validated conclusion was published.')}</p>
         <details><summary>{t('Inspect the unvalidated model response')}</summary><ResearchMarkdown text={data.narrative} /></details>
       </> : <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />}
-      <p className="muted caption">{t('Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.')}</p>
-      {data.sections.length ? <details><summary>{t('Analyst reports & debate')}</summary><p className="muted caption">{t('Intermediate research, not the final conclusion. Conflicting arguments are preserved for review.')}</p>
+      <p className="report-footnote">{t('Saved research, not a live market signal. Review the evidence, limitations and your portfolio before deciding.')}</p>
+      <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a>
+      </section> : null}
+      {section === 'research' ? <section aria-label={t('Research detail')}><p className="muted caption">{t('Intermediate research, not the final conclusion. Conflicting arguments are preserved for review.')}</p>
         {data.sections.map(section => <details key={section.title}><summary>{t(section.title)}</summary><ResearchMarkdown text={section.body} /></details>)}
-      </details> : null}
+        {!data.sections.length ? <p className="muted">{t('No intermediate reports were saved.')}</p> : null}
+      </section> : null}
+      {section === 'audit' ? <section aria-label={t('Verification')}>
+      <p className="muted caption">{t("Immutable research artifact · Not current approval state. Text is displayed without executing HTML or external content.")}</p>
+      <p>{t("Snapshot attestation:")} {data.attestation}</p>
+      <p className="muted caption">{t('Original report · Language requested:')} {t(data.reportLanguage === 'en-vi' ? 'English + Vietnamese' : data.reportLanguage === 'vi' ? 'Vietnamese' : data.reportLanguage === 'en' ? 'English' : 'Legacy / not recorded')}</p>
+      <p className="muted caption">{t('Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.')}</p>
       <details><summary>{t("Structured research output")}</summary><pre className="safe-text">{JSON.stringify(data.structured ?? null, null, 2)}</pre></details>
       <details><summary>{t('Validation & model usage')}</summary>{data.issues.length ? <ul>{data.issues.map(issue => <li key={issue}>{issue}</li>)}</ul> : <p>{t('No automated finding recorded. Human financial review remains required.')}</p>}
         {data.usage ? <pre className="safe-text">{JSON.stringify(data.usage, null, 2)}</pre> : <p>{t('Token usage was not recorded for this report.')}</p>}
       </details>
-      <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a>
+      </section> : null}
     </> : <>
       <p>{t("Evidence as of")} {timestamp(data.asOf)}</p>
       {!data.claims.length ? <p className="warning">{t("No material claims are linked. This is not evidence of a valid conclusion.")}</p> : data.claims.map(claim => <details key={claim.id}>

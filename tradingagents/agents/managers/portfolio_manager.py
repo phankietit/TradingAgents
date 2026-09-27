@@ -23,22 +23,11 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_portfolio_manager(llm, *, research_only=False, snapshot_reports=None):
-    from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
+def create_portfolio_manager(llm, *, research_only=False):
+    from tradingagents.agents.research_schemas import SnapshotReportDraft
 
-    schema = CanonicalSnapshotDecision if research_only else PortfolioDecision
+    schema = SnapshotReportDraft if research_only else PortfolioDecision
     structured_llm = bind_structured(llm, schema, "Portfolio Manager")
-    fact_sources, snapshot_ids = {}, set()
-    if snapshot_reports is not None:
-        import json
-
-        from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
-
-        for report in snapshot_reports.values():
-            for source in json.loads(report):
-                snapshot_ids.add(source["snapshot_id"])
-                if source["provenance"]["dataset"] == "ohlcv.daily":
-                    fact_sources[source["snapshot_id"]] = SnapshotMarketFacts(source)
 
     def portfolio_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
@@ -119,13 +108,13 @@ Write these sections, in this order, starting with the rating on its own line:
                        "invalidation_conditions string, one entry per unique string; no paraphrases "
                        "or extra entries. Hypothetical conditions must "
                        "be labelled conditional, not observed. No sizing or execution instructions.")
-            prompt += ("\nUse observed_numbers to reference every observed numeric claim using "
+            prompt += ("\nUse quantity_bindings to reference every observed numeric claim using "
                        "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
                        "passed by analysts; do not invent IDs. Write canonical structured fields in English "
                        "only. Set localized_report=null; a separate presentation stage handles translation. "
                        "Include the strongest opposing case and coverage limitations within investment_thesis. "
                        "Use concise paragraphs with descriptive headings, not numbered headings. "
-                       "Round monetary/percentage observations to 2 decimals in prose and observed_numbers, "
+                       "Render monetary/percentage observations through placeholders, "
                        "setting decimal_places=2; never copy "
                        "floating-point noise from the catalog. Preserve the sign and units. "
                        "Do not invent conditional price targets as observed facts.")
@@ -141,17 +130,14 @@ Write these sections, in this order, starting with the rating on its own line:
                        "cấu trúc, nạp lại tăng giá, lưỡi dao phòng thủ, điểm ngọt or cầu dao. "
                        "Summarize the strongest opposing evidence without repeating each agent's "
                        "entire argument. Do not prescribe sizing, even without a numeric quantity.")
+            from tradingagents.agents.utils.report_compiler import BINDING_INSTRUCTIONS
+
+            prompt += BINDING_INSTRUCTIONS
 
         def capture_decision(value):
             nonlocal structured_decision
             # Revalidate even model instances: model_copy can bypass validators.
             validated = schema.model_validate(value.model_dump())
-            if research_only and snapshot_reports is not None:
-                from tradingagents.platform.analysis.research_validation import (
-                    validate_canonical_report,
-                )
-
-                validate_canonical_report(validated, fact_sources, snapshot_ids)
             structured_decision = validated.model_dump(mode="json")
 
         final_trade_decision = invoke_structured_or_freetext(
@@ -187,7 +173,8 @@ Write these sections, in this order, starting with the rating on its own line:
         return {
             "risk_debate_state": new_risk_debate_state,
             "final_trade_decision": final_trade_decision,
-            "structured_decision": structured_decision,
+            "structured_decision": None if research_only else structured_decision,
+            **({"structured_draft": structured_decision} if research_only else {}),
             "structured_diagnostics": diagnostics,
         }
 

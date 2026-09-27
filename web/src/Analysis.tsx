@@ -10,6 +10,7 @@ import type { Artifact } from './ArtifactPreview';
 import JobProgress, { processingLabels } from './JobProgress';
 import { eventLabel } from './financialLabels';
 import { researchLabel } from './researchLabels';
+import ResearchWorkflow, { type ResearchEvent } from './ResearchWorkflow';
 
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
@@ -18,7 +19,7 @@ export default function Analysis() {
   const [version, setVersion] = useState(0);
   const catalog = useResource<Instrument[]>('/instruments?limit=500', 0, instruments);
   const history = useResource<Run[]>('/runs?limit=200', version);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(() => new URLSearchParams(window.location.hash.split('?')[1]).get('run'));
   const [observedStatuses, setObservedStatuses] = useState<Record<string, string>>({});
   const observeStatus = useCallback((id: string, status: string) => {
     setObservedStatuses(previous => previous[id] === status ? previous : { ...previous, [id]: status });
@@ -26,26 +27,28 @@ export default function Analysis() {
   const [initialInstrument, setInitialInstrument] = useState(() => new URLSearchParams(window.location.hash.split('?')[1]).get('instrument') ?? undefined);
   const [newRun, setNewRun] = useState(!!initialInstrument);
   const refresh = () => { setObservedStatuses({}); setVersion(value => value + 1); };
-  const run = history.data?.find(item => item.run_id === selected) ?? history.data?.[0];
+  const runId = selected ?? history.data?.[0]?.run_id;
   return <>
     <div className="section-actions"><p className="muted">{t("Snapshot-based research · Results require review, not automatic execution.")}</p>
-      <button className="primary" onClick={() => setNewRun(true)}>{t("New analysis")}</button><button onClick={refresh}>{t("Refresh runs")}</button></div>
+      {!newRun ? <><button className="primary" onClick={() => setNewRun(true)}>{t("New analysis")}</button><button onClick={refresh}>{t("Refresh runs")}</button></> : null}</div>
     {newRun && catalog.data ? <RunForm key={initialInstrument} catalog={catalog.data} initialInstrument={initialInstrument}
-      onClose={() => setNewRun(false)} onCreated={value => { setSelected(value.run_id); setNewRun(false); refresh(); }} /> : null}
+      onClose={() => { setNewRun(false); window.history.replaceState(null, '', '#/analysis'); }} onCreated={value => {
+        setSelected(value.run_id); setNewRun(false); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(value.run_id)}`); refresh();
+      }} /> : null}
     {catalog.error ? <p role="alert" className="danger">{t("Instrument discovery failed.")} {t(errorMessage(catalog.error))}</p> : null}
-    <div className="market-layout">
+    {!newRun ? <div className="market-layout research-workspace">
       <section className="instrument-list" aria-label={t("Analysis history")}><div className="list-heading">{t("Recent runs")} <span>{history.data?.length ?? '—'}</span></div>
         {history.loading ? <p role="status">{t("Loading runs…")}</p> : history.error ? <p role="alert" className="danger">{t(errorMessage(history.error))}</p>
           : !history.data?.length ? <p className="muted">{t("No runs yet. Create one using saved evidence.")}</p>
-          : <ul>{history.data.map(item => <li key={item.run_id}><button aria-pressed={run?.run_id === item.run_id} onClick={() => setSelected(item.run_id)}>
+          : <ul>{history.data.map(item => <li key={item.run_id}><button aria-pressed={runId === item.run_id} onClick={() => { setSelected(item.run_id); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(item.run_id)}`); }}>
             <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t("Instrument")}</strong><span>{t(processingLabels[observedStatuses[item.run_id] ?? item.status] ?? 'Status unavailable')}</span></span>
             <span className="instrument-name">{timestamp(item.created_at)}</span>
           </button></li>)}</ul>}
         {history.data?.length === 200 ? <p className="warning">{t("Showing the latest 200 runs.")}</p> : null}
       </section>
-      {run ? <RunDetail key={run.run_id} runId={run.run_id} version={version} onStatus={observeStatus} onChanged={refresh} onRetry={value => { setInitialInstrument(value.instrument_id); setNewRun(true); }} />
+      {runId ? <RunDetail key={runId} runId={runId} version={version} onStatus={observeStatus} onChanged={refresh} onRetry={value => { setInitialInstrument(value.instrument_id); setNewRun(true); }} />
         : <section className="empty-state"><h2>{t("Research runs")}</h2><p>{t("Queue a run to inspect progress and artifacts. A worker must be running to process the queue.")}</p></section>}
-    </div>
+    </div> : null}
   </>;
 }
 
@@ -53,9 +56,9 @@ const eventNames = ['run.queued', 'run.started', 'stage.started', 'stage.complet
 function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: string; version: number; onStatus: (id: string, status: string) => void; onChanged: () => void; onRetry: (run: Run) => void }) {
   useLocale();
   const [tick, setTick] = useState(0);
-  const run = useResource<Run>(`/runs/${encodeURIComponent(runId)}`, version + tick);
-  const artifacts = useResource<Artifact[]>(`/runs/${encodeURIComponent(runId)}/artifacts?limit=200`, version + tick);
-  const [events, setEvents] = useState<{ sequence: number; event_type: string; occurred_at: string; stage?: string }[]>([]);
+  const run = useResource<Run>(`/runs/${encodeURIComponent(runId)}`, version + tick, undefined, true);
+  const artifacts = useResource<Artifact[]>(`/runs/${encodeURIComponent(runId)}/artifacts?limit=200`, version + tick, undefined, true);
+  const [events, setEvents] = useState<ResearchEvent[]>([]);
   const [streamError, setStreamError] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -72,7 +75,8 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
         const value = JSON.parse(event.data);
         if (!Number.isInteger(value.sequence) || typeof value.event_type !== 'string' || typeof value.occurred_at !== 'string') return;
         const stage = typeof value.payload?.stage === 'string' && value.payload.stage.length < 80 ? value.payload.stage : undefined;
-        setEvents(previous => [...previous.filter(item => item.sequence !== value.sequence), { sequence: value.sequence, event_type: value.event_type, occurred_at: value.occurred_at, stage }].sort((a, b) => a.sequence - b.sequence).slice(-100));
+        const attempt = Number.isInteger(value.payload?.attempt) && value.payload.attempt > 0 ? value.payload.attempt : undefined;
+        setEvents(previous => [...previous.filter(item => item.sequence !== value.sequence), { sequence: value.sequence, event_type: value.event_type, occurred_at: value.occurred_at, stage, attempt }].sort((a, b) => a.sequence - b.sequence).slice(-100));
         if (['run.succeeded', 'run.failed', 'run.cancelled'].includes(value.event_type)) stream.close();
         setTick(value => value + 1);
       } catch { setStreamError(true); }
@@ -96,12 +100,12 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   return <section className="instrument-detail" aria-label={t("Run details")}>
     <h2>{t("Research progress")}</h2>
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
-      <p role="status">{t("Research:")} <strong>{t(processingLabels[jobStatus ?? run.data.status] ?? 'Status unavailable')}</strong>  {t("· As of")} {timestamp(run.data.analysis_as_of)}</p>
+      <p className="muted caption">{t("As of")} {timestamp(run.data.analysis_as_of)}</p>
+      <ResearchWorkflow events={events} status={jobStatus ?? run.data.status} hasSources={run.data.snapshot_ids.length > 0}
+        hasReport={artifacts.data?.some(item => item.kind === 'analysis_report') ?? false} />
       <JobProgress runId={runId} version={version + tick} onStatus={setJobStatus} />
-      {!isTerminal && jobStatus === 'running' && events.some(event => event.stage) ? <p className="stage-indicator" role="status">{t('Current research stage:')} {t([...events].reverse().find(event => event.stage)?.stage ?? '')}</p> : null}
-      {run.data.status === 'queued' ? <p className="notice">{t("Waiting for a worker. Queued does not mean analysis has started.")}</p> : null}
       {run.data.error_code ? <><p className="notice danger">{t("Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.")}</p><details><summary>{t("Failure details")}</summary><p className="mono">{run.data.error_code}</p></details></> : null}
-      <p className="muted">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>
+      <p className="muted caption">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>
       {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? t("Requesting cancellation…") : t("Cancel run")}</button> : ['failed', 'cancelled'].includes(run.data.status) ? <button onClick={() => onRetry(run.data!)}>{t("Configure new attempt")}</button> : null}
     </> : <p role="status">{t("Loading run…")}</p>}
     {error ? <p role="alert" className="danger">{t(error)}</p> : null}
@@ -111,9 +115,8 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     </details>
     <h3>{t("Reports & evidence")}</h3>
     {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
-      <a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))}  {t("· Download")}</a>
-      <details><summary>{t("File details")}</summary><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')}  {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
       <ArtifactPreview artifact={item} runId={runId} defaultOpen={item.kind === 'analysis_report'} />
+      <details><summary>{t("File details")}</summary><a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))} {t("· Download")}</a><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
     </li>)}</ul> : <p className="muted">{t("No artifacts have been published for this run.")}</p>}
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
   </section>;

@@ -82,6 +82,7 @@ it('preserves bilingual report content across UI languages while rendering safe 
   expect(rendered).toContain('<img src=x onerror=alert(1)>');
   fireEvent.click(screen.getByRole('button', { name: /VI/ }));
   expect(original.textContent).toBe(rendered);
+  fireEvent.click(screen.getByRole('button', {name:'Kiểm chứng'}));
   expect(screen.getByText(/Báo cáo gốc · Ngôn ngữ yêu cầu: Anh \+ Việt/)).toBeTruthy();
   expect(document.querySelector('img')).toBeNull();
 });

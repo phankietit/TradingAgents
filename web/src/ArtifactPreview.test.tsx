@@ -36,6 +36,7 @@ it('loads only on demand and displays untrusted report text plus a bound decisio
   expect(await screen.findByText(report.narrative)).toBeTruthy();
   expect(document.querySelector('img')).toBeNull();
   expect(screen.getByRole('link', { name: 'Review linked decision' }).getAttribute('href')).toBe(`#/decisions?decision=${report.decision_id}`);
+  await user.click(screen.getByRole('button', { name: 'Verification' }));
   await user.click(screen.getByText('Structured research output'));
   expect(document.querySelector('script')).toBeNull();
   await user.click(screen.getByRole('button', { name: 'Close analysis report' }));

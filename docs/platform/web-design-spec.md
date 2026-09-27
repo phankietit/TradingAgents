@@ -1,5 +1,24 @@
 # Research workspace design specification
 
+## Operational research flow
+
+Creating research is a dedicated workspace, not a form above an unrelated old
+report. Selecting a saved run retains its exact identity in the URL; a missing
+run never silently opens a different result. Read-only progress refreshes retain
+the previous display while fetching, clear it on error and clear it immediately
+when identity changes. Approval/control reads retain their fail-closed behavior.
+
+Progress groups actual events into Evidence prepared, Research and challenge,
+Report preparation and Your decision. Only events from the latest attempt count.
+There is no invented percentage or ETA. Processing complete means a report is
+available, not that validation or portfolio approval passed.
+
+Reports use Summary, Price history, Research detail and Verification navigation.
+The default reader view presents the financial assessment and saved EN/VI prose;
+agent transcripts, JSON, hashes and token receipts are drilldowns. Material
+validation/coverage limitations remain visible. Decisions reuse the same report
+instead of repeating an English-only thesis above the bilingual reader.
+
 Owner chose direct code design, no Image Gen. This is the implementation brief,
 not by itself evidence of rendered or functional UI. Reference screenshots are captured
 from the actual browser as each complete surface is implemented.

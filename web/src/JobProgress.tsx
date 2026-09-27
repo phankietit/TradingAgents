@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 export const processingLabels: Record<string, string> = {
   queued: 'Waiting to start', running: 'In progress', retry_wait: 'Waiting to retry',
-  cancel_requested: 'Cancellation requested', succeeded: 'Research complete', failed: 'Research failed', cancelled: 'Cancelled',
+  cancel_requested: 'Cancellation requested', succeeded: 'Processing complete', failed: 'Research failed', cancelled: 'Cancelled',
 };
 interface JobState { job_id: string; run_id: string; status: string; attempt: number; max_attempts: number;
   available_at: string; updated_at: string; completed_at: string | null }
@@ -20,7 +20,7 @@ function validate(value: JobState): JobState {
 
 export default function JobProgress({runId, version, onStatus}: {runId: string; version: number; onStatus?: (status: string) => void}) {
   useLocale();
-  const job = useResource<JobState>(`/runs/${encodeURIComponent(runId)}/job`, version, validate);
+  const job = useResource<JobState>(`/runs/${encodeURIComponent(runId)}/job`, version, validate, true);
   const currentStatus = job.data?.run_id === runId ? job.data.status : undefined;
   useEffect(() => { if (currentStatus) onStatus?.(currentStatus); }, [currentStatus, onStatus]);
   if (job.loading) return <p role="status">{t("Checking processing status…")}</p>;

@@ -109,7 +109,7 @@ class SnapshotMarketFacts:
         high_index = max(range(n), key=lambda i: self.bars[i].high)
         high = self.bars[high_index].high
         return {
-            "calculation_version": "snapshot-market-facts-v2",
+            "calculation_version": "snapshot-market-facts-v3",
             "snapshot_id": self.snapshot_id, "provenance": self.provenance,
             "fact_catalog": self.fact_catalog(),
             "quote_currency": self.series.quote_currency,
@@ -172,6 +172,47 @@ class SnapshotMarketFacts:
         """
         import re
 
+        window = re.fullmatch(r"window\.(\d+)\.(candle|indicator)\.([a-z0-9_]+)\.(min|max)", fact_id)
+        if window:
+            count, kind, name, aggregation = window.groups()
+            count = int(count)
+            if not 1 <= count <= len(self.bars):
+                return None
+            # Require the entire requested observation window, including warmup.
+            values = [self.resolve_fact(f"history.{index}.{kind}.{name}")
+                      for index in range(len(self.bars) - count, len(self.bars))]
+            if any(value is None for value in values):
+                return None
+            return (min if aggregation == "min" else max)(values)
+        # A tiny expression language, never eval: operands must themselves be
+        # immutable fact IDs. No literals, nesting, cross-snapshot mixing or
+        # implicit percentage conversion is accepted.
+        calculation = re.fullmatch(r"calc\.(difference|ratio|pct_change|abs_pct_change|atr_distance)\(([a-z0-9_.]+),([a-z0-9_.]+)\)", fact_id)
+        if calculation:
+            operation, left_id, right_id = calculation.groups()
+            left, right = self.resolve_fact(left_id), self.resolve_fact(right_id)
+            if left is None or right is None or self._fact_unit(left_id) != self._fact_unit(right_id):
+                return None
+            if operation == "difference":
+                value = left - right
+            elif operation == "atr_distance":
+                atr = self.resolve_fact("indicator.atr")
+                if self._fact_unit(left_id) != "price" or atr is None or atr <= 0:
+                    return None
+                value = (left - right) / atr
+            elif operation == "ratio":
+                if right == 0:
+                    return None
+                value = left / right
+            else:
+                # Percentage change against a non-positive baseline is not a
+                # conventional return; do not emit a misleading percentage.
+                if right <= 0:
+                    return None
+                value = (left / right - 1) * 100
+                if operation == "abs_pct_change":
+                    value = abs(value)
+            return value if isfinite(value) else None
         match = re.fullmatch(r"history\.(\d+)\.(candle|indicator)\.([a-z0-9_]+)", fact_id)
         if match:
             index, kind, name = int(match[1]), match[2], match[3]
@@ -186,6 +227,18 @@ class SnapshotMarketFacts:
         if match and 1 <= int(match[1]) <= 36500:
             return self.calendar_return(int(match[1]))["return_pct"]
         return self.fact_catalog().get(fact_id)
+
+    @staticmethod
+    def _fact_unit(fact_id):
+        if fact_id.startswith("window."):
+            fact_id = fact_id.rsplit(".", 1)[0]
+        if fact_id.endswith(".pct") or fact_id.endswith("_pct") or fact_id.endswith(".pct_of_latest_close"):
+            return "percent"
+        if fact_id.endswith(".volume"):
+            return "volume"
+        if fact_id.endswith(".rsi"):
+            return "oscillator"
+        return "price"
 
     def chart(self) -> dict:
         """Full observed history for the saved report, never a live-price query."""

@@ -1,4 +1,31 @@
 :root { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #ecece8; background: #111211; font-size: 15px; line-height: 1.6; font-synthesis: none; color-scheme: dark; --muted: #989c96; --border: #2c2e2b; --accent: #e4e8d9; --surface: #181a18; }
+.research-workflow { margin: 24px 0; padding-block: 22px; border-block: 1px solid var(--border); }
+.research-workflow ol { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; padding: 0; margin: 0; list-style: none; }
+.research-workflow li { display: flex; gap: 10px; min-width: 0; color: var(--muted); }
+.workflow-index { font-size: 11px; font-variant-numeric: tabular-nums; padding-top: 3px; }
+.research-workflow strong { display: block; font-size: 13px; font-weight: 550; }
+.research-workflow li div > span { display: block; font-size: 12px; line-height: 1.5; margin-top: 6px; }
+.research-workflow .active { color: var(--accent); }
+.research-workflow .active .workflow-index { border-top: 2px solid var(--accent); }
+.research-workflow .done .workflow-index { color: #a6bd9c; }
+.research-workflow > p { margin: 16px 0 0; }
+.report-header { display: flex; justify-content: space-between; gap: 20px; align-items: baseline; }
+.report-header h3 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.5px; }
+.report-header > span { font-size: 12px; flex-shrink: 0; }
+.report-navigation { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin: 24px 0 28px; }
+.report-navigation button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--muted); padding: 12px 14px; }
+.report-navigation button[aria-pressed=true] { color: var(--accent); border-bottom-color: var(--accent); }
+.report-reading { max-width: 76ch; }
+.report-outlook { display: grid; grid-template-columns: 1fr auto; gap: 4px 20px; border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 28px; }
+.report-outlook > span, .report-outlook small { color: var(--muted); font-size: 12px; }
+.report-outlook strong { font-size: 22px; font-weight: 550; grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--accent); }
+.report-outlook small { grid-column: 1; }
+.report-reading .research-prose { font-size: 15px; line-height: 1.85; }
+.report-reading .research-prose h2 { font-size: 18px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+.report-reading .research-prose h2:first-child { margin-top: 0; padding-top: 0; border: 0; }
+.report-footnote { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; margin-top: 32px; }
+@media(max-width: 1100px) { .research-workflow ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width: 600px) { .research-workflow ol { grid-template-columns: 1fr; gap: 18px; } .report-header { display: block; } .report-navigation button { padding-inline: 10px; } }
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input, select, textarea { font: inherit; }

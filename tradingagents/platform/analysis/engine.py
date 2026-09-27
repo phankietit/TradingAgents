@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
+from contextlib import suppress
 from copy import deepcopy
 from datetime import date
 from typing import Any
@@ -171,6 +172,10 @@ class AnalysisEngine:
                     validation_issues.append("structured_schema_invalid")
         else:
             validation_issues.append("structured_output_missing")
+            rejected = final_state.get("rejected_structured_decision")
+            if rejected is not None:
+                with suppress(ValueError, TypeError):
+                    quantitative_references = SnapshotPortfolioDecision.model_validate(rejected).observed_numbers
         return AnalysisResult(
             instrument=request.instrument,
             analysis_date=request.analysis_date,

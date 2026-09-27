@@ -91,7 +91,23 @@ def snapshot_analyst_nodes(llm, reports):
             """Compute a calendar-horizon return with exact endpoint prices and dates."""
             return markets[snapshot_id].calendar_return(calendar_days)
 
-        tools = [get_snapshot_candles, get_snapshot_indicator, get_snapshot_return] if markets else []
+        @tool
+        def get_snapshot_calculation(snapshot_id: str, fact_id: str) -> dict:
+            """Replay a fact or derived calculation over the immutable snapshot.
+
+            calc.difference(A,B), calc.ratio(A,B), calc.pct_change(A,B),
+            calc.abs_pct_change(A,B), calc.atr_distance(A,B). A/B are same-unit
+            fact IDs, no literals or nesting. pct_change = (A/B-1)*100, B>0.
+            Example: calc.pct_change(indicator.macdh,history.1700.indicator.macdh).
+            Extrema: window.N.indicator.NAME.max/min or window.N.candle.FIELD.max/min,
+            N = latest observation count (not days). No incomplete warmup window.
+            Return the full ID in observed_numbers; unavailable is not zero.
+            """
+            value = markets[snapshot_id].resolve_fact(fact_id)
+            return {"snapshot_id": snapshot_id, "fact_id": fact_id, "value": value,
+                    "status": "available" if value is not None else "unavailable"}
+
+        tools = [get_snapshot_candles, get_snapshot_indicator, get_snapshot_return, get_snapshot_calculation] if markets else []
         by_name = {item.name: item for item in tools}
         model = llm.bind_tools(tools) if tools else llm
         sentiment_model = bind_structured(llm, SentimentReport, "Sentiment Analyst") if role == "social" else None

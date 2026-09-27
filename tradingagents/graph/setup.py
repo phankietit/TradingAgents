@@ -96,8 +96,7 @@ class GraphSetup:
         aggressive_analyst = create_aggressive_debator(self.quick_thinking_llm)
         neutral_analyst = create_neutral_debator(self.quick_thinking_llm)
         conservative_analyst = create_conservative_debator(self.quick_thinking_llm)
-        portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm,
-            **scoped_options, **({"snapshot_reports": self.snapshot_reports} if self.snapshot_reports is not None else {}))
+        portfolio_manager_node = create_portfolio_manager(self.deep_thinking_llm, **scoped_options)
 
         # Create workflow
         workflow = StateGraph(AgentState)
@@ -165,10 +164,13 @@ class GraphSetup:
             )
 
         if self.analyst_nodes is not None:
+            from tradingagents.agents.utils.financial_validation import create_financial_validation
             from tradingagents.agents.utils.report_localization import create_report_presentation
 
+            workflow.add_node("Financial validation", create_financial_validation(self.deep_thinking_llm, self.snapshot_reports or {}))
             workflow.add_node("Report presentation", create_report_presentation(self.deep_thinking_llm))
-            workflow.add_edge("Portfolio Manager", "Report presentation")
+            workflow.add_edge("Portfolio Manager", "Financial validation")
+            workflow.add_edge("Financial validation", "Report presentation")
             workflow.add_edge("Report presentation", END)
         else:
             workflow.add_edge("Portfolio Manager", END)

@@ -57,6 +57,24 @@ CanonicalSnapshotDecision = create_model(
     localized_report=(Literal[None], Field(default=None,
         description="Must be null. A separate protected translation stage handles presentation.")),
 )
+
+
+class QuantityBinding(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    key: str = Field(pattern=r"^Q[A-Z]{1,5}$")
+    snapshot_id: UUID
+    fact_id: str = Field(min_length=1, max_length=200)
+    decimal_places: int = Field(default=2, ge=0, le=8)
+
+
+SnapshotReportDraft = create_model(
+    "PortfolioDecision", __base__=CanonicalSnapshotDecision,
+    quantity_bindings=(tuple[QuantityBinding, ...], Field(default=(), max_length=100,
+        description="Use {{QA}}, {{QB}}, etc. in prose. Bind each placeholder to an immutable fact ID; the application resolves and rounds its value. Never supply numeric values yourself.")),
+    observed_numbers=(tuple[ObservedNumber, ...], Field(default=(), max_length=0,
+        description="Leave empty. Application-generated from quantity_bindings.")),
+    price_target=(Literal[None], Field(default=None)),
+)
 SnapshotResearchPlan = create_model(
     "ResearchPlan", __base__=ResearchPlan,
     strategic_actions=(Text, Field(description="Conditional research scenarios and evidence to monitor. No quantities, sizing, allocation percentages or derivative strategies.")),

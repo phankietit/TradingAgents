@@ -87,7 +87,7 @@ it.each(['run_id', 'instrument_id', 'analysis_as_of', null])('requires matching 
   const run = {run_id:candidate.run_id,instrument_id:candidate.instrument_id,analysis_as_of:candidate.as_of,status:'succeeded', ...(field ? {[field]:'mismatched'} : {})};
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/state') ? {candidate:ready,current_status:'ready_for_approval',events:[]} : url.includes('/decisions?') ? [ready] : url.includes('/runs/') ? run : []))));
   render(<Decisions />);
-  await screen.findByText(field ? 'Matching research status unavailable. Approval remains disabled.' : 'Research processing: Research complete');
+  await screen.findByText(field ? 'Matching research status unavailable. Approval remains disabled.' : 'Research processing: Processing complete');
   expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(field !== null);
 });
 

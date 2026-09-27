@@ -68,17 +68,20 @@ export function priceResponse(value: SeriesResponse): SeriesResponse {
 
 type Resource<T> = { path: string | null; data?: T; error?: unknown; loading: boolean };
 /** Path-tagged state prevents even one paint of a previous instrument's values. */
-export function useResource<T>(path: string | null, version = 0, validate?: (value: T) => T) {
+export function useResource<T>(path: string | null, version = 0, validate?: (value: T) => T, retainWhileRefreshing = false) {
   const [state, setState] = useState<Resource<T>>({ path, loading: !!path });
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    setState({ path, loading: true });
+    // Opt-in for read-only polling surfaces. Identity changes and failed fetches
+    // still clear data; approval/configuration consumers keep fail-closed defaults.
+    setState(previous => retainWhileRefreshing && previous.path === path && previous.data !== undefined
+      ? {path, data: previous.data, loading: false} : { path, loading: true });
     request<T>(path, { signal: controller.signal }).then(value => validate ? validate(value) : value)
       .then(data => { if (!controller.signal.aborted) setState({ path, data, loading: false }); })
       .catch(error => { if (!controller.signal.aborted) setState({ path, error, loading: false }); });
     return () => controller.abort();
-  }, [path, version, validate]);
+  }, [path, version, validate, retainWhileRefreshing]);
   return state.path === path ? state : { path, loading: !!path } as Resource<T>;
 }
 

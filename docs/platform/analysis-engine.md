@@ -1,5 +1,32 @@
 # Analysis engine adapter
 
+## Canonical report compilation and publication
+
+Snapshot research retains every configured analyst, bull/bear debate, research
+manager, trader and risk debate. The final manager produces an unpublished
+English draft with `{{QA}}`-style quantity bindings to run-bound snapshot facts.
+Application code resolves and rounds those facts; the model does not supply their
+values. The compiler preserves conclusions and exact material-claim citations.
+Unknown, duplicate, unused or unbound quantities fail closed. No historical report
+is rewritten. Drafts remain private audit evidence, not approval payloads.
+
+A dedicated Financial validation stage applies source, numeric, authority and
+claim-coverage checks. One bounded financial correction (with one schema-format
+repair) is permitted after failure; valid drafts incur no correction model call.
+Only accepted canonical output reaches protected bilingual presentation. Translation
+uses unique quantity anchors and must restore every anchor exactly once without
+introducing digits. Translation failure withholds bilingual readiness; it does not
+replace English evidence or rerun the research debate.
+
+Fact calculation version v3 supports closed, no-eval `calc.difference`, `calc.ratio`,
+`calc.pct_change`, `calc.abs_pct_change` and `calc.atr_distance` expressions over
+existing same-snapshot facts. Units, zero/positive denominator requirements and
+indicator warm-up are checked. `window.N.candle.NAME.min|max` and corresponding
+indicator windows count observations, not calendar days. No numeric literals,
+nested expressions, cross-snapshot operands or invented values are accepted.
+These checks establish quantitative reproducibility, not qualitative entailment
+or a probability of profit. Human financial review remains required.
+
 `AnalysisEngine` is the stable platform boundary around the existing
 `TradingAgentsGraph`. It validates an instrument/date/analyst request, creates a
 run-scoped graph configuration, and returns the raw research state plus the

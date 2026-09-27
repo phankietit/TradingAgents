@@ -109,7 +109,7 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
     completed = [payload["stage"] for kind, payload in events if kind == "stage.completed"]
     expected_analysts = ["Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst"] if all_roles else ["Market Analyst"]
     assert completed == [*expected_analysts, "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
-                         "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Report presentation"]
+                         "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Financial validation", "Report presentation"]
     assert all(set(payload) == {"stage"} for _, payload in events)
     assert observer.receipt()["usage"]["status"] == "incomplete"  # fake model has no provider usage
 

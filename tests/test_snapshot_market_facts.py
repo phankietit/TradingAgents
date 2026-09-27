@@ -126,7 +126,7 @@ def test_snapshot_market_tools_run_without_fetching_live_data(batch_size):
 
     class Model:
         def bind_tools(self, tools):
-            assert {tool.name for tool in tools} == {"get_snapshot_candles", "get_snapshot_indicator", "get_snapshot_return"}
+            assert {tool.name for tool in tools} == {"get_snapshot_candles", "get_snapshot_indicator", "get_snapshot_return", "get_snapshot_calculation"}
             return self
 
         def invoke(self, messages):
@@ -143,3 +143,26 @@ def test_snapshot_market_tools_run_without_fetching_live_data(batch_size):
     assert result["market_report"] == "Evidence-based market report"
     assert len(calls) == 2
     assert len(calls[0][1].content) < 20000
+
+
+def test_calculation_grammar_replays_units_denominators_and_window_extrema():
+    facts = SnapshotMarketFacts(source())
+    assert facts.resolve_fact("calc.difference(latest.close,history.0.candle.close)") == 399
+    assert facts.resolve_fact("calc.pct_change(latest.close,history.0.candle.close)") == pytest.approx(399)
+    assert facts.resolve_fact("calc.pct_change(history.0.candle.close,latest.close)") == pytest.approx((100 / 499 - 1) * 100)
+    assert facts.resolve_fact("calc.abs_pct_change(history.0.candle.close,latest.close)") == pytest.approx((1 - 100 / 499) * 100)
+    assert facts.resolve_fact("window.5.candle.close.min") == 495
+    assert facts.resolve_fact("window.5.candle.close.max") == 499
+    assert facts.resolve_fact("calc.pct_change(latest.close,window.5.candle.close.min)") == pytest.approx((499 / 495 - 1) * 100)
+    assert facts.resolve_fact("calc.atr_distance(latest.close,history.0.candle.close)") == pytest.approx(399 / facts.resolve_fact("indicator.atr"))
+
+
+@pytest.mark.parametrize("expression", [
+    "calc.pct_change(latest.volume,latest.close)", "calc.ratio(indicator.rsi,latest.close)",
+    "calc.pct_change(latest.close,123)", "calc.difference(latest.close,missing)",
+    "calc.pct_change(latest.close,calc.ratio(latest.close,latest.open))",
+    "__import__('os').system('echo bad')", "window.401.candle.close.max",
+    "window.400.indicator.close_200_sma.max", "window.0.candle.close.min",
+])
+def test_calculations_reject_unsupported_inputs_instead_of_inventing_values(expression):
+    assert SnapshotMarketFacts(source()).resolve_fact(expression) is None

@@ -10,7 +10,8 @@ from langchain_core.callbacks import BaseCallbackHandler
 
 STAGES = frozenset({"Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst",
                    "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
-                   "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Report presentation"})
+                   "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager",
+                   "Financial validation", "Report presentation"})
 
 
 class ResearchBudgetExceeded(RuntimeError):
