@@ -75,15 +75,15 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
   return { type: 'evidence', asOf: text(data.as_of), claims };
 }
 
-export default function ArtifactPreview({ artifact, runId, defaultOpen = false }: { artifact: Artifact; runId: string; defaultOpen?: boolean }) {
+export default function ArtifactPreview({ artifact, runId, defaultOpen = false, embedded = false }: { artifact: Artifact; runId: string; defaultOpen?: boolean; embedded?: boolean }) {
   useLocale();
   const [open, setOpen] = useState(defaultOpen);
   const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence'].includes(artifact.kind)
     && Number.isSafeInteger(artifact.byte_size) && artifact.byte_size > 0 && artifact.byte_size <= MAX_PREVIEW_BYTES;
   return <>
-    {supported ? <button onClick={() => setOpen(value => !value)} aria-expanded={open}>{open ? t("Close") : t("Inspect")} {t(artifact.kind.replaceAll('_', ' '))}</button>
+    {supported ? !embedded && <button onClick={() => setOpen(value => !value)} aria-expanded={open}>{open ? t("Close") : t("Inspect")} {t(artifact.kind.replaceAll('_', ' '))}</button>
       : <p className="muted caption">{t("Inline preview unavailable for this format or size; use the integrity-checked download.")}</p>}
-    {open && supported ? <PreviewBody key={`${runId}:${artifact.artifact_id}`} artifact={artifact} runId={runId} /> : null}
+    {(open || embedded) && supported ? <PreviewBody key={`${runId}:${artifact.artifact_id}`} artifact={artifact} runId={runId} /> : null}
   </>;
 }
 

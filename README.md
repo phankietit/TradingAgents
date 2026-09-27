@@ -388,7 +388,10 @@ The local UI supports **English / Tiếng Việt** with a persistent VI/EN switc
 The current remediation candidate adds snapshot-bound indicator tools, explicit
 daily session labels, deterministic return endpoints, readable Markdown reports,
 saved-report charts and separate source/research/portfolio states. It retains
-the original debate/manager graph. See the [implementation and verification
+the original debate/manager graph. Final report quantities are compiled from
+snapshot-bound references before protected bilingual presentation. The research
+workspace separates setup, actual-event progress and report summary/price/history
+verification views; processing completion is not report approval. See the [implementation and verification
 ledger](docs/platform/research-remediation.md); local tests are not live-model
 quality or release approval.
 New research offers English, Vietnamese or bilingual English–Vietnamese reports

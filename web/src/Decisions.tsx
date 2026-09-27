@@ -92,7 +92,7 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
     {candidate.portfolio_snapshot_id ? <div className="metrics"><div><span>{t("Current weight")}</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>{t("Owner target")}</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>{t("Maximum allowed")}</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div> : <p className="muted">{t("Research only. No portfolio was supplied, so allocation and portfolio impact have not been calculated.")}</p>}
     </section>
     <h3>{t("Full research report")}</h3>
-    {artifacts.data?.filter(item => item.kind === 'analysis_report').map(item => <ArtifactPreview key={item.artifact_id} artifact={item} runId={candidate.run_id} defaultOpen />)}
+    {artifacts.data?.filter(item => item.kind === 'analysis_report').map(item => <ArtifactPreview key={item.artifact_id} artifact={item} runId={candidate.run_id} embedded />)}
     {artifacts.error ? <p className="warning">{t("Report unavailable. Decision review state is shown separately.")}</p> : null}
     <details className="review-controls"><summary>{t("Portfolio checks & human approval")}</summary>
     <h3>{t("Portfolio risk checks")}</h3>

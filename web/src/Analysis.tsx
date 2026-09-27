@@ -33,7 +33,7 @@ export default function Analysis() {
     <div className="section-actions"><p className="muted">{t("Snapshot-based research · Results require review, not automatic execution.")}</p>
       {!newRun ? <><button className="primary" onClick={() => setNewRun(true)}>{t("New analysis")}</button><button onClick={refresh}>{t("Refresh runs")}</button></> : null}</div>
     {newRun && catalog.data ? <RunForm key={initialInstrument} catalog={catalog.data} initialInstrument={initialInstrument}
-      onClose={() => { setNewRun(false); window.history.replaceState(null, '', '#/analysis'); }} onCreated={value => {
+      onClose={() => { setNewRun(false); window.history.replaceState(null, '', runId ? `#/analysis?run=${encodeURIComponent(runId)}` : '#/analysis'); }} onCreated={value => {
         setSelected(value.run_id); setNewRun(false); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(value.run_id)}`); refresh();
       }} /> : null}
     {catalog.error ? <p role="alert" className="danger">{t("Instrument discovery failed.")} {t(errorMessage(catalog.error))}</p> : null}
@@ -123,7 +123,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     </details>
     <h3>{t("Reports & evidence")}</h3>
     {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
-      <ArtifactPreview artifact={item} runId={runId} defaultOpen={item.kind === 'analysis_report'} />
+      <ArtifactPreview artifact={item} runId={runId} embedded={item.kind === 'analysis_report'} />
       <details><summary>{t("File details")}</summary><a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))} {t("· Download")}</a><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
     </li>)}</ul> : <p className="muted">{t("No artifacts have been published for this run.")}</p>}
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
