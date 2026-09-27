@@ -4,6 +4,27 @@ Base: `e45e079b718c29f5fef8de399ed3ce002bcf1f97` (M3 PR #3 merged).
 Branch: `feature/TA-M4-local-web-ui`; reuse the clean managed M3 checkout.
 Owner: this Codex task only. Root checkout and other worktrees remain untouched.
 
+## Current ticket disposition — 2026-09-27
+
+Code candidate: `967aa24ab148d8dc4b78979a0134ea3b254be1d6`.
+The detailed paragraphs below retain the chronological implementation history;
+this table and `milestone-4-verification.md` supersede their old checkpoint status.
+
+| Local ticket | Acceptance status | Delivered scope |
+| --- | --- | --- |
+| M4-FOUNDATION | PASS | Native quant design, finance-first contract, loopback architecture and local gate commands. |
+| M4-API | PASS | Owner-scoped discovery, persisted watchlist, sources/screener/report/valuation receipts; SQLite/PostgreSQL tests. |
+| M4-SHELL | PASS | Built same-origin UI, session/CSRF/login/logout/expiry, responsive accessible navigation and recovery. |
+| M4-MARKETS | PASS | Saved chart/table/benchmark, groups/watchlists/screener, provenance, missing/stale states and analysis handoff. |
+| M4-ANALYSIS | PASS | Native research time, suitable source selection, explicit spend consent, durable queue/progress/cancel/bounded retry and reports; synthetic worker E2E. |
+| M4-PORTFOLIO | PASS | Exact stored values, readable policy limits, immutable source drill-down, no frontend risk math or historical backfill. |
+| M4-DECISIONS | PASS | Thesis/risks/invalidation/evidence, deterministic checks, explicit human approve/reject, conflict handling and persistent audit. |
+| M4-ACCEPTANCE | UNVERIFIED | Local quality/security/browser/docs gates PASS; PR/merge receipt still required. |
+
+Live data/model calls remain UNVERIFIED; real multi-currency provider operation,
+public hosting, simulator and broker execution are not delivered by fixture QA.
+Review approval never sends an order. No hosted CI or Image Gen was used.
+
 GitHub Issues is disabled (verified through repository API). No M4 ticket file
 was found in the current tracked tree. IDs below are **local ticket keys**, not
 claims of existing GitHub issues or old PLAN assignments. The branch uses the
@@ -18,7 +39,7 @@ No simulator, broker, production deployment, paid service setup or hosted CI.
 Manual security review is the owner-approved acceptance format; failed historical
 plugin finalization is neither rewritten nor represented as completed evidence.
 
-No frontend framework currently exists. Proposed stack: React + TypeScript +
+At the milestone base no frontend framework existed. Implemented stack: React + TypeScript +
 Vite in `web/`, same-origin `/api` requests through a loopback-only development
 proxy. Backend remains authoritative. Pin actual installed package versions in
 a lockfile; inspect current official documentation before implementation.
@@ -280,8 +301,8 @@ Status: planned. Depends on all tickets above.
 
 The consolidated current evidence and remaining gates are tracked in
 `milestone-4-verification.md`. Earlier ticket paragraphs are chronological
-checkpoints, not claims about the final candidate. The local PostgreSQL full
-regression now passes; final-candidate repetition and delivery gates remain open.
+checkpoints, not claims about the final candidate. Final-candidate frontend,
+Python and PostgreSQL full regression now pass; the PR/merge gate remains open.
 
 Saved-screener checkpoint: owner-scoped read-only list/detail API and Markets
 panel implemented. Saved ranking, exclusions, immutable policy/hashes/source IDs

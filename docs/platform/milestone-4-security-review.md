@@ -81,6 +81,25 @@ references; visual accessibility acceptance remains a separate gate.
 
 ## Limits and delivery conditions
 
+### Final display-diff addendum — 2026-09-27
+
+Reviewed `cbb1bfe..967aa24` after the original source review. Changes are
+finance-first labels, policy table formatting, compatible-source display and
+supporting tests/docs. Existing exact-ID submission, freshness checks, risk
+values, session/CSRF and approval enforcement remain unchanged. Unknown role
+names are rendered as escaped text with own-property lookup; custom risk warning
+text is preserved. No new HTML sink, external endpoint or provider. No new
+confirmed exploitable finding in this follow-up scope.
+
+At clean `967aa24ab148d8dc4b78979a0134ea3b254be1d6`: 87 frontend tests,
+lint/typecheck/build and full PostgreSQL regression (1284 tests + 88 subtests)
+PASS. Browser approval conflict, same-database API reconnect, final mobile
+presentation and logout verified. Full details and the two optional/provider
+skips remain in the verification ledger. Later documentation-only edits do not
+change this reviewed application tree.
+
+### Ongoing limits
+
 PASS for this scoped local/manual source-review gate. Rerun relevant checks and
 review subsequent security-sensitive changes before merge. Final whole-candidate
 regression and PostgreSQL receipt remain separate delivery gates. Do not infer

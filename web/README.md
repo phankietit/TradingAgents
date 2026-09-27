@@ -1,4 +1,4 @@
-# Local web (M4 implementation in progress)
+# Local research Web UI (M4)
 
 This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
@@ -8,8 +8,14 @@ new-attempt configuration and artifact downloads/inline inspection. Portfolio re
 snapshots/cash/holdings/policies without recomputing portfolio math. Decisions
 renders original/current state, narrative/evidence/risk checks and explicit
 approve/reject dialogs. Worker-to-approval integration is verified locally with a
-labelled synthetic graph; live-provider and broader acceptance remain pending.
-Do not describe this checkpoint as the completed M4 product.
+labelled synthetic graph. Finance-first presentation keeps ordinary research,
+portfolio and review flows readable while retaining diagnostics in disclosures.
+Local acceptance now passes at `967aa24`; see the authoritative
+[verification ledger](../docs/platform/milestone-4-verification.md) for exact
+commands, browser receipts and PR/merge status. Historical checkpoints below
+retain their original counts and limitations. Live-provider validation and
+production deployment are not implied. Start with the
+[local startup guide](../docs/platform/local-web-startup.md).
 
 ## Development
 

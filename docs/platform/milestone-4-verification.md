@@ -2,8 +2,10 @@
 
 This ledger consolidates current evidence; historical ticket checkpoints in
 `milestone-4-plan.md` and `web/README.md` are not final acceptance declarations.
-M4 delivery status: **UNVERIFIED** until the remaining acceptance and merge gates
-below are satisfied. No production deployment or live trading is in scope.
+Local implementation/QA status: **PASS** at code candidate
+`967aa24ab148d8dc4b78979a0134ea3b254be1d6`. PR/merge status remains **UNVERIFIED**
+until the delivery receipt is recorded. No production deployment or live trading
+is in scope. The latest acceptance matrix below supersedes earlier checkpoints.
 
 ## PostgreSQL regression — 2026-09-27
 
@@ -63,9 +65,9 @@ below are satisfied. No production deployment or live trading is in scope.
   not backfilled. Missing receipts stay unavailable, not inferred from current data.
 - Model configuration disclosure explicitly reports service/provider liveness as
   UNVERIFIED. It is not an authenticated connectivity or capability probe.
-- Latest frontend checkpoint: 84 tests, lint/typecheck/build PASS. Precise decimal
+- Earlier frontend checkpoint: 84 tests, lint/typecheck/build PASS. Precise decimal
   display, invalid portfolio/policy responses and view-level recovery are tested;
-  injected render failures have component evidence, not browser evidence yet.
+  injected render failures have component evidence, not browser-injection evidence.
 
 ## Decision identity and concurrent review — 2026-09-27
 
@@ -234,27 +236,35 @@ below are satisfied. No production deployment or live trading is in scope.
   uses unchanged role/ID checks and payloads. No new HTML sinks, providers,
   network endpoints, risk limits or approval rules.
 
-## Remaining M4 acceptance gates
+## Final code candidate acceptance — 2026-09-27
 
-1. **UNVERIFIED — finance-first final UX:** all four workspaces must meet the
-   owner brief, not only screener/date controls. Finish readable source/status
-   and decision/risk language; tuck diagnostics away without hiding warnings.
-   Verify desktop/narrow layouts and routine use without internal IDs/JSON.
-2. **UNVERIFIED — browser failure matrix:** complete and record actual browser
-   evidence for session expiry, failed/invalid output, unavailable/stale data,
-   cancellation/new attempt, approval failure/conflict and recovery. Existing
-   unit/API evidence remains useful but is not a substitute for browser checks.
-3. **UNVERIFIED — final candidate verification:** rerun frontend/backend gates
-   on the final code candidate; repeat clean-install smoke if packaging changes
-   after the successful installation receipt above;
-   [Manual source security review](milestone-4-security-review.md), dependency
-   advisories and limited tracked-secret scan now have scoped evidence at
-   `cbb1bfe`; subsequent changes still need relevant re-review.
-4. **UNVERIFIED — delivery documentation:** reconcile README, CHANGELOG, startup,
-   ingestion/cadence guidance and ticket statuses with actual runtime behavior.
-5. **UNVERIFIED — PR and merge:** fetch/compare current main, create/attach PR,
-   review exact diff, resolve findings, merge and verify merged tree plus Actions
-   remaining disabled. Never infer completion from this intermediate ledger.
+Clean branch `feature/TA-M4-local-web-ui`, code SHA
+`967aa24ab148d8dc4b78979a0134ea3b254be1d6`, base
+`e45e079b718c29f5fef8de399ed3ce002bcf1f97`. Following receipt edits are docs only.
+Release boundary: local research Web UI / private-platform development milestone,
+**not** production-private-platform, paper-trading or live-provider readiness.
 
-No owner decision is currently blocking these local implementation/QA steps.
-Paid-provider tests, public hosting and broker actions remain outside authorization.
+| Gate | Status | Exact evidence / limit |
+| --- | --- | --- |
+| Frontend | PASS | `npm test && npm run lint && npm run build`: 87 tests in 16 files; ESLint/TypeScript/Vite; bundle `index-Bf2JLK8C.js`. Node 26.8.1/npm 11.19.0. |
+| Python/SQLite regression | PASS | `bash scripts/verify-local.sh`: 1266 tests + 88 subtests, 29.63s; 20 skips, 22 warnings. Ruff/pip check/diff check pass. Python 3.14.7. |
+| PostgreSQL regression | PASS | `TA_ALLOW_TEST_DB_RESET=1 TEST_POSTGRES_URL=<disposable> bash scripts/verify-local.sh --postgres`: 1284 tests + 88 subtests, 41.08s; 2 skips, 22 warnings. PostgreSQL 16.14. Migration/schema/rollback, owner isolation, concurrency and ledger receipts included. |
+| Browser workflow | PASS | Real local API/database/worker with labelled synthetic graph: login, saved charts/watchlist/screener, source selection, queue/progress/report, risk review, approval/rejection and reload. Group-specific fixtures cover ETF, BTC/ETH and reference-only NQ/ES; not real market-calendar or live-provider evidence. |
+| Browser failure/recovery | PASS | Missing/stale data, invalid output remains REVIEW, failed worker bounded retries, cancellation/new attempt, real 300-second session expiry and cross-tab revocation, approval/rejection conflicts, API outage and same-DB recovery, logout. Receipts above preserve individual candidate scope. |
+| Finance-first presentation | PASS | Four workspaces, desktop 1280×720 and narrow 390×844; chart/table alternative, keyboard/disclosures, no document overflow. Native controls, readable financial labels, warning/provenance visible, IDs/JSON collapsed. Final form screenshot `Results/final-analysis-narrow.png`. No Image Gen. |
+| Authorization/security | PASS | Manual report plus follow-up display-diff review; API tests prove cross-owner/CSRF/Host/Origin denial. Browser happy-path auth and rejected transitions are distinct evidence, not browser exploit coverage. Dependency advisories and limited secret scan are scoped receipts, not exhaustive certification. |
+| Malformed rendering | PASS | Component/validator tests, including view recovery; deliberate browser injection remains UNVERIFIED and is not claimed. |
+| Clean installation | PASS | Non-editable installation receipt above; packaging unchanged since that receipt. Web assets remain separate from the wheel. |
+| Documentation | PASS | README/CHANGELOG, startup/bootstrap, operator-controlled ingestion cadence, local tickets, design and security/evidence docs reconciled. |
+| PR/merge | UNVERIFIED | Local checks do not replace merge verification; record PR identity, final head and merged tree separately. |
+| Paid/live provider and optional Bedrock | UNVERIFIED | DeepSeek live call withheld; optional `langchain_aws` absent. No paid/model/vendor test authorized. |
+| Public deployment, broker, simulator | NOT_IN_SCOPE | No exposure, orders, automated execution or portfolio simulator added. |
+
+Disposable PostgreSQL container `ta-m4-final-967aa24`, label
+`codex.task=tradingagents-m4-final-967aa24`, tmpfs database, loopback port 32792;
+stopped after testing. Other containers untouched. Temporary browser tabs, API
+and synthetic worker stopped; ignored synthetic DB/artifacts and external QA
+screenshots retained. No owner data deletion or history backfill.
+
+Current `origin/main` fetched and unchanged at the base above. GitHub Actions
+permission still `enabled=false`; no hosted CI required or enabled.
