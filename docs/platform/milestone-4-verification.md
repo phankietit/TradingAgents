@@ -268,3 +268,14 @@ screenshots retained. No owner data deletion or history backfill.
 
 Current `origin/main` fetched and unchanged at the base above. GitHub Actions
 permission still `enabled=false`; no hosted CI required or enabled.
+
+## Pull request and final delivery receipt
+
+[PR #4](https://github.com/phankietit/TradingAgents/pull/4) is the delivery PR.
+Its timeline/merge record is authoritative for the final merge SHA and post-merge
+tree verification; the table above is the **pre-merge** acceptance receipt.
+Do not treat an open PR as delivery complete. Review confirmed the submitted
+application tree is identical to tested `967aa24`; later commits change only
+documentation. Base remained `e45e079`, the branch was mergeable with no checks
+configured, and Actions remained disabled. Manual review is scoped as documented
+in the security report, not independent third-party certification.

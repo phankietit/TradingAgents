@@ -19,7 +19,7 @@ this table and `milestone-4-verification.md` supersede their old checkpoint stat
 | M4-ANALYSIS | PASS | Native research time, suitable source selection, explicit spend consent, durable queue/progress/cancel/bounded retry and reports; synthetic worker E2E. |
 | M4-PORTFOLIO | PASS | Exact stored values, readable policy limits, immutable source drill-down, no frontend risk math or historical backfill. |
 | M4-DECISIONS | PASS | Thesis/risks/invalidation/evidence, deterministic checks, explicit human approve/reject, conflict handling and persistent audit. |
-| M4-ACCEPTANCE | UNVERIFIED | Local quality/security/browser/docs gates PASS; PR/merge receipt still required. |
+| M4-ACCEPTANCE | PASS for local gates | Final delivery is conditional on [PR #4](https://github.com/phankietit/TradingAgents/pull/4) being merged; consult its timeline for exact merge/tree/Actions verification. |
 
 Live data/model calls remain UNVERIFIED; real multi-currency provider operation,
 public hosting, simulator and broker execution are not delivered by fixture QA.
