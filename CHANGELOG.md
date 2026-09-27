@@ -15,6 +15,8 @@ Breaking changes within the 0.x line are called out explicitly.
   Preserve original research/debate flow and rejected reports for audit.
 - Distinguish unused, missing, duplicate and unresolved report quantity bindings
   in bounded repair feedback without accepting malformed or unsupported output.
+  Separate input instrument metadata from permitted report fields on initial
+  and repair calls; keep schema rejection fail-closed.
 - Separate analysis setup, actual-event progress and report reading; add
   summary/history/research/verification sections and a compact mobile run picker.
   Read-only polling no longer blanks the report, and deep links retain run identity.

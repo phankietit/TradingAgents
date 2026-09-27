@@ -114,3 +114,19 @@ browser acceptance must pass before completion can be claimed.
   admin-enforced policy for localhost. No security bypass or indirect browser
   access was attempted. Earlier screenshots/interaction receipts remain scoped
   to their original candidate; no final valid-report screenshot is claimed.
+- PASS: clean `c34258d3eb602431154e661205aa1f5522259aea`,
+  `bash scripts/verify-local.sh`: 1,377 tests + 88 subtests, 20 skips,
+  244.18 seconds. Skip classifications above remain unchanged.
+- FAIL: a financial-validation-only replay reused the saved AAPL draft without
+  rerunning research or PM. It used 68,508 tokens (14,424 input + 54,084 output),
+  two calls. The repair had 19 used bindings, no unused/missing bindings, but
+  added 12 instrument-metadata fields forbidden by the report schema. The
+  rejected object was not stripped, published or promoted to a valid report.
+- Follow-up explicitly separates input metadata from output and lists the exact
+  permitted top-level schema fields on both the initial and bounded repair
+  attempt. This does not relax additional-field rejection or evidence checks.
+  Live acceptance of this final prompt change remains UNVERIFIED; no further
+  whole-graph paid run was opened while NQ/environment gates remain unresolved.
+  Targeted compiler, financial-stage, structured-agent, engine and localization
+  checks passed 81 tests in 5.55 seconds; Ruff passed. The full regression above
+  predates only this prompt-boundary change and its regression test.

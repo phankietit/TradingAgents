@@ -77,6 +77,18 @@ def invoke_structured_or_freetext(
     """
     repair_feedback = None
     failed_candidate = None
+    if repair_schema is not None:
+        output_contract = (
+            "OUTPUT CONTRACT: Return the requested report, not its JSON schema or input context. "
+            "The ONLY allowed top-level field names are: "
+            + json.dumps(list(repair_schema.model_fields))
+            + ". Required fields follow the schema. Do not add instrument metadata, source "
+            "envelopes, review checklists, or other fields from the input context. "
+            "Do not remove required evidence or arguments to satisfy this format."
+        )
+        prompt = (prompt + "\n\n" + output_contract) if isinstance(prompt, str) else [
+            *prompt, {"role": "user", "content": output_contract}
+        ]
     if structured_llm is not None:
         try:
             result = structured_llm.invoke(prompt)

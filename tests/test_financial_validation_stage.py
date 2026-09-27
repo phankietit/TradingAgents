@@ -55,3 +55,27 @@ def test_invalid_financial_repair_cannot_publish_or_loop():
     assert result["rejected_structured_decision"] == bad
     assert len(calls) == 1
     assert result["final_trade_decision"].startswith("UNVALIDATED RESEARCH")
+
+
+def test_metadata_is_input_only_and_extra_fields_remain_rejected():
+    data = source()
+    bad = {**candidate(data["snapshot_id"]), "symbol":"AAPL"}
+    prompts = []
+    class Model:
+        def with_structured_output(self, schema):
+            def invoke(prompt):
+                prompts.append(prompt)
+                return schema.model_validate(bad)
+            return SimpleNamespace(invoke=invoke)
+        def invoke(self, prompt):
+            prompts.append(prompt)
+            return AIMessage(content=json.dumps(bad))
+    initial = candidate(data["snapshot_id"], incorrect=True)
+    result = create_financial_validation(Model(), {"market":json.dumps([data])})({
+        "structured_decision":initial, "instrument_context":'{"symbol":"AAPL"}',
+    })
+    assert result["structured_decision"] is None
+    assert len(prompts) == 2
+    assert all("ONLY allowed top-level field names" in p for p in prompts)
+    assert '<input_context_not_output_fields>\n{"symbol":"AAPL"}' in prompts[0]
+    assert result["rejected_structured_decision"] == initial
