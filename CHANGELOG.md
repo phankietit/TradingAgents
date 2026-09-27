@@ -8,7 +8,21 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ## [Unreleased]
 
+### Fixed
+
+- Honor explicit provider, quick-model and deep-model environment settings in
+  the local API so new run manifests retain the operator's model selection.
+  Existing runs and API defaults are unchanged.
+
 ### Added
+
+- Add English/Vietnamese UI localization, persistent VI/EN controls and localized
+  financial display formatting without changing saved amounts, UTC cutoffs or
+  risk/approval states.
+- Add immutable per-run `report_language` selection (English, Vietnamese or
+  English–Vietnamese), worker propagation and schema-preserving bilingual
+  narrative instructions. Existing reports remain unchanged; no translation
+  service or automatic paid calls are introduced.
 
 - Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
   Decisions workspaces, owner sessions, same-origin CSRF and opt-in built-asset

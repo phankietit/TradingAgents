@@ -64,6 +64,18 @@ def get_language_instruction() -> str:
     lang = get_config().get("output_language", "English")
     if lang.strip().lower() == "english":
         return ""
+    if lang.strip().lower() == "english and vietnamese":
+        return (
+            " Write human-readable analysis bilingually in English and Vietnamese."
+            " For each section or narrative field, provide the English text followed by"
+            " its equivalent Vietnamese translation, labeled English: and Tiếng Việt:."
+            " Preserve exactly the same numbers, signs, units, dates, tickers, citations,"
+            " uncertainty, risks and invalidation conditions in both languages."
+            " Do not add facts or strengthen conclusions in translation."
+            " Keep required JSON keys, enum values and tool arguments unchanged;"
+            " place both languages only inside human-readable string fields."
+            " Follow the required output schema and all evidence and safety rules."
+        )
     return f" Write your entire response in {lang}."
 
 
@@ -285,5 +297,4 @@ def create_msg_delete():
         return {"messages": removal_operations + [placeholder]}
 
     return delete_messages
-
 

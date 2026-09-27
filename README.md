@@ -384,6 +384,13 @@ It uses saved evidence, not a live trading feed. See the
 [local startup guide](docs/platform/local-web-startup.md) and
 [web build and verification guide](web/README.md).
 
+The local UI supports **English / Tiếng Việt** with a persistent VI/EN switch.
+New research offers English, Vietnamese or bilingual English–Vietnamese reports
+(bilingual is the web form default). The language choice is recorded on each
+run; changing the UI language never translates or overwrites saved analysis.
+Bilingual generation can consume more output tokens and still needs human
+translation/financial review. See [language behavior](docs/platform/bilingual.md).
+
 The current platform layer also provides canonical instrument identity,
 immutable normalized price series, vendor-neutral equity/ETF evidence,
 reference-only NQ/ES context, BTC/ETH UTC snapshots, a deterministic large-cap

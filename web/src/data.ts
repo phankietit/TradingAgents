@@ -1,3 +1,4 @@
+import { t, formatLocale } from './i18n';
 import { useEffect, useState } from 'react';
 import { ApiError, request } from './api';
 
@@ -80,11 +81,11 @@ export function useResource<T>(path: string | null, version = 0, validate?: (val
 }
 
 export function number(value: number, digits = 2): string {
-  return Number.isFinite(value) ? value.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits }) : 'Unavailable';
+  return Number.isFinite(value) ? value.toLocaleString(formatLocale(), { maximumFractionDigits: digits, minimumFractionDigits: digits }) : t('Unavailable');
 }
-export const percent = (value: number) => Number.isFinite(value) ? `${number(value * 100)}%` : 'Unavailable';
+export const percent = (value: number) => Number.isFinite(value) ? `${number(value * 100)}%` : t('Unavailable');
 export function timestamp(value: string | null): string {
-  if (!value) return 'Unavailable';
+  if (!value) return t('Unavailable');
   const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, ' UTC') : 'Invalid timestamp';
+  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, ' UTC') : t('Invalid timestamp');
 }

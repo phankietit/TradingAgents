@@ -1,3 +1,4 @@
+import { t, useLocale } from './i18n';
 import { ApiError, errorMessage } from './api';
 import { timestamp, useResource } from './data';
 
@@ -17,17 +18,18 @@ function validate(value: JobState): JobState {
 }
 
 export default function JobProgress({runId, version}: {runId: string; version: number}) {
+  useLocale();
   const job = useResource<JobState>(`/runs/${encodeURIComponent(runId)}/job`, version, validate);
-  if (job.loading) return <p role="status">Checking processing status…</p>;
-  if (job.error || !job.data || job.data.run_id !== runId) return <p className="warning">Processing details unavailable. {job.error instanceof ApiError && job.error.status === 404 ? 'No processing record was found for this research.' : errorMessage(job.error)} This does not confirm that research is running.</p>;
+  if (job.loading) return <p role="status">{t("Checking processing status…")}</p>;
+  if (job.error || !job.data || job.data.run_id !== runId) return <p className="warning">{t("Processing details unavailable.")} {job.error instanceof ApiError && job.error.status === 404 ? t("No processing record was found for this research.") : t(errorMessage(job.error))}  {t("This does not confirm that research is running.")}</p>;
   const data = job.data;
-  return <section aria-label="Processing status">
-    <p><strong>{processingLabels[data.status]}</strong> · {data.attempt === 0 ? 'No attempt started' : `Attempt ${data.attempt} of ${data.max_attempts}`}</p>
-    {data.status === 'retry_wait' ? <p className="notice">A retry is scheduled no earlier than {timestamp(data.available_at)}. It starts only when a background service is available and may incur further model charges.</p> : null}
-    {data.status === 'cancel_requested' ? <p className="notice">Cancellation is pending. Work may continue until the current processing step stops.</p> : null}
-    <details><summary>Processing details</summary><dl><dt>Last updated</dt><dd>{timestamp(data.updated_at)}</dd>
-      {data.completed_at ? <><dt>Finished</dt><dd>{timestamp(data.completed_at)}</dd></> : null}
-      <dt>Processing ID</dt><dd className="mono">{data.job_id}</dd><dt>Research ID</dt><dd className="mono">{data.run_id}</dd>
+  return <section aria-label={t("Processing status")}>
+    <p><strong>{t(processingLabels[data.status])}</strong> · {data.attempt === 0 ? t("No attempt started") : `${t("Attempt")} ${data.attempt} ${t("of")} ${data.max_attempts}`}</p>
+    {data.status === 'retry_wait' ? <p className="notice">{t("A retry is scheduled no earlier than")} {timestamp(data.available_at)}{t(". It starts only when a background service is available and may incur further model charges.")}</p> : null}
+    {data.status === 'cancel_requested' ? <p className="notice">{t("Cancellation is pending. Work may continue until the current processing step stops.")}</p> : null}
+    <details><summary>{t("Processing details")}</summary><dl><dt>{t("Last updated")}</dt><dd>{timestamp(data.updated_at)}</dd>
+      {data.completed_at ? <><dt>{t("Finished")}</dt><dd>{timestamp(data.completed_at)}</dd></> : null}
+      <dt>{t("Processing ID")}</dt><dd className="mono">{data.job_id}</dd><dt>{t("Research ID")}</dt><dd className="mono">{data.run_id}</dd>
     </dl></details>
   </section>;
 }
