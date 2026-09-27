@@ -59,7 +59,13 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
             return SimpleNamespace(invoke=lambda prompt: schema.model_validate(values[schema.__name__]))
 
     model = Model()
-    monkeypatch.setattr(trading_graph, "create_llm_client", lambda **kwargs: SimpleNamespace(get_llm=lambda: model))
+    client_options = []
+
+    def client(**kwargs):
+        client_options.append(kwargs)
+        return SimpleNamespace(get_llm=lambda: model)
+
+    monkeypatch.setattr(trading_graph, "create_llm_client", client)
 
     def forbidden(*args, **kwargs):
         pytest.fail("snapshot path accessed legacy tools/memory/writes")
@@ -88,6 +94,8 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         snapshot_context=inputs, execution_observer=observer))
     assert result.decision_payload.thesis == "Snapshot thesis"
     assert result.narrative_signal == "Hold"
+    assert all(options["timeout"] == 600 for options in client_options)
+    assert all(options["max_retries"] == 1 for options in client_options)
     assert "fixture immutable price" in calls[0][1].content
     assert str(inputs.by_analyst["market"][0].manifest.snapshot_id) in calls[0][1].content
     assert list((tmp_path / "reports").iterdir()) == []

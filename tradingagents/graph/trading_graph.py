@@ -127,7 +127,11 @@ class TradingAgentsGraph:
         # Initialize LLMs with provider-specific thinking configuration
         llm_kwargs = self._get_provider_kwargs()
         if snapshot_reports is not None:
-            llm_kwargs.setdefault("timeout", 180)
+            # Long reasoning/report calls need the OpenAI-compatible SDK's
+            # normal ten-minute allowance. A shorter 180s ceiling interrupted
+            # valid MiniMax final reports after all preceding stages finished.
+            # The observer still enforces the run budget at model boundaries.
+            llm_kwargs.setdefault("timeout", 600)
             llm_kwargs.setdefault("max_retries", 1)
 
         # Add callbacks to kwargs if provided (passed to LLM constructor)
