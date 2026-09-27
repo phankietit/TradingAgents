@@ -92,6 +92,13 @@ variables for provider credentials.
 
 ## 4. Supply evidence, then opt into processing
 
+The VI/EN switch affects only application labels and financial display format.
+Select the report language separately when configuring a new analysis; the web
+form defaults to English + Vietnamese and explains potential extra token use.
+Restart API and any authorized worker together after upgrading to the bilingual
+version, so both understand the new job field. No database migration or rewrite
+of existing owner reports is needed. See [language behavior](bilingual.md).
+
 The UI reads existing owner-scoped records. Empty lists are expected for a fresh
 database; never copy synthetic QA evidence into an investment workspace.
 Follow [snapshot contracts](normalized-time-series.md),

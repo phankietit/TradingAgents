@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import RunForm from './RunForm';
+import LanguageSwitch from './LanguageSwitch';
 const catalog = [{ instrument_id: 'aapl', canonical_symbol: 'AAPL', display_name: 'Apple', asset_class: 'equity', tradability: 'investable', venue: 'NASDAQ', quote_currency: 'USD', timezone: 'America/New_York', session_calendar: 'XNAS', benchmark_symbol: 'SPY' }];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['market'] };
@@ -25,6 +26,23 @@ it('requires evidence and explicit paid-call authorization', async () => {
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(false);
+});
+it('keeps report language independent of UI and resets consent when changing generation language', async () => {
+  const fetch = setup(); const user = userEvent.setup();
+  render(<><LanguageSwitch /><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} /></>);
+  await user.click(await within(await screen.findByRole('group', { name: 'Price & trend' })).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
+  expect((screen.getByLabelText('Report language') as HTMLSelectElement).value).toBe('en-vi');
+  await user.click(screen.getByRole('button', { name: /VI/ }));
+  expect((screen.getByLabelText('Ngôn ngữ báo cáo') as HTMLSelectElement).value).toBe('en-vi');
+  expect((screen.getByRole('button', { name: 'Gửi phân tích' }) as HTMLButtonElement).disabled).toBe(false);
+  await user.selectOptions(screen.getByLabelText('Ngôn ngữ báo cáo'), 'vi');
+  expect((screen.getByRole('button', { name: 'Gửi phân tích' }) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole('checkbox', { name: /Tôi cho phép/ }));
+  await user.click(screen.getByRole('button', { name: 'Gửi phân tích' }));
+  await screen.findByRole('alert');
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  expect(JSON.parse(calls.find(([url]) => url.endsWith('/runs'))![1].body as string).report_language).toBe('vi');
 });
 it('withholds price snapshots from news and pins risk request to portfolio time', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);

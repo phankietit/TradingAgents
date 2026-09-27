@@ -1,3 +1,4 @@
+import { t, useLocale } from './i18n';
 import { useState } from 'react';
 import { ApiError, errorMessage } from './api';
 import { timestamp, useResource } from './data';
@@ -15,19 +16,21 @@ function validate(value: Evidence): Evidence {
   return value;
 }
 export default function ValuationSources({id, hash, catalog}: {id: string; hash: string; catalog: Instrument[]}) {
+  useLocale();
   const [open,setOpen] = useState(false);
-  return <section aria-label="Valuation sources"><button aria-expanded={open} onClick={()=>setOpen(value=>!value)}>{open ? 'Hide valuation sources' : 'View valuation sources'}</button>
+  return <section aria-label={t("Valuation sources")}><button aria-expanded={open} onClick={()=>setOpen(value=>!value)}>{open ? t("Hide valuation sources") : t("View valuation sources")}</button>
     {open ? <Sources id={id} hash={hash} catalog={catalog} /> : null}</section>;
 }
 function Sources({id,hash,catalog}: {id: string; hash: string; catalog: Instrument[]}) {
+  useLocale();
   const result=useResource<Evidence>(`/portfolios/${encodeURIComponent(id)}/valuation-evidence`,0,validate);
-  if(result.loading) return <p role="status">Checking saved valuation sources…</p>;
-  if(result.error || !result.data || result.data.portfolio_id!==id || result.data.portfolio_content_hash!==hash) return <p className="warning">Valuation sources unavailable. {result.error instanceof ApiError && result.error.status===404 ? 'This saved portfolio has no source receipt. Its price sources cannot be verified here.' : errorMessage(result.error)} No current price has been substituted.</p>;
-  return <><p className="muted">Prices recorded when this portfolio was valued. This is historical evidence, not a live quote or a new valuation.</p>
-    {!result.data.sources.length ? <p>No security prices were required for this cash-only valuation.</p> : result.data.sources.map(source=><div className="provenance" key={source.quote.instrument_id}>
-      <h3>{catalog.find(asset=>asset.instrument_id===source.quote.instrument_id)?.canonical_symbol ?? 'Holding'} · {plainDecimal(source.quote.price)} {source.quote.currency}</h3>
-      <p>{source.vendor} · Recorded quality: {source.quote.quality_status}</p>
-      <p>Price time {timestamp(source.quote.source_at)} · Retrieved {timestamp(source.quote.observed_at)}</p>
-      <details><summary>Source audit details</summary><dl><dt>Dataset</dt><dd>{source.dataset}</dd><dt>Source ID</dt><dd className="mono">{source.quote.snapshot_id}</dd><dt>Content hash</dt><dd className="mono">{source.quote.content_hash}</dd></dl></details>
+  if(result.loading) return <p role="status">{t("Checking saved valuation sources…")}</p>;
+  if(result.error || !result.data || result.data.portfolio_id!==id || result.data.portfolio_content_hash!==hash) return <p className="warning">{t("Valuation sources unavailable.")} {result.error instanceof ApiError && result.error.status===404 ? t("This saved portfolio has no source receipt. Its price sources cannot be verified here.") : t(errorMessage(result.error))}  {t("No current price has been substituted.")}</p>;
+  return <><p className="muted">{t("Prices recorded when this portfolio was valued. This is historical evidence, not a live quote or a new valuation.")}</p>
+    {!result.data.sources.length ? <p>{t("No security prices were required for this cash-only valuation.")}</p> : result.data.sources.map(source=><div className="provenance" key={source.quote.instrument_id}>
+      <h3>{catalog.find(asset=>asset.instrument_id===source.quote.instrument_id)?.canonical_symbol ?? t("Holding")} · {plainDecimal(source.quote.price)} {source.quote.currency}</h3>
+      <p>{source.vendor}  {t("· Recorded quality:")} {source.quote.quality_status}</p>
+      <p>{t("Price time")} {timestamp(source.quote.source_at)}  {t("· Retrieved")} {timestamp(source.quote.observed_at)}</p>
+      <details><summary>{t("Source audit details")}</summary><dl><dt>{t("Dataset")}</dt><dd>{source.dataset}</dd><dt>{t("Source ID")}</dt><dd className="mono">{source.quote.snapshot_id}</dd><dt>{t("Content hash")}</dt><dd className="mono">{source.quote.content_hash}</dd></dl></details>
     </div>)}</>;
 }

@@ -107,6 +107,7 @@ class RunCreateRequest(ApiModel):
     analysis_as_of: AwareDatetime
     selected_analysts: tuple[str, ...] = Field(min_length=1, max_length=4)
     decision_inputs: DecisionRunInputs | None = None
+    report_language: Literal["en", "vi", "en-vi"] | None = None
 
     @model_validator(mode="after")
     def validate_snapshot_roles(self):
