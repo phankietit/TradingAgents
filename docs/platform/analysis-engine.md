@@ -11,8 +11,11 @@ The adapter exposes `decision_payload` only when the structured result contains
 a valid rating, thesis, confidence, non-empty risks and invalidation conditions.
 Legacy outputs missing these additive fields remain readable Markdown but have
 no platform decision payload. Confidence is model-reported, not calibrated.
-No additional model call is introduced; the existing one-call structured path
-and single free-text retry remain. Provider cost/latency are not live-verified.
+The legacy CLI keeps its structured/plain fallback. Snapshot managers use a
+schema aligned with the platform consumer and at most one strict JSON format
+repair after a schema/tool-output miss. Transport failures are not formatting
+failures. Invalid repairs remain unvalidated text, never a ready decision.
+Safe diagnostics contain error types and field locations, not provider payloads.
 
 The Typer CLI and public `TradingAgentsGraph.propagate()` API are unchanged.
 The adapter does not calculate target weights, waive policies, approve a
@@ -58,7 +61,7 @@ terminated on cancellation; their result is withheld at publication.
 
 ## Snapshot-only graph execution
 
-An `AnalysisRequest.snapshot_context` selects tool-free analyst nodes while
+An `AnalysisRequest.snapshot_context` selects snapshot-bound analyst nodes while
 reusing the existing research/trader/risk/Portfolio Manager workflow. Context
 must cover exactly the selected profile analysts with nonempty JSON snapshots;
 input hashes, instrument identity, OK quality and source/retrieval eligibility

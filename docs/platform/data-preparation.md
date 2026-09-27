@@ -8,7 +8,7 @@ not full fundamental, news, macro or historical-vintage research.
 
 1. Select an instrument and prepare prices. The authenticated, CSRF-protected
    `POST /api/v1/instruments/{id}/prepare-data` accepts no vendor URL or symbol.
-2. Reuse a current owner-readable `yfinance.daily.v3` snapshot only after hash
+2. Reuse a current owner-readable `yfinance.daily.v4` snapshot only after hash
    verification and complete five-year session coverage checks. Otherwise fetch
    five calendar years of daily OHLCV through the
    existing yfinance dependency, with adjusted close and no rounding.
@@ -45,10 +45,15 @@ More evidence can increase AI input tokens when the owner authorizes research;
 free market-data acquisition does not mean free model processing.
 
 This establishes price-history window parity, **not full CLI analysis parity**.
-The CLI computes stockstats indicators using the long history and returns a
-default 30-day indicator window, whereas the web snapshot-only analyst does
-not call those live tools. Automated indicator evidence, news, financials,
-social and macro still need governed source adapters. Never describe a
+Both paths now use stockstats over the full supplied history. The web's tools
+read only immutable snapshots, expose explicit indicator warmup, page any stored
+candle/indicator window, and compute calendar returns with named endpoints.
+The chart in a new report is pinned to that run's snapshot, never today's feed.
+The v4 acquisition contract writes v1.1 bars with `session_date`; `timestamp`
+remains the close instant. Old v1.0 payloads remain readable and labels remain
+unknown rather than inferred for an unrecognized source. No historical bytes
+are rewritten. News, financials, social and macro still require eligible
+snapshots; automatic acquisition of those feeds is not implemented here. Never describe a
 price-only report as a full replication of the original multi-source pipeline.
 Completeness must follow each source's original contract, not an arbitrary
 uniform lookback or a speed/token-driven reduction. Preserve point-in-time and

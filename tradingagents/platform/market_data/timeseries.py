@@ -67,6 +67,7 @@ def normalize_time_series(
     ):
         raise ValueError("UTC instruments require UTC bar timestamps")
     return NormalizedTimeSeries(
+        schema_version="1.1" if any(bar.session_date is not None for bar in normalized_bars) else "1.0",
         instrument_id=instrument.instrument_id,
         dataset=dataset,
         interval=interval,

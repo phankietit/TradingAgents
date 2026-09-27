@@ -23,8 +23,11 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_portfolio_manager(llm):
-    structured_llm = bind_structured(llm, PortfolioDecision, "Portfolio Manager")
+def create_portfolio_manager(llm, *, research_only=False):
+    from tradingagents.agents.research_schemas import SnapshotPortfolioDecision
+
+    schema = SnapshotPortfolioDecision if research_only else PortfolioDecision
+    structured_llm = bind_structured(llm, schema, "Portfolio Manager")
 
     def portfolio_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
@@ -79,11 +82,30 @@ Write these sections, in this order, starting with the rating on its own line:
 {NO_EXTERNAL_TOOLS}{get_language_instruction()}"""
 
         structured_decision = None
+        diagnostics = list(state.get("structured_diagnostics", []))
+        if research_only:
+            prompt = prompt.replace("sized by how decisively it wins", "qualified by the evidence strength")
+            prompt += ("\nResearch-only output: include required confidence, at least one risk, "
+                       "and at least one invalidation condition. For investment_thesis and every "
+                       "risk and invalidation, include an evidence_claim with exactly matching "
+                       "claim text and only supplied snapshot IDs. Hypothetical conditions must "
+                       "be labelled conditional, not observed. No sizing or execution instructions.")
+            prompt += ("\nUse observed_numbers to reference every observed numeric claim using "
+                       "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
+                       "passed by analysts; do not invent IDs. If bilingual output was requested, "
+                       "localized_report is required with complete en and vi Markdown reports. "
+                       "Keep canonical structured fields in English and preserve all numbers, dates "
+                       "and currency symbols verbatim in the Vietnamese translation.")
 
         def capture_decision(value):
             nonlocal structured_decision
             # Revalidate even model instances: model_copy can bypass validators.
-            validated = PortfolioDecision.model_validate(value.model_dump())
+            validated = schema.model_validate(value.model_dump())
+            if research_only:
+                from tradingagents.dataflows.config import get_config
+
+                if get_config().get("output_language") == "English and Vietnamese" and validated.localized_report is None:
+                    raise ValueError("bilingual research requires both saved report languages")
             structured_decision = validated.model_dump(mode="json")
 
         final_trade_decision = invoke_structured_or_freetext(
@@ -93,6 +115,8 @@ Write these sections, in this order, starting with the rating on its own line:
             render_pm_decision,
             "Portfolio Manager",
             on_structured=capture_decision,
+            repair_schema=schema if research_only else None,
+            diagnostics=diagnostics,
         )
 
         new_risk_debate_state = {
@@ -112,6 +136,7 @@ Write these sections, in this order, starting with the rating on its own line:
             "risk_debate_state": new_risk_debate_state,
             "final_trade_decision": final_trade_decision,
             "structured_decision": structured_decision,
+            "structured_diagnostics": diagnostics,
         }
 
     return portfolio_manager_node

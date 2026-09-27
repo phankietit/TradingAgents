@@ -4,13 +4,17 @@ import json
 from uuid import uuid5
 
 from tradingagents._compat import UTC
-from tradingagents.contracts import ArtifactKind
+from tradingagents.contracts import ArtifactKind, RunEventType
 from tradingagents.platform.analysis import (
     AnalysisEngine,
     AnalysisRequest,
 )
+from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+from tradingagents.platform.analysis.observer import ResearchObserver
+from tradingagents.platform.analysis.profiles import resolve_analysis_profile
 from tradingagents.platform.analysis.snapshots import load_snapshot_context
 from tradingagents.platform.artifacts import ArtifactService
+from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.persistence import PlatformRepository
 
 from .decision_pipeline import build_run_decision, load_run_portfolio
@@ -88,11 +92,23 @@ class AnalysisJobHandler:
                 raise ValueError("run instrument unavailable")
             snapshot_context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst) if run.decision_inputs else None
             portfolio = load_run_portfolio(repository, run)
+        def emit(event_type, payload):
+            from datetime import datetime
+
+            # The same fenced session used for publication rejects cancelled
+            # or expired workers. No model call is made under this transaction.
+            with context.publication_session() as event_session:
+                RunEventStore(event_session).append(owner_id=run.owner_id, run_id=run.run_id,
+                    event_type=RunEventType(event_type), occurred_at=datetime.now(UTC),
+                    payload={**payload, "attempt": job.attempt})
+
+        observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit)
         result = self.engine.analyze(AnalysisRequest(
             instrument=instrument, analysis_date=run.analysis_as_of.date(),
             selected_analysts=run.selected_analysts,
             snapshot_context=snapshot_context,
             portfolio=portfolio,
+            execution_observer=observer,
             config_overrides={"llm_provider": run.llm_provider,
                               "quick_think_llm": run.quick_model,
                               "deep_think_llm": run.deep_model,
@@ -102,6 +118,9 @@ class AnalysisJobHandler:
         context.raise_if_cancelled()
         context.heartbeat()  # Reject a lost/expired lease before publishing.
         raw = result.decision_payload.model_dump(mode="json") if result.decision_payload else {}
+        market_sources = [SnapshotMarketFacts(source)
+            for source in json.loads(snapshot_context.reports(run.instrument_id, run.selected_analysts).get("market", "[]"))
+            if source["provenance"]["dataset"] == "ohlcv.daily"] if snapshot_context else []
         # Deliberately exclude raw graph messages, which may contain provider
         # objects or unrelated prompt context. Preserve the research artifact.
         report = {
@@ -113,6 +132,19 @@ class AnalysisJobHandler:
             "structured_narrative": raw or None,
             "snapshot_attestation": "PASS" if snapshot_context is not None else "UNVERIFIED",
             "report_language": run.report_language,
+            "publication_warning": publication_warning(snapshot_context),
+            "structured_diagnostics": result.final_state.get("structured_diagnostics", []),
+            "execution": observer.receipt(),
+            "source_quality": "verified" if snapshot_context is not None else "unverified",
+            "research_quality": "structured" if raw else "unvalidated",
+            "validation_issues": list(result.validation_issues),
+            "localized_report": (result.final_state.get("structured_decision") or {}).get("localized_report"),
+            "coverage": {"selected": list(run.selected_analysts),
+                         "expected": list(resolve_analysis_profile(instrument).allowed_analysts),
+                         "missing": [role for role in resolve_analysis_profile(instrument).allowed_analysts if role not in run.selected_analysts],
+                         "all_profile_roles_present": set(run.selected_analysts) == set(resolve_analysis_profile(instrument).allowed_analysts)},
+            "market_facts": [source.summary() for source in market_sources],
+            "market_history": [source.chart() for source in market_sources],
         }
         with context.publication_session() as session:
             repository = PlatformRepository(session, artifact_store=self.artifact_store)

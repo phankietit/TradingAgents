@@ -14,8 +14,11 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_research_manager(llm):
-    structured_llm = bind_structured(llm, ResearchPlan, "Research Manager")
+def create_research_manager(llm, *, research_only=False):
+    from tradingagents.agents.research_schemas import SnapshotResearchPlan
+
+    schema = SnapshotResearchPlan if research_only else ResearchPlan
+    structured_llm = bind_structured(llm, schema, "Research Manager")
 
     def research_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
@@ -53,12 +56,19 @@ Write these sections, in this order, starting with the recommendation on its own
 
 {NO_EXTERNAL_TOOLS}""" + get_language_instruction()
 
+        diagnostics = list(state.get("structured_diagnostics", []))
+        if research_only:
+            prompt = prompt.replace("sized by how decisively it wins", "qualified by evidence strength")
+            prompt = prompt.replace("concrete steps for the trader, sized against a standard allocation",
+                                    "conditional research scenarios and evidence to monitor; no sizing or allocation")
         investment_plan = invoke_structured_or_freetext(
             structured_llm,
             llm,
             prompt,
             render_research_plan,
             "Research Manager",
+            repair_schema=schema if research_only else None,
+            diagnostics=diagnostics,
         )
 
         new_investment_debate_state = {
@@ -73,6 +83,7 @@ Write these sections, in this order, starting with the recommendation on its own
         return {
             "investment_debate_state": new_investment_debate_state,
             "investment_plan": investment_plan,
+            "structured_diagnostics": diagnostics,
         }
 
     return research_manager_node

@@ -28,7 +28,7 @@ from tradingagents.platform.market_data.timeseries import normalize_time_series
 from .history_window import OHLCV_HISTORY_YEARS
 
 # Acquisition-contract version prevents reusing the old one-year snapshots.
-VENDOR = "yfinance.daily.v3"
+VENDOR = "yfinance.daily.v4"
 DATASET = "ohlcv.daily"
 
 
@@ -140,6 +140,7 @@ def normalize_yahoo(instrument, frame, metadata, *, now):
             bars.append(
                 {
                     "timestamp": close,
+                    "session_date": day,
                     "open": float(row["Open"]),
                     "high": float(row["High"]),
                     "low": float(row["Low"]),

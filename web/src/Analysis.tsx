@@ -55,7 +55,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   const [tick, setTick] = useState(0);
   const run = useResource<Run>(`/runs/${encodeURIComponent(runId)}`, version + tick);
   const artifacts = useResource<Artifact[]>(`/runs/${encodeURIComponent(runId)}/artifacts?limit=200`, version + tick);
-  const [events, setEvents] = useState<{ sequence: number; event_type: string; occurred_at: string }[]>([]);
+  const [events, setEvents] = useState<{ sequence: number; event_type: string; occurred_at: string; stage?: string }[]>([]);
   const [streamError, setStreamError] = useState(false);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -70,7 +70,8 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
       try {
         const value = JSON.parse(event.data);
         if (!Number.isInteger(value.sequence) || typeof value.event_type !== 'string' || typeof value.occurred_at !== 'string') return;
-        setEvents(previous => [...previous.filter(item => item.sequence !== value.sequence), { sequence: value.sequence, event_type: value.event_type, occurred_at: value.occurred_at }].sort((a, b) => a.sequence - b.sequence).slice(-100));
+        const stage = typeof value.payload?.stage === 'string' && value.payload.stage.length < 80 ? value.payload.stage : undefined;
+        setEvents(previous => [...previous.filter(item => item.sequence !== value.sequence), { sequence: value.sequence, event_type: value.event_type, occurred_at: value.occurred_at, stage }].sort((a, b) => a.sequence - b.sequence).slice(-100));
         if (['run.succeeded', 'run.failed', 'run.cancelled'].includes(value.event_type)) stream.close();
         setTick(value => value + 1);
       } catch { setStreamError(true); }
@@ -96,6 +97,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
       <p role="status">{t("Research:")} <strong>{t(processingLabels[run.data.status] ?? 'Status unavailable')}</strong>  {t("· As of")} {timestamp(run.data.analysis_as_of)}</p>
       <JobProgress runId={runId} version={version + tick} />
+      {!isTerminal && events.some(event => event.stage) ? <p className="stage-indicator" role="status">{t('Current research stage:')} {t([...events].reverse().find(event => event.stage)?.stage ?? '')}</p> : null}
       {run.data.status === 'queued' ? <p className="notice">{t("Waiting for a worker. Queued does not mean analysis has started.")}</p> : null}
       {run.data.error_code ? <><p className="notice danger">{t("Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.")}</p><details><summary>{t("Failure details")}</summary><p className="mono">{run.data.error_code}</p></details></> : null}
       <p className="muted">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>
@@ -103,14 +105,14 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     </> : <p role="status">{t("Loading run…")}</p>}
     {error ? <p role="alert" className="danger">{t(error)}</p> : null}
     {streamError ? <p className="warning">{t("Event connection interrupted; active run status refreshes every 5 seconds.")}</p> : null}
-    <details><summary>{t("Processing timeline")}</summary><ol className="event-list">{events.map(event => <li key={event.sequence}><span>{eventLabel(event.event_type)}</span><time>{timestamp(event.occurred_at)}</time></li>)}</ol>
+    <details><summary>{t("Processing timeline")}</summary><ol className="event-list">{events.map(event => <li key={event.sequence}><span>{eventLabel(event.event_type)}{event.stage ? ` · ${t(event.stage)}` : ''}</span><time>{timestamp(event.occurred_at)}</time></li>)}</ol>
     {!events.length ? <p className="muted">{t("No events received yet.")}</p> : null}
     </details>
     <h3>{t("Reports & evidence")}</h3>
     {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
       <a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))}  {t("· Download")}</a>
       <details><summary>{t("File details")}</summary><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')}  {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
-      <ArtifactPreview artifact={item} runId={runId} />
+      <ArtifactPreview artifact={item} runId={runId} defaultOpen={item.kind === 'analysis_report'} />
     </li>)}</ul> : <p className="muted">{t("No artifacts have been published for this run.")}</p>}
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
   </section>;

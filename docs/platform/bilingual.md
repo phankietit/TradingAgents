@@ -16,6 +16,14 @@
 
 ## Report generation
 
+New snapshot-mode Portfolio Manager output may retain a `localized_report`
+with complete `en` and `vi` Markdown. Bilingual runs require both; the schema
+checks numeric-token parity, and the UI switches saved content without model
+calls. Canonical decision fields remain English. This is a translation-integrity
+check, not certified semantic equivalence. Older mixed-language reports are
+shown as saved and are not regenerated. Markdown never executes raw HTML or
+loads remote images; source links remain in the separate provenance view.
+
 `POST /api/v1/runs` accepts optional `report_language`: `en`, `vi`, `en-vi`, or
 null/omitted for legacy worker-configured behavior. The web form explicitly
 defaults to `en-vi`. Changing this selection clears paid-run consent. The API

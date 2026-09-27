@@ -385,6 +385,12 @@ It uses saved evidence, not a live trading feed. See the
 [web build and verification guide](web/README.md).
 
 The local UI supports **English / Tiếng Việt** with a persistent VI/EN switch.
+The current remediation candidate adds snapshot-bound indicator tools, explicit
+daily session labels, deterministic return endpoints, readable Markdown reports,
+saved-report charts and separate source/research/portfolio states. It retains
+the original debate/manager graph. See the [implementation and verification
+ledger](docs/platform/research-remediation.md); local tests are not live-model
+quality or release approval.
 New research offers English, Vietnamese or bilingual English–Vietnamese reports
 (bilingual is the web form default). The language choice is recorded on each
 run; changing the UI language never translates or overwrites saved analysis.

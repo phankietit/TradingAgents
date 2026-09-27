@@ -3,8 +3,16 @@ import { useEffect, useState } from 'react';
 import { ApiError, errorMessage, request } from './api';
 import { timestamp } from './data';
 import { researchLabel } from './researchLabels';
+import ResearchMarkdown from './ResearchMarkdown';
+import ResearchChart, { reportHistories, type ReportHistory } from './ResearchChart';
 
 export interface Artifact { artifact_id: string; kind: string; media_type: string; content_hash: string; byte_size: number; created_at: string }
+export function artifactList(value: Artifact[]): Artifact[] {
+  if (!Array.isArray(value) || value.some(item => !item || typeof item.artifact_id !== 'string'
+      || typeof item.kind !== 'string' || typeof item.media_type !== 'string' || typeof item.content_hash !== 'string'
+      || !Number.isSafeInteger(item.byte_size) || item.byte_size < 1 || typeof item.created_at !== 'string')) throw new ApiError(502);
+  return value;
+}
 const MAX_PREVIEW_BYTES = 1_000_000;
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type JsonObject = Record<string, unknown>;
@@ -21,7 +29,7 @@ function list(value: unknown): unknown[] {
   return value;
 }
 interface Source { id: string; snapshot: string; name: string; hash: string; claim: string; sourceAt: string | null; observedAt: string }
-type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null }
+type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null }
   | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] };
 
 function parse(value: unknown, artifact: Artifact, runId: string): Preview {
@@ -30,10 +38,16 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
   if (artifact.kind === 'analysis_report') {
     const decisionId = text(data.decision_id);
     if (!uuid.test(decisionId) || typeof data.reference_only !== 'boolean') throw new ApiError(502);
+    const localized = data.localized_report ? object(data.localized_report) : null;
     return { type: 'report', decisionId, profile: text(data.profile), referenceOnly: data.reference_only,
       analysts: list(data.selected_analysts).map(text), attestation: text(data.snapshot_attestation),
       narrative: text(data.narrative), structured: data.structured_narrative,
-      reportLanguage: ['en', 'vi', 'en-vi'].includes(String(data.report_language)) ? String(data.report_language) : null };
+      reportLanguage: ['en', 'vi', 'en-vi'].includes(String(data.report_language)) ? String(data.report_language) : null,
+      histories: reportHistories(data.market_history),
+      localized: localized ? { en: text(localized.en), vi: text(localized.vi) } : null,
+      warning: data.publication_warning === undefined ? '' : text(data.publication_warning),
+      issues: data.validation_issues === undefined ? [] : list(data.validation_issues).map(text),
+      usage: data.execution ? object(object(data.execution).usage) : null };
   }
   if (artifact.kind !== 'decision_evidence' || data.graph_id !== artifact.artifact_id) throw new ApiError(502);
   const sources = list(data.evidence).map(value => {
@@ -56,9 +70,9 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
   return { type: 'evidence', asOf: text(data.as_of), claims };
 }
 
-export default function ArtifactPreview({ artifact, runId }: { artifact: Artifact; runId: string }) {
+export default function ArtifactPreview({ artifact, runId, defaultOpen = false }: { artifact: Artifact; runId: string; defaultOpen?: boolean }) {
   useLocale();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence'].includes(artifact.kind)
     && Number.isSafeInteger(artifact.byte_size) && artifact.byte_size > 0 && artifact.byte_size <= MAX_PREVIEW_BYTES;
   return <>
@@ -69,7 +83,7 @@ export default function ArtifactPreview({ artifact, runId }: { artifact: Artifac
 }
 
 function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string }) {
-  useLocale();
+  const locale = useLocale();
   const [state, setState] = useState<{ data?: Preview; error?: unknown }>({});
   useEffect(() => {
     const controller = new AbortController();
@@ -88,11 +102,17 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
       <p>{t("Profile:")} {t(data.profile)} {t("· Analysts:")} {data.analysts.map(researchLabel).join(', ')}</p>
       {data.referenceOnly ? <p className="warning">{t("Reference only — not investable.")}</p> : null}
       <p>{t("Snapshot attestation:")} {data.attestation}</p>
+      {data.histories.map(history => <ResearchChart key={history.snapshot_id} history={history} />)}
+      {data.issues.length ? <p className="notice warning">{t('This report has unresolved validation findings. It is available for inspection, not an approved investment conclusion.')}</p> : null}
       <h4>{t("Research narrative")}</h4>
       <p className="muted caption">{t('Original report · Language requested:')} {t(data.reportLanguage === 'en-vi' ? 'English + Vietnamese' : data.reportLanguage === 'vi' ? 'Vietnamese' : data.reportLanguage === 'en' ? 'English' : 'Legacy / not recorded')}</p>
-      <p className="narrative" lang={data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined}>{data.narrative}</p>
+      {data.localized && data.warning ? <p className="notice warning">{data.warning}</p> : null}
+      <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />
       <p className="muted caption">{t('Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.')}</p>
       <details><summary>{t("Structured research output")}</summary><pre className="safe-text">{JSON.stringify(data.structured ?? null, null, 2)}</pre></details>
+      <details><summary>{t('Validation & model usage')}</summary>{data.issues.length ? <ul>{data.issues.map(issue => <li key={issue}>{issue}</li>)}</ul> : <p>{t('No automated finding recorded. Human financial review remains required.')}</p>}
+        {data.usage ? <pre className="safe-text">{JSON.stringify(data.usage, null, 2)}</pre> : <p>{t('Token usage was not recorded for this report.')}</p>}
+      </details>
       <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a>
     </> : <>
       <p>{t("Evidence as of")} {timestamp(data.asOf)}</p>

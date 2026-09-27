@@ -301,6 +301,14 @@ def render_pm_decision(decision: PortfolioDecision) -> str:
     target = decision.price_target if decision.price_target is not None else "not provided"
     parts.extend(["", f"**Price Target**: {target}"])
     parts.extend(["", f"**Time Horizon**: {decision.time_horizon or 'not provided'}"])
+    if decision.risks:
+        parts.extend(["", "## Risks", *[f"- {risk}" for risk in decision.risks]])
+    if decision.invalidation_conditions:
+        parts.extend(["", "## Invalidation conditions", *[f"- {condition}" for condition in decision.invalidation_conditions]])
+    if decision.evidence_claims:
+        parts.extend(["", "## Evidence", *[
+            f"- {item.claim} — " + ", ".join(str(value) for value in item.snapshot_ids)
+            for item in decision.evidence_claims]])
     return "\n".join(parts)
 
 

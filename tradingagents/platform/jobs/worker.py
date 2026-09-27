@@ -186,6 +186,8 @@ class JobWorker:
                 with self.database.session() as session:
                     return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except Exception as exc:
+            from tradingagents.platform.analysis.observer import ResearchBudgetExceeded
+
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
             try:
                 with self.database.session() as session:
@@ -193,9 +195,9 @@ class JobWorker:
                     failed = DurableJobQueue(session).fail(
                         job.job_id,
                         self.worker_id,
-                        error_code="HANDLER_ERROR",
+                        error_code="RESEARCH_BUDGET_EXHAUSTED" if isinstance(exc, ResearchBudgetExceeded) else "HANDLER_ERROR",
                         error_message=type(exc).__name__,
-                        retryable=True,
+                        retryable=not isinstance(exc, ResearchBudgetExceeded),
                         retry_after=retry_after,
                         now=timestamp,
                     )

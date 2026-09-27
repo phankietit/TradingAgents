@@ -18,11 +18,12 @@ all three agents log the same warnings when fallback fires.
 
 from __future__ import annotations
 
+import json
 import logging
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,8 @@ def invoke_structured_or_freetext(
     agent_name: str,
     *,
     on_structured: Callable[[T], None] | None = None,
+    repair_schema: type[T] | None = None,
+    diagnostics: list[dict] | None = None,
 ) -> str:
     """Run the structured call and render to markdown; fall back to free-text on any failure.
 
@@ -80,15 +83,63 @@ def invoke_structured_or_freetext(
                 # the tool, leaving the parser with nothing to return. Treat it
                 # as a structured miss and fall back, with a clear reason.
                 raise ValueError("structured output returned no parsed result")
+            if repair_schema is not None:
+                result = repair_schema.model_validate(result.model_dump())
             rendered = render(result)
             if on_structured is not None:
                 on_structured(result)
             return rendered
         except Exception as exc:
+            if repair_schema is not None:
+                # Transport/auth/rate-limit failures are not schema failures:
+                # let the durable worker classify/retry rather than spending
+                # another model call on a purported formatting repair.
+                if not isinstance(exc, (ValueError, TypeError)):
+                    raise
+                if diagnostics is not None:
+                    diagnostics.append(_safe_diagnostic(agent_name, exc, "structured"))
             logger.warning(
                 "%s: structured-output invocation failed (%s); retrying once as free text",
                 agent_name, type(exc).__name__,
             )
 
+    if repair_schema is not None:
+        # A provider may return no schema tool call. One strict JSON-format
+        # repair is allowed; it never creates confidence, citations or fields
+        # in application code, and malformed prose cannot become a decision.
+        instruction = ("FORMAT REPAIR: Return only one JSON object matching this schema. "
+                       "Use only the same supplied evidence and authority constraints. "
+                       "Do not invent missing facts or source IDs.\n"
+                       + json.dumps(repair_schema.model_json_schema(), ensure_ascii=False))
+        if isinstance(prompt, str):
+            repair_prompt = prompt + "\n\n" + instruction
+        else:
+            repair_prompt = [*prompt, {"role": "user", "content": instruction}]
+        response = plain_llm.invoke(repair_prompt)
+        text = response.content
+        try:
+            # Accept an optional single JSON fence, never extract a fragment
+            # from commentary or fill omitted fields with guessed values.
+            candidate = text.strip()
+            if candidate.startswith("```json\n") and candidate.endswith("\n```"):
+                candidate = candidate[8:-4]
+            result = repair_schema.model_validate_json(candidate)
+            rendered = render(result)
+            if on_structured is not None:
+                on_structured(result)
+            return rendered
+        except (ValueError, TypeError) as exc:
+            if diagnostics is not None:
+                diagnostics.append(_safe_diagnostic(agent_name, exc, "repair"))
+            return "UNVALIDATED RESEARCH — structured output failed after one format repair.\n\n" + str(text)
     response = plain_llm.invoke(prompt)
     return response.content
+
+
+def _safe_diagnostic(agent: str, error: Exception, phase: str) -> dict:
+    # No raw provider message, input values, URLs, prompts or credentials.
+    fields = []
+    if isinstance(error, ValidationError):
+        fields = [{"field": ".".join(str(part) for part in item["loc"]),
+                   "code": item["type"]} for item in error.errors(include_input=False, include_url=False)]
+    return {"agent": agent, "phase": phase, "error_type": type(error).__name__, "fields": fields[:32]}

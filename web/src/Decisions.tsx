@@ -6,6 +6,8 @@ import type { Instrument } from './data';
 import type { Run } from './RunForm';
 import { reviewStatus, qualityLabel, riskLabel, riskReason } from './financialLabels';
 import { processingLabels } from './JobProgress';
+import ArtifactPreview, { artifactList, type Artifact } from './ArtifactPreview';
+import ResearchMarkdown from './ResearchMarkdown';
 
 interface Check { check_id: string; policy_id: string; policy_version: string; result: string; blocking: boolean; reason: string; observed_value: unknown; limit_value: unknown }
 interface Evidence { evidence_id: string; snapshot_id: string; claim: string; source_name: string; source_url: string | null; observed_at: string; source_at: string | null; content_hash: string }
@@ -64,6 +66,7 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
   // Never render or act on a different candidate returned for the selected URL.
   const candidate = state.data?.candidate?.decision_id === id ? state.data.candidate : undefined;
   const run = useResource<Run>(candidate ? `/runs/${encodeURIComponent(candidate.run_id)}` : null, version + tick);
+  const artifacts = useResource<Artifact[]>(candidate ? `/runs/${encodeURIComponent(candidate.run_id)}/artifacts?limit=200` : null, version + tick, artifactList);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   if (state.loading) return <p role="status">{t("Loading decision state…")}</p>;
   if (state.data && !candidate) return <p role="alert" className="danger">{t("The returned research does not match the selected decision. Refresh decisions to try again. Review actions are unavailable.")}</p>;
@@ -78,14 +81,19 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
   const canApprove = current === 'ready_for_approval' && candidate.data_quality === 'OK' && runMatches && run.data?.status === 'succeeded'
     && candidate.policy_checks.length > 0 && policies.size === 1 && candidate.policy_checks.every(check => !check.blocking || check.result === 'PASS');
   return <section className="instrument-detail" aria-label={t("Decision details")}>
-    <h2>{instrumentName} · {t(candidate.rating)} <span className="muted">{t("· Research rating")}</span></h2>
-    <p className="notice">{t("Your review:")} <strong>{reviewStatus(current)}</strong></p>
-    <p className="muted">{t("As of")} {timestamp(candidate.as_of)}  {t("· Data quality:")} {qualityLabel(candidate.data_quality)}</p>
-    <h3>{t("Investment thesis")}</h3><p className="narrative">{invalidNarrative ? t("No usable investment conclusion was produced. Manual review is required.") : candidate.thesis}</p>
+    <div className="research-heading"><div><p className="eyebrow">{t("Research outlook")}</p><h2>{instrumentName}</h2><p className="muted">{t("As of")} {timestamp(candidate.as_of)}</p></div><span className={`outlook-badge ${invalidNarrative ? 'unvalidated' : ''}`}>{invalidNarrative ? t("Needs validation") : t(candidate.rating)}</span></div>
+    <div className="status-strip"><span>{t("Your review:")} <strong>{reviewStatus(current)}</strong></span><span>{invalidNarrative ? t("Research output needs validation; this does not establish a source-data failure.") : `${t("Evidence quality:")} ${qualityLabel(candidate.data_quality)}`}</span></div>
+    <h3>{t("Investment thesis")}</h3><ResearchMarkdown text={invalidNarrative ? t("No usable investment conclusion was produced. Manual review is required.") : candidate.thesis} />
     {invalidNarrative ? <p className="warning">{t("The research output did not pass validation. Do not use it to make an investment decision. Start a new analysis only after the underlying issue is resolved.")}</p> : <div className="review-columns"><section><h3>{t("Key risks")}</h3><ul>{candidate.risks.map((text, i) => <li key={i}>{text}</li>)}</ul></section><section><h3>{t("What would invalidate this thesis?")}</h3><ul>{candidate.invalidation_conditions.map((text, i) => <li key={i}>{text}</li>)}</ul></section></div>}
     {invalidNarrative ? <details><summary>{t("Validation details")}</summary><p>{candidate.thesis}</p><ul>{candidate.risks.map((text,i)=><li key={i}>{text}</li>)}</ul><ul>{candidate.invalidation_conditions.map((text,i)=><li key={i}>{text}</li>)}</ul></details> : null}
     <details><summary>{t("Research context & audit")}</summary><p>{t("At publication:")} {reviewStatus(candidate.status)}{t(". Your review status may have changed since then.")}</p><p>{t("Model confidence:")} {percent(candidate.confidence)}  {t("· Uncalibrated, not a probability of profit.")}</p><dl><dt>{t("Decision ID")}</dt><dd className="mono">{candidate.decision_id}</dd><dt>{t("Research ID")}</dt><dd className="mono">{candidate.run_id}</dd></dl></details>
-    <div className="metrics"><div><span>{t("Current weight")}</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>{t("Owner target")}</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>{t("Maximum allowed")}</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div>
+    <section className="portfolio-impact"><h3>{t("Portfolio impact")}</h3>
+    {candidate.portfolio_snapshot_id ? <div className="metrics"><div><span>{t("Current weight")}</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>{t("Owner target")}</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>{t("Maximum allowed")}</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div> : <p className="muted">{t("Research only. No portfolio was supplied, so allocation and portfolio impact have not been calculated.")}</p>}
+    </section>
+    <h3>{t("Full research report")}</h3>
+    {artifacts.data?.filter(item => item.kind === 'analysis_report').map(item => <ArtifactPreview key={item.artifact_id} artifact={item} runId={candidate.run_id} defaultOpen />)}
+    {artifacts.error ? <p className="warning">{t("Report unavailable. Decision review state is shown separately.")}</p> : null}
+    <details className="review-controls"><summary>{t("Portfolio checks & human approval")}</summary>
     <h3>{t("Portfolio risk checks")}</h3>
     {!candidate.policy_checks.length ? <p className="warning">{t("No risk checks. Approval is unavailable.")}</p> : <div className="table-scroll" role="region" aria-label={t("Policy checks")} tabIndex={0}><table><thead><tr><th>{t("Check")}</th><th>{t("Result")}</th><th>{t("Observed")}</th><th>{t("Limit")}</th><th>{t("Reason")}</th></tr></thead><tbody>{candidate.policy_checks.map(check => <tr key={check.check_id}><th scope="row">{riskLabel(check.check_id)}<small>{check.blocking ? t("Required for approval") : t("Informational")}</small></th><td className={check.result === 'PASS' ? '' : 'warning'}>{check.result === 'PASS' ? t("Passed") : check.result === 'FAIL' ? t("Not passed") : t("Needs review")}</td><td>{riskValue(check.check_id,check.observed_value)}</td><td>{riskValue(check.check_id,check.limit_value)}</td><td className="wrap-cell">{riskReason(check.check_id,check.result,check.reason)}</td></tr>)}</tbody></table></div>}
     {candidate.policy_checks.some(check=>check.check_id==='max_correlation') ? <p className="muted">{t("Correlation is a coefficient, not a percentage. The saved risk engine also uses −1 when no other holdings require comparison; this value alone does not establish diversification.")}</p> : null}
@@ -94,6 +102,7 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
     {run.error || run.data && !runMatches ? <p className="warning">{t("Matching research status unavailable. Approval remains disabled.")}</p> : <p>{t("Research processing:")} {run.data ? t(processingLabels[run.data.status] ?? 'Status unavailable') : t("Loading…")}</p>}
     {!canApprove && ['review', 'ready_for_approval'].includes(current) ? <p className="warning">{t("Approval is unavailable until the candidate is ready, its run succeeds and blocking checks pass.")}</p> : null}
     <div className="section-actions"><button className="primary" disabled={!canApprove} onClick={() => setAction('approve')}>{t("Approve decision")}</button><button disabled={!['review', 'ready_for_approval'].includes(current)} onClick={() => setAction('reject')}>{t("Reject decision")}</button></div>
+    </details>
     <h3>{t("Review history")}</h3>{!state.data.events.length ? <p className="muted">{t("No review recorded yet.")}</p> : <ol className="event-list">{state.data.events.map(event => <li key={event.event_id}><strong>{reviewStatus(event.from_status)} → {reviewStatus(event.to_status)}</strong><time>{timestamp(event.occurred_at)} · {event.actor_type}</time><p>{event.reason}</p></li>)}</ol>}
     {action ? <ReviewDialog instrumentName={instrumentName} action={action} state={state.data} onClose={() => setAction(null)} onSaved={() => { setAction(null); setTick(value => value + 1); }} /> : null}
   </section>;

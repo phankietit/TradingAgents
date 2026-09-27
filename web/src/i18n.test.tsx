@@ -64,17 +64,20 @@ it('preserves six data failure states, exact decimals, UTC and private source te
   expect(t('__proto__')).toBe('__proto__');
 });
 
-it('preserves original bilingual and legacy reports byte-for-text across UI languages', async () => {
+it('preserves bilingual report content across UI languages while rendering safe Markdown', async () => {
   const narrative = 'English: Risk −10%, AAPL, USD.\nTiếng Việt: Rủi ro −10%, AAPL, USD.\n<img src=x onerror=alert(1)>';
   vi.stubGlobal('fetch', vi.fn(async () => json({ run_id: 'run', decision_id: '12345678-1234-1234-1234-123456789abc', profile: 'equity', reference_only: false,
     selected_analysts: ['market'], snapshot_attestation: 'PASS', narrative, structured_narrative: null, report_language: 'en-vi' })));
   render(<><LanguageSwitch /><ArtifactPreview runId="run" artifact={{ artifact_id: 'report', kind: 'analysis_report', media_type: 'application/json', content_hash: 'fixture', byte_size: 500, created_at: '2026-09-01' }} /></>);
   fireEvent.click(screen.getByRole('button', { name: 'Inspect analysis report' }));
   await screen.findByText(/English: Risk/);
-  const original = document.querySelector('.narrative')!;
-  expect(original.textContent).toBe(narrative);
+  const original = document.querySelector('.research-prose')!;
+  const rendered = original.textContent;
+  expect(rendered).toContain('English: Risk −10%, AAPL, USD.');
+  expect(rendered).toContain('Tiếng Việt: Rủi ro −10%, AAPL, USD.');
+  expect(rendered).toContain('<img src=x onerror=alert(1)>');
   fireEvent.click(screen.getByRole('button', { name: /VI/ }));
-  expect(original.textContent).toBe(narrative);
+  expect(original.textContent).toBe(rendered);
   expect(screen.getByText(/Báo cáo gốc · Ngôn ngữ yêu cầu: Anh \+ Việt/)).toBeTruthy();
   expect(document.querySelector('img')).toBeNull();
 });

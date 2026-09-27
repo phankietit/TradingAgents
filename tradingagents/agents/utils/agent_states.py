@@ -45,6 +45,8 @@ class RiskDebateState(TypedDict):
 
 
 class AgentState(MessagesState):
+    research_only: Annotated[bool, "Snapshot research authority; never executable instructions"]
+    structured_diagnostics: Annotated[list[dict], "Safe schema failure locations without provider content"]
     company_of_interest: Annotated[str, "Company that we are interested in trading"]
     asset_type: Annotated[str, "Asset type under analysis such as stock or crypto"]
     instrument_context: Annotated[str, "Deterministic ticker identity resolved at run start"]

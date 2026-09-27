@@ -13,6 +13,7 @@ from tradingagents.contracts import SnapshotManifest
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph import trading_graph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
+from tradingagents.platform.analysis.observer import ResearchObserver
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot, SnapshotAnalysisContext
 
 
@@ -66,17 +67,24 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         monkeypatch.setattr(trading_graph.TradingAgentsGraph, name, forbidden)
     instrument = _instrument()
     inputs = context(instrument)
+    events = []
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda kind, payload: events.append((kind, payload)))
     config = {**DEFAULT_CONFIG, "data_cache_dir": str(tmp_path / "cache"),
               "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 1,
               "max_risk_discuss_rounds": 1}
     result = AnalysisEngine(base_config=config).analyze(AnalysisRequest(
         instrument=instrument, analysis_date=NOW.date(), selected_analysts=("market",),
-        snapshot_context=inputs))
+        snapshot_context=inputs, execution_observer=observer))
     assert result.decision_payload.thesis == "Snapshot thesis"
     assert result.narrative_signal == "Hold"
     assert "fixture immutable price" in calls[0][1].content
     assert str(inputs.by_analyst["market"][0].manifest.snapshot_id) in calls[0][1].content
     assert list((tmp_path / "reports").iterdir()) == []
+    completed = [payload["stage"] for kind, payload in events if kind == "stage.completed"]
+    assert completed == ["Market Analyst", "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
+                         "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager"]
+    assert all(set(payload) == {"stage"} for _, payload in events)
+    assert observer.receipt()["usage"]["status"] == "incomplete"  # fake model has no provider usage
 
 
 @pytest.mark.parametrize("mutation", ["hash", "future", "owner_instrument", "roles", "missing_source_end"])

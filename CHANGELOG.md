@@ -10,6 +10,18 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Preserve daily session labels separately from candle close instants in v1.1
+  Yahoo v4 snapshots without rewriting older evidence. Add full-history,
+  snapshot-bound stockstats tools and deterministic calendar return endpoints.
+- Align snapshot-mode structured schemas with the decision consumer, use one
+  bounded JSON format repair, and retain redacted field-level diagnostics.
+  Apply research authority constraints throughout the existing graph.
+- Emit real graph-stage events, report provider token usage when supplied,
+  check cancellation between model calls, and reconcile retry-wait cancellation
+  without rewriting prior artifacts.
+- Introduce a restrained research workspace, safe Markdown, immutable-report
+  price charts, bilingual saved-report views and separate portfolio impact.
+  Candidate validation remains in progress; see the remediation ledger.
 - Allow owner-approved latest-available crypto research with at most one missing
   trailing daily candle, preserving internal-gap rejection and current retrieval
   time. Disclose the actual cutoff in source metadata, UI and bilingual reports;

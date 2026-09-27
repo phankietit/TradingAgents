@@ -101,6 +101,7 @@ class TradingAgentsGraph:
         config: dict[str, Any] = None,
         callbacks: list | None = None,
         snapshot_reports: dict[str, str] | None = None,
+        execution_observer: Any = None,
     ):
         """Initialize the trading agents graph and components.
 
@@ -117,6 +118,7 @@ class TradingAgentsGraph:
         # languages, and storage paths concurrently.
         self.config = deepcopy(config or DEFAULT_CONFIG)
         self.callbacks = callbacks or []
+        self.execution_observer = execution_observer
 
         # Create necessary directories
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)
@@ -124,6 +126,9 @@ class TradingAgentsGraph:
 
         # Initialize LLMs with provider-specific thinking configuration
         llm_kwargs = self._get_provider_kwargs()
+        if snapshot_reports is not None:
+            llm_kwargs.setdefault("timeout", 180)
+            llm_kwargs.setdefault("max_retries", 1)
 
         # Add callbacks to kwargs if provided (passed to LLM constructor)
         if self.callbacks:
@@ -458,7 +463,12 @@ class TradingAgentsGraph:
                 instrument_context=instrument_context,
                 portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
             )
-            final = self.graph.invoke(state, **self.propagator.get_graph_args())
+            from tradingagents.agents.utils.research_scope import RESEARCH_SCOPE
+
+            state["instrument_context"] += "\n" + RESEARCH_SCOPE
+            state["research_only"] = True
+            final = self.graph.invoke(state, **self.propagator.get_graph_args(
+                callbacks=[self.execution_observer] if self.execution_observer is not None else None))
             structured = final.get("structured_decision")
             return final, structured.get("rating", "REVIEW") if structured else "REVIEW"
 

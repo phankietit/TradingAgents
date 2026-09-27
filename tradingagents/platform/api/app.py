@@ -871,13 +871,25 @@ def create_app(settings: ApiSettings) -> FastAPI:
         )
         return RunAcceptedResponse(run=run, job=job)
 
+    def current_run_view(run, session):
+        # Older retry-wait cancellations left a RUNNING manifest. Project the
+        # durable terminal job state without rewriting immutable run inputs or
+        # historical evidence. New cancellations persist both states below.
+        if run.status in {RunStatus.QUEUED, RunStatus.RUNNING}:
+            job = DurableJobQueue(session).get_by_run(run.run_id, run.owner_id)
+            if job is not None and job.status is JobStatus.CANCELLED:
+                return run.model_copy(update={"status": RunStatus.CANCELLED,
+                    "started_at": run.started_at or job.created_at,
+                    "completed_at": job.completed_at or job.updated_at})
+        return run
+
     @app.get(f"{API_PREFIX}/runs", response_model=list[RunManifest], tags=["runs"])
     def list_runs(
         owner: OwnerDependency,
         session: SessionDependency,
         limit: int = Query(default=50, ge=1, le=200),
     ) -> tuple[RunManifest, ...]:
-        return PlatformRepository(session).list_runs(owner.owner_id, limit=limit)
+        return tuple(current_run_view(run, session) for run in PlatformRepository(session).list_runs(owner.owner_id, limit=limit))
 
     @app.get(f"{API_PREFIX}/runs/{{run_id}}", response_model=RunManifest, tags=["runs"])
     def get_run(
@@ -888,7 +900,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
         run = PlatformRepository(session).get_run(run_id, owner.owner_id)
         if run is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
-        return run
+        return current_run_view(run, session)
 
     @app.get(
         f"{API_PREFIX}/runs/{{run_id}}/artifacts",
@@ -1078,12 +1090,12 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 occurred_at=timestamp,
                 payload={"job_id": str(job.job_id)},
             )
-        if cancelled.status is JobStatus.CANCELLED and run.status is RunStatus.QUEUED:
+        if cancelled.status is JobStatus.CANCELLED and run.status in {RunStatus.QUEUED, RunStatus.RUNNING}:
             repository.save_run(
                 run.model_copy(
                     update={
                         "status": RunStatus.CANCELLED,
-                        "started_at": timestamp,
+                        "started_at": run.started_at or timestamp,
                         "completed_at": timestamp,
                     }
                 )
