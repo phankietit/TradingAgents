@@ -159,7 +159,23 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
             # is forwarded into the request body untouched.
             extra_body = payload.setdefault("extra_body", {})
             extra_body.setdefault("reasoning_split", True)
+            for outgoing, message in zip(payload.get("messages", []), _input_to_messages(input_), strict=False):
+                if isinstance(message, AIMessage):
+                    for key in ("reasoning_details", "reasoning_content"):
+                        if key in message.additional_kwargs:
+                            outgoing[key] = message.additional_kwargs[key]
         return payload
+
+    def _create_chat_result(self, response, generation_info=None):
+        result = super()._create_chat_result(response, generation_info)
+        data = response if isinstance(response, dict) else response.model_dump(
+            exclude={"choices": {"__all__": {"message": {"parsed"}}}})
+        for generation, choice in zip(result.generations, data.get("choices", []), strict=False):
+            for key in ("reasoning_details", "reasoning_content"):
+                value = choice.get("message", {}).get(key)
+                if value is not None:
+                    generation.message.additional_kwargs[key] = value
+        return result
 
 
 # Kwargs forwarded from user config to ChatOpenAI
@@ -298,6 +314,14 @@ class OpenAIClient(BaseLLMClient):
                 )
             if base_url:
                 llm_kwargs["base_url"] = base_url
+                # Keep the configured provider/key/endpoint unchanged, but use
+                # the documented wire protocol on official MiniMax endpoints.
+                # Arbitrary compatible servers must not receive vendor flags.
+                parsed_url = urlparse(base_url)
+                if (self.provider == "openai_compatible" and parsed_url.scheme == "https"
+                        and parsed_url.hostname in {"api.minimax.io", "api.minimaxi.com"}
+                        and get_capabilities(self.model).requires_reasoning_split):
+                    chat_cls = MinimaxChatOpenAI
 
             # API key: required unless key_optional; keyless local servers get a
             # placeholder. The env-var name is the single source in api_key_env.

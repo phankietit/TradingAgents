@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from tradingagents.agents.research_schemas import LocalizedResearchReport
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
+from tradingagents.platform.analysis.research_validation import PublicationValidationError
 
 ANCHOR = re.compile(r"⟦Q[A-Z]+⟧")
 # Protect every digit, including indicator names and dates. No locale-specific
@@ -36,7 +37,7 @@ def _letters(index):
 
 def protect_quantities(text):
     if ANCHOR.search(text):
-        raise ValueError("canonical report contains reserved translation anchors")
+        raise PublicationValidationError(["translation_reserved_anchor"])
     values = {}
 
     def replace(match):
@@ -49,9 +50,9 @@ def protect_quantities(text):
 
 def restore_quantities(text, values):
     if Counter(ANCHOR.findall(text)) != Counter(values.keys()):
-        raise ValueError("translation must preserve each quantitative anchor exactly once")
+        raise PublicationValidationError(["translation_anchor_mismatch"])
     if any(char.isdecimal() for char in ANCHOR.sub("", text)):
-        raise ValueError("translation introduced an unverified numeric token")
+        raise PublicationValidationError(["translation_numeric_token_added"])
     return ANCHOR.sub(lambda match: values[match.group()], text)
 
 

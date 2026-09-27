@@ -59,6 +59,12 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
                         "evidence_claims": [{"claim": claim, "snapshot_ids": [str(inputs.by_analyst["market"][0].manifest.snapshot_id)]}
                             for claim in ("Snapshot thesis", "Coverage risk", "New information")]},
             }
+            if "quantity_bindings" in schema.model_fields:
+                payload = values["PortfolioDecision"]
+                claims = payload.pop("evidence_claims")
+                payload["investment_thesis"] = [claims[0]]
+                payload["risks"] = [claims[1]]
+                payload["invalidation_conditions"] = [claims[2]]
             return SimpleNamespace(invoke=lambda prompt: (structured_prompts.append(prompt)
                 or schema.model_validate(values[schema.__name__])))
 
@@ -98,9 +104,10 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         snapshot_context=inputs, execution_observer=observer))
     assert result.decision_payload.thesis == "Snapshot thesis"
     assert result.narrative_signal == "Hold"
-    assert "EDITORIAL CONTRACT" in structured_prompts[-1]
-    assert "diễn biến giá" in structured_prompts[-1]
-    assert "in structured references only" in structured_prompts[-1]
+    assert "EDITORIAL CONTRACT" in structured_prompts[-2]
+    assert "diễn biến giá" in structured_prompts[-2]
+    assert "in structured references only" in structured_prompts[-2]
+    assert "percentage denominator" in structured_prompts[-1]
     assert all(options["timeout"] == 600 for options in client_options)
     assert all(options["max_retries"] == 1 for options in client_options)
     assert "fixture immutable price" in calls[0][1].content
@@ -132,6 +139,26 @@ def test_snapshot_input_rejects_invalid_provenance(mutation):
     inputs = inputs.model_copy(update={"by_analyst": {"news" if mutation == "roles" else "market": (source,)}})
     with pytest.raises(ValueError):
         inputs.reports(instrument.instrument_id, ("market",))
+
+
+@pytest.mark.parametrize("phase,blocked", [("repair", True), ("structured", False)])
+def test_failed_upstream_schema_repair_cannot_be_hidden_by_valid_final_report(phase, blocked):
+    instrument = _instrument()
+    inputs = context(instrument)
+    sid = str(inputs.by_analyst["market"][0].manifest.snapshot_id)
+    class Graph:
+        def __init__(self, **kwargs):
+            pass
+        def propagate_snapshots(self, *args, **kwargs):
+            return {"structured_decision": {"rating":"Hold", "confidence":.5,
+                "executive_summary":"Limited research", "investment_thesis":"Thesis",
+                "risks":["Risk"], "invalidation_conditions":["Conditional change"],
+                "evidence_claims":[{"claim":text,"snapshot_ids":[sid]} for text in ("Thesis","Risk","Conditional change")]},
+                "structured_diagnostics":[{"agent":"Research Manager","phase":phase,"error_type":"ValueError"}]}, "Hold"
+    result = AnalysisEngine(graph_factory=Graph, base_config={"output_language":"English"}).analyze(
+        AnalysisRequest(instrument=instrument, analysis_date=NOW.date(), selected_analysts=("market",), snapshot_context=inputs))
+    assert (result.decision_payload is None) is blocked
+    assert ("upstream_structured_output_invalid" in result.validation_issues) is blocked
 
 
 def test_snapshot_freshness_is_explicit_and_enforced():

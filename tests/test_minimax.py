@@ -25,6 +25,20 @@ def _client(model: str = "MiniMax-M2.7"):
 
 @pytest.mark.unit
 class TestMinimaxReasoningSplit:
+    def test_m3_reasoning_metadata_roundtrips_without_entering_report_text(self):
+        client = _client("MiniMax-M3")
+        details = [{"type":"reasoning.text", "text":"private reasoning fixture"}]
+        result = client._create_chat_result({"id":"fixture", "model":"MiniMax-M3", "object":"chat.completion",
+            "created":0, "choices":[{"index":0, "finish_reason":"stop", "message":{
+                "role":"assistant", "content":"public report", "reasoning_details":details,
+                "reasoning_content":"private reasoning fixture"}}]})
+        message = result.generations[0].message
+        assert message.content == "public report"
+        payload = client._get_request_payload([HumanMessage(content="hi"), message])
+        assert payload["messages"][1]["reasoning_details"] == details
+        assert payload["messages"][1]["reasoning_content"] == "private reasoning fixture"
+        assert payload["extra_body"]["reasoning_split"] is True
+
     def test_reasoning_split_sent_via_extra_body_not_top_level(self):
         # Must be in extra_body, not top-level: the openai SDK validates
         # top-level params and rejects unknown ones like reasoning_split (#826).

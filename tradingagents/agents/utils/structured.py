@@ -155,11 +155,17 @@ def _safe_diagnostic(agent: str, error: Exception, phase: str) -> dict:
     if isinstance(error, ValidationError):
         # Extra/mapping keys can themselves contain arbitrary provider text.
         # Retain schema field names only, never echo unknown field names.
-        from tradingagents.agents.research_schemas import LocalizedResearchReport, ObservedNumber
+        from tradingagents.agents.research_schemas import (
+            LocalizedResearchReport,
+            ObservedNumber,
+            QuantityBinding,
+            SnapshotReportDraft,
+        )
         from tradingagents.agents.schemas import PortfolioDecision, ResearchPlan, TraderProposal
 
         allowed = set().union(*(set(schema.model_fields) for schema in (
-            PortfolioDecision, ResearchPlan, TraderProposal, LocalizedResearchReport, ObservedNumber)))
+            PortfolioDecision, ResearchPlan, TraderProposal, LocalizedResearchReport, ObservedNumber,
+            QuantityBinding, SnapshotReportDraft)))
         allowed.update({"localized_report", "observed_numbers", "claim", "snapshot_ids"})
         fields = [{"field": ".".join(str(part) if isinstance(part, int) or part in allowed else "unknown_field"
                                     for part in item["loc"]),

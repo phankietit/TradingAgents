@@ -1,5 +1,6 @@
 import copy
 import json
+from types import SimpleNamespace
 
 import pytest
 
@@ -18,7 +19,12 @@ def draft():
     data = source()
     payload = candidate(data["snapshot_id"])
     payload["investment_thesis"] = payload["investment_thesis"].replace("499.00", "{{QA}}")
-    payload["evidence_claims"][0]["claim"] = payload["investment_thesis"]
+    def linked(claim):
+        return {"claim":claim,"snapshot_ids":[data["snapshot_id"]]}
+    payload["investment_thesis"] = [linked(payload["investment_thesis"])]
+    payload["risks"] = [linked(text) for text in payload["risks"]]
+    payload["invalidation_conditions"] = [linked(text) for text in payload["invalidation_conditions"]]
+    payload["evidence_claims"] = []
     payload["observed_numbers"] = []
     payload["quantity_bindings"] = [
         {
@@ -71,13 +77,37 @@ def test_invalid_binding_cannot_publish(mutation):
         binding["snapshot_id"] = "00000000-0000-0000-0000-000000000000"
     if mutation == "literal_expression":
         binding["fact_id"] = "calc.ratio(latest.close,100)"
-    with pytest.raises(PublicationValidationError):
+    with pytest.raises(ValueError):
         compile_report(raw, {data["snapshot_id"]: SnapshotMarketFacts(data)})
 
 
-def test_draft_validates_without_extra_model_call():
+def test_draft_requires_one_financial_meaning_review_even_when_math_passes():
     raw, data = draft()
-    node = create_financial_validation(object(), {"market": json.dumps([data])})
+    calls = []
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt: calls.append(prompt) or schema.model_validate(raw))
+    node = create_financial_validation(Model(), {"market": json.dumps([data])})
     result = node({"structured_draft": raw})
     assert result["structured_decision"]["observed_numbers"][0]["value"] == 499
     assert "{{QA}}" not in result["final_trade_decision"]
+    assert len(calls) == 1
+
+
+def test_paragraph_citations_compile_without_losing_source_coverage():
+    raw, data = draft()
+    raw["investment_thesis"].append({"claim":"Opposing evidence remains material.", "snapshot_ids":[data["snapshot_id"]]})
+    facts = {data["snapshot_id"]:SnapshotMarketFacts(data)}
+    result = compile_report(raw, facts)
+    assert result.investment_thesis.endswith("\n\nOpposing evidence remains material.")
+    validate_canonical_report(result, facts, set(facts))
+    assert result.evidence_claims[0].claim == result.investment_thesis
+
+
+def test_unknown_material_source_is_not_invented_during_compilation():
+    raw, data = draft()
+    raw["risks"][0]["snapshot_ids"] = ["00000000-0000-0000-0000-000000000000"]
+    facts = {data["snapshot_id"]:SnapshotMarketFacts(data)}
+    result = compile_report(raw, facts)
+    with pytest.raises(PublicationValidationError):
+        validate_canonical_report(result, facts, set(facts))

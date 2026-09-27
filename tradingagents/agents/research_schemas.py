@@ -3,9 +3,22 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, create_model, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    create_model,
+    field_validator,
+    model_validator,
+)
 
-from tradingagents.agents.schemas import PortfolioDecision, ResearchPlan, TraderProposal
+from tradingagents.agents.schemas import (
+    DecisionEvidenceClaim,
+    PortfolioDecision,
+    ResearchPlan,
+    TraderProposal,
+)
 
 Text = Annotated[str, Field(min_length=1, max_length=20000)]
 
@@ -67,8 +80,28 @@ class QuantityBinding(BaseModel):
     decimal_places: int = Field(default=2, ge=0, le=8)
 
 
+def _bound_financial_text(value):
+    from tradingagents.platform.analysis.research_validation import unsupported_financial_numbers
+
+    if value is not None and unsupported_financial_numbers(value, ()):
+        raise ValueError("Every monetary or percent quantity must use a quantity binding, including approximations and conditions")
+    return value
+
+
+class BoundEvidenceClaim(DecisionEvidenceClaim):
+    claim: Text = Field(description="Financial prose using {{QA}} quantity placeholders, never literal monetary amounts or percentages, including approximate or conditional quantities.")
+    _bound_claim = field_validator("claim")(_bound_financial_text)
+
+
 SnapshotReportDraft = create_model(
     "PortfolioDecision", __base__=CanonicalSnapshotDecision,
+    __validators__={"bound_summary": field_validator("executive_summary", "time_horizon")(_bound_financial_text)},
+    investment_thesis=(tuple[BoundEvidenceClaim, ...], Field(min_length=1, max_length=12,
+        description="Evidence-linked thesis paragraphs, including strongest opposing case and coverage. Each paragraph carries supplied snapshot IDs.")),
+    risks=(tuple[BoundEvidenceClaim, ...], Field(min_length=1, max_length=30)),
+    invalidation_conditions=(tuple[BoundEvidenceClaim, ...], Field(min_length=1, max_length=30)),
+    evidence_claims=(tuple[DecisionEvidenceClaim, ...], Field(default=(), max_length=0,
+        description="Leave empty. Application compiles exact citations from thesis, risk and invalidation objects; do not duplicate prose.")),
     quantity_bindings=(tuple[QuantityBinding, ...], Field(default=(), max_length=100,
         description="Use {{QA}}, {{QB}}, etc. in prose. Bind each placeholder to an immutable fact ID; the application resolves and rounds its value. Never supply numeric values yourself.")),
     observed_numbers=(tuple[ObservedNumber, ...], Field(default=(), max_length=0,

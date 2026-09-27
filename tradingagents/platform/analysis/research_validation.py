@@ -14,7 +14,8 @@ UUID_PATTERN = re.compile(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", re
 NUMBER_PATTERN = re.compile(r"(?<![\w])[-+]?\d+(?:,\d{3})*(?:\.\d+)?%?")
 
 PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_requires_verified_reference",
-    "research_authority_requires_review", "material_claim_citation_mismatch", "unknown_snapshot_reference"})
+    "research_authority_requires_review", "material_claim_citation_mismatch", "unknown_snapshot_reference",
+    "translation_anchor_mismatch", "translation_numeric_token_added", "translation_reserved_anchor"})
 
 
 class PublicationValidationError(ValueError):

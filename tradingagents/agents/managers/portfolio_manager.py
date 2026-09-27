@@ -101,12 +101,9 @@ Write these sections, in this order, starting with the rating on its own line:
                 prompt = prompt.replace(old, new)
             prompt = prompt.replace("sized by how decisively it wins", "qualified by the evidence strength")
             prompt += ("\nResearch-only output: include required confidence, at least one risk, "
-                       "and at least one invalidation condition. For investment_thesis and every "
-                       "risk and invalidation, include an evidence_claim with exactly matching "
-                       "claim text and only supplied snapshot IDs. The evidence_claims array must "
-                       "contain EXACTLY the investment_thesis string, each risks string and each "
-                       "invalidation_conditions string, one entry per unique string; no paraphrases "
-                       "or extra entries. Hypothetical conditions must "
+                       "and at least one invalidation condition. Each thesis paragraph, risk and "
+                       "invalidation is a claim object with supplied snapshot IDs. Do not duplicate "
+                       "those claims into evidence_claims. Hypothetical conditions must "
                        "be labelled conditional, not observed. No sizing or execution instructions.")
             prompt += ("\nUse quantity_bindings to reference every observed numeric claim using "
                        "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
@@ -144,18 +141,12 @@ Write these sections, in this order, starting with the rating on its own line:
             structured_llm,
             llm,
             prompt,
-            render_pm_decision,
+            (lambda value: value.model_dump_json()) if research_only else render_pm_decision,
             "Portfolio Manager",
             on_structured=capture_decision,
             repair_schema=schema if research_only else None,
             diagnostics=diagnostics,
         )
-
-        if research_only and structured_decision is not None:
-            from tradingagents.agents.utils.report_localization import reader_report
-
-            canonical = schema.model_validate(structured_decision)
-            final_trade_decision = reader_report(canonical)
 
         new_risk_debate_state = {
             "judge_decision": final_trade_decision,

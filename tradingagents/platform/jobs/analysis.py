@@ -142,6 +142,7 @@ class AnalysisJobHandler:
             "localized_report": (result.final_state.get("structured_decision") or {}).get("localized_report"),
             "rejected_structured_decision": result.final_state.get("rejected_structured_decision"),
             "structured_draft": result.final_state.get("structured_draft"),
+            "canonical_research": result.final_state.get("structured_decision"),
             "coverage": {"selected": list(run.selected_analysts),
                          "expected": list(resolve_analysis_profile(instrument).allowed_analysts),
                          "missing": [role for role in resolve_analysis_profile(instrument).allowed_analysts if role not in run.selected_analysts],

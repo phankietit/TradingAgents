@@ -10,9 +10,11 @@ values. The compiler preserves conclusions and exact material-claim citations.
 Unknown, duplicate, unused or unbound quantities fail closed. No historical report
 is rewritten. Drafts remain private audit evidence, not approval payloads.
 
-A dedicated Financial validation stage applies source, numeric, authority and
-claim-coverage checks. One bounded financial correction (with one schema-format
-repair) is permitted after failure; valid drafts incur no correction model call.
+A dedicated Financial validation stage reviews financial meaning (including
+percentage denominators, return/drawdown terminology and source availability),
+then applies deterministic source, numeric, authority and claim-coverage checks.
+It uses one review call with at most one schema-format repair; it does not rerun
+the preceding debate. A failed upstream schema repair also withholds readiness.
 Only accepted canonical output reaches protected bilingual presentation. Translation
 uses unique quantity anchors and must restore every anchor exactly once without
 introducing digits. Translation failure withholds bilingual readiness; it does not
@@ -26,6 +28,19 @@ indicator windows count observations, not calendar days. No numeric literals,
 nested expressions, cross-snapshot operands or invented values are accepted.
 These checks establish quantitative reproducibility, not qualitative entailment
 or a probability of profit. Human financial review remains required.
+
+Thesis paragraphs, risks and invalidations are source-linked objects in the
+unpublished draft. The compiler joins thesis paragraphs and unions only their
+supplied source IDs into the historical canonical shape. It never invents source
+links or asks the model to repeat the entire report in a second citation array.
+
+For `openai_compatible` on the exact official HTTPS MiniMax API hosts, the client
+uses MiniMax wire handling without changing the configured provider, key, model
+or URL. `reasoning_split` separates private reasoning from report text, and
+reasoning metadata is preserved in memory across tool turns as required by the
+[MiniMax API contract](https://platform.minimax.io/docs/api-reference/text-openai-api).
+Arbitrary compatible servers do not receive these vendor-specific flags. Raw
+reasoning is not added to persisted run events or report artifacts.
 
 `AnalysisEngine` is the stable platform boundary around the existing
 `TradingAgentsGraph`. It validates an instrument/date/analyst request, creates a
