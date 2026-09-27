@@ -31,9 +31,17 @@ def test_roundtrip_protects_prices_signed_percentages_dates_and_indicator_digits
 
 def test_ranges_and_dates_remain_indivisible_translation_atoms():
     protected, values = protect_quantities("EMA10; horizon 3-6 months; as of 2026-09-27.")
-    assert list(values.values()) == ["10", "3-6", "2026-09-27"]
+    assert list(values.values()) == ["EMA10", "3-6", "2026-09-27"]
     restored = restore_quantities(protected.replace("EMA", "EMA "), values)
     LocalizedResearchReport(en="EMA10; horizon 3-6 months; as of 2026-09-27.", vi=restored)
+
+
+def test_indicator_names_are_indivisible_from_their_periods():
+    original = "The +18.52% premium over the 200-SMA; EMA 10 and SMA50 remain references."
+    protected, values = protect_quantities(original)
+    assert list(values.values()) == ["+18.52%", "200-SMA", "EMA 10", "SMA50"]
+    assert "SMA" not in protected and "EMA" not in protected
+    assert restore_quantities(protected, values) == original
 
 
 @pytest.mark.parametrize("vietnamese", [
@@ -96,6 +104,7 @@ def test_canonical_generation_cannot_embed_a_second_language_report():
     ("Low volatility may persist.", "Thanh khoản thấp có thể kéo dài."),
     ("Volume expands.", "Thanh khoản giãn nở."),
     ("MACD signal cross.", "Phân kỳ MACD."),
+    ("A +18.52% premium over the 200-SMA.", "Giãn cách 200 so với SMA +18.52%."),
 ])
 def test_financial_concept_substitution_is_rejected(english, vietnamese):
     with pytest.raises(ValueError):

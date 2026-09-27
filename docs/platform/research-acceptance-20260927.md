@@ -201,3 +201,16 @@ browser acceptance must pass before completion can be claimed.
   protects dates/ranges intact. Tests still reject changed periods, endpoints
   and signs. This fixes a proven checker defect, not proof of the live failure's
   exact wording; subsequent live acceptance remains required.
+- PASS: candidate `da2a675`, local regression 1,394 tests + 88 subtests,
+  20 classified skips, 186.76 seconds; Ruff passed. Translation-only replay
+  consumed 8,250 tokens (2,942 input + 5,308 output), one call. Canonical English
+  was byte-for-value unchanged outside the localized field; numeric parity passed.
+  **Manual translation acceptance remained FAIL**: one sentence attached the
+  moving-average period to the price extension and its percentage to SMA.
+  Numeric multiset equality is not semantic fidelity and is not sufficient for
+  report acceptance. QA blob: `sha256/50/5c/505c77319104018ee665d524780f7c95eb6f0586de1bbaadd77cb0faeaa7363c`.
+- Follow-up protects the complete moving-average name (`200-SMA`, `EMA 10`,
+  `SMA50`) as one atom and supplies non-numeric anchor-role metadata. This
+  reduces the reproduced period/percentage confusion without rewriting the
+  canonical conclusion or removing any research stage. It is not a universal
+  semantic guarantee; live editorial acceptance remains UNVERIFIED.

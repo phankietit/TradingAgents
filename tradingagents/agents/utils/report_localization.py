@@ -21,7 +21,8 @@ from tradingagents.platform.analysis.research_validation import (
 ANCHOR = re.compile(r"⟦Q[A-Z]+⟧")
 # Protect every digit, including indicator names and dates. No locale-specific
 # number parsing or arithmetic is delegated to the translator.
-QUANTITY = NUMBER_PATTERN
+INDICATOR = r"(?:\b(?:SMA|EMA)\s*\d+\b|\b\d+[-–](?:SMA|EMA)\b)"
+QUANTITY = re.compile(INDICATOR + "|" + NUMBER_PATTERN.pattern, re.I)
 
 
 class ReportTranslation(BaseModel):
@@ -64,7 +65,8 @@ def validate_financial_terms(english, vietnamese):
     """Conservative checks for observed concept substitutions, not full MT QA."""
     translated = unicodedata.normalize("NFC", vietnamese).casefold()
     if (("thanh khoản" in translated and not re.search(r"\bliquidity\b", english, re.I))
-            or ("phân kỳ" in translated and not re.search(r"\bdivergen(?:ce|t)\b", english, re.I))):
+            or ("phân kỳ" in translated and not re.search(r"\bdivergen(?:ce|t)\b", english, re.I))
+            or re.search(r"\b(?:SMA|EMA)\s*[+−-]?\d+(?:[.,]\d+)?\s*%", vietnamese, re.I)):
         raise PublicationValidationError(["translation_terminology_mismatch"])
 
 
@@ -82,6 +84,9 @@ def reader_report(decision):
 def localize_report(llm, decision, diagnostics):
     english = reader_report(decision)
     protected, values = protect_quantities(english)
+    roles = {key: ("complete moving-average name" if re.fullmatch(INDICATOR, value, re.I)
+                   else "percentage" if value.endswith("%") else "number or date/range")
+             for key, value in values.items()}
     accepted = None
 
     def capture(result):
@@ -96,6 +101,9 @@ def localize_report(llm, decision, diagnostics):
         "Do not add recommendations, evidence, numbers, numbered headings or calculations. "
         "Copy EVERY ⟦Q…⟧ anchor exactly once in the corresponding sentence, including repeated quantities "
         "that have distinct anchors. Never spell an anchor as words. Keep Markdown headings and lists. "
+        "Some anchors replace a COMPLETE indicator name, not its period alone. Never attach a "
+        "percentage anchor to SMA/EMA as a period, or use an indicator anchor as an amount. "
+        "Anchor roles (metadata only, do not include in the report): " + str(roles) + ". "
         "Terminology is mandatory: volatility = biến động; volume = khối lượng giao dịch; "
         "liquidity = thanh khoản; cross/crossover = giao cắt; divergence = phân kỳ. "
         "Never replace volatility or volume with liquidity, or a crossover with divergence. "
