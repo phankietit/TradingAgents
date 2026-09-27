@@ -6,6 +6,7 @@ import type { Instrument, Snapshot } from './data';
 import type { Policy, PortfolioSnapshot } from './Portfolio';
 import ResearchSetup from './ResearchSetup';
 import { portfolioSnapshots, policyHistory } from './portfolioData';
+import { datasetLabel, researchLabel } from './researchLabels';
 
 export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
@@ -99,17 +100,18 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       }} required><option value="">Choose a valued snapshot</option>{portfolios.data?.map((item,index) => <option key={item.portfolio_id} value={item.portfolio_id}>{item.base_currency} · {timestamp(item.as_of)} · Record {index+1}</option>)}</select></label>
       <label>Risk policy version<select value={policyKey} onChange={event => { setPolicyKey(event.target.value); setRiskSources({}); setConfirmed(false); }} required><option value="">Choose an existing policy</option>{policies.data?.filter(item => item.asset_class === asset?.asset_class && Date.parse(item.effective_at) <= Date.parse(asOf)).map(item => <option key={`${item.policy_id}:${item.policy_version}`} value={`${item.policy_id}:${item.policy_version}`}>{item.name} · v{item.policy_version}</option>)}</select></label>
       <label>Owner target weight (0–1)<input type="number" min="0" max="1" step="any" value={target} onChange={event => { setTarget(event.target.value); setConfirmed(false); }} required /></label></div>
+      <p className="muted">Enter the portfolio allocation you want to evaluate: 0.20 means 20%. This is your input, not a model recommendation or an order.</p>
       {!portfolios.data?.length || !policies.data?.length ? <p className="warning">A valued owner portfolio and a governed policy are required. This form does not create either.</p> : null}
       {correlationInstruments.length ? <><h3>Correlation evidence</h3><p className="muted">Select daily price snapshots for the proposal and other holdings. Backend validates window alignment, currency, integrity and policy freshness. Missing coverage remains blocking REVIEW.</p>
         {correlationInstruments.map(id => <RiskSource key={`${portfolioId}:${policyKey}:${id}`} instrumentId={id} label={catalog.find(item => item.instrument_id === id)?.canonical_symbol ?? id}
           asOf={asOf} maxAge={Number(policy?.parameters.correlation_max_age_seconds ?? 0)} selected={riskSources[id] ?? ''}
           onChange={value => { setRiskSources(previous => ({ ...previous, [id]: value })); setConfirmed(false); }} />)}</> : null}
     </section> : null}
-    {profile.data?.allowed_analysts.map(role => <fieldset key={role} className="source-role"><legend>{role} analyst</legend>
-      {!discovery.data?.length ? <p className="muted">No saved sources available for this instrument.</p> : discovery.data.map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
+    {profile.data?.allowed_analysts.map(role => <fieldset key={role} className="source-role"><legend>{researchLabel(role)}</legend>
+      {!discovery.data?.some(item => item.supported_analysts.includes(role)) ? <p className="muted">No suitable saved sources for this research area. It will not be included.</p> : discovery.data.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}
           checked={sources[role]?.includes(item.snapshot.snapshot_id) ?? false} onChange={() => toggle(role, item.snapshot.snapshot_id)} />
-        <span>{item.snapshot.dataset} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)} · {item.snapshot.quality_status} · {!item.supported_analysts.includes(role) ? 'Dataset not suitable for this analyst' : item.metadata_eligible ? 'Metadata eligible; content check pending' : item.ineligibility_reasons.join(', ')}</small></span>
+        <span>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)} · Quality: {item.snapshot.quality_status} · {item.metadata_eligible ? 'Available to select; verified before research' : item.ineligibility_reasons.join(', ')}</small></span>
       </label>)}
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">Only the latest 200 source manifests are shown.</p> : null}

@@ -3,7 +3,7 @@ import { errorMessage, mutate } from './api';
 import { instruments, percent, timestamp, useResource } from './data';
 import type { Instrument } from './data';
 import type { Run } from './RunForm';
-import { reviewStatus, qualityLabel, riskLabel } from './financialLabels';
+import { reviewStatus, qualityLabel, riskLabel, riskReason } from './financialLabels';
 import { processingLabels } from './JobProgress';
 
 interface Check { check_id: string; policy_id: string; policy_version: string; result: string; blocking: boolean; reason: string; observed_value: unknown; limit_value: unknown }
@@ -19,6 +19,8 @@ const weight = (value: number | null) => value === null ? 'Unavailable' : percen
 const valueText = (value: unknown) => value === null || value === undefined ? 'Unavailable' : typeof value === 'object' ? 'Structured value' : String(value);
 const weightChecks = new Set(['max_position_weight','max_asset_class_weight','max_gross_exposure','max_turnover','min_cash_weight']);
 function riskValue(checkId: string, value: unknown) {
+  if (checkId === 'data_quality' && typeof value === 'string') return qualityLabel(value);
+  if (checkId === 'tradability' && value === 'investable') return 'Eligible';
   if (weightChecks.has(checkId) && (typeof value === 'number' || typeof value === 'string' && value.trim() !== '') && Number.isFinite(Number(value))) return percent(Number(value));
   return valueText(value);
 }
@@ -82,7 +84,8 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
     <details><summary>Research context &amp; audit</summary><p>At publication: {reviewStatus(candidate.status)}. Your review status may have changed since then.</p><p>Model confidence: {percent(candidate.confidence)} · Uncalibrated, not a probability of profit.</p><dl><dt>Decision ID</dt><dd className="mono">{candidate.decision_id}</dd><dt>Research ID</dt><dd className="mono">{candidate.run_id}</dd></dl></details>
     <div className="metrics"><div><span>Current weight</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>Owner target</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>Maximum allowed</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div>
     <h3>Portfolio risk checks</h3>
-    {!candidate.policy_checks.length ? <p className="warning">No risk checks. Approval is unavailable.</p> : <div className="table-scroll" role="region" aria-label="Policy checks" tabIndex={0}><table><thead><tr><th>Check</th><th>Result</th><th>Observed</th><th>Limit</th><th>Reason</th></tr></thead><tbody>{candidate.policy_checks.map(check => <tr key={check.check_id}><th scope="row">{riskLabel(check.check_id)}<small>{check.blocking ? 'Required for approval' : 'Informational'}</small></th><td className={check.result === 'PASS' ? '' : 'warning'}>{check.result === 'PASS' ? 'Passed' : check.result === 'FAIL' ? 'Not passed' : 'Needs review'}</td><td>{riskValue(check.check_id,check.observed_value)}</td><td>{riskValue(check.check_id,check.limit_value)}</td><td className="wrap-cell">{check.reason}</td></tr>)}</tbody></table></div>}
+    {!candidate.policy_checks.length ? <p className="warning">No risk checks. Approval is unavailable.</p> : <div className="table-scroll" role="region" aria-label="Policy checks" tabIndex={0}><table><thead><tr><th>Check</th><th>Result</th><th>Observed</th><th>Limit</th><th>Reason</th></tr></thead><tbody>{candidate.policy_checks.map(check => <tr key={check.check_id}><th scope="row">{riskLabel(check.check_id)}<small>{check.blocking ? 'Required for approval' : 'Informational'}</small></th><td className={check.result === 'PASS' ? '' : 'warning'}>{check.result === 'PASS' ? 'Passed' : check.result === 'FAIL' ? 'Not passed' : 'Needs review'}</td><td>{riskValue(check.check_id,check.observed_value)}</td><td>{riskValue(check.check_id,check.limit_value)}</td><td className="wrap-cell">{riskReason(check.check_id,check.result,check.reason)}</td></tr>)}</tbody></table></div>}
+    {candidate.policy_checks.some(check=>check.check_id==='max_correlation') ? <p className="muted">Correlation is a coefficient, not a percentage. The saved risk engine also uses −1 when no other holdings require comparison; this value alone does not establish diversification.</p> : null}
     <h3>Evidence</h3>{!candidate.evidence.length ? <p className="warning">No cited evidence.</p> : candidate.evidence.map(item => <details className="provenance" key={item.evidence_id}><summary>{item.source_name} · {item.claim}</summary><p>Source: {timestamp(item.source_at)} · Observed: {timestamp(item.observed_at)}</p><p className="mono">Snapshot {item.snapshot_id}</p><p className="mono">{item.content_hash}</p>{safeSourceUrl(item.source_url) ? <a href={safeSourceUrl(item.source_url)} target="_blank" rel="noopener noreferrer">Open external source</a> : null}</details>)}
     <h3>Owner review</h3><p className="muted">This records a decision; it does not place an order. The backend revalidates run, policy and evidence on approval.</p>
     {run.error || run.data && !runMatches ? <p className="warning">Matching research status unavailable. Approval remains disabled.</p> : <p>Research processing: {run.data ? processingLabels[run.data.status] ?? 'Status unavailable' : 'Loading…'}</p>}

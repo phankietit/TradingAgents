@@ -8,6 +8,7 @@ import ArtifactPreview from './ArtifactPreview';
 import type { Artifact } from './ArtifactPreview';
 import JobProgress, { processingLabels } from './JobProgress';
 import { eventLabel } from './financialLabels';
+import { researchLabel } from './researchLabels';
 
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
@@ -94,7 +95,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
       <JobProgress runId={runId} version={version + tick} />
       {run.data.status === 'queued' ? <p className="notice">Waiting for a worker. Queued does not mean analysis has started.</p> : null}
       {run.data.error_code ? <><p className="notice danger">Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.</p><details><summary>Failure details</summary><p className="mono">{run.data.error_code}</p></details></> : null}
-      <p className="muted">Analysts: {run.data.selected_analysts.join(', ')} · {run.data.snapshot_ids.length} bound snapshots</p>
+      <p className="muted">Research coverage: {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length} saved sources</p>
       {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? 'Requesting cancellation…' : 'Cancel run'}</button> : ['failed', 'cancelled'].includes(run.data.status) ? <button onClick={() => onRetry(run.data!)}>Configure new attempt</button> : null}
     </> : <p role="status">Loading run…</p>}
     {error ? <p role="alert" className="danger">{error}</p> : null}

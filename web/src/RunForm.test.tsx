@@ -19,7 +19,7 @@ function setup(stale = false) {
 }
 it('requires evidence and explicit paid-call authorization', async () => {
   setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
-  const group = await screen.findByRole('group', { name: 'market analyst' });
+  const group = await screen.findByRole('group', { name: 'Price & trend' });
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(await within(group).findByRole('checkbox'));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
@@ -28,15 +28,16 @@ it('requires evidence and explicit paid-call authorization', async () => {
 });
 it('withholds price snapshots from news and pins risk request to portfolio time', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
-  const news = await screen.findByRole('group', {name:'news analyst'});
-  expect((await within(news).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
+  const news = await screen.findByRole('group', {name:'News & events'});
+  expect(within(news).queryByRole('checkbox')).toBeNull();
+  expect(within(news).getByText('No suitable saved sources for this research area. It will not be included.')).toBeTruthy();
   await user.click(screen.getByRole('checkbox', {name:/Evaluate against my portfolio/}));
   await user.selectOptions(screen.getByLabelText('Portfolio snapshot'), 'portfolio1');
   expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).value).toBe('2026-09-01T00:00');
   expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).disabled).toBe(true);
   await user.selectOptions(screen.getByLabelText('Risk policy version'), 'policy1:1');
   await user.type(screen.getByLabelText('Owner target weight (0–1)'), '0.2');
-  await user.click(await within(screen.getByRole('group', {name:'market analyst'})).findByRole('checkbox'));
+  await user.click(await within(screen.getByRole('group', {name:'Price & trend'})).findByRole('checkbox'));
   await user.click(screen.getByRole('checkbox', {name:/I authorize/}));
   await user.click(screen.getByRole('button', {name:'Queue analysis'}));
   await screen.findByRole('alert');
@@ -51,7 +52,7 @@ it('uses explicit UTC date controls and keeps advanced freshness unchanged',asyn
   fireEvent.change(date,{target:{value:'2026-08-31T13:45:12.123'}});
   expect((screen.getByLabelText('Maximum source age (seconds)') as HTMLInputElement).value).toBe('604800');
   expect(screen.getByLabelText('Maximum source age (seconds)').closest('details')?.open).toBe(false);
-  await user.click(await within(await screen.findByRole('group',{name:'market analyst'})).findByRole('checkbox'));
+  await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
   await user.click(screen.getByRole('button',{name:'Queue analysis'}));
   await screen.findByRole('alert');
@@ -64,12 +65,12 @@ it('uses explicit UTC date controls and keeps advanced freshness unchanged',asyn
 });
 it('disables stale evidence', async () => {
   setup(true); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
-  const group = await screen.findByRole('group', { name: 'market analyst' });
+  const group = await screen.findByRole('group', { name: 'Price & trend' });
   expect((await within(group).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
 });
 it('reuses idempotency key on unchanged failed submission', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
-  const group = await screen.findByRole('group', { name: 'market analyst' });
+  const group = await screen.findByRole('group', { name: 'Price & trend' });
   await user.click(await within(group).findByRole('checkbox'));
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   await user.click(screen.getByRole('button', { name: 'Queue analysis' }));

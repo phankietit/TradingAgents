@@ -196,6 +196,44 @@ below are satisfied. No production deployment or live trading is in scope.
 - Manual follow-up review: display-only allowlisted labels/formatting and CSS;
   no new HTML sinks, endpoint, provider, authentication or mutation behavior.
 
+## Final research language, approval conflict and reconnect — 2026-09-27
+
+- Source: `7134dec` plus accompanying frontend-only patch; final built bundle
+  `index-Bf2JLK8C.js`. **PASS:** 87 tests/16 files, lint, TypeScript/Vite build.
+  Research groups have financial labels; irrelevant sources no longer repeat
+  under every group. Missing research coverage remains explicit. Daily OHLCV has
+  a readable label. Owner allocation input includes a 0.20 = 20% explanation;
+  the request value, backend freshness/role checks and explicit consent remain
+  unchanged. Exact mechanical policy reasons have plain labels; specific warning
+  text is preserved. Correlation's backend no-comparison sentinel is explained,
+  not represented as evidence of diversification.
+- **PASS — real browser approval:** built fixture with synthetic worker,
+  all asset groups and screening. AAPL → owner-entered 0.2 target and fixture
+  portfolio/policy → queued → worker complete → eight blocking risk checks
+  passed → explicit reason/confirmation → Approved. A second tab with stale
+  approval state received conflict, kept its reason and showed no false success.
+  Close/refresh and full reload confirmed one original approval event, with
+  both transition buttons disabled. No model/provider/broker calls were made.
+- **PASS — outage/reconnect:** stop fixture API/worker normally, navigate Markets
+  in the already-loaded browser; visible local-API error and no fake quotes.
+  Restart `create_app(ApiSettings(...))` through loopback Uvicorn against the
+  **same task-owned** `.cache/web-fixture-bvwr67m6/fixture.db` and artifacts, with
+  built web, synthetic model labels and no worker. Reload saved data restored
+  authenticated AAPL 60-bar history and explicit synthetic provenance. No owner
+  database, migrations or historical content were changed during restart.
+- **PASS — presentation:** readable risk names/values/reasons and collapsed
+  identity/evidence details inspected on desktop; 390px decision page has no
+  document overflow, tables scroll within labelled regions. Browser console
+  warning/error inventory empty after recovery. Screenshots in external QA run:
+  `Results/approval-conflict.png`, `Results/final-decisions.png`,
+  `Results/final-decisions-narrow.png`, `Results/api-outage.png`,
+  `Results/api-recovered.png`, `Results/final-markets.png`,
+  `Results/final-analysis.png`. Synthetic data is not market validation.
+- Manual source follow-up: only text/display filtering was changed. Unknown
+  research IDs retain text, prototype keys are guarded; source selection still
+  uses unchanged role/ID checks and payloads. No new HTML sinks, providers,
+  network endpoints, risk limits or approval rules.
+
 ## Remaining M4 acceptance gates
 
 1. **UNVERIFIED — finance-first final UX:** all four workspaces must meet the
