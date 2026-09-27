@@ -16,6 +16,21 @@ from tradingagents.platform.persistence import PlatformRepository
 from .decision_pipeline import build_run_decision, load_run_portfolio
 
 
+def publication_warning(snapshot_context):
+    """Deterministic disclosure retained even if a model omits its limitation."""
+    if snapshot_context is None:
+        return ""
+    delayed = {source.manifest.source_end for sources in snapshot_context.by_analyst.values()
+               for source in sources if source.manifest.metadata.get("freshness") == "delayed"}
+    if not delayed:
+        return ""
+    cutoffs = ", ".join(sorted(value.isoformat() for value in delayed if value is not None))
+    return (f"DATA LIMITATION / GIỚI HẠN DỮ LIỆU: Source publication delayed; completed candles through "
+            f"{cutoffs}. Not a current-market assessment. No missing candle filled. / "
+            f"Nguồn cập nhật trễ; nến hoàn tất đến {cutoffs}. Không phản ánh thị trường hiện tại; "
+            "không tự bù nến thiếu.\n\n")
+
+
 class AnalysisJobHandler:
     """Run the existing graph outside DB transactions, persist one immutable result.
 
@@ -93,7 +108,8 @@ class AnalysisJobHandler:
             "run_id": str(run.run_id), "decision_id": str(decision_id),
             "profile": result.profile_name, "reference_only": result.reference_only,
             "selected_analysts": result.selected_analysts,
-            "narrative": result.final_state.get("final_trade_decision", result.narrative_signal),
+            "narrative": publication_warning(snapshot_context)
+                + result.final_state.get("final_trade_decision", result.narrative_signal),
             "structured_narrative": raw or None,
             "snapshot_attestation": "PASS" if snapshot_context is not None else "UNVERIFIED",
             "report_language": run.report_language,

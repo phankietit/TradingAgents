@@ -8,13 +8,22 @@ not full fundamental, news, macro or historical-vintage research.
 
 1. Select an instrument and prepare prices. The authenticated, CSRF-protected
    `POST /api/v1/instruments/{id}/prepare-data` accepts no vendor URL or symbol.
-2. Reuse a current owner-readable `yfinance.daily.v2` snapshot only after hash
+2. Reuse a current owner-readable `yfinance.daily.v3` snapshot only after hash
    verification and complete five-year session coverage checks. Otherwise fetch
    five calendar years of daily OHLCV through the
    existing yfinance dependency, with adjusted close and no rounding.
 3. Validate identity, currency, exchange timezone, finite OHLCV, duplicates,
    complete exchange-session coverage and latest completed session. Exclude
    unfinished sessions and allow one hour after close for publication.
+   Owner-approved crypto research permits exactly one missing **trailing** daily
+   session from Yahoo. Internal gaps, two or more missing trailing sessions,
+   invalid prices and unfinished bars still fail. US assets remain strict.
+   A delayed result is eligible only under this bounded latest-available contract,
+   not a claim of current-market completeness: manifest metadata records the
+   expected/actual close and missing-session count; the UI, analyst prompt and
+   deterministic bilingual report notice disclose the limitation. The actual
+   source end remains unchanged. Delayed snapshots are not reused as current;
+   the next permitted preparation tries Yahoo again. No filling or fallback.
 4. Append an immutable `ohlcv.daily` snapshot; never rewrite earlier evidence.
    `as_of` is acquisition completion, **not** the last bar date. Newly retrieved
    adjusted history is not a historical vintage and cannot serve earlier runs.
@@ -31,6 +40,7 @@ from `dataflows/history_window.py`. Calendar years preserve leap-day semantics.
 The earlier one-year web-only reduction has been removed. Existing v1 snapshots
 and reports are retained unchanged; preparation appends a v2 snapshot instead
 of reusing the shorter history. No prompt-side price truncation is introduced.
+The v3 publication policy preserves earlier v1/v2 evidence without rewriting it.
 More evidence can increase AI input tokens when the owner authorizes research;
 free market-data acquisition does not mean free model processing.
 

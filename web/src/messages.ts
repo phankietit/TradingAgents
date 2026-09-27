@@ -1,5 +1,7 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'Source publication is delayed by one daily candle. Research uses completed prices only through:': 'Nguồn cập nhật chậm một nến ngày. Phân tích chỉ dùng giá đã hoàn tất đến:',
+  'This is not a current-market assessment. No missing candle is filled.': 'Không phản ánh thị trường hiện tại. Không tự bù nến thiếu.',
   'Data preparation progress': 'Tiến độ chuẩn bị dữ liệu',
   'Checking market data': 'Đang kiểm tra dữ liệu thị trường',
   'Completed checks': 'Số lượt kiểm tra đã hoàn tất',

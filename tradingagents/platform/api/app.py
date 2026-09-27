@@ -633,6 +633,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             approved_symbol,
             history_start,
             session_closes,
+            validate_price_coverage,
         )
         from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
 
@@ -701,16 +702,19 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 return outcome("unavailable")
             retrieved_at = _now(settings)
             if (series.instrument_id != instrument_id or series.dataset != DATASET
-                    or series.as_of > retrieved_at or series.as_of < now
-                    or series.bars[-1].timestamp < latest_close):
+                    or series.as_of > retrieved_at or series.as_of < now):
                 return outcome("invalid")
-            if not expected_closes.issubset({bar.timestamp for bar in series.bars}):
-                return outcome("coverage_gap")
+            try:
+                coverage = validate_price_coverage(instrument,
+                    (bar.timestamp for bar in series.bars), now=series.as_of)
+            except PricePreparationError as error:
+                return outcome(error.code)
             with database.session() as write_session:
                 write_repository = PlatformRepository(write_session)
                 snapshot = TimeSeriesSnapshotService(write_repository,
                     ArtifactService(artifact_store, write_repository)).persist(
-                        owner_id=owner.owner_id, series=series, vendor=VENDOR, retrieved_at=retrieved_at)
+                        owner_id=owner.owner_id, series=series, vendor=VENDOR,
+                        retrieved_at=retrieved_at, source_metadata=coverage)
             return outcome("ready", snapshot=snapshot)
         finally:
             preparation_lock.release()

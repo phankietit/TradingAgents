@@ -27,6 +27,20 @@ it('requires evidence and explicit paid-call authorization', async () => {
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(false);
 });
+it('discloses delayed source cutoff before paid consent in both languages', async () => {
+  const delayed = { ...source, snapshot: { ...source.snapshot, metadata: { freshness: 'delayed' } } };
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+    if (url.includes('/analysis-profile')) return json({allowed_analysts:['market'], investable:true});
+    if (url.includes('/snapshots?')) return json([delayed]);
+    return json([]);
+  }));
+  const user = userEvent.setup();
+  render(<><LanguageSwitch /><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} /></>);
+  expect(await screen.findByText(/Source publication is delayed/)).toBeTruthy();
+  expect((screen.getByRole('button', {name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole('button', {name:/VI/}));
+  expect(await screen.findByText(/Nguồn cập nhật chậm một nến ngày/)).toBeTruthy();
+});
 it('keeps report language independent of UI and resets consent when changing generation language', async () => {
   const fetch = setup(); const user = userEvent.setup();
   render(<><LanguageSwitch /><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} /></>);

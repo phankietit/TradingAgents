@@ -28,7 +28,7 @@ from tradingagents.platform.market_data.timeseries import normalize_time_series
 from .history_window import OHLCV_HISTORY_YEARS
 
 # Acquisition-contract version prevents reusing the old one-year snapshots.
-VENDOR = "yfinance.daily.v2"
+VENDOR = "yfinance.daily.v3"
 DATASET = "ohlcv.daily"
 
 
@@ -73,6 +73,35 @@ def session_closes(instrument: InstrumentContract, now: datetime) -> dict:
     }
 
 
+def validate_price_coverage(instrument, timestamps, *, now):
+    """Permit one unpublished trailing crypto day, never an internal gap.
+
+    Owner-approved latest-available research, not a current-market assertion.
+    Stock/ETF/index calendars retain the strict latest-session requirement.
+    """
+    expected = {close for close in session_closes(instrument, now).values()
+                if history_start(now) <= close <= now - timedelta(hours=1)}
+    actual = set(timestamps)
+    if not actual:
+        raise PricePreparationError("no_data")
+    if not actual.issubset(expected):
+        raise PricePreparationError("invalid")
+    latest = max(actual)
+    trailing = expected - {close for close in expected if close <= latest}
+    allowed = 1 if instrument.asset_class is AssetClass.CRYPTO else 0
+    if len(trailing) > allowed:
+        raise PricePreparationError("stale")
+    if actual != expected - trailing:
+        raise PricePreparationError("coverage_gap")
+    return {
+        "freshness": "delayed" if trailing else "current",
+        "missing_trailing_sessions": len(trailing),
+        "expected_source_end": max(expected).isoformat(),
+        "data_through": latest.isoformat(),
+        "publication_policy": "crypto-one-trailing-day-v1",
+    }
+
+
 def normalize_yahoo(instrument, frame, metadata, *, now):
     symbol = approved_symbol(instrument)
     expected_type = {
@@ -99,9 +128,6 @@ def normalize_yahoo(instrument, frame, metadata, *, now):
     closes = session_closes(instrument, now)
     # A completed session is usable only after a one-hour publication allowance.
     cutoff = now - timedelta(hours=1)
-    expected = {
-        day: close for day, close in closes.items() if history_start(now) <= close <= cutoff
-    }
     bars = []
     try:
         for label, row in frame.iterrows():
@@ -124,11 +150,7 @@ def normalize_yahoo(instrument, frame, metadata, *, now):
             )
         if not bars:
             raise PricePreparationError("no_data")
-        actual = {bar["timestamp"] for bar in bars}
-        if max(actual) < max(expected.values()):
-            raise PricePreparationError("stale")
-        if actual != set(expected.values()):
-            raise PricePreparationError("coverage_gap")
+        validate_price_coverage(instrument, (bar["timestamp"] for bar in bars), now=now)
         return normalize_time_series(
             instrument=instrument,
             dataset=DATASET,

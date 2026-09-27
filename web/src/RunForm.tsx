@@ -178,7 +178,9 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       {!discovery.data?.some(item => item.supported_analysts.includes(role)) ? <p className="muted">{t("No suitable saved sources for this research area. It will not be included.")}</p> : discovery.data.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}
           checked={sources[role]?.includes(item.snapshot.snapshot_id) ?? false} onChange={() => toggle(role, item.snapshot.snapshot_id)} />
-        <span>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)}  {t("· Quality:")} {item.snapshot.quality_status} · {item.metadata_eligible ? t("Available to select; verified before research") : item.ineligibility_reasons.join(', ')}</small></span>
+        <span>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)}  {t("· Quality:")} {item.snapshot.quality_status} · {item.metadata_eligible ? t("Available to select; verified before research") : item.ineligibility_reasons.join(', ')}</small>
+          {item.snapshot.metadata?.freshness === 'delayed' ? <small className="warning">{t('Source publication is delayed by one daily candle. Research uses completed prices only through:')} {timestamp(item.snapshot.source_end)} (UTC). {t('This is not a current-market assessment. No missing candle is filled.')}</small> : null}
+        </span>
       </label>)}
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}

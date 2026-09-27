@@ -11,6 +11,7 @@ export interface Snapshot {
   snapshot_id: string; dataset: string; vendor: string; as_of: string; retrieved_at: string;
   source_start: string | null; source_end: string | null; content_hash: string;
   quality_status: string; quality_reasons: string[];
+  metadata?: { freshness?: string; missing_trailing_sessions?: number; data_through?: string };
 }
 export interface SeriesResponse {
   snapshot: Snapshot;

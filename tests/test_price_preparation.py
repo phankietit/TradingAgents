@@ -223,7 +223,7 @@ def test_five_calendar_years_preserve_leap_day_semantics():
     assert history_start(NOW) == datetime(2021, 9, 23, 12, tzinfo=UTC)
 
 
-@pytest.mark.parametrize("vendor", ["yfinance.daily.v1", "yfinance.daily.v2"])
+@pytest.mark.parametrize("vendor", ["yfinance.daily.v1", "yfinance.daily.v2", "yfinance.daily.v3"])
 def test_short_saved_history_is_preserved_but_not_reused(prepared_api, vendor):
     from uuid import UUID
 
@@ -305,3 +305,54 @@ def test_synthetic_fixture_never_calls_yahoo(tmp_path):
     with pytest.raises(PricePreparationError, match="unavailable"):
         app.state.fetch_daily_prices(AAPL)
     app.state.database.dispose()
+
+
+def test_crypto_one_missing_trailing_day_is_bounded_and_never_filled():
+    crypto = INITIAL_INSTRUMENT_CATALOG[-1].instrument
+    frame = price_frame(crypto)
+    series = normalize_yahoo(crypto, frame.iloc[:-1], metadata(crypto), now=NOW)
+    assert len(series.bars) == len(frame) - 1
+    assert series.bars[-1].timestamp == NOW.replace(hour=0) - timedelta(days=1)
+    assert series.as_of == NOW  # retrieval clock is not backdated
+    with pytest.raises(PricePreparationError, match="stale"):
+        normalize_yahoo(crypto, frame.iloc[:-2], metadata(crypto), now=NOW)
+    with pytest.raises(PricePreparationError, match="coverage_gap"):
+        normalize_yahoo(crypto, frame.iloc[:-1].drop(frame.index[10]), metadata(crypto), now=NOW)
+    with pytest.raises(PricePreparationError, match="coverage_gap"):
+        normalize_yahoo(crypto, frame.drop(frame.index[-2]), metadata(crypto), now=NOW)
+
+
+def test_delayed_crypto_persists_disclosure_and_does_not_reuse_as_current(prepared_api):
+    from uuid import UUID
+
+    from tradingagents.platform.analysis.snapshots import AnalysisSnapshot, SnapshotAnalysisContext
+    from tradingagents.platform.artifacts import ArtifactService
+    from tradingagents.platform.jobs.analysis import publication_warning
+
+    client, app = prepared_api
+    crypto = INITIAL_INSTRUMENT_CATALOG[-1].instrument
+    series = normalize_yahoo(crypto, price_frame(crypto).iloc[:-1], metadata(crypto), now=NOW)
+    app.state.fetch_daily_prices.return_value = series
+    headers = login(client)
+    path = f"/api/v1/instruments/{crypto.instrument_id}/prepare-data"
+    result = client.post(path, headers=headers).json()
+    assert result["status"] == "ready"
+    manifest = result["snapshot"]
+    assert manifest["metadata"]["freshness"] == "delayed"
+    assert manifest["metadata"]["missing_trailing_sessions"] == 1
+    assert manifest["source_end"] != manifest["metadata"]["expected_source_end"]
+    assert client.post(path, headers=headers).json()["status"] == "cooldown"
+    owner = UUID(client.get("/api/v1/auth/me").json()["owner_id"])
+    with app.state.database.session() as session:
+        repo = PlatformRepository(session)
+        artifact = repo.get_snapshot_artifact(UUID(manifest["snapshot_id"]), owner)
+        loaded = ArtifactService(app.state.artifact_store, repo).read(artifact.artifact_id, owner)
+    context = SnapshotAnalysisContext(as_of=NOW,
+        by_analyst={"market": (AnalysisSnapshot(manifest=manifest, payload=loaded[1].decode()),)},
+        source_max_age_seconds={"market": 604800})
+    assert '"freshness": "delayed"' in context.reports(crypto.instrument_id, ("market",))["market"]
+    warning = publication_warning(context)
+    assert series.bars[-1].timestamp.isoformat() in warning
+    assert "Không phản ánh thị trường hiện tại" in warning
+    assert publication_warning(None) == ""
+    assert client.get("/api/v1/runs").json() == []

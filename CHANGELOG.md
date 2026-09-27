@@ -10,6 +10,10 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Allow owner-approved latest-available crypto research with at most one missing
+  trailing daily candle, preserving internal-gap rejection and current retrieval
+  time. Disclose the actual cutoff in source metadata, UI and bilingual reports;
+  never fill missing prices or reuse delayed snapshots as current evidence.
 - Show bounded price-preparation progress and automatic retry countdowns before
   a final source failure. Separate local cooldown from Yahoo rate limits, retain
   the source cause, and support cancellation without starting paid analysis.
