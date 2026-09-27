@@ -137,9 +137,8 @@ function PriceHistory({ data, catalog }: { data: SeriesResponse; catalog: Instru
       <div><span>{t("Annualized volatility")}</span><strong>{percent(view.statistics.annualized_volatility)}</strong></div>
       <div><span>{t("Maximum drawdown")}</span><strong>{percent(view.statistics.maximum_drawdown)}</strong></div>
     </div>
-    <figure className="price-chart"><svg viewBox="0 0 900 280" role="img" aria-label={`${t("Saved")} ${view.statistics.price_basis} ${t("history in")} ${view.series.quote_currency}; ${points.length} ${t("observations. Data table available below.")}`}>
+    <figure className="price-chart"><div className="chart-scale"><span>{t('Low')}: {number(minimum)}</span><span>{t('High')}: {number(maximum)} {view.series.quote_currency}</span></div><svg viewBox="0 0 900 280" role="img" aria-label={`${t("Saved")} ${view.statistics.price_basis} ${t("history in")} ${view.series.quote_currency}; ${points.length} ${t("observations. Data table available below.")}`}>
       <line x1="50" x2="870" y1="230" y2="230" stroke="var(--border)" /><line x1="50" x2="870" y1="50" y2="50" stroke="var(--border)" />
-      <text x="50" y="36">{number(maximum)} {view.series.quote_currency}</text><text x="50" y="252">{number(minimum)}</text>
       <polyline points={polyline} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       {points.length === 1 ? <circle cx="50" cy="230" r="4" fill="var(--accent)" /> : null}
     </svg><figcaption>{timestamp(points[0].timestamp)} — {timestamp(points[points.length - 1].timestamp)}<br />{t(view.statistics.price_basis === 'adjusted_close' ? 'Adjusted close' : 'Close')} · {view.series.interval} · {view.statistics.observations}  {t("observations")}</figcaption></figure>

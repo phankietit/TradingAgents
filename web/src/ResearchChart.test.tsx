@@ -13,8 +13,10 @@ it('switches the chart window and inspects saved candles without provider calls'
   expect(screen.getByText('2026-09-19')).toBeTruthy();
   await user.click(screen.getByRole('button', { name: '1M' }));
   expect(screen.getByRole('slider').getAttribute('max')).toBe('0');
+  expect(screen.getByText('Low: 120.00')).toBeTruthy();
   await user.click(screen.getByRole('button', { name: 'All' }));
   expect(screen.getByRole('slider').getAttribute('max')).toBe('1');
+  expect(screen.getByText('Low: 100.00')).toBeTruthy();
   expect(screen.getByRole('img').getAttribute('aria-labelledby')).toBeTruthy();
 });
 it('withholds malformed, future-ordered or nonfinite chart payloads and supports legacy absence', () => {

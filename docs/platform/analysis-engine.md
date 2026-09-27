@@ -111,10 +111,17 @@ failed model call appends a cumulative `model.usage` receipt for its attempt;
 sum the last receipt per attempt, not every cumulative event. Missing provider
 usage is explicitly incomplete; subscription dollar cost is not inferred.
 An in-flight provider call can still consume quota after cancellation. Snapshot
-runs cap wall time at 1800 seconds and model starts at 128, with 180-second
-provider timeout and one SDK retry by default. Exceeding a budget fails the run,
+runs check a 1800-second wall-time budget at callback boundaries and cap model
+starts at 128, with a 600-second provider timeout and one SDK retry by default.
+An in-flight synchronous call may exceed the wall-time budget before the next
+boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted
 analyst/research/trader/debate sections, not raw messages or hidden reasoning.
+
+Web retries currently restart the graph unless its final publication already
+committed. The CLI's ticker/date checkpoint is deliberately not reused across
+owner-scoped web runs. Mid-graph web resume requires separately fenced,
+run/config/source-bound checkpoints; it is not an existing capability.
 
 ## Local worker command
 

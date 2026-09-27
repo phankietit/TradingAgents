@@ -40,9 +40,9 @@ export default function ResearchChart({ history }: { history: ReportHistory }) {
     <div className="chart-toolbar"><div><span className="eyebrow">{t('Price context')} · {history.quote_currency}</span><p className="chart-price">{number(active.price)} <small>{active.session_date ?? timestamp(active.closed_at)}</small></p></div>
       <div className="chart-ranges" aria-label={t('Chart window')}>{[[30, '1M'], [90, '3M'], [365, '1Y'], [0, 'All']].map(([value, label]) => <button key={value} aria-pressed={days === value} onClick={() => { setDays(Number(value)); setSelection(null); }}>{t(String(label))}</button>)}</div>
     </div>
-    <figure><svg viewBox="0 0 880 260" role="img" aria-labelledby={id}>
+    <figure><div className="chart-scale"><span>{t('Low')}: {number(low)}</span><span>{t('High')}: {number(high)} {history.quote_currency}</span></div><svg viewBox="0 0 790 260" role="img" aria-labelledby={id}>
       <title id={id}>{t('Saved research price history')} · {history.quote_currency} · {t(history.price_basis)}</title>
-      {[0, .5, 1].map(ratio => <g key={ratio}><line x1="30" x2="760" y1={40 + ratio * 180} y2={40 + ratio * 180} stroke="var(--border)" strokeDasharray="3 5" /><text x="780" y={44 + ratio * 180}>{number(high - ratio * (high - low), 0)}</text></g>)}
+      {[0, .5, 1].map(ratio => <line key={ratio} x1="30" x2="760" y1={40 + ratio * 180} y2={40 + ratio * 180} stroke="var(--border)" strokeDasharray="3 5" />)}
       <polyline points={path} fill="none" stroke="#b8c7a2" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       <line x1={x(active)} x2={x(active)} y1="35" y2="225" stroke="#77886c" strokeDasharray="3 4" />
       <circle cx={x(active)} cy={y(active)} r="4" fill="#e4e8d9" />

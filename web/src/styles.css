@@ -109,6 +109,7 @@ select { display: block; width: 100%; margin-top: 8px; background: #10151c; bord
 .metrics span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 .metrics strong { font-family: ui-monospace, monospace; font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .price-chart { margin: 24px 0; }
+.chart-scale { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
 .price-chart svg { display: block; width: 100%; min-height: 180px; }
 .price-chart text { fill: var(--muted); font: 12px ui-monospace, monospace; }
 .price-chart figcaption { color: var(--muted); font-size: 12px; line-height: 1.8; }
