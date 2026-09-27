@@ -15,7 +15,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from tradingagents.agents.research_schemas import SnapshotPortfolioDecision
+from tradingagents.agents.research_schemas import ObservedNumber, SnapshotPortfolioDecision
 from tradingagents.agents.schemas import PortfolioDecision
 from tradingagents.agents.utils.agent_utils import build_instrument_context
 from tradingagents.contracts import InstrumentContract
@@ -63,6 +63,7 @@ class AnalysisResult(BaseModel):
     decision_payload: StructuredDecisionNarrative | None = None
     material_claims: dict[str, tuple[UUID, ...]] = Field(default_factory=dict)
     validation_issues: tuple[str, ...] = ()
+    quantitative_references: tuple[ObservedNumber, ...] = ()
 
 
 GraphFactory = Callable[..., TradingAgentsGraph]
@@ -128,12 +129,16 @@ class AnalysisEngine:
         decision_payload = None
         material_claims = {}
         validation_issues = []
+        quantitative_references = ()
         raw_decision = final_state.get("structured_decision")
         if raw_decision is not None:
             try:
                 schema = SnapshotPortfolioDecision if request.snapshot_context is not None else PortfolioDecision
                 parsed = schema.model_validate(raw_decision)
                 if request.snapshot_context is not None:
+                    # Retain schema-valid references even when publication
+                    # fails. They are audit evidence, never a valid decision.
+                    quantitative_references = parsed.observed_numbers
                     # Historical tool results retain explicit immutable IDs;
                     # validate them by replay, not by a lossy latest-only catalog.
                     for claim in parsed.observed_numbers:
@@ -175,4 +180,5 @@ class AnalysisEngine:
             decision_payload=decision_payload,
             material_claims=material_claims,
             validation_issues=tuple(validation_issues),
+            quantitative_references=quantitative_references,
         )

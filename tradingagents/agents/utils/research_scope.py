@@ -20,6 +20,11 @@ history.INDEX.indicator.NAME, using the exact immutable index returned by tools.
 Return facts use return.DAYS_calendar_days.pct. Latest indicators and distances
 use the supplied fact_catalog. These are the only numeric reference conventions;
 do not invent calculations or IDs. Preserve signed percentage units when citing.
+For "price above/below an indicator", use latest_close_vs_indicator_pct
+(denominator = indicator), or its explicit latest_close_distance_magnitude_pct
+with the correct direction. distance_from_latest_close_pct instead expresses
+the indicator relative to price (denominator = price); do not reverse it by
+just changing the sign. Cite the correct verified formula, not mental math.
 For a consecutive decline every adjacent pair must decline; do not repeat a
 debater's monotonic-sequence claim when supplied pairs are mixed. A calendar
 return is measured from its dated start close, never from the window high.

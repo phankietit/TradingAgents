@@ -109,7 +109,7 @@ class SnapshotMarketFacts:
         high_index = max(range(n), key=lambda i: self.bars[i].high)
         high = self.bars[high_index].high
         return {
-            "calculation_version": "snapshot-market-facts-v1",
+            "calculation_version": "snapshot-market-facts-v2",
             "snapshot_id": self.snapshot_id, "provenance": self.provenance,
             "fact_catalog": self.fact_catalog(),
             "quote_currency": self.series.quote_currency,
@@ -132,6 +132,7 @@ class SnapshotMarketFacts:
                 "Observed-window high is not an all-time high.",
                 "Indicators use raw OHLCV, returns use adjusted close when supplied; do not conflate bases.",
                 "No interpolation, synthetic candles, annualized return or portfolio sizing is performed.",
+                "distance_from_latest_close_pct uses latest close as denominator; latest_close_vs_indicator_pct uses the indicator as denominator. They are not interchangeable.",
             ],
         }
 
@@ -157,6 +158,10 @@ class SnapshotMarketFacts:
                 facts[f"indicator.{name}.pct_of_latest_close"] = value / latest.close * 100
                 if name in {"close_10_ema", "close_50_sma", "close_200_sma", "boll", "boll_ub", "boll_lb"}:
                     facts[f"indicator.{name}.distance_from_latest_close_pct"] = (value / latest.close - 1) * 100
+                    if value > 0:
+                        relative = (latest.close / value - 1) * 100
+                        facts[f"indicator.{name}.latest_close_vs_indicator_pct"] = relative
+                        facts[f"indicator.{name}.latest_close_distance_magnitude_pct"] = abs(relative)
         return facts
 
     def resolve_fact(self, fact_id: str):

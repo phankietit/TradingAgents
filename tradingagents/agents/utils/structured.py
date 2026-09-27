@@ -101,8 +101,8 @@ def invoke_structured_or_freetext(
                     diagnostics.append(_safe_diagnostic(agent_name, exc, "structured"))
                 repair_feedback = _safe_diagnostic(agent_name, exc, "structured")
             logger.warning(
-                "%s: structured-output invocation failed (%s); retrying once as free text",
-                agent_name, type(exc).__name__,
+                "%s: structured-output invocation failed (%s); retrying once as %s",
+                agent_name, type(exc).__name__, "strict JSON format repair" if repair_schema is not None else "free text",
             )
 
     if repair_schema is not None:

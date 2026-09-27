@@ -102,6 +102,13 @@ separate states. A completed job can contain an unvalidated research report.
 Snapshot facts verify declared numeric references and rounding; known authority
 violations and unsupported money/percentage observations withhold a structured
 candidate. These checks are not a general semantic proof of qualitative claims.
+New reports retain schema-valid `quantitative_references` for audit even when
+publication checks reject the decision; they do not grant readiness. Older
+artifacts without these references are not reconstructed or rewritten.
+Calculation version `snapshot-market-facts-v2` distinguishes indicator distance
+relative to price from price distance relative to an indicator, including an
+explicit magnitude. Reversing a percentage denominator by changing its sign is
+incorrect; the supplied formulas and IDs are not interchangeable.
 Human financial review remains required. Bilingual reports have canonical
 English fields and saved EN/VI Markdown; numeric tokens must match across
 locales. Switching the interface never invokes AI.

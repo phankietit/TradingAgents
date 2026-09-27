@@ -97,6 +97,18 @@ def test_historical_reference_replay_and_derived_distances_are_snapshot_bound():
     assert facts.resolve_fact("history.1.candle.secret") is None
     assert facts.resolve_fact("return.365_calendar_days.pct") == facts.calendar_return(365)["return_pct"]
     assert facts.resolve_fact("indicator.close_200_sma.distance_from_latest_close_pct") == pytest.approx((399.5 / 499 - 1) * 100)
+    assert facts.resolve_fact("indicator.close_200_sma.latest_close_vs_indicator_pct") == pytest.approx((499 / 399.5 - 1) * 100)
+    assert facts.resolve_fact("indicator.close_200_sma.latest_close_distance_magnitude_pct") == pytest.approx(abs((499 / 399.5 - 1) * 100))
+
+
+def test_band_distance_does_not_reverse_the_percentage_denominator(monkeypatch):
+    facts = SnapshotMarketFacts(source())
+    close = facts.bars[-1].close
+    monkeypatch.setattr(facts, "indicator", lambda name, **kwargs: {"rows": [{"value": close * .8}]})
+    catalog = facts.fact_catalog()
+    assert catalog["indicator.boll_lb.distance_from_latest_close_pct"] == pytest.approx(-20)
+    assert catalog["indicator.boll_lb.latest_close_vs_indicator_pct"] == pytest.approx(25)
+    assert catalog["indicator.boll_lb.latest_close_distance_magnitude_pct"] == pytest.approx(25)
 
 
 def test_future_payload_cannot_hide_behind_valid_manifest():

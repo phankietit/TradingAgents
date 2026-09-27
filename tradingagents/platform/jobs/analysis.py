@@ -138,6 +138,7 @@ class AnalysisJobHandler:
             "source_quality": "verified" if snapshot_context is not None else "unverified",
             "research_quality": "structured" if raw else "unvalidated",
             "validation_issues": list(result.validation_issues),
+            "quantitative_references": [item.model_dump(mode="json") for item in result.quantitative_references],
             "localized_report": (result.final_state.get("structured_decision") or {}).get("localized_report"),
             "coverage": {"selected": list(run.selected_analysts),
                          "expected": list(resolve_analysis_profile(instrument).allowed_analysts),

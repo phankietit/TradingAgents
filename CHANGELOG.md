@@ -10,6 +10,9 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Preserve quantitative references on rejected reports, distinguish reciprocal
+  percentage denominators in snapshot facts, and allow ten minutes for long
+  final model responses without reducing flow.
 - Preserve daily session labels separately from candle close instants in v1.1
   Yahoo v4 snapshots without rewriting older evidence. Add full-history,
   snapshot-bound stockstats tools and deterministic calendar return endpoints.

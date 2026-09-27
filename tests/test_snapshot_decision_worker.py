@@ -15,7 +15,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -56,6 +56,8 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 "evidence_claims": claims}
             if case == "model_weight":
                 payload["target_weight"] = .99
+            if case == "invalid_number":
+                payload["observed_numbers"] = [{"snapshot_id": str(source), "fact_id": "invented", "value": 999, "decimal_places": 0}]
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Buy"
 
     if case in {"fixture_graph", "invalid_fixture_graph"}:
@@ -99,4 +101,13 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
         else:
             assert decision.status is DecisionStatus.REVIEW
             assert decision.target_weight is None
+            if case == "invalid_number":
+                import json
+
+                service = ArtifactService(store, repo)
+                _, content = service.read(job.output_artifact_ids[0], run.owner_id)
+                report = json.loads(content)
+                assert report["structured_narrative"] is None
+                assert report["quantitative_references"][0]["fact_id"] == "invented"
+                assert report["validation_issues"] == ["numeric_claim_not_supported"]
     database.dispose()
