@@ -29,10 +29,12 @@ class ApiModel(BaseModel):
 
 class PrepareDataResponse(ApiModel):
     status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
-                    "rate_limited", "unavailable", "busy"]
+                    "rate_limited", "unavailable", "busy", "cooldown"]
     snapshot: SnapshotManifest | None = None
     analysis_as_of: AwareDatetime
     reused: bool = False
+    retry_after_seconds: int = Field(default=0, ge=0, le=120)
+    last_failure: Literal["no_data", "stale", "coverage_gap", "rate_limited", "unavailable"] | None = None
 
 
 class LoginRequest(ApiModel):

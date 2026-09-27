@@ -184,7 +184,10 @@ def test_failed_prepare_does_not_publish_or_call_ai(prepared_api, code):
     headers = login(client)
     path = f"/api/v1/instruments/{AAPL.instrument_id}/prepare-data"
     assert client.post(path, headers=headers).json()["status"] == code
-    assert client.post(path, headers=headers).json()["status"] == "rate_limited"
+    retry = client.post(path, headers=headers).json()
+    assert retry["status"] == "cooldown"
+    assert retry["last_failure"] == (None if code == "invalid" else code)
+    assert 1 <= retry["retry_after_seconds"] <= 60
     assert app.state.fetch_daily_prices.call_count == 1
     assert (
         client.get(

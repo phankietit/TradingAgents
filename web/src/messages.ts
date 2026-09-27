@@ -1,5 +1,17 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'Data preparation progress': 'Tiến độ chuẩn bị dữ liệu',
+  'Checking market data': 'Đang kiểm tra dữ liệu thị trường',
+  'Completed checks': 'Số lượt kiểm tra đã hoàn tất',
+  'Next check in': 'Tự thử lại sau',
+  'Stop automatic retries': 'Dừng tự thử lại',
+  'Waiting for the local download cooldown.': 'Đang chờ hết thời gian giãn cách tải của hệ thống.',
+  'Yahoo is limiting requests.': 'Yahoo đang giới hạn lượt tải.',
+  'Data is not ready yet. Retrying automatically.': 'Dữ liệu chưa sẵn sàng. Hệ thống sẽ tự thử lại.',
+  'Data is still incomplete after three checks.': 'Sau 3 lượt kiểm tra, dữ liệu vẫn chưa đủ điều kiện.',
+  'Yahoo is limiting requests. Please try again later.': 'Yahoo đang giới hạn lượt tải. Vui lòng thử lại sau.',
+  'The local service is spacing out download requests. Please try again later.': 'Hệ thống đang giãn cách các lượt tải. Vui lòng thử lại sau.',
+  'Automatic retries stopped. A download already received by the server may still finish; no AI analysis was submitted.': 'Đã dừng tự thử lại. Lượt tải máy chủ đã nhận có thể vẫn hoàn tất; chưa gửi phân tích AI.',
   'Prepare market data': 'Chuẩn bị dữ liệu thị trường',
   '1. Prepare market data': '1. Chuẩn bị dữ liệu thị trường',
   'Prepare latest prices': 'Chuẩn bị dữ liệu giá mới nhất',

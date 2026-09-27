@@ -62,11 +62,11 @@ export async function request<T>(path: string, init: RequestInit = {}, maxBytes?
 }
 
 /** Fetch a session-bound token on demand; neither credentials nor reports are persisted. */
-export async function mutate<T>(path: string, body?: unknown, method = 'POST', headers = {}): Promise<T> {
-  const csrf = await request<{ csrf_token: string }>('/auth/csrf');
+export async function mutate<T>(path: string, body?: unknown, method = 'POST', headers = {}, signal?: AbortSignal): Promise<T> {
+  const csrf = await request<{ csrf_token: string }>('/auth/csrf', { signal });
   if (typeof csrf.csrf_token !== 'string' || !csrf.csrf_token) throw new ApiError(502);
   return request<T>(path, {
-    method, headers: { ...headers, 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.csrf_token },
+    method, signal, headers: { ...headers, 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.csrf_token },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }

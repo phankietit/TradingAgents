@@ -6,6 +6,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import re
 import secrets
 import time
@@ -245,6 +246,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
     app.state.fetch_daily_prices = fetch_daily_prices
     preparation_lock = Lock()
     preparation_attempts: dict[tuple[UUID, UUID], float] = {}
+    preparation_failures: dict[tuple[UUID, UUID], str] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -641,7 +643,16 @@ def create_app(settings: ApiSettings) -> FastAPI:
         now = _now(settings)
 
         def outcome(code, **kwargs):
-            return PrepareDataResponse(status=code, analysis_as_of=_now(settings), **kwargs)
+            key = (owner.owner_id, instrument_id)
+            if code in {"no_data", "stale", "coverage_gap", "rate_limited", "unavailable"}:
+                preparation_failures[key] = code
+            if code in {"ready", "invalid", "unsupported"}:
+                preparation_failures.pop(key, None)
+            elapsed = time.monotonic() - preparation_attempts.get(key, time.monotonic() - 60)
+            wait = max(0, math.ceil(60 - elapsed))
+            return PrepareDataResponse(status=code, analysis_as_of=_now(settings),
+                retry_after_seconds=wait if code != "ready" else 0,
+                last_failure=preparation_failures.get(key), **kwargs)
 
         try:
             approved_symbol(instrument)
@@ -678,7 +689,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 return outcome("ready", snapshot=snapshot, reused=True)
             key = (owner.owner_id, instrument_id)
             if time.monotonic() - preparation_attempts.get(key, float("-inf")) < 60:
-                return outcome("rate_limited")
+                return outcome("cooldown")
             preparation_attempts[key] = time.monotonic()
             # Release the authentication/read transaction before the network request.
             session.close()

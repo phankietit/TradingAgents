@@ -138,6 +138,8 @@ it('explains source failure and keeps AI submission disabled',async()=>{
   });
   const user=userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
   await user.click(screen.getByRole('button',{name:'Prepare latest prices'}));
-  await screen.findByText(/Price history has missing sessions/);
+  await screen.findByText(/Data is not ready yet. Retrying automatically/);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole('button',{name:'Stop automatic retries'}));
+  await screen.findByText(/Automatic retries stopped/);
 });

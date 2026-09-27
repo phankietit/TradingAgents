@@ -1,5 +1,5 @@
 import { t, useLocale } from './i18n';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { errorMessage, mutate } from './api';
 import { timestamp, useResource } from './data';
@@ -8,6 +8,8 @@ import type { Policy, PortfolioSnapshot } from './Portfolio';
 import ResearchSetup from './ResearchSetup';
 import { portfolioSnapshots, policyHistory } from './portfolioData';
 import { datasetLabel, researchLabel } from './researchLabels';
+import { preparePrices } from './preparePrices';
+import type { PreparationProgress } from './preparePrices';
 
 export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
@@ -16,14 +18,14 @@ export interface Run {
 }
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
-interface Prepared { status: string; snapshot: Snapshot | null; analysis_as_of: string; reused: boolean }
 const preparationMessages: Record<string, string> = {
   unsupported: 'Automatic preparation is not available for this instrument. Futures references require contract and roll data; no substitute is used.',
   invalid: 'The data failed validation. Nothing was selected. Please retry later or check the source.',
   no_data: 'Yahoo returned no price history. No analysis was started.',
   stale: 'The latest completed session is missing. Please retry after the source updates.',
   coverage_gap: 'Price history has missing sessions. Analysis remains blocked until coverage is complete.',
-  rate_limited: 'Please wait at least one minute before trying again. Yahoo or the local service is limiting requests.',
+  rate_limited: 'Yahoo is limiting requests. Please try again later.',
+  cooldown: 'The local service is spacing out download requests. Please try again later.',
   unavailable: 'The price source is unavailable or timed out. Please retry later; no AI call was made.',
   busy: 'Another data request is in progress. Please try again shortly.',
 };
@@ -51,7 +53,11 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [preparing, setPreparing] = useState(false);
+  const [preparationProgress, setPreparationProgress] = useState<PreparationProgress | null>(null);
+  const preparationController = useRef<AbortController | null>(null);
+  useEffect(() => () => preparationController.current?.abort(), []);
   const [preparationNote, setPreparationNote] = useState('');
+  const [preparationExhausted, setPreparationExhausted] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
   const submission = useRef<{ body: string; key: string } | null>(null);
   const profile = useResource<Profile>(instrumentId ? `/instruments/${encodeURIComponent(instrumentId)}/analysis-profile` : null);
@@ -73,12 +79,15 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     setConfirmed(false);
   }
   async function prepare() {
-    if (preparing || pending || riskEnabled) return;
-    setPreparing(true); setPreparationNote(''); setConfirmed(false); setError('');
+    if (preparationController.current || preparing || pending || riskEnabled) return;
+    const controller = new AbortController();
+    preparationController.current = controller;
+    setPreparing(true); setPreparationNote(''); setPreparationExhausted(false); setConfirmed(false); setError('');
     try {
-      const result = await mutate<Prepared>(`/instruments/${encodeURIComponent(instrumentId)}/prepare-data`);
+      const result = await preparePrices(instrumentId, controller.signal, setPreparationProgress);
       if (result.status !== 'ready') {
-        setPreparationNote(preparationMessages[result.status] ?? preparationMessages.unavailable);
+        setPreparationExhausted(result.checks === 3);
+        setPreparationNote(preparationMessages[result.last_failure ?? result.status] ?? preparationMessages.unavailable);
         return;
       }
       if (!result.snapshot?.snapshot_id || !Number.isFinite(Date.parse(result.analysis_as_of))) {
@@ -88,8 +97,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       setDataVersion(value => value + 1);
       setPreparationNote(result.reused ? 'Saved prices are current and verified. Review the sources, then authorize AI analysis.'
         : 'Prices are ready. Research time has been updated to now. Review the sources, then authorize AI analysis.');
-    } catch (cause) { setPreparationNote(errorMessage(cause)); }
-    finally { setPreparing(false); }
+    } catch (cause) { setPreparationNote(controller.signal.aborted ? 'Automatic retries stopped. A download already received by the server may still finish; no AI analysis was submitted.' : errorMessage(cause)); }
+    finally { preparationController.current = null; setPreparationProgress(null); setPreparing(false); }
   }
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!ready) return;
@@ -110,6 +119,12 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   }
   return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || preparing}>
     <h2>{t("Configure analysis")}</h2>
+    {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
+      <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
+      <progress max={3} value={preparationProgress.waiting ? preparationProgress.attempt : preparationProgress.attempt - 1} aria-label={t('Completed checks')} />
+      {preparationProgress.waiting ? <p>{t(preparationProgress.reason === 'cooldown' ? 'Waiting for the local download cooldown.' : preparationProgress.reason === 'rate_limited' ? 'Yahoo is limiting requests.' : 'Data is not ready yet. Retrying automatically.')} {t('Next check in')} {preparationProgress.remaining} {t('seconds')}.</p> : <p>{t('Downloading and checking prices…')}</p>}
+      <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
+    </section> : null}
     <ResearchSetup />
     <label>{t('Report language')}<select value={reportLanguage} disabled={pending || preparing} onChange={event => {
       setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
@@ -129,7 +144,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
       <button type="button" disabled={riskEnabled || !instrumentId} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
       {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
-      {preparationNote ? <p role="status">{t(preparationNote)}</p> : null}
+      {preparationNote ? <p role={preparationExhausted ? 'alert' : 'status'}>{preparationExhausted ? `${t('Data is still incomplete after three checks.')} ` : ''}{t(preparationNote)}</p> : null}
     </section>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>

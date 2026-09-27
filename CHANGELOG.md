@@ -10,6 +10,9 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Show bounded price-preparation progress and automatic retry countdowns before
+  a final source failure. Separate local cooldown from Yahoo rate limits, retain
+  the source cause, and support cancellation without starting paid analysis.
 - Align web price acquisition to the original engine's five-calendar-year
   history window via a shared constant; retain old one-year snapshots without
   reusing them as complete history. This does not claim full CLI/tool parity.

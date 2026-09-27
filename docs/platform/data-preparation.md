@@ -59,14 +59,28 @@ approved ingestion. Missing research areas are not invented or auto-selected.
 ## Failure, concurrency and cost
 
 The response distinguishes `ready`, `no_data`, `stale`, `coverage_gap`,
-`invalid`, `unavailable`, `rate_limited`, `busy`, and `unsupported`. Failed
+`invalid`, `unavailable`, `rate_limited` (Yahoo), `cooldown` (local), `busy`, and `unsupported`. Failed
 requests publish no snapshot and submit no analysis. Ambiguous Yahoo
 missing-price exceptions count as unavailable, not proof of no data.
 
 Each acquisition runs in an isolated subprocess with a 45-second total deadline
 and 10-second Yahoo request timeout, one instrument/request. The private API
 allows one acquisition at a time and a 60-second owner/instrument retry delay.
-There is no automatic scheduler, retry loop, fallback provider or bulk backfill.
+The web performs at most three checks after one owner click, with visible
+attempt progress and a countdown: 60 seconds before check 2, 120 before check 3,
+or the server's longer bounded retry hint. A local cooldown or busy response
+counts as a check, not a provider download. Transient source failures, missing
+sessions and no-data responses are retried; unsupported instruments, invalid
+data and authentication/authorization failures stop immediately. Only the
+exhausted result is shown as a final failure, preserving the underlying source
+reason across cooldown responses. No infinite polling or automatic AI call.
+
+Cancel or unmount aborts the client request and clears retry timers. An already
+received server acquisition may still publish a valid snapshot; cancellation
+does not delete it or falsely promise a server-side stop. Each browser request
+has a 60-second timeout. Closing/reloading the page stops the sequence; this
+short, bounded preparation is not a durable background backfill.
+There is no automatic scheduler, fallback provider or bulk backfill.
 Disconnects may leave a successfully verified snapshot but never an AI job;
 repeating the action reuses current evidence. Process-local concurrency is for
 the local single-process deployment, not a multi-replica hosted rate limiter.
