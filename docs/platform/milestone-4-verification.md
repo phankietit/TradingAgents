@@ -63,7 +63,7 @@ below are satisfied. No production deployment or live trading is in scope.
   not backfilled. Missing receipts stay unavailable, not inferred from current data.
 - Model configuration disclosure explicitly reports service/provider liveness as
   UNVERIFIED. It is not an authenticated connectivity or capability probe.
-- Latest frontend checkpoint: 83 tests, lint/typecheck/build PASS. Precise decimal
+- Latest frontend checkpoint: 84 tests, lint/typecheck/build PASS. Precise decimal
   display, invalid portfolio/policy responses and view-level recovery are tested;
   injected render failures have component evidence, not browser evidence yet.
 
@@ -120,8 +120,7 @@ below are satisfied. No production deployment or live trading is in scope.
 - Initial fixture TTL of ten seconds was rejected by the existing auth minimum.
   Fixture validation was corrected to 300–43200 seconds, with boundary tests;
   no auth protection was relaxed. Actual five-minute expiry is verified below.
-  Failed-graph retry/exhaustion mode is
-  available but its browser check has not yet been run.
+  Failed-graph retry/exhaustion is verified below.
 
 ## Session expiry, cancellation and operator docs — 2026-09-27
 
@@ -150,6 +149,32 @@ below are satisfied. No production deployment or live trading is in scope.
   for the locked dependency tree at this date. Not a guarantee against unknown
   vulnerabilities. Python advisory scan remains **UNVERIFIED**: `pip_audit` is
   not installed in the developer environment; dependency consistency did pass.
+
+## Worker exhaustion and dependency advisories — 2026-09-27
+
+- Source: `4b6763c` plus accompanying Analysis display/test change. Browser used
+  `.venv/bin/python -m scripts.web_fixture --synthetic-local-only --built-web
+  --fixture-worker --graph-result failed`; no vendor/model call was possible.
+- **PASS:** AAPL source selection/enqueue → real durable worker failure →
+  `Waiting to retry`, attempt 1/3 then 2/3 with earliest retry timestamps →
+  `Research failed`, attempt 3/3. Reload retained terminal failure, no report
+  artifacts, and explicit configuration of a new attempt rather than automatic
+  unbounded retry. No successful investment conclusion was displayed.
+- Failure copy is now plain language; diagnostic code stays in collapsed
+  `Failure details`. **PASS:** 84 frontend tests, lint, TypeScript/build,
+  `index-B6nZIz6u.js`; rendered copy verified after reload. Browser console clean,
+  page meaningful with no framework overlay. Screenshot in external run above:
+  `Results/worker-retry-exhausted.png`. Tab/server/worker stopped normally.
+- **PASS:** `pip-audit 2.10.1` run with `--path` against the exact developer
+  `.venv/lib/python3.14/site-packages`: 109 dependencies, zero known advisories.
+  Editable `tradingagents` intentionally skipped (source review is separate).
+  Auditor installed only in the external QA environment, not application deps.
+  JSON retained at external run `Logs/developer-dependency-audit.json`.
+- Tracked-file key/certificate/database inventory found only example environment
+  files and key-related source/tests. High-signal private-key/provider/GitHub token
+  pattern scan returned no matching tracked files (values never printed).
+  This is limited manual-pattern evidence, not exhaustive secret detection or
+  completion of the pending security source review. `gitleaks` was unavailable.
 
 ## Remaining M4 acceptance gates
 

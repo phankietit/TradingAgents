@@ -93,7 +93,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
       <p role="status">Research: <strong>{processingLabels[run.data.status] ?? 'Status unavailable'}</strong> · As of {timestamp(run.data.analysis_as_of)}</p>
       <JobProgress runId={runId} version={version + tick} />
       {run.data.status === 'queued' ? <p className="notice">Waiting for a worker. Queued does not mean analysis has started.</p> : null}
-      {run.data.error_code ? <p className="notice danger">Run failed: {run.data.error_code}. No successful conclusion is implied.</p> : null}
+      {run.data.error_code ? <><p className="notice danger">Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.</p><details><summary>Failure details</summary><p className="mono">{run.data.error_code}</p></details></> : null}
       <p className="muted">Analysts: {run.data.selected_analysts.join(', ')} · {run.data.snapshot_ids.length} bound snapshots</p>
       {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? 'Requesting cancellation…' : 'Cancel run'}</button> : ['failed', 'cancelled'].includes(run.data.status) ? <button onClick={() => onRetry(run.data!)}>Configure new attempt</button> : null}
     </> : <p role="status">Loading run…</p>}
