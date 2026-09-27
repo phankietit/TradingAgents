@@ -316,3 +316,8 @@ browser acceptance must pass before completion can be claimed.
   console health and interactions remain UNVERIFIED for this candidate.
 - No new whole-graph paid run, database restart, NQ substitution, provider/model
   change, historical rewrite, merge or deployment occurred in this continuation.
+- PASS: final code candidate `fdf6f6af0dddaac5db12f4d0f5b19e85729e2b87`:
+  1,441 tests + 88 subtests, 20 classified skips, 43.99 seconds; Ruff passed.
+  The last RSI/editorial guard changes have local evidence only; another paid
+  translation was not opened. Live acceptance remains tied to the failed manual
+  review on `865ccc2`, not silently transferred to this later candidate.
