@@ -288,3 +288,31 @@ browser acceptance must pass before completion can be claimed.
   tests + 88 subtests, 20 classified skips, 42.93 seconds; Ruff passed. This later
   change was not separately live-replayed; live evidence above belongs to the
   loaded `f910258` candidate. No new whole-graph run was opened this continuation.
+
+## Block-addressed Vietnamese editing
+
+- `865ccc28435d1829624edd38d296f542ab374810` makes translation paragraph/item
+  addressed. Source-owned headings and order are restored by code; missing,
+  duplicate, unknown, empty or heading-injected blocks fail closed. Anchors
+  cannot move between blocks. Known literal calques use the existing single
+  repair budget rather than an additional editing agent or graph shortcut.
+- PASS: full local regression, 1,437 tests + 88 subtests, 20 classified skips,
+  41.10 seconds; Ruff passed. Mocked frontend ArtifactPreview: 9 tests PASS,
+  2.39 seconds. These are component tests, not browser-rendered acceptance.
+- Live translation-only replay from the previously accepted canonical research
+  retained that canonical object unchanged outside localization and passed block
+  and numerical checks after one format repair. Usage: 62,463 tokens (10,089
+  input + 52,374 output), two calls. QA blob:
+  `sha256/8f/71/8f711fc14bde3944615a279ff863445c2d1ea174c09b1bbec754ac657f4a5e1c`.
+  **Manual translation acceptance remains FAIL**: RSI's neutral midline was
+  rendered as a moving average in a paragraph containing no moving average;
+  literal expressions such as “việc khung nó” remained. A subsequent regression
+  guard covers this specific RSI concept substitution and the reproduced
+  editorial cases. No assertion of universal translation fidelity is made.
+- Browser revalidation: the old QA tab was absent; existing owner tab 27 was
+  found at `http://127.0.0.1:8000/#/markets`. Access was again denied because the
+  admin-enforced browser policy could not be verified. No alternate browser,
+  indirect UI access or security bypass was attempted. Page content, screenshot,
+  console health and interactions remain UNVERIFIED for this candidate.
+- No new whole-graph paid run, database restart, NQ substitution, provider/model
+  change, historical rewrite, merge or deployment occurred in this continuation.

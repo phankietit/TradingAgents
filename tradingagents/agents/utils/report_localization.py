@@ -79,6 +79,9 @@ def validate_financial_terms(english, vietnamese):
     translated = unicodedata.normalize("NFC", vietnamese).casefold()
     if (("thanh khoản" in translated and not re.search(r"\bliquidity\b", english, re.I))
             or ("phân kỳ" in translated and not re.search(r"\bdivergen(?:ce|t)\b", english, re.I))
+            or (re.search(r"\bRSI\b", english, re.I) and re.search(r"\bmidline\b", english, re.I)
+                and not re.search(r"\b(?:SMA|EMA|Bollinger|moving averages?)\b", english, re.I)
+                and "đường trung bình" in translated)
             or re.search(r"\b(?:SMA|EMA)\s*[+−-]?\d+(?:[.,]\d+)?\s*%", vietnamese, re.I)):
         raise PublicationValidationError(["translation_terminology_mismatch"])
 
@@ -90,6 +93,7 @@ def validate_editorial_quality(vietnamese):
         "bộ xu hướng", "so sánh biên", "tư thế phù hợp", "chế độ thông tin mỏng",
         "thanh giảm", "trùng phùng", "tại thời điểm của bộ dữ liệu tại thời điểm",
         "nó sẽ diễn biến giá tiếp theo theo hướng",
+        "việc khung nó", "vị thế mua dài", "hồi quy về trung bình sắc nét",
     )):
         raise PublicationValidationError(["translation_editorial_requires_review"])
 
@@ -190,6 +194,11 @@ def localize_report(llm, decision, diagnostics):
         "Use cấu trúc xu hướng for trend stack, quan điểm for posture, phiên giảm for down-bar, "
         "so sánh đã được kiểm chứng for bound comparison, mốc tham chiếu for anchor, "
         "mốc giá cố định for static strike, and điều kiện cần theo dõi for invalidation ladder. "
+        "The RSI midline is ngưỡng trung tính, NOT a moving average or đường trung bình. "
+        "Long positions are vị thế mua, not vị thế mua dài. Volume expansion means khối lượng "
+        "giao dịch tăng. A sharp mean reversion is a nhịp điều chỉnh mạnh về đường trung bình, "
+        "not a visually sắc nét movement. 'Framing it as compressed' means coi đó là trạng thái "
+        "biến động thu hẹp, never việc khung nó. Describe a single reading as một giá trị quan sát. "
         "An information-thin regime means dữ liệu còn hạn chế; it is not chế độ thông tin mỏng. "
         "Avoid bộ xu hướng, so sánh biên, tư thế phù hợp, thanh giảm, trùng phùng, phán quyết, "
         "vùng bao phủ and phân giải. Say tại thời điểm phân tích without repeating snapshot wording. "

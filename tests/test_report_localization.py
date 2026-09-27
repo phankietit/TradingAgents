@@ -113,6 +113,7 @@ def test_canonical_generation_cannot_embed_a_second_language_report():
     ("Volume expands.", "Thanh khoản giãn nở."),
     ("MACD signal cross.", "Phân kỳ MACD."),
     ("A +18.52% premium over the 200-SMA.", "Giãn cách 200 so với SMA +18.52%."),
+    ("RSI remains above its 50 midline.", "RSI vẫn trên đường trung bình 50."),
 ])
 def test_financial_concept_substitution_is_rejected(english, vietnamese):
     with pytest.raises(ValueError):
@@ -123,11 +124,15 @@ def test_distinct_financial_terms_and_genuine_liquidity_divergence_are_allowed()
     validate_financial_terms("Volume expands; volatility rises; MACD crosses signal.",
                              "Khối lượng giao dịch tăng; biến động tăng; MACD giao cắt đường tín hiệu.")
     validate_financial_terms("No liquidity or divergence evidence.", "Chưa có bằng chứng thanh khoản hay phân kỳ.")
+    validate_financial_terms("RSI remains above its 50 midline.", "RSI vẫn trên ngưỡng trung tính 50.")
+    validate_financial_terms("RSI is above its midline, and price above its moving average.",
+                             "RSI trên ngưỡng trung tính; giá trên đường trung bình.")
 
 
 @pytest.mark.parametrize("text", ["Bộ xu hướng còn nguyên vẹn.", "Không có so sánh biên.",
     "Tư thế phù hợp là giữ vị thế.", "Chế độ thông tin mỏng.", "Khối lượng trên thanh giảm.",
-    "Diễn biến trùng phùng với phá vỡ hỗ trợ.", "Tại thời điểm của bộ dữ liệu tại thời điểm phân tích."])
+    "Diễn biến trùng phùng với phá vỡ hỗ trợ.", "Tại thời điểm của bộ dữ liệu tại thời điểm phân tích.",
+    "Việc khung nó là thu hẹp.", "Mở vị thế mua dài.", "Hồi quy về trung bình sắc nét."])
 def test_reproduced_editorial_calques_require_review(text):
     with pytest.raises(ValueError):
         validate_editorial_quality(text)
