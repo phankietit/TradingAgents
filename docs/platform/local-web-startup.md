@@ -70,6 +70,26 @@ ingest sources or start the worker. The package may load ignored `.env` and
 `.env.enterprise` from the current directory/parents; use the intended working
 directory and never assume unrelated inherited settings are safe.
 
+Set `TRADINGAGENTS_LLM_PROVIDER`, `TRADINGAGENTS_QUICK_THINK_LLM` and
+`TRADINGAGENTS_DEEP_THINK_LLM` explicitly in the same environment for API and
+worker. The API records these on new runs; the worker uses those recorded
+models. Missing/blank values retain the API defaults (`openai`, `gpt-4o-mini`,
+`gpt-4o`), not the standalone CLI defaults. Existing runs are not rewritten.
+Provider reasoning settings such as `TRADINGAGENTS_OPENAI_REASONING_EFFORT`
+are read by the worker and depend on model support; they are not dedicated
+immutable run fields. Restart the relevant processes after changing env.
+
+When the ignored env file belongs to another checkout, load its explicit path
+before importing the package instead of copying secrets into the worktree:
+
+```sh
+.venv/bin/python -c 'from dotenv import load_dotenv; load_dotenv("/absolute/path/to/private/.env", override=False); from tradingagents.platform.api.runtime import main; main()'
+```
+
+Existing process environment takes precedence. Loading a key is not proof of
+provider access, quota or a successful paid request. Never use `VITE_`-prefixed
+variables for provider credentials.
+
 ## 4. Supply evidence, then opt into processing
 
 The UI reads existing owner-scoped records. Empty lists are expected for a fresh
