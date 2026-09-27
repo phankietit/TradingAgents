@@ -78,6 +78,10 @@ def test_translation_is_saved_separately_and_cannot_mutate_canonical_decision():
             def invoke(prompt):
                 assert "phạm vi dữ liệu" in prompt and "not as a word-for-word translation" in prompt
                 assert "retaining every opposing argument and condition" in prompt
+                assert "A warning against aggressive new buying is NOT a warning against all new buying" in prompt
+                assert "actor, action, direction, intensity, negation, condition and uncertainty must agree" in prompt
+                assert "theo dõi các điều kiện cụ thể có thể bác bỏ luận điểm" in prompt
+                assert "điều kiện cần theo dõi for invalidation ladder" not in prompt
                 blocks = translated_blocks(prompt)
                 for block in blocks:
                     block["vi"] = block["vi"].replace("Price-only evidence", "Chỉ có dữ liệu giá")

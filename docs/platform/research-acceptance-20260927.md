@@ -357,3 +357,26 @@ browser acceptance must pass before completion can be claimed.
   current-data acceptance or browser evidence. Historical reports remain
   unchanged. BTC/AAPL/NQ overall acceptance, browser policy access and current
   PostgreSQL verification remain unresolved. Draft PR #7 remains unmerged.
+
+## Localization scope and editorial follow-up
+
+- The preceding live failure exposed a prompt defect: a noun phrase for
+  `invalidation ladder` already contained the verb `theo dõi`, encouraging
+  repetition when translating `monitor the invalidation ladder`. The prompt
+  now supplies a whole-clause example, without changing any stored report.
+- Translation instructions now explicitly contrast a warning against
+  **aggressive** new buying with a warning against **all** new buying, and ask
+  for source/target agreement on actor, action, direction, intensity, negation,
+  conditions and uncertainty. No string replacement is applied to model output;
+  no additional model/agent call, retry or provider change is introduced.
+- PASS: `tests/test_report_localization.py`, 38 tests, 2.90 seconds; targeted
+  Ruff and `git diff --check`. The test verifies prompt delivery plus existing
+  preservation/rejection behavior, not model compliance or financial meaning.
+  Live language quality for this prompt revision remains UNVERIFIED. The
+  preceding `b811e4be…` manual FAIL is not upgraded by these tests.
+- Manual acceptance cases for the next bounded replay: retain the qualifier in
+  new aggressive buying; preserve every confirmation/conditional clause;
+  distinguish fundamentals from earnings; render invalidation monitoring without
+  repeated verbs; maintain the RSI midline meaning; retain all numbers, opposing
+  arguments and coverage limitations. These are review criteria, not a claim
+  that keyword matching proves translation fidelity.
