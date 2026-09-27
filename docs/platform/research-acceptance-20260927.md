@@ -321,3 +321,39 @@ browser acceptance must pass before completion can be claimed.
   The last RSI/editorial guard changes have local evidence only; another paid
   translation was not opened. Live acceptance remains tied to the failed manual
   review on `865ccc2`, not silently transferred to this later candidate.
+
+## Strict MiniMax whole-message JSON acceptance
+
+- Candidate `2cd26091d86c6e19fcfbb3c684c602ea08f27de0` accepts a complete JSON
+  object (optionally one whole JSON fence) through the same Pydantic schema
+  when MiniMax omits the schema tool call. It never extracts prose fragments or
+  reasoning. Unknown/additional tool calls, duplicate fields, incomplete or
+  refused responses remain rejected. Publication callbacks and the single
+  repair budget remain authoritative; graph roles/model/provider are unchanged.
+- Duplicate tool fields are checked before LangChain normalization loses their
+  wire representation. Only a safe rejection flag is retained, not another copy
+  of raw tool arguments. HTTP fixtures cover sync/async, schema JSON-mode date
+  semantics, usage, callback rejection and maximum repair calls.
+- PASS: clean fixed-candidate `.venv/bin/python -m pytest -q`:
+  1,465 tests + 88 subtests, 20 classified skips, 130.82 seconds.
+  `.venv/bin/ruff check .` and `git diff --check` passed. Skips remain 18
+  PostgreSQL environment gates, optional Bedrock and optional live DeepSeek.
+  An earlier run overlapped a source edit and failed seven tests; it is not
+  acceptance evidence. The complete clean-candidate rerun supersedes it.
+- Translation-only live replay from `7d588e7f…` produced QA blob
+  `sha256/b8/11/b811e4be25af2eaf389cb6c823dd653a029c77e70c22f894b181ea502998cd36`.
+  Usage: 21,417 tokens (5,228 input + 16,189 output), one call, no format repair.
+  Safe wire counters show zero tool calls and zero invalid tool calls: the
+  whole-message JSON path was exercised live. No provider cost was reported;
+  this one sample is not a general cost/quality benchmark.
+- Canonical research was unchanged outside localization. Numerical/block
+  validation passed and RSI's neutral midline was translated correctly.
+  **Manual editorial/meaning acceptance remains FAIL**: the phrase
+  “theo dõi điều kiện cần theo dõi mất hiệu lực” is repetitive and unclear;
+  “against initiating fresh aggressive long entries” lost its aggressive-entry
+  qualifier in Vietnamese. Numerical parity alone does not prove semantic
+  fidelity. No additional paid replay was opened after this result.
+- This is isolated presentation QA, not a registered decision, full-graph run,
+  current-data acceptance or browser evidence. Historical reports remain
+  unchanged. BTC/AAPL/NQ overall acceptance, browser policy access and current
+  PostgreSQL verification remain unresolved. Draft PR #7 remains unmerged.
