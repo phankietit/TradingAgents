@@ -86,6 +86,19 @@ def test_tool_output_cannot_hide_duplicate_fields_or_additional_tools(extra_call
         model.with_structured_output(Pick).invoke("Choose")
 
 
+def test_wire_rejection_flag_is_not_sent_back_to_provider():
+    model, _ = client_for([{"content":"unused"}])
+    response = {"id":"fixture", "object":"chat.completion", "created":0,
+        "model":"MiniMax-M2.7", "choices":[{"index":0, "finish_reason":"tool_calls",
+            "message":{"role":"assistant", "content":None, "tool_calls":[{
+                "id":"call-fixture", "type":"function", "function":{"name":"Pick",
+                "arguments":'{"action":"Hold","action":"Buy"}'}}]}}]}
+    message = model._create_chat_result(response).generations[0].message
+    assert message.additional_kwargs["_invalid_structured_tool_arguments"] is True
+    payload = model._get_request_payload([message])
+    assert "_invalid_structured_tool_arguments" not in payload["messages"][0]
+
+
 @pytest.mark.parametrize("reason", ["length", "content_filter"])
 def test_incomplete_completion_is_not_accepted_even_with_valid_json(reason):
     model, _ = client_for([{"content":'{"action":"Hold"}'}], finish_reason=reason)

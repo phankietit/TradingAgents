@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from .api_key_env import get_api_key_env
 from .base_client import BaseLLMClient, normalize_content
 from .capabilities import get_capabilities
-from .structured_content import parse_structured_content
+from .structured_content import parse_structured_content, validated_json_object
 from .validators import validate_model
 
 
@@ -168,7 +168,7 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
             if (raw.response_metadata.get("finish_reason") in {"length", "content_filter"}
                     or raw.additional_kwargs.get("refusal")):
                 raise ValueError("structured response is incomplete or refused")
-            if raw.invalid_tool_calls:
+            if raw.invalid_tool_calls or raw.additional_kwargs.get("_invalid_structured_tool_arguments"):
                 raise ValueError("schema response contains invalid tool calls")
             if envelope.get("parsed") is not None:
                 expected_name = schema.model_json_schema().get("title", schema.__name__)
@@ -214,6 +214,14 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
         data = response if isinstance(response, dict) else response.model_dump(
             exclude={"choices": {"__all__": {"message": {"parsed"}}}})
         for generation, choice in zip(result.generations, data.get("choices", []), strict=False):
+            # LangChain normalizes tool arguments into dicts, which loses any
+            # duplicate fields from the original wire JSON. Retain only a safe
+            # rejection flag, never a second copy of raw arguments.
+            for call in choice.get("message", {}).get("tool_calls") or []:
+                try:
+                    validated_json_object(call.get("function", {}).get("arguments"))
+                except (ValueError, TypeError):
+                    generation.message.additional_kwargs["_invalid_structured_tool_arguments"] = True
             for key in ("reasoning_details", "reasoning_content"):
                 value = choice.get("message", {}).get(key)
                 if value is not None:
