@@ -240,3 +240,15 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   recovery. IAB desktop verified valid fixture NAV/holdings and reload without
   console errors. Browser fault injection and final all-workspace QA remain open;
   component failure tests are not presented as live browser fault evidence.
+- Decision readability pass: symbol/rating, current human-review state, thesis,
+  key risks and invalidation conditions precede technical context. Model confidence
+  stays in audit details and is explicitly not a profit probability. All six data
+  quality states retain distinct labels. Known allocation/exposure/turnover/cash
+  checks display percentages; correlation and other checks keep their own values.
+  Confirmation identifies symbol/rating/date and keeps exact identity available.
+  Analysis event timeline and file metadata are collapsed; event names use readable
+  labels. No authorization, risk threshold or state-transition logic changed.
+  77 frontend tests plus lint/typecheck/build PASS. IAB desktop/390px verified
+  REVIEW approval denied, keyboard-opened rejection, required reason, persisted
+  rejection after reload, original/current distinction and clean console. The
+  final all-workspace visual/failure matrix remains open.

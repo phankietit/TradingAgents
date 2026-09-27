@@ -7,6 +7,7 @@ import type { Run } from './RunForm';
 import ArtifactPreview from './ArtifactPreview';
 import type { Artifact } from './ArtifactPreview';
 import JobProgress, { processingLabels } from './JobProgress';
+import { eventLabel } from './financialLabels';
 
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
@@ -98,12 +99,13 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     </> : <p role="status">Loading run…</p>}
     {error ? <p role="alert" className="danger">{error}</p> : null}
     {streamError ? <p className="warning">Event connection interrupted; active run status refreshes every 5 seconds.</p> : null}
-    <h3>Progress events</h3><ol className="event-list">{events.map(event => <li key={event.sequence}><span>{event.event_type}</span><time>{timestamp(event.occurred_at)}</time></li>)}</ol>
+    <details><summary>Processing timeline</summary><ol className="event-list">{events.map(event => <li key={event.sequence}><span>{eventLabel(event.event_type)}</span><time>{timestamp(event.occurred_at)}</time></li>)}</ol>
     {!events.length ? <p className="muted">No events received yet.</p> : null}
+    </details>
     <h3>Reports & evidence</h3>
     {artifacts.error ? <p role="alert" className="danger">{errorMessage(artifacts.error)}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
       <a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{item.kind.replaceAll('_', ' ')} · Download</a>
-      <span className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} bytes · {timestamp(item.created_at)}</span><span className="mono caption">{item.content_hash}</span>
+      <details><summary>File details</summary><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} bytes · {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
       <ArtifactPreview artifact={item} runId={runId} />
     </li>)}</ul> : <p className="muted">No artifacts have been published for this run.</p>}
     <p className="muted caption">Artifacts download after backend integrity checks. Run success does not imply decision approval.</p>

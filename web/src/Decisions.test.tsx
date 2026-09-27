@@ -28,6 +28,16 @@ it('renders narrative as text and disables approval for REVIEW', async () => {
   expect(document.querySelector('script')).toBeNull();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
 });
+it('presents financial risk percentages without changing review eligibility',async()=>{
+  const value={...candidate,policy_checks:[{check_id:'max_position_weight',policy_id:'p',policy_version:'1',result:'PASS',blocking:true,reason:'Within allocation limit',observed_value:0.2,limit_value:0.3}]};
+  vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/state') ? {candidate:value,current_status:'review',events:[]} : url.includes('/decisions?') ? [value] : url.includes('/runs/') ? {status:'succeeded'} : []))));
+  render(<Decisions />);
+  expect(await screen.findByText('20.00%')).toBeTruthy();
+  expect(screen.getByText('30.00%')).toBeTruthy();
+  expect(screen.getByText('Position allocation')).toBeTruthy();
+  expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText(/Uncalibrated, not a probability of profit/).closest('details')?.open).toBe(false);
+});
 it('requires a reason and persists rejection with exact prior state', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<Decisions />);
   await user.click(await screen.findByRole('button', {name:'Reject decision'}));
@@ -35,7 +45,7 @@ it('requires a reason and persists rejection with exact prior state', async () =
   await user.type(screen.getByLabelText('Reason'), 'Insufficient evidence');
   await user.click(screen.getByRole('button', {name:'Confirm reject'}));
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-  expect(await screen.findByText('review → rejected')).toBeTruthy();
+  expect(await screen.findByText('Needs review → Rejected')).toBeTruthy();
   const request = fetch.mock.calls.find(([url]) => url.endsWith('/transitions'))!;
   expect(JSON.parse(request[1].body as string)).toMatchObject({action:'reject',expected_status:'review',reason:'Insufficient evidence'});
 });
@@ -46,7 +56,7 @@ it('does not claim success when backend rejects the transition', async () => {
   await user.click(screen.getByRole('button', {name:'Confirm reject'}));
   expect((await screen.findByRole('alert')).textContent).toContain('No successful transition');
   expect(screen.getByRole('dialog')).toBeTruthy();
-  expect(screen.queryByText('review → rejected')).toBeNull();
+  expect(screen.queryByText('Needs review → Rejected')).toBeNull();
 });
 
 it('loads a deep-linked candidate outside the history page instead of substituting the first row', async () => {
