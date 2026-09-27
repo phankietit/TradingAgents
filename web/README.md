@@ -220,3 +220,12 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   reload preserves result; keyboard details, console and overflow checks PASS.
   No live model or vendor calls. Retry-wait and invalid-data states have component
   coverage; this browser flow verifies successful processing, not a provider retry.
+- Portfolio source drilldown: View valuation sources loads the saved receipt on
+  demand. Prices/currency/vendor/source times remain readable, with IDs/hashes
+  collapsed. Legacy missing receipts are explained without a fabricated live
+  fallback. New valuation receipts do not change portfolio math or rewrite history.
+  24 scoped backend tests and 58 frontend tests PASS; lint/typecheck/build PASS.
+  Full local Python regression: 1256 tests + 88 subtests PASS, 20 skips (same
+  PostgreSQL/optional Bedrock/live DeepSeek limitations). IAB desktop/390px:
+  source price 198.02 USD matches the synthetic AAPL holding, vendor/time visible,
+  keyboard disclosure and console checks PASS. No live market validation.

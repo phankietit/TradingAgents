@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { errorMessage } from './api';
 import { instruments, percent, timestamp, useResource } from './data';
 import type { Instrument } from './data';
+import ValuationSources from './ValuationSources';
 
 export interface PortfolioSnapshot {
   portfolio_id: string; as_of: string; base_currency: string; net_asset_value: string;
@@ -37,6 +38,7 @@ export default function Portfolio() {
         <h2>Cash</h2><div className="table-scroll" role="region" aria-label="Cash balances" tabIndex={0}><table><thead><tr><th>Currency</th><th>Balance</th></tr></thead><tbody>{current.cash.map(item => <tr key={item.currency}><th scope="row">{item.currency}</th><td>{decimal(item.amount)}</td></tr>)}</tbody></table></div>
         {!current.cash.length ? <p className="muted">No cash balance entries in this snapshot.</p> : null}
         <h2>Holdings & allocation</h2>
+        <ValuationSources key={current.portfolio_id} id={current.portfolio_id} hash={current.content_hash} catalog={catalog.data ?? []} />
         {catalog.error ? <p className="warning">Instrument names unavailable; persisted instrument IDs are shown.</p> : null}
         {!current.positions.length ? <p className="muted">This snapshot contains no positions.</p> : <div className="table-scroll" role="region" aria-label="Portfolio holdings" tabIndex={0}><table><thead><tr>{['Instrument', 'Quantity', 'Average cost', 'Valuation price', 'Market value', 'Weight'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead><tbody>{current.positions.map(item => {
           const asset = catalog.data?.find(value => value.instrument_id === item.instrument_id);

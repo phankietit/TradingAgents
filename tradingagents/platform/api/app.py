@@ -78,6 +78,7 @@ from tradingagents.platform.persistence import (
     Database,
     PlatformRepository,
 )
+from tradingagents.platform.portfolio.evidence import ValuationEvidence, load_valuation_evidence
 from tradingagents.platform.screening import DeterministicStockScreener
 
 from .schemas import (
@@ -796,6 +797,20 @@ def create_app(settings: ApiSettings) -> FastAPI:
             )
             for item in repository.list_run_artifacts(run_id, owner.owner_id, limit=limit, offset=offset)
         )
+
+    @app.get(f"{API_PREFIX}/portfolios/{{portfolio_id}}/valuation-evidence", response_model=ValuationEvidence, tags=["portfolios"])
+    def portfolio_valuation_evidence(portfolio_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        repository = PlatformRepository(session)
+        portfolio = repository.get_portfolio_snapshot(portfolio_id, owner.owner_id)
+        if portfolio is None:
+            raise HTTPException(status_code=404, detail="valuation evidence unavailable")
+        try:
+            evidence = load_valuation_evidence(ArtifactService(artifact_store, repository), portfolio, owner.owner_id)
+            if evidence is None:
+                raise HTTPException(status_code=404, detail="valuation evidence unavailable")
+            return evidence
+        except (ArtifactIntegrityError, ValueError) as error:
+            raise HTTPException(status_code=409, detail="valuation evidence validation failed") from error
 
     @app.get(f"{API_PREFIX}/portfolios", response_model=list[PortfolioSnapshot], tags=["portfolios"])
     def portfolios(

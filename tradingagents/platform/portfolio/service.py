@@ -3,10 +3,11 @@
 import hashlib
 from decimal import Decimal
 
-from tradingagents.contracts import LedgerTransactionType, NormalizedTimeSeries
+from tradingagents.contracts import ArtifactKind, LedgerTransactionType, NormalizedTimeSeries
 from tradingagents.contracts.ledger import ValuationQuote
 from tradingagents.platform.analysis.profiles import resolve_analysis_profile
 
+from .evidence import ValuationEvidence, ValuationSource, evidence_id
 from .ledger import PortfolioLedger
 
 
@@ -35,6 +36,7 @@ class PortfolioLedgerService:
         if set(price_snapshot_ids) != held:
             raise ValueError("valuation snapshots must exactly cover open holdings")
         quotes = {}
+        sources = []
         for instrument_id, snapshot_id in price_snapshot_ids.items():
             manifest = self.repository.get_snapshot(snapshot_id)
             artifact = self.repository.get_snapshot_artifact(snapshot_id, owner_id)
@@ -61,7 +63,17 @@ class PortfolioLedgerService:
                 price=Decimal(str(bar.close)), source_at=bar.timestamp, observed_at=manifest.retrieved_at,
                 snapshot_id=snapshot_id, content_hash=manifest.content_hash, quality_status=manifest.quality_status,
             )
+            sources.append(ValuationSource(quote=quotes[instrument_id], vendor=manifest.vendor, dataset=manifest.dataset))
         snapshot = PortfolioLedger().replay(ledger_id=ledger_id, owner_id=owner_id,
             base_currency=base_currency, transactions=transactions, prices=quotes,
             as_of=as_of, max_price_age=max_price_age)
-        return self.repository.add_portfolio_snapshot(snapshot)
+        existing = self.repository.get_portfolio_snapshot(snapshot.portfolio_id, owner_id)
+        persisted = self.repository.add_portfolio_snapshot(snapshot)
+        if existing is None:
+            evidence = ValuationEvidence(portfolio_id=snapshot.portfolio_id,
+                portfolio_content_hash=snapshot.content_hash,
+                sources=tuple(sorted(sources, key=lambda source: str(source.quote.instrument_id))))
+            self.artifacts.create(owner_id=owner_id, kind=ArtifactKind.PORTFOLIO_VALUATION_EVIDENCE,
+                media_type="application/json", content=evidence.model_dump_json().encode(),
+                artifact_id=evidence_id(snapshot.portfolio_id))
+        return persisted

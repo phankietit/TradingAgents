@@ -19,6 +19,7 @@ class ArtifactKind(str, Enum):
     RUN_EVENT_LOG = "run_event_log"
     DECISION_EVIDENCE = "decision_evidence"
     HISTORICAL_EVALUATION = "historical_evaluation"
+    PORTFOLIO_VALUATION_EVIDENCE = "portfolio_valuation_evidence"
 
 
 class ArtifactManifest(VersionedContract):

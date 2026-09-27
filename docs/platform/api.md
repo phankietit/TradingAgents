@@ -130,6 +130,24 @@ silently filtered to a current version; run validation determines temporal
 eligibility. Cross-owner and missing detail IDs both return 404. All data remains
 non-cacheable. These routes do not fetch vendors, trigger LLMs or mutate history.
 
+## Portfolio valuation evidence
+
+`GET /api/v1/portfolios/{portfolio_id}/valuation-evidence` returns an owner-scoped
+immutable receipt written when a new portfolio is valued by
+`PortfolioLedgerService`. It records the raw close used for each holding, currency,
+source/observation times, recorded quality, vendor, dataset and source ID/hash.
+The receipt is a `portfolio_valuation_evidence` artifact; its ID is deterministic
+from the portfolio ID. The portfolio's existing identity, fingerprint, accounting
+and policy remain unchanged. Replaying an existing portfolio never backfills or
+rewrites evidence. A legacy/manual snapshot may therefore have no receipt.
+
+The read verifies blob integrity, portfolio identity/fingerprint, complete unique
+holding coverage, exact prices, currency, quality and temporal eligibility.
+Missing/cross-owner portfolios or missing receipts return 404; invalid receipts
+return 409 without raw payloads. This is recorded provenance, not a fresh vendor
+check or independent reconstruction of all original ledger inputs. Receipt
+creation time is actual write time, separate from historical valuation time.
+
 ## Run processing state
 
 `GET /api/v1/runs/{run_id}/job` discovers the persisted job using the authenticated
