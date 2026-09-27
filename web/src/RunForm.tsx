@@ -16,6 +16,17 @@ export interface Run {
 }
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
+interface Prepared { status: string; snapshot: Snapshot | null; analysis_as_of: string; reused: boolean }
+const preparationMessages: Record<string, string> = {
+  unsupported: 'Automatic preparation is not available for this instrument. Futures references require contract and roll data; no substitute is used.',
+  invalid: 'The data failed validation. Nothing was selected. Please retry later or check the source.',
+  no_data: 'Yahoo returned no price history. No analysis was started.',
+  stale: 'The latest completed session is missing. Please retry after the source updates.',
+  coverage_gap: 'Price history has missing sessions. Analysis remains blocked until coverage is complete.',
+  rate_limited: 'Please wait at least one minute before trying again. Yahoo or the local service is limiting requests.',
+  unavailable: 'The price source is unavailable or timed out. Please retry later; no AI call was made.',
+  busy: 'Another data request is in progress. Please try again shortly.',
+};
 
 export default function RunForm({ catalog, initialInstrument, onClose, onCreated }: {
   catalog: Instrument[]; initialInstrument?: string; onClose: () => void; onCreated: (run: Run) => void;
@@ -39,11 +50,14 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const [confirmed, setConfirmed] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [preparing, setPreparing] = useState(false);
+  const [preparationNote, setPreparationNote] = useState('');
+  const [dataVersion, setDataVersion] = useState(0);
   const submission = useRef<{ body: string; key: string } | null>(null);
   const profile = useResource<Profile>(instrumentId ? `/instruments/${encodeURIComponent(instrumentId)}/analysis-profile` : null);
   const dateValid = /(?:Z|[+-]\d\d:\d\d)$/.test(asOf) && Number.isFinite(Date.parse(asOf)) && Date.parse(asOf) <= Date.now();
   const ageValid = /^\d+$/.test(maxAge) && Number(maxAge) <= 315360000;
-  const discovery = useResource<Source[]>(instrumentId && dateValid && ageValid ? `/instruments/${encodeURIComponent(instrumentId)}/snapshots?${new URLSearchParams({ analysis_as_of: asOf, max_age_seconds: maxAge, limit: '200' })}` : null);
+  const discovery = useResource<Source[]>(instrumentId && dateValid && ageValid ? `/instruments/${encodeURIComponent(instrumentId)}/snapshots?${new URLSearchParams({ analysis_as_of: asOf, max_age_seconds: maxAge, limit: '200' })}` : null, dataVersion);
   const selectedRoles = (profile.data?.allowed_analysts ?? []).filter(role => sources[role]?.length);
   const eligible = new Set(discovery.data?.filter(item => item.metadata_eligible).map(item => item.snapshot.snapshot_id));
   const riskReady = !riskEnabled || profile.data?.investable && portfolio && policy && portfolio.as_of === asOf
@@ -51,12 +65,31 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const correlationInstruments = riskEnabled && portfolio && Number(target) > 0
     && portfolio.positions.some(item => Number(item.weight) > 0 && item.instrument_id !== instrumentId)
     ? Array.from(new Set([instrumentId, ...portfolio.positions.filter(item => Number(item.weight) > 0).map(item => item.instrument_id)])) : [];
-  const ready = !pending && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !discovery.error
+  const ready = !pending && !preparing && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !discovery.error
     && dateValid && ageValid && riskReady && selectedRoles.every(role => sources[role].every(id => eligible.has(id)
       && discovery.data?.find(item => item.snapshot.snapshot_id === id)?.supported_analysts.includes(role)));
   function toggle(role: string, id: string) {
     setSources(previous => ({ ...previous, [role]: previous[role]?.includes(id) ? previous[role].filter(value => value !== id) : [...(previous[role] ?? []), id].slice(0, 16) }));
     setConfirmed(false);
+  }
+  async function prepare() {
+    if (preparing || pending || riskEnabled) return;
+    setPreparing(true); setPreparationNote(''); setConfirmed(false); setError('');
+    try {
+      const result = await mutate<Prepared>(`/instruments/${encodeURIComponent(instrumentId)}/prepare-data`);
+      if (result.status !== 'ready') {
+        setPreparationNote(preparationMessages[result.status] ?? preparationMessages.unavailable);
+        return;
+      }
+      if (!result.snapshot?.snapshot_id || !Number.isFinite(Date.parse(result.analysis_as_of))) {
+        setPreparationNote(preparationMessages.invalid); return;
+      }
+      setAsOf(result.analysis_as_of); setSources({ market: [result.snapshot.snapshot_id] });
+      setDataVersion(value => value + 1);
+      setPreparationNote(result.reused ? 'Saved prices are current and verified. Review the sources, then authorize AI analysis.'
+        : 'Prices are ready. Research time has been updated to now. Review the sources, then authorize AI analysis.');
+    } catch (cause) { setPreparationNote(errorMessage(cause)); }
+    finally { setPreparing(false); }
   }
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!ready) return;
@@ -75,20 +108,29 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending}>
+  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || preparing}>
     <h2>{t("Configure analysis")}</h2>
     <ResearchSetup />
-    <label>{t('Report language')}<select value={reportLanguage} disabled={pending} onChange={event => {
+    <label>{t('Report language')}<select value={reportLanguage} disabled={pending || preparing} onChange={event => {
       setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
     }}>
       <option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option>
     </select></label>
     <p className="muted">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
     <p className="muted">{t("Choose the instrument, research date and supporting sources. You can also review the impact on your portfolio using an allocation you specify.")}</p>
-    <fieldset disabled={pending}><div className="form-grid">
-      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
+    <fieldset disabled={pending || preparing}><div className="form-grid">
+      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
     </div>
+    <section className="notice" aria-label={t('Prepare market data')}>
+      <h3>{t('1. Prepare market data')}</h3>
+      <p>{t('Download the last year of completed daily prices, or reuse verified current prices. Yahoo needs no API key. This step does not use AI tokens.')}</p>
+      <p className="muted">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
+      <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
+      <button type="button" disabled={riskEnabled || !instrumentId} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
+      {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
+      {preparationNote ? <p role="status">{t(preparationNote)}</p> : null}
+    </section>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>
       <label>{t("Maximum source age (seconds)")}<input inputMode="numeric" value={maxAge} onChange={event => { setMaxAge(event.target.value); setConfirmed(false); }} required /></label>
@@ -125,7 +167,12 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       </label>)}
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
+    <h3>{t('2. Review sources and authorize AI')}</h3>
+    {!selectedRoles.length ? <p className="warning">{t('To continue, prepare latest prices above or select an eligible saved source. No AI analysis has been submitted.')}</p> : null}
+    {selectedRoles.some(role => sources[role].some(id => !eligible.has(id))) ? <p className="warning">{t('A selected source is not eligible for this research time. Prepare current prices or change the selection.')}</p> : null}
+    {!riskReady ? <p className="warning">{t('Complete the portfolio, policy and target allocation inputs, or turn off portfolio evaluation.')}</p> : null}
     <label className="source-option"><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} /><span>{t("I authorize this analysis run. The configured worker may call paid models; results require human review.")}</span></label>
+    {!confirmed && selectedRoles.length > 0 ? <p className="muted">{t('One final step: authorize the AI run above to enable submission.')}</p> : null}
     {error ? <p role="alert" className="notice danger">{t(error)}  {t("Retrying unchanged inputs reuses the same request key.")}</p> : null}
     <div className="section-actions"><button className="primary" disabled={!ready}>{pending ? t("Submitting…") : t("Queue analysis")}</button><button type="button" onClick={onClose}>{t("Close configuration")}</button></div>
     </fieldset>

@@ -105,9 +105,11 @@ Follow [snapshot contracts](normalized-time-series.md),
 [portfolio ledger](portfolio-ledger.md), [risk policy](risk-engine.md) and
 [analysis engine](analysis-engine.md) for operator-controlled inputs.
 
-There is no automatic ingestion scheduler in this UI. A weekly/medium-term
-workflow should ingest approved sources before each review, inspect source
-timestamps and coverage, then run research against the chosen cutoff. Refresh
+Use **Prepare latest prices** in the analysis form to fetch or reuse current
+daily price evidence before authorizing AI. Yahoo needs no env key. This step
+uses no AI tokens and covers price/trend research only; see the explicit
+[coverage and failure contract](data-preparation.md). There is no automatic
+ingestion scheduler. Other sources still need approved ingestion. Refresh
 only rereads saved records. Equities/ETFs use their exchange sessions; BTC/ETH
 use a 24/7 calendar. NQ/ES are context references, never investable positions.
 Missing historical coverage or stale evidence must not be filled from current

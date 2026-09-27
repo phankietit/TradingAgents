@@ -12,6 +12,7 @@ import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import datetime
+from threading import Lock
 from typing import Annotated
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
@@ -92,6 +93,7 @@ from .schemas import (
     LoginRequest,
     LoginResponse,
     OwnerResponse,
+    PrepareDataResponse,
     RunAcceptedResponse,
     RunCreateRequest,
     RunJobStateResponse,
@@ -238,6 +240,11 @@ def create_app(settings: ApiSettings) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.database = database
+    # One bounded acquisition at a time on the private, single-process server.
+    from tradingagents.dataflows.platform_prices import fetch_daily_prices
+    app.state.fetch_daily_prices = fetch_daily_prices
+    preparation_lock = Lock()
+    preparation_attempts: dict[tuple[UUID, UUID], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -611,6 +618,85 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 detail=str(error),
             ) from error
         return TimeSeriesResponse(snapshot=snapshot, view=view, benchmark_snapshot=benchmark_snapshot)
+
+    @app.post(f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-data",
+              response_model=PrepareDataResponse, tags=["market-data"])
+    def prepare_data(instrument_id: UUID, owner: CsrfOwnerDependency,
+                     session: SessionDependency) -> PrepareDataResponse:
+        from tradingagents.contracts import NormalizedTimeSeries
+        from tradingagents.dataflows.platform_prices import (
+            DATASET,
+            VENDOR,
+            PricePreparationError,
+            approved_symbol,
+            session_closes,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        now = _now(settings)
+
+        def outcome(code, **kwargs):
+            return PrepareDataResponse(status=code, analysis_as_of=_now(settings), **kwargs)
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            from datetime import timedelta
+            latest_close = max(close for close in session_closes(instrument, now).values()
+                               if close <= now - timedelta(hours=1))
+            artifacts = ArtifactService(artifact_store, repository)
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.vendor != VENDOR or snapshot.dataset != DATASET
+                        or snapshot.source_end != latest_close
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                artifact = repository.get_snapshot_artifact(snapshot.snapshot_id, owner.owner_id)
+                if artifact is None or artifact.content_hash != snapshot.content_hash:
+                    return outcome("invalid")
+                try:
+                    loaded = artifacts.read(artifact.artifact_id, owner.owner_id)
+                    if loaded is None:
+                        return outcome("invalid")
+                    series = NormalizedTimeSeries.model_validate_json(loaded[1])
+                    if (series.instrument_id != instrument_id or series.dataset != DATASET
+                            or series.as_of != snapshot.as_of):
+                        return outcome("invalid")
+                except (ValueError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            if time.monotonic() - preparation_attempts.get(key, float("-inf")) < 60:
+                return outcome("rate_limited")
+            preparation_attempts[key] = time.monotonic()
+            # Release the authentication/read transaction before the network request.
+            session.close()
+            try:
+                series = app.state.fetch_daily_prices(instrument)
+            except PricePreparationError as error:
+                return outcome(error.code)
+            except Exception:
+                return outcome("unavailable")
+            retrieved_at = _now(settings)
+            if (series.instrument_id != instrument_id or series.dataset != DATASET
+                    or series.as_of > retrieved_at or series.as_of < now
+                    or series.bars[-1].timestamp < latest_close):
+                return outcome("invalid")
+            with database.session() as write_session:
+                write_repository = PlatformRepository(write_session)
+                snapshot = TimeSeriesSnapshotService(write_repository,
+                    ArtifactService(artifact_store, write_repository)).persist(
+                        owner_id=owner.owner_id, series=series, vendor=VENDOR, retrieved_at=retrieved_at)
+            return outcome("ready", snapshot=snapshot)
+        finally:
+            preparation_lock.release()
 
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",

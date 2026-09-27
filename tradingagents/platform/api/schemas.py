@@ -27,6 +27,14 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class PrepareDataResponse(ApiModel):
+    status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
+                    "rate_limited", "unavailable", "busy"]
+    snapshot: SnapshotManifest | None = None
+    analysis_as_of: AwareDatetime
+    reused: bool = False
+
+
 class LoginRequest(ApiModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=1024)

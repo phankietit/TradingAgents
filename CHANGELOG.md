@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Connect the local analysis form to bounded Yahoo daily-price preparation,
+  owner-scoped verified reuse and immutable snapshots. Explain missing data,
+  coverage failures, paid-AI consent and queued-worker state in English/Vietnamese.
+  Current bootstrap stocks/ETFs, cash indices and BTC/ETH are supported; NQ/ES
+  preparation and automatic non-price ingestion remain unavailable.
 - Honor explicit provider, quick-model and deep-model environment settings in
   the local API so new run manifests retain the operator's model selection.
   Existing runs and API defaults are unchanged.

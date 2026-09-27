@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import RunForm from './RunForm';
@@ -100,4 +100,44 @@ it('reuses idempotency key on unchanged failed submission', async () => {
   expect(submissions).toHaveLength(2);
   expect(submissions[0][1].headers).toEqual(submissions[1][1].headers);
   expect(JSON.parse(submissions[0][1].body as string).selected_analysts).toEqual(['market']);
+});
+
+it('prepares current evidence without AI and requires fresh consent before submitting', async () => {
+  let prepared = false;
+  const now = new Date().toISOString();
+  const fetch = vi.fn(async (url: string) => {
+    if (url.includes('/analysis-profile')) return json({allowed_analysts:['market'], investable:true});
+    if (url.includes('/snapshots?')) return json(prepared ? [source] : []);
+    if (url.endsWith('/auth/csrf')) return json({csrf_token:'test'});
+    if (url.endsWith('/prepare-data')) { prepared=true; return json({status:'ready',snapshot:source.snapshot,analysis_as_of:now,reused:false}); }
+    if (url.includes('/portfolios?') || url.includes('/policies?')) return json([]);
+    return json({},503);
+  });
+  vi.stubGlobal('fetch',fetch);
+  const user=userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await screen.findByText(/To continue, prepare/);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Prepare latest prices'}));
+  await screen.findByText(/Prices are ready/);
+  await waitFor(()=>expect((screen.getByRole('group',{name:'Price & trend'}).querySelector('input') as HTMLInputElement).checked).toBe(true));
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(false);
+});
+
+it('explains source failure and keeps AI submission disabled',async()=>{
+  const fetch=setup();
+  fetch.mockImplementation(async (url:string)=>{
+    if(url.includes('/analysis-profile')) return json({allowed_analysts:['market'],investable:true});
+    if(url.includes('/snapshots?')) return json([]);
+    if(url.endsWith('/auth/csrf')) return json({csrf_token:'test'});
+    if(url.endsWith('/prepare-data')) return json({status:'coverage_gap',snapshot:null,analysis_as_of:new Date().toISOString(),reused:false});
+    return json([]);
+  });
+  const user=userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await user.click(screen.getByRole('button',{name:'Prepare latest prices'}));
+  await screen.findByText(/Price history has missing sessions/);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
 });

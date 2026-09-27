@@ -25,6 +25,7 @@ export default function JobProgress({runId, version}: {runId: string; version: n
   const data = job.data;
   return <section aria-label={t("Processing status")}>
     <p><strong>{t(processingLabels[data.status])}</strong> · {data.attempt === 0 ? t("No attempt started") : `${t("Attempt")} ${data.attempt} ${t("of")} ${data.max_attempts}`}</p>
+    {data.status === 'queued' ? <p className="notice">{t('Your request is saved, but AI processing has not started. The local analysis worker must be running. Do not submit a duplicate request.')}</p> : null}
     {data.status === 'retry_wait' ? <p className="notice">{t("A retry is scheduled no earlier than")} {timestamp(data.available_at)}{t(". It starts only when a background service is available and may incur further model charges.")}</p> : null}
     {data.status === 'cancel_requested' ? <p className="notice">{t("Cancellation is pending. Work may continue until the current processing step stops.")}</p> : null}
     <details><summary>{t("Processing details")}</summary><dl><dt>{t("Last updated")}</dt><dd>{timestamp(data.updated_at)}</dd>
