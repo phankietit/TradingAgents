@@ -11,6 +11,7 @@ from tradingagents._compat import UTC
 from tradingagents.dataflows.platform_prices import (
     PricePreparationError,
     approved_symbol,
+    history_start,
     normalize_yahoo,
     session_closes,
 )
@@ -29,7 +30,7 @@ def price_frame(instrument=AAPL, now=NOW):
     days = [
         day
         for day, close in session_closes(instrument, now).items()
-        if now - timedelta(days=365) <= close <= now - timedelta(hours=1)
+        if history_start(now) <= close <= now - timedelta(hours=1)
     ]
     return pd.DataFrame(
         {
@@ -60,7 +61,7 @@ def test_completed_sessions_timezone_and_crypto():
         series = normalize_yahoo(instrument, price_frame(instrument), metadata(instrument), now=NOW)
         assert series.as_of == NOW
         assert all(bar.timestamp <= NOW - timedelta(hours=1) for bar in series.bars)
-        assert len(series.bars) >= 250
+        assert len(series.bars) > (1800 if instrument.asset_class.value == "crypto" else 1200)
         assert series.bars[-1].close == 101
         assert series.bars[-1].adjusted_close == 100.5
 
@@ -211,6 +212,54 @@ def test_calendar_early_close_and_dst():
     assert closes[date(2025, 11, 28)].hour == 18
     assert closes[date(2026, 1, 5)].hour == 21
     assert closes[date(2026, 7, 6)].hour == 20
+
+
+def test_five_calendar_years_preserve_leap_day_semantics():
+    now = datetime(2024, 2, 29, 12, tzinfo=UTC)
+    assert history_start(now) == datetime(2019, 2, 28, 12, tzinfo=UTC)
+    assert history_start(NOW) == datetime(2021, 9, 23, 12, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("vendor", ["yfinance.daily.v1", "yfinance.daily.v2"])
+def test_short_saved_history_is_preserved_but_not_reused(prepared_api, vendor):
+    from uuid import UUID
+
+    from tradingagents.platform.artifacts import ArtifactService
+    from tradingagents.platform.market_data import TimeSeriesSnapshotService
+
+    client, app = prepared_api
+    headers = login(client)
+    owner = UUID(client.get("/api/v1/auth/me").json()["owner_id"])
+    series = app.state.fetch_daily_prices.return_value
+    short_series = series.model_copy(update={"bars": series.bars[-250:]})
+    with app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        old = TimeSeriesSnapshotService(
+            repository, ArtifactService(app.state.artifact_store, repository)
+        ).persist(owner_id=owner, series=short_series, vendor=vendor, retrieved_at=NOW)
+    result = client.post(
+        f"/api/v1/instruments/{AAPL.instrument_id}/prepare-data", headers=headers
+    ).json()
+    assert result["status"] == "ready"
+    assert result["reused"] is False
+    assert result["snapshot"]["snapshot_id"] != str(old.snapshot_id)
+    assert result["snapshot"]["metadata"]["observations"] > 1200
+    with app.state.database.session() as session:
+        assert PlatformRepository(session).get_snapshot(old.snapshot_id) == old
+    app.state.fetch_daily_prices.assert_called_once()
+
+
+def test_short_acquisition_cannot_publish_as_five_years(prepared_api):
+    client, app = prepared_api
+    series = app.state.fetch_daily_prices.return_value
+    app.state.fetch_daily_prices.return_value = series.model_copy(
+        update={"bars": series.bars[-250:]}
+    )
+    result = client.post(
+        f"/api/v1/instruments/{AAPL.instrument_id}/prepare-data", headers=login(client)
+    ).json()
+    assert result["status"] == "coverage_gap"
+    assert result["snapshot"] is None
 
 
 def test_acquisition_has_hard_deadline(monkeypatch):

@@ -124,7 +124,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     </div>
     <section className="notice" aria-label={t('Prepare market data')}>
       <h3>{t('1. Prepare market data')}</h3>
-      <p>{t('Download the last year of completed daily prices, or reuse verified current prices. Yahoo needs no API key. This step does not use AI tokens.')}</p>
+      <p>{t('Download five years of completed daily prices, matching the original research engine, or reuse verified history. Yahoo needs no API key. This step does not use AI tokens.')}</p>
       <p className="muted">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
       <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
       <button type="button" disabled={riskEnabled || !instrumentId} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>

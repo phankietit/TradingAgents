@@ -4,7 +4,7 @@ export const vietnamese: Record<string, string> = {
   '1. Prepare market data': '1. Chuẩn bị dữ liệu thị trường',
   'Prepare latest prices': 'Chuẩn bị dữ liệu giá mới nhất',
   'Downloading and checking prices…': 'Đang tải và kiểm tra dữ liệu giá…',
-  'Download the last year of completed daily prices, or reuse verified current prices. Yahoo needs no API key. This step does not use AI tokens.': 'Tải một năm nến ngày đã hoàn tất hoặc dùng lại dữ liệu hiện có đã kiểm tra. Yahoo không cần API key. Bước này không tốn token AI.',
+  'Download five years of completed daily prices, matching the original research engine, or reuse verified history. Yahoo needs no API key. This step does not use AI tokens.': 'Tải 5 năm nến ngày đã hoàn tất theo cùng cửa sổ dữ liệu của repo gốc, hoặc dùng lại lịch sử đã kiểm tra. Yahoo không cần API key. Bước này không tốn token AI.',
   'This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.': 'Bước này chỉ chuẩn bị phân tích giá và xu hướng; chưa tải tin tức, tài chính doanh nghiệp, tâm lý thị trường hay dữ liệu vĩ mô.',
   'New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.': 'Dữ liệu mới dùng để phân tích hiện tại, không tái hiện quá khứ. Thời điểm nghiên cứu sẽ được cập nhật; các báo cáo cũ không thay đổi.',
   'Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.': 'Tắt đánh giá danh mục để chuẩn bị giá hiện tại. Phân tích danh mục phải giữ đúng thời điểm định giá ban đầu.',

@@ -10,6 +10,9 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Align web price acquisition to the original engine's five-calendar-year
+  history window via a shared constant; retain old one-year snapshots without
+  reusing them as complete history. This does not claim full CLI/tool parity.
 - Connect the local analysis form to bounded Yahoo daily-price preparation,
   owner-scoped verified reuse and immutable snapshots. Explain missing data,
   coverage failures, paid-AI consent and queued-worker state in English/Vietnamese.

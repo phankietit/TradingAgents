@@ -399,7 +399,8 @@ classification. These services operate on explicitly supplied or previously
 stored snapshots; this milestone does not select or configure a production
 market-data vendor. The web now also offers **Prepare latest prices** using the
 existing Yahoo/yfinance integration for AAPL, SPY/QQQ, cash indices and BTC/ETH.
-It verifies a year of completed daily sessions, saves immutable evidence, then
+It verifies five years of completed daily sessions using the original engine's
+shared history window, saves immutable evidence, then
 requires separate paid-AI consent. It is not automatic news/fundamental/macro
 ingestion or a historical-vintage feed; NQ/ES preparation remains unsupported.
 See [data preparation](docs/platform/data-preparation.md).

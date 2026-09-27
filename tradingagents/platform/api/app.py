@@ -629,6 +629,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             VENDOR,
             PricePreparationError,
             approved_symbol,
+            history_start,
             session_closes,
         )
         from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
@@ -650,8 +651,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
             return outcome("busy")
         try:
             from datetime import timedelta
-            latest_close = max(close for close in session_closes(instrument, now).values()
-                               if close <= now - timedelta(hours=1))
+            expected_closes = {close for close in session_closes(instrument, now).values()
+                               if history_start(now) <= close <= now - timedelta(hours=1)}
+            latest_close = max(expected_closes)
             artifacts = ArtifactService(artifact_store, repository)
             for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
                 if (snapshot.vendor != VENDOR or snapshot.dataset != DATASET
@@ -669,6 +671,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
                     if (series.instrument_id != instrument_id or series.dataset != DATASET
                             or series.as_of != snapshot.as_of):
                         return outcome("invalid")
+                    if not expected_closes.issubset({bar.timestamp for bar in series.bars}):
+                        continue
                 except (ValueError, ArtifactIntegrityError, OSError):
                     return outcome("invalid")
                 return outcome("ready", snapshot=snapshot, reused=True)
@@ -689,6 +693,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
                     or series.as_of > retrieved_at or series.as_of < now
                     or series.bars[-1].timestamp < latest_close):
                 return outcome("invalid")
+            if not expected_closes.issubset({bar.timestamp for bar in series.bars}):
+                return outcome("coverage_gap")
             with database.session() as write_session:
                 write_repository = PlatformRepository(write_session)
                 snapshot = TimeSeriesSnapshotService(write_repository,

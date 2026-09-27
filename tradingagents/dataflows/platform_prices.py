@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timedelta
 
 import exchange_calendars
+from dateutil.relativedelta import relativedelta
 
 from tradingagents._compat import UTC
 from tradingagents.contracts import (
@@ -24,8 +25,15 @@ from tradingagents.contracts import (
 from tradingagents.platform.instruments.catalog import INITIAL_INSTRUMENT_CATALOG
 from tradingagents.platform.market_data.timeseries import normalize_time_series
 
-VENDOR = "yfinance.daily.v1"
+from .history_window import OHLCV_HISTORY_YEARS
+
+# Acquisition-contract version prevents reusing the old one-year snapshots.
+VENDOR = "yfinance.daily.v2"
 DATASET = "ohlcv.daily"
+
+
+def history_start(now: datetime) -> datetime:
+    return now - relativedelta(years=OHLCV_HISTORY_YEARS)
 
 
 class PricePreparationError(ValueError):
@@ -46,13 +54,13 @@ def approved_symbol(instrument: InstrumentContract) -> str:
 
 def session_closes(instrument: InstrumentContract, now: datetime) -> dict:
     approved_symbol(instrument)
-    start = (now - timedelta(days=370)).date()
+    start = (history_start(now) - timedelta(days=2)).date()
     if instrument.asset_class is AssetClass.CRYPTO:
         return {
             start + timedelta(days=i): datetime.combine(
                 start + timedelta(days=i + 1), datetime.min.time(), tzinfo=UTC
             )
-            for i in range(372)
+            for i in range((now.date() - start).days + 3)
         }
     calendar = exchange_calendars.get_calendar(
         instrument.session_calendar,
@@ -82,13 +90,17 @@ def normalize_yahoo(instrument, frame, metadata, *, now):
         raise PricePreparationError("invalid")
     if frame.empty:
         raise PricePreparationError("no_data")
-    if len(frame) > 370 or frame.index.tz is None or frame.index.has_duplicates:
+    if (
+        len(frame) > OHLCV_HISTORY_YEARS * 366 + 5
+        or frame.index.tz is None
+        or frame.index.has_duplicates
+    ):
         raise PricePreparationError("invalid")
     closes = session_closes(instrument, now)
     # A completed session is usable only after a one-hour publication allowance.
     cutoff = now - timedelta(hours=1)
     expected = {
-        day: close for day, close in closes.items() if now - timedelta(days=365) <= close <= cutoff
+        day: close for day, close in closes.items() if history_start(now) <= close <= cutoff
     }
     bars = []
     try:
@@ -97,7 +109,7 @@ def normalize_yahoo(instrument, frame, metadata, *, now):
             close = closes.get(day)
             if close is None:
                 raise PricePreparationError("invalid")
-            if close > cutoff or close < now - timedelta(days=365):
+            if close > cutoff or close < history_start(now):
                 continue
             bars.append(
                 {
@@ -142,7 +154,7 @@ def fetch_daily_prices(instrument: InstrumentContract) -> NormalizedTimeSeries:
             timeout=45,
             check=False,
         )
-        if result.returncode or len(result.stdout) > 500_000:
+        if result.returncode or len(result.stdout) > 2_000_000:
             raise PricePreparationError("unavailable")
         value = json.loads(result.stdout)
         if "error" in value:
@@ -172,7 +184,7 @@ def main():
         with contextlib.redirect_stdout(sys.stderr):
             ticker = yf.Ticker(approved_symbol(instrument))
             frame = ticker.history(
-                period="1y",
+                period=f"{OHLCV_HISTORY_YEARS}y",
                 interval="1d",
                 auto_adjust=False,
                 actions=False,
