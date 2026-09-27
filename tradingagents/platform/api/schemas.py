@@ -15,6 +15,7 @@ from tradingagents.contracts import (
     InstrumentAliasContract,
     InstrumentContract,
     JobRecord,
+    JobStatus,
     RunManifest,
     SnapshotManifest,
     TimeSeriesView,
@@ -51,6 +52,17 @@ class AnalysisConfigurationResponse(ApiModel):
     worker_status: Literal["UNVERIFIED"] = "UNVERIFIED"
     provider_connection: Literal["UNVERIFIED"] = "UNVERIFIED"
     max_job_attempts: int
+
+
+class RunJobStateResponse(ApiModel):
+    job_id: UUID
+    run_id: UUID
+    status: JobStatus
+    attempt: int
+    max_attempts: int
+    available_at: AwareDatetime
+    updated_at: AwareDatetime
+    completed_at: AwareDatetime | None
 
 
 class ArtifactMetadataResponse(ApiModel):

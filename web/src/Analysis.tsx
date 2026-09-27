@@ -6,6 +6,7 @@ import RunForm from './RunForm';
 import type { Run } from './RunForm';
 import ArtifactPreview from './ArtifactPreview';
 import type { Artifact } from './ArtifactPreview';
+import JobProgress, { processingLabels } from './JobProgress';
 
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
@@ -33,8 +34,8 @@ export default function Analysis() {
         {history.loading ? <p role="status">Loading runs…</p> : history.error ? <p role="alert" className="danger">{errorMessage(history.error)}</p>
           : !history.data?.length ? <p className="muted">No runs yet. Create one using saved evidence.</p>
           : <ul>{history.data.map(item => <li key={item.run_id}><button aria-pressed={run?.run_id === item.run_id} onClick={() => setSelected(item.run_id)}>
-            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? 'Instrument'}</strong><span>{observedStatuses[item.run_id] ?? item.status}</span></span>
-            <span className="instrument-name">{timestamp(item.created_at)}</span><span className="caption mono">{item.run_id.slice(0, 8)}</span>
+            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? 'Instrument'}</strong><span>{processingLabels[observedStatuses[item.run_id] ?? item.status] ?? 'Status unavailable'}</span></span>
+            <span className="instrument-name">{timestamp(item.created_at)}</span>
           </button></li>)}</ul>}
         {history.data?.length === 200 ? <p className="warning">Showing the latest 200 runs.</p> : null}
       </section>
@@ -86,9 +87,10 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     finally { setPending(false); }
   }
   return <section className="instrument-detail" aria-label="Run details">
-    <h2>Run <span className="mono">{runId.slice(0, 8)}</span></h2>
+    <h2>Research progress</h2>
     {run.error ? <p role="alert" className="danger">{errorMessage(run.error)}</p> : run.data ? <>
-      <p role="status">Status: <strong>{run.data.status}</strong> · As of {timestamp(run.data.analysis_as_of)}</p>
+      <p role="status">Research: <strong>{processingLabels[run.data.status] ?? 'Status unavailable'}</strong> · As of {timestamp(run.data.analysis_as_of)}</p>
+      <JobProgress runId={runId} version={version + tick} />
       {run.data.status === 'queued' ? <p className="notice">Waiting for a worker. Queued does not mean analysis has started.</p> : null}
       {run.data.error_code ? <p className="notice danger">Run failed: {run.data.error_code}. No successful conclusion is implied.</p> : null}
       <p className="muted">Analysts: {run.data.selected_analysts.join(', ')} · {run.data.snapshot_ids.length} bound snapshots</p>

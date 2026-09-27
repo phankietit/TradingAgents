@@ -20,14 +20,14 @@ it('updates the history row from refreshed detail without reconnecting the event
       url.includes('/artifacts?') ? [] : { ...run, status },
   ))));
   render(<Analysis />);
-  expect(await within(screen.getByRole('region', { name: 'Analysis history' })).findByText('queued')).toBeTruthy();
+  expect(await within(screen.getByRole('region', { name: 'Analysis history' })).findByText('Waiting to start')).toBeTruthy();
   await screen.findByRole('button', { name: 'Cancel run' });
   status = 'succeeded';
   act(() => listeners.get('run.succeeded')!(new MessageEvent('run.succeeded', {
     data: JSON.stringify({ sequence: 1, event_type: 'run.succeeded', occurred_at: run.created_at }),
   })));
   await waitFor(() => expect(within(screen.getByRole('region', { name: 'Analysis history' }))
-    .getByText('succeeded')).toBeTruthy());
+    .getByText('Research complete')).toBeTruthy());
   expect(screen.queryByRole('button', { name: 'Cancel run' })).toBeNull();
   expect(stream).toHaveBeenCalledTimes(1);
   expect(close).toHaveBeenCalled();

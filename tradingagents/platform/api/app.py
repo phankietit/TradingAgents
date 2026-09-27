@@ -93,6 +93,7 @@ from .schemas import (
     OwnerResponse,
     RunAcceptedResponse,
     RunCreateRequest,
+    RunJobStateResponse,
     SnapshotDiscoveryResponse,
     StatusResponse,
     TimeSeriesResponse,
@@ -962,6 +963,16 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 )
             )
         return cancelled
+
+    @app.get(f"{API_PREFIX}/runs/{{run_id}}/job", response_model=RunJobStateResponse, tags=["jobs"])
+    def run_job(run_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        job = DurableJobQueue(session).get_by_run(run_id, owner.owner_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="job not found")
+        return RunJobStateResponse.model_validate({
+            key: value for key, value in job.model_dump().items()
+            if key in RunJobStateResponse.model_fields
+        })
 
     @app.get(f"{API_PREFIX}/jobs/{{job_id}}", response_model=JobRecord, tags=["jobs"])
     def get_job(

@@ -211,3 +211,12 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   advanced disclosure works, no document overflow or console errors. The browser
   driver's fill alone did not dispatch a React state update for the native date
   field; validation used the visible native keyboard interaction instead.
+- Durable processing detail: Analysis reloads owner-scoped job state by run ID,
+  with readable status, attempt count, explicit retry/cancellation semantics and
+  collapsed processing IDs/timestamps. Missing jobs never imply active work.
+  54 frontend tests, lint/typecheck/build and 9 scoped Python tests PASS; one
+  PostgreSQL test skipped (UNVERIFIED). IAB desktop/390px: new AAPL fixture analysis
+  → queued → real local worker publication → complete, attempt 1/3 → browser
+  reload preserves result; keyboard details, console and overflow checks PASS.
+  No live model or vendor calls. Retry-wait and invalid-data states have component
+  coverage; this browser flow verifies successful processing, not a provider retry.

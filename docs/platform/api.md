@@ -130,6 +130,16 @@ silently filtered to a current version; run validation determines temporal
 eligibility. Cross-owner and missing detail IDs both return 404. All data remains
 non-cacheable. These routes do not fetch vendors, trigger LLMs or mutate history.
 
+## Run processing state
+
+`GET /api/v1/runs/{run_id}/job` discovers the persisted job using the authenticated
+owner and run ID, including after browser reload. Missing and cross-owner jobs
+both return 404. The response allowlist contains job/run IDs, lifecycle status,
+attempt/max attempts, earliest availability, updated and completed timestamps.
+It omits payload, owner ID, idempotency key, lease identity and raw error messages.
+This read-only endpoint does not retry, start or cancel work. `available_at` is an
+earliest eligibility time, not an execution or completion ETA.
+
 ## Research configuration disclosure
 
 `GET /api/v1/analysis-configuration` requires an owner session and returns only
