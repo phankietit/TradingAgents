@@ -29,7 +29,7 @@ function list(value: unknown): unknown[] {
   return value;
 }
 interface Source { id: string; snapshot: string; name: string; hash: string; claim: string; sourceAt: string | null; observedAt: string }
-type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null }
+type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null; sections: {title:string; body:string}[] }
   | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] };
 
 function parse(value: unknown, artifact: Artifact, runId: string): Preview {
@@ -39,6 +39,11 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
     const decisionId = text(data.decision_id);
     if (!uuid.test(decisionId) || typeof data.reference_only !== 'boolean') throw new ApiError(502);
     const localized = data.localized_report ? object(data.localized_report) : null;
+    const research = data.research_sections === undefined ? {} : object(data.research_sections);
+    const debates = data.debate_sections === undefined ? {} : object(data.debate_sections);
+    const sectionNames: Record<string,string> = {market_report:'Market Analyst',sentiment_report:'Sentiment Analyst',news_report:'News Analyst',fundamentals_report:'Fundamentals Analyst',investment_plan:'Research Manager',trader_investment_plan:'Trader',investment_debate_state:'Bull & bear debate',risk_debate_state:'Risk debate'};
+    const sections = Object.entries({...research,...debates}).filter(([key]) => Object.hasOwn(sectionNames,key))
+      .map(([key,value]) => ({title:sectionNames[key],body:text(value)})).filter(section => section.body.length > 0);
     return { type: 'report', decisionId, profile: text(data.profile), referenceOnly: data.reference_only,
       analysts: list(data.selected_analysts).map(text), attestation: text(data.snapshot_attestation),
       narrative: text(data.narrative), structured: data.structured_narrative,
@@ -47,7 +52,7 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
       localized: localized ? { en: text(localized.en), vi: text(localized.vi) } : null,
       warning: data.publication_warning === undefined ? '' : text(data.publication_warning),
       issues: data.validation_issues === undefined ? [] : list(data.validation_issues).map(text),
-      usage: data.execution ? object(object(data.execution).usage) : null };
+      usage: data.execution ? object(object(data.execution).usage) : null, sections };
   }
   if (artifact.kind !== 'decision_evidence' || data.graph_id !== artifact.artifact_id) throw new ApiError(502);
   const sources = list(data.evidence).map(value => {
@@ -112,6 +117,9 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
         <details><summary>{t('Inspect the unvalidated model response')}</summary><ResearchMarkdown text={data.narrative} /></details>
       </> : <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />}
       <p className="muted caption">{t('Original analysis text is preserved. Language preference guides generation; translation accuracy still requires human review.')}</p>
+      {data.sections.length ? <details><summary>{t('Analyst reports & debate')}</summary><p className="muted caption">{t('Intermediate research, not the final conclusion. Conflicting arguments are preserved for review.')}</p>
+        {data.sections.map(section => <details key={section.title}><summary>{t(section.title)}</summary><ResearchMarkdown text={section.body} /></details>)}
+      </details> : null}
       <details><summary>{t("Structured research output")}</summary><pre className="safe-text">{JSON.stringify(data.structured ?? null, null, 2)}</pre></details>
       <details><summary>{t('Validation & model usage')}</summary>{data.issues.length ? <ul>{data.issues.map(issue => <li key={issue}>{issue}</li>)}</ul> : <p>{t('No automated finding recorded. Human financial review remains required.')}</p>}
         {data.usage ? <pre className="safe-text">{JSON.stringify(data.usage, null, 2)}</pre> : <p>{t('Token usage was not recorded for this report.')}</p>}

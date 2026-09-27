@@ -4,6 +4,7 @@ import { ApiError, errorMessage, mutate } from './api';
 import { instruments, number, percent, priceResponse, timestamp, useResource } from './data';
 import type { Instrument, SeriesResponse } from './data';
 import StockScreener from './StockScreener';
+import { qualityLabel } from './financialLabels';
 
 const groups = ['All assets', 'Stocks', 'ETFs', 'Crypto', 'Index references'] as const;
 const groupOf = (item: Instrument) => item.asset_class === 'equity' ? 'Stocks' : item.asset_class === 'etf' ? 'ETFs'
@@ -127,7 +128,8 @@ function PriceHistory({ data, catalog }: { data: SeriesResponse; catalog: Instru
   const polyline = points.map(point => `${50 + (Date.parse(point.timestamp) - start) / duration * 820},${230 - (point.price - minimum) / range * 180}`).join(' ');
   const rows = view.series.bars.slice(page * 30, (page + 1) * 30);
   return <>
-    <div className="quality-line"><span className={snapshot.quality_status === 'OK' ? 'muted' : 'warning'}>{t("Snapshot quality:")} {snapshot.quality_status}</span><span>{snapshot.vendor}</span><span>{t("Source through")} {timestamp(snapshot.source_end)}</span></div>
+    <div className="quality-line"><span className={snapshot.quality_status === 'OK' ? 'muted' : 'warning'}>{t("Snapshot quality:")} {qualityLabel(snapshot.quality_status)}</span><span>{snapshot.vendor.startsWith('yfinance.') ? 'Yahoo Finance' : snapshot.vendor}</span><span>{t("Source through")} {timestamp(snapshot.source_end)}</span></div>
+    {snapshot.metadata?.freshness === 'delayed' ? <p className="notice warning">{t('The source is delayed. These are the latest verified saved candles, not a current-market quote.')}</p> : null}
     {snapshot.quality_reasons.length ? <p className="notice warning">{snapshot.quality_reasons.join(' · ')}</p> : null}
     <div className="metrics">
       <div><span>{t("Last saved price ·")} {view.series.quote_currency}</span><strong>{number(points[points.length - 1].price)}</strong></div>
@@ -140,9 +142,9 @@ function PriceHistory({ data, catalog }: { data: SeriesResponse; catalog: Instru
       <text x="50" y="36">{number(maximum)} {view.series.quote_currency}</text><text x="50" y="252">{number(minimum)}</text>
       <polyline points={polyline} fill="none" stroke="var(--accent)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
       {points.length === 1 ? <circle cx="50" cy="230" r="4" fill="var(--accent)" /> : null}
-    </svg><figcaption>{timestamp(points[0].timestamp)} — {timestamp(points[points.length - 1].timestamp)}<br />{view.statistics.price_basis.replace('_', ' ')} · {view.series.interval} · {view.statistics.observations}  {t("observations")}</figcaption></figure>
+    </svg><figcaption>{timestamp(points[0].timestamp)} — {timestamp(points[points.length - 1].timestamp)}<br />{t(view.statistics.price_basis === 'adjusted_close' ? 'Adjusted close' : 'Close')} · {view.series.interval} · {view.statistics.observations}  {t("observations")}</figcaption></figure>
     <button onClick={() => setShowTable(value => !value)} aria-expanded={showTable} aria-controls="price-table">{showTable ? t("Hide price table") : t("Show price table")}</button>
-    {showTable ? <div id="price-table"><div className="table-scroll" role="region" aria-label={t("Saved OHLCV price history")} tabIndex={0}><table><caption>{t("Saved OHLCV ·")} {view.series.quote_currency}  {t("· UTC timestamps")}</caption><thead><tr>{['Timestamp', 'Open', 'High', 'Low', 'Close', 'Adjusted close', 'Volume'].map(label => <th key={label} scope="col">{t(label)}</th>)}</tr></thead><tbody>{rows.map(bar => <tr key={bar.timestamp}><th scope="row">{timestamp(bar.timestamp)}</th>{[bar.open, bar.high, bar.low, bar.close, bar.adjusted_close, bar.volume].map((value, index) => <td key={index}>{value === null ? t("Unavailable") : number(value, index === 5 ? 0 : 2)}</td>)}</tr>)}</tbody></table></div>
+    {showTable ? <div id="price-table"><div className="table-scroll" role="region" aria-label={t("Saved OHLCV price history")} tabIndex={0}><table><caption>{t("Saved OHLCV ·")} {view.series.quote_currency}  {t("· UTC timestamps")}</caption><thead><tr>{['Session date', 'Candle closed at (UTC)', 'Open', 'High', 'Low', 'Close', 'Adjusted close', 'Volume'].map(label => <th key={label} scope="col">{t(label)}</th>)}</tr></thead><tbody>{rows.map(bar => <tr key={bar.timestamp}><th scope="row">{bar.session_date ?? t('Unavailable')}</th><td>{timestamp(bar.timestamp)}</td>{[bar.open, bar.high, bar.low, bar.close, bar.adjusted_close, bar.volume].map((value, index) => <td key={index}>{value === null ? t("Unavailable") : number(value, index === 5 ? 0 : 2)}</td>)}</tr>)}</tbody></table></div>
       <div className="pagination"><button disabled={page === 0} onClick={() => setPage(value => value - 1)}>{t("Previous rows")}</button><span>{t("Page")} {page + 1} / {Math.ceil(view.series.bars.length / 30)}</span><button disabled={(page + 1) * 30 >= view.series.bars.length} onClick={() => setPage(value => value + 1)}>{t("Next rows")}</button></div></div> : null}
     <details className="provenance"><summary>{t("Source & provenance")}</summary><dl>
       <dt>{t("Vendor / dataset")}</dt><dd>{snapshot.vendor} / {snapshot.dataset}</dd><dt>{t("As of")}</dt><dd>{timestamp(snapshot.as_of)}</dd><dt>{t("Retrieved")}</dt><dd>{timestamp(snapshot.retrieved_at)}</dd><dt>{t("Source window")}</dt><dd>{timestamp(snapshot.source_start)} — {timestamp(snapshot.source_end)}</dd><dt>{t("Snapshot")}</dt><dd className="mono">{snapshot.snapshot_id}</dd><dt>{t("Content hash")}</dt><dd className="mono">{snapshot.content_hash}</dd>

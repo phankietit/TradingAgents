@@ -37,7 +37,8 @@ def test_price_snapshot_cannot_masquerade_as_other_analyst_evidence(role):
         mismatched.reports(instrument.instrument_id, (role,))
 
 
-def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch):
+@pytest.mark.parametrize("all_roles", [False, True])
+def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch, all_roles):
     calls = []
 
     class Model:
@@ -47,6 +48,8 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
 
         def with_structured_output(self, schema):
             values = {
+                "SentimentReport": {"overall_band": "Mixed", "overall_score": 5, "confidence": "low",
+                                    "narrative": "Fixture source sentiment; limited sample, not a market conclusion."},
                 "ResearchPlan": {"recommendation": "Hold", "rationale": "Snapshot evidence", "strategic_actions": "Review"},
                 "TraderProposal": {"action": "Hold", "reasoning": "Research only"},
                 "PortfolioDecision": {"rating": "Hold", "executive_summary": "Research only",
@@ -67,13 +70,21 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         monkeypatch.setattr(trading_graph.TradingAgentsGraph, name, forbidden)
     instrument = _instrument()
     inputs = context(instrument)
+    analysts = ("market", "social", "news", "fundamentals") if all_roles else ("market",)
+    if all_roles:
+        original = inputs.by_analyst["market"][0]
+        extras = {role: (AnalysisSnapshot(manifest=original.manifest.model_copy(update={
+            "snapshot_id": uuid4(), "dataset": role}), payload=original.payload),)
+            for role in analysts if role != "market"}
+        inputs = inputs.model_copy(update={"by_analyst": {**inputs.by_analyst, **extras},
+                                          "source_max_age_seconds": dict.fromkeys(analysts, 0)})
     events = []
     observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda kind, payload: events.append((kind, payload)))
     config = {**DEFAULT_CONFIG, "data_cache_dir": str(tmp_path / "cache"),
               "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 1,
               "max_risk_discuss_rounds": 1}
     result = AnalysisEngine(base_config=config).analyze(AnalysisRequest(
-        instrument=instrument, analysis_date=NOW.date(), selected_analysts=("market",),
+        instrument=instrument, analysis_date=NOW.date(), selected_analysts=analysts,
         snapshot_context=inputs, execution_observer=observer))
     assert result.decision_payload.thesis == "Snapshot thesis"
     assert result.narrative_signal == "Hold"
@@ -81,7 +92,8 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
     assert str(inputs.by_analyst["market"][0].manifest.snapshot_id) in calls[0][1].content
     assert list((tmp_path / "reports").iterdir()) == []
     completed = [payload["stage"] for kind, payload in events if kind == "stage.completed"]
-    assert completed == ["Market Analyst", "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
+    expected_analysts = ["Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst"] if all_roles else ["Market Analyst"]
+    assert completed == [*expected_analysts, "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
                          "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager"]
     assert all(set(payload) == {"stage"} for _, payload in events)
     assert observer.receipt()["usage"]["status"] == "incomplete"  # fake model has no provider usage

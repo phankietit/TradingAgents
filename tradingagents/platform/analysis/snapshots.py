@@ -1,4 +1,4 @@
-"""Validated immutable evidence inputs for a tool-free graph run."""
+"""Validated immutable evidence inputs for a snapshot-bound graph run."""
 
 import hashlib
 import json

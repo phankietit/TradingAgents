@@ -1,7 +1,7 @@
-# M4 native-code design specification
+# Research workspace design specification
 
 Owner chose direct code design, no Image Gen. This is the implementation brief,
-not evidence of rendered or functional UI. Reference screenshots will be captured
+not by itself evidence of rendered or functional UI. Reference screenshots are captured
 from the actual browser as each complete surface is implemented.
 
 ## Owner acceptance requirement: finance-first, not developer-first
@@ -48,30 +48,33 @@ including loading/empty/error/stale states. A passing build or functional flow
 alone does not satisfy this presentation requirement. Direct code design only;
 no Image Gen, paid service, new provider or public deployment is authorized.
 
-## Layout and visual system
+## Layout and visual system (R10–R12, 2026-09-27)
 
-- Theme: neutral near-black canvas `#0b0e13`, rail `#10151c`, raised surface
-  `#151c25`, dividers `#283342`, primary text `#e7edf5`, secondary `#a0afc1`.
-- Accent: cool blue `#80b7ff`; positive `#6bd7af`, warning `#efc16d`, negative
+- Reference: owner's Linkpolish, adapted to a financial workspace, not copied
+  as a landing page. No image generation or remote font dependency.
+- Theme: charcoal canvas `#111211`, rail `#141614`, raised surface
+  `#181a18`, dividers `#2c2e2b`, primary text `#ecece8`, secondary `#989c96`.
+- Accent: warm-white `#e4e8d9`, muted sage for charts; positive `#6bd7af`, warning `#efc16d`, negative
   `#ff8f99`. Never convey quality, rating or policy result by color alone.
 - Typography: system sans UI, system monospace for IDs and tabular numeric values.
-  Base 14px/1.5, table 13px, labels 12px, section 18px, page title 28px. Controls
+  Base 15px/1.6, table 13px, labels 13px, section 18px, page title 30–42px. Controls
   explicitly sized; no web-font network request. Minimum readable narrow UI 14px.
 - Spacing: 4/8/12/16/24/32px. Borders 1px, controls radius 6px, major regions
   mostly square/open with dividers. Avoid nested panels and decorative gradients.
-- Desktop: 208px navigation rail, main header 80px, 24px gutters; Markets uses
+- Desktop: 216px navigation rail, spacious main header and 44px gutters; Markets uses
   instrument list 280px plus flexible chart/detail. Analysis and Decisions use
   list/detail; Portfolio uses full-width positions table and valuation summary.
 - At <=900px, rail becomes top navigation; instrument/run lists collapse above
   detail. At <=600px, controls wrap and forms become one column. Tables stay in
   labelled horizontal scroll regions. No document-wide horizontal overflow.
-- Focus ring: 2px blue, offset 3px. Reduced motion supported; no animated prices,
+- Focus ring: 2px warm-white, offset 3px. Reduced motion supported; no animated prices,
   pulse indicators, fake connection status or decorative loaders.
 
 ## Information architecture and native component inventory
 
 Shell: text wordmark TradingAgents, Markets/Analysis/Portfolio/Decisions links,
-owner account/logout control, page heading and contextual action. No hero/kicker.
+owner account/logout control, page heading and contextual action. A restrained
+workspace eyebrow is not a marketing hero.
 Secondary text states “Local research workspace” and “Decision support · No order
 execution” where scope is useful, not as marketing badges.
 
@@ -111,6 +114,12 @@ parallel; run creation and approval are explicit mutation events, never effects.
 Reports render plain text or a strictly safe Markdown renderer with no raw HTML;
 arbitrary source URLs do not execute or embed remote content. Evidence IDs/hashes
 are details, not information users must type to navigate routine workflows.
+Saved reports include the exact snapshot history (1M/3M/1Y/all with keyboard
+inspection), source lag, research validity and a readable saved-language view.
+Invalid JSON responses stay in an explicitly unvalidated disclosure, not the
+main report body. Original analyst/debate sections are inspectable; they remain
+intermediate arguments, not approved conclusions. Portfolio controls collapse
+when reading research; absent holdings never display fabricated zero weights.
 
 Dev origin: http://127.0.0.1:5173; Vite proxy to local API with the browser Origin
 preserved for backend validation. Bind both servers to loopback, exact origin,

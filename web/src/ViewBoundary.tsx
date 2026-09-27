@@ -11,6 +11,8 @@ export default class ViewBoundary extends Component<{ children: ReactNode }, { f
       <h2>{t("This view could not be displayed")}</h2>
       <p>{t("No financial conclusion is available from this view. You can retry or choose another workspace. No action will be submitted automatically.")}</p>
       <button onClick={() => this.setState({ failed: false })}>{t("Retry display")}</button>
+      <p className="muted caption">{t('If the app was updated, reload to obtain the latest version. Unsaved form entries will be cleared.')}</p>
+      <button onClick={() => window.location.reload()}>{t('Reload application')}</button>
     </section>;
     return this.props.children;
   }

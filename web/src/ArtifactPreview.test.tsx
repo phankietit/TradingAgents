@@ -1,15 +1,31 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import ArtifactPreview from './ArtifactPreview';
 import type { Artifact } from './ArtifactPreview';
 import { request } from './api';
+import { setLocale } from './i18n';
 
 afterEach(() => vi.unstubAllGlobals());
 const artifact: Artifact = { artifact_id: 'artifact-fixture', kind: 'analysis_report', media_type: 'application/json',
   byte_size: 500, content_hash: 'sha256:fixture', created_at: '2026-09-01T00:00:00Z' };
 const report = { run_id: 'run-fixture', decision_id: '12345678-1234-1234-1234-123456789abc', profile: 'equity',
   reference_only: false, selected_analysts: ['market'], snapshot_attestation: 'PASS', narrative: '<img src=x onerror=alert(1)>', structured_narrative: { thesis: '<script>not executable</script>' } };
+
+it('switches saved bilingual reports without network calls or changing numbers', async () => {
+  setLocale('en');
+  const fetch = vi.fn(async () => new Response(JSON.stringify({...report, report_language:'en-vi',
+    localized_report:{en:'Return **-22.94%**',vi:'Lợi suất **-22.94%**'}})));
+  vi.stubGlobal('fetch',fetch);
+  render(<ArtifactPreview artifact={artifact} runId="run-fixture" defaultOpen />);
+  expect(await screen.findByText('Return', {exact:false})).toBeTruthy();
+  const calls = fetch.mock.calls.length;
+  act(() => setLocale('vi'));
+  expect(screen.getByText('Lợi suất', {exact:false})).toBeTruthy();
+  expect(screen.getByText('-22.94%')).toBeTruthy();
+  expect(fetch.mock.calls.length).toBe(calls);
+  act(() => setLocale('en'));
+});
 
 it('loads only on demand and displays untrusted report text plus a bound decision link', async () => {
   const fetch = vi.fn(async () => new Response(JSON.stringify(report)));

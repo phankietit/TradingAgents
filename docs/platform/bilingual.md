@@ -42,7 +42,7 @@ unchanged. A report records the requested language; null means legacy/unrecorded
 not proof that a report is English. The report viewer retains original text and
 escaping. Downloaded artifacts are not rewritten or post-processed.
 
-For `en-vi`, the existing language prompt asks for paired English and Vietnamese
+For legacy CLI/intermediate role output, the existing language prompt asks for paired English and Vietnamese
 in each narrative section/string, while retaining exact financial values,
 units, signs, dates, tickers, citations, uncertainty and invalidation conditions.
 JSON keys, enums and tool arguments must remain unchanged. This is a generation
@@ -51,7 +51,16 @@ translation provider, automatic translation call or regeneration of old reports
 is added. Bilingual output may increase tokens/latency and truncation risk under
 existing limits. Invalid structured output still becomes REVIEW.
 
-## Local verification (2026-09-27)
+The snapshot Portfolio Manager does not use that legacy paired-field suffix:
+it produces canonical English schema fields and separate `localized_report.en`
+and `.vi` Markdown. Numeric tokens (including counts and signs) must match;
+currency/decimal conventions in prose stay identical between saved translations.
+One bounded repair receives safe schema-field errors and explicit correction
+instructions. No application-side number correction, invented confidence or
+schema relaxation promotes an invalid answer. See the remediation receipt for
+live validation; the historical checkpoint below is not current certification.
+
+## Historical bilingual checkpoint (2026-09-27)
 
 Implementation branch: `feature/TA-M4-bilingual`, based on `origin/main`
 `7dfec4d20709a702b130f3ba5813f097a930ffe6`, retaining the model-env fix.

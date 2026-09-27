@@ -18,7 +18,7 @@ export interface SeriesResponse {
   benchmark_snapshot?: Snapshot | null;
   view: {
     series: { instrument_id: string; interval: string; quote_currency: string; timezone: string; bars: {
-      timestamp: string; open: number; high: number; low: number; close: number;
+      timestamp: string; session_date?: string | null; open: number; high: number; low: number; close: number;
       adjusted_close: number | null; volume: number;
     }[] };
     returns: { timestamp: string; price: number; simple_return: number | null; drawdown: number }[];
@@ -51,6 +51,7 @@ export function priceResponse(value: SeriesResponse): SeriesResponse {
     const valid = snapshot(value.snapshot) && view.series &&
       [view.series.instrument_id, view.series.interval, view.series.quote_currency, view.series.timezone].every(string) &&
       Array.isArray(view.series.bars) && view.series.bars.length > 0 && view.series.bars.every(bar => bar && date(bar.timestamp) &&
+        (bar.session_date == null || (string(bar.session_date) && /^\d{4}-\d{2}-\d{2}$/.test(bar.session_date))) &&
         [bar.open, bar.high, bar.low, bar.close, bar.volume].every(Number.isFinite) && (bar.adjusted_close === null || Number.isFinite(bar.adjusted_close))) &&
       Array.isArray(view.returns) && view.returns.length > 0 && view.returns.every(point => point && date(point.timestamp) &&
         [point.price, point.drawdown].every(Number.isFinite) && (point.simple_return === null || Number.isFinite(point.simple_return))) &&

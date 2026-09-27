@@ -12,6 +12,13 @@ status, stage, attempt, and stable error codes. Raw model output, vendor
 responses, credentials, portfolio data, and exception messages do not belong
 in run events.
 
+`model.usage` additionally records provider-reported token counters, failed-call
+count and completeness, cumulative within one worker attempt. Use only the
+latest receipt per attempt when aggregating; summing every receipt double-counts
+usage. Missing usage and subscription price are unknown, not zero. API and worker
+must be upgraded together to recognize this additive event type. No SQL migration
+is needed because event types/payloads are stored as text/JSON.
+
 ## SSE Contract
 
 `GET /api/v1/runs/{run_id}/events` uses the authenticated owner from the

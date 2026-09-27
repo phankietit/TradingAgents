@@ -27,12 +27,18 @@ renders original/current state, narrative/evidence/risk checks and explicit
 approve/reject dialogs. Worker-to-approval integration is verified locally with a
 labelled synthetic graph. Finance-first presentation keeps ordinary research,
 portfolio and review flows readable while retaining diagnostics in disclosures.
-Local acceptance now passes at `967aa24`; see the authoritative
+The historical M4 acceptance checkpoint was `967aa24`; see its
 [verification ledger](../docs/platform/milestone-4-verification.md) for exact
 commands, browser receipts and PR/merge status. Historical checkpoints below
 retain their original counts and limitations. Live-provider validation and
 production deployment are not implied. Start with the
 [local startup guide](../docs/platform/local-web-startup.md).
+
+The R01–R14 candidate adds snapshot-bound research tools, strict bilingual report
+validation, saved-history charts, safe Markdown, real graph-stage progress and
+the charcoal/sage workspace redesign. Current status and live limitations are
+tracked in [research remediation](../docs/platform/research-remediation.md);
+historical M4 receipts do not certify this candidate.
 
 ## Development
 
