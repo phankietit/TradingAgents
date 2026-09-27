@@ -1,0 +1,98 @@
+"""Isolated publication replay QA. Never registers or rewrites an analysis run."""
+import json
+import os
+import argparse
+import subprocess
+from pathlib import Path
+from uuid import UUID
+
+from dotenv import load_dotenv
+
+load_dotenv('/Volumes/Data/Project/TradingAgents/.env', override=False)
+parser = argparse.ArgumentParser()
+parser.add_argument('--reuse-draft', action='store_true')
+parser.add_argument('--translation-only', action='store_true')
+args = parser.parse_args()
+candidate_sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+if subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip():
+    raise RuntimeError('A clean candidate is required for publication replay QA')
+translation_source = 'sha256/7d/58/7d588e7f4a1b76a1d889fbe223ca94528d816b8667ba369c76152bcb9578aab9'
+
+from tradingagents.agents.managers.portfolio_manager import create_portfolio_manager
+from tradingagents.agents.utils.financial_validation import create_financial_validation
+from tradingagents.agents.utils.report_localization import create_report_presentation
+from tradingagents.agents.utils.research_scope import RESEARCH_SCOPE
+from tradingagents.default_config import DEFAULT_CONFIG
+from tradingagents.graph.trading_graph import TradingAgentsGraph
+from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+from tradingagents.platform.analysis.observer import ResearchObserver
+from tradingagents.platform.analysis.snapshots import load_snapshot_context
+from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
+from tradingagents.platform.persistence import Database, PlatformRepository
+from tradingagents.platform.persistence.models import ArtifactRow
+from langchain_core.callbacks import BaseCallbackHandler
+
+wire_shapes = []
+class WireShapeObserver(BaseCallbackHandler):
+    def on_llm_end(self, response, **kwargs):
+        for group in response.generations:
+            for generation in group:
+                message = getattr(generation, 'message', None)
+                if message is not None:
+                    wire_shapes.append({'tool_call_count':len(getattr(message, 'tool_calls', [])),
+                        'invalid_tool_call_count':len(getattr(message, 'invalid_tool_calls', []))})
+
+database = Database(os.environ['TRADINGAGENTS_DATABASE_URL'])
+store = LocalArtifactStore(os.environ['TRADINGAGENTS_ARTIFACT_ROOT'])
+artifact_id = UUID('12673674-0609-531e-b41f-e87f81c4832a')
+with database.session() as session:
+    row = session.get(ArtifactRow, artifact_id)
+    repository = PlatformRepository(session, artifact_store=store)
+    artifacts = ArtifactService(store, repository)
+    run = repository.get_run(row.run_id, row.owner_id)
+    report = json.loads(artifacts.read(artifact_id, row.owner_id)[1])
+    context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst)
+    instrument = repository.get_instrument(run.instrument_id)
+database.dispose()
+assert run.llm_provider == DEFAULT_CONFIG['llm_provider']
+assert run.quick_model == DEFAULT_CONFIG['quick_think_llm']
+assert run.deep_model == DEFAULT_CONFIG['deep_think_llm']
+reports = context.reports(run.instrument_id, run.selected_analysts)
+facts = {s['snapshot_id']: SnapshotMarketFacts(s).fact_catalog() for s in json.loads(reports['market'])}
+observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *_: None)
+config = {**DEFAULT_CONFIG, 'output_language':'English and Vietnamese',
+    'data_cache_dir': str(store.root / 'worker-runtime' / 'cache'),
+    'results_dir': str(store.root / 'worker-runtime' / 'reports')}
+graph = TradingAgentsGraph(selected_analysts=run.selected_analysts, config=config,
+    snapshot_reports=reports, callbacks=[observer, WireShapeObserver()])
+state = {'structured_diagnostics': [],
+    'instrument_context': instrument.model_dump_json() + '\n' + RESEARCH_SCOPE + '\nVerified fact_catalog: ' + json.dumps(facts),
+    'investment_plan':report['research_sections']['investment_plan'],
+    'trader_investment_plan':report['research_sections']['trader_investment_plan'],
+    'risk_debate_state':{'history':report['debate_sections']['risk_debate_state'],
+        'aggressive_history':'', 'conservative_history':'', 'neutral_history':'',
+        'current_aggressive_response':'', 'current_conservative_response':'', 'current_neutral_response':'', 'count':3}}
+# Empty per-speaker bookkeeping is not prompt input: the exact persisted debate
+# history above is reused. This is deliberately not a full graph acceptance run.
+with graph.config_scope():
+    if args.translation_only:
+        prior = json.loads((Path(store.root) / translation_source).read_text())
+        state['structured_decision'] = {**prior['state']['structured_decision'], 'localized_report':None}
+    elif args.reuse_draft:
+        prior = json.loads((Path(store.root) / 'sha256/d2/32/d232af0c3ffe1543da247ff69c6510586efe619033d3d9f826f0ddb2f13c9d9c').read_text())
+        state['structured_draft'] = prior['state']['structured_draft']
+    else:
+        state.update(create_portfolio_manager(graph.deep_thinking_llm, research_only=True)(state))
+    if not args.translation_only:
+        state.update(create_financial_validation(graph.deep_thinking_llm, reports)(state))
+    if state.get('structured_decision'):
+        state.update(create_report_presentation(graph.deep_thinking_llm)(state))
+receipt = {'kind':'translation_component_replay_only' if args.translation_only else 'publication_component_replay_only', 'parent_report_id':str(artifact_id),
+    'candidate_sha':candidate_sha, 'source_qa_blob':translation_source if args.translation_only else None,
+    'wire_shapes':wire_shapes,
+    'state':state, 'execution':observer.receipt()}
+blob = store.put_json(receipt)
+print(json.dumps({'artifact':blob.storage_key, 'diagnostics':state['structured_diagnostics'],
+    'canonical_valid':state.get('structured_decision') is not None,
+    'localized':bool((state.get('structured_decision') or {}).get('localized_report')),
+    'usage':observer.receipt()['usage'], 'wire_shapes':wire_shapes}))

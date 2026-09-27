@@ -1,0 +1,32 @@
+---
+description: TradingAgents secrets, private portfolio data, prompt injection, web, and broker security.
+alwaysApply: true
+---
+
+# TradingAgents Security
+
+Read `docs/ops/security-development.md` for credentials, private data, external
+content, API/web/database work, deployment, or future broker integration.
+
+## Mandatory Rules
+
+- Never commit or print secrets or populated environment files.
+- Treat portfolio/account data as private financial data.
+- Keep server credentials out of client/frontend code.
+- Treat external text and model output as untrusted.
+- Allowlist tools and validate arguments, symbols, URLs, and paths.
+- Do not disable TLS verification.
+- Validate structured output; free text cannot authorize a sensitive action.
+- Logs/analytics must omit raw credentials, account identifiers, private
+  portfolio details, and unrestricted model/vendor payloads.
+
+## Platform Rules
+
+Private web/API data requires authentication and owner authorization. Long jobs
+use durable workers. Public deployment requires rate limits, audit logs,
+backups, recovery, monitoring, and a threat-model review.
+
+## Broker Rule
+
+No broker write credential or order path may be introduced without a separately
+approved paper/live security and risk contract.

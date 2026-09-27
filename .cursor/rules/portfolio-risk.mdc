@@ -1,0 +1,35 @@
+---
+description: Portfolio, risk policy, backtest, paper, and order-proposal rules.
+alwaysApply: false
+---
+
+# TradingAgents Portfolio And Risk Rules
+
+## Authority Boundary
+
+- LLMs produce analysis and proposals, not orders.
+- Deterministic code owns valuation, target/max weights, quantity, cash,
+  concentration, turnover, exposure, and policy checks.
+- Model prose cannot waive a failed policy.
+- Every future order proposal requires explicit human approval.
+
+## Current Backtest Boundary
+
+`tradingagents/backtest.py` evaluates independent ticker/date decisions. Until a
+separate ledger/execution model exists, do not claim portfolio return, Sharpe,
+drawdown, turnover, realistic fills, or deployable strategy performance.
+
+## Required Invariants
+
+- Distinguish no portfolio context, a flat portfolio, and an existing position.
+- Validate currency, sign, quantity, and price semantics.
+- Use immutable portfolio fingerprints for resumable runs.
+- Keep equity, ETF, and crypto limits separate.
+- Preserve cash and accounting identities in any future simulator.
+- Include fees, slippage, corporate actions, calendars, and reconciliation
+  before paper-performance claims.
+
+## Hard Stop
+
+Explicit approval is required to change risk limits, enable leverage/shorting or
+derivatives, connect a broker, submit an order, or move from paper to live.

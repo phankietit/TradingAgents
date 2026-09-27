@@ -1,0 +1,40 @@
+---
+description: TradingAgents planning, issue, execution, and completion lifecycle.
+alwaysApply: true
+---
+
+# TradingAgents Ticket Lifecycle
+
+## Modes
+
+| Mode | Trigger | Mutation allowed |
+| --- | --- | --- |
+| Audit | review, inspect, no action | No |
+| Planning | plan, estimate, create issue | Issue/docs draft only when requested |
+| Execution | implement/fix an approved scope | Yes, scoped branch/worktree |
+| PR/sync | push, PR, upstream sync | Yes, after verification |
+| Release | publish/deploy/paper/live | Only with explicit approval |
+
+## Issue Contract
+
+- Title: `[TA-<N>] <type>: <short description>`.
+- Labels: exactly one type, one area, and one priority.
+- Acceptance criteria are observable and include failure behavior.
+- Data issues specify `as_of`, coverage, provenance, and no-look-ahead impact.
+- LLM issues specify schema/tool/provider impact.
+- Portfolio issues specify deterministic policy invariants.
+- Live/security impact is explicit.
+
+Use `docs/ops/issue-label-taxonomy.md` for label names and
+`docs/ops/in-progress.md` for active multi-agent/worktree coordination.
+
+## Status
+
+Use: `planned`, `in-progress`, `ready-for-pr`, `pr-open`, `done`, `blocked`, or
+`aborted`. Do not mark `done` while required gates are blocked or unverified.
+
+## Planning Hard Stop
+
+Planning and audit modes do not edit product source, install dependencies,
+create worktrees, push, open PRs, deploy, or modify external state unless the
+user explicitly changes the mode.

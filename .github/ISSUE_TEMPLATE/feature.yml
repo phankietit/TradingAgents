@@ -1,0 +1,67 @@
+name: Feature request
+description: Propose a scoped feature consistent with the product contract.
+title: "[TA-] feat: "
+labels:
+  - "type:feature"
+body:
+  - type: markdown
+    attributes:
+      value: Read docs/governance/PRODUCT_CONTRACT.md before proposing platform or execution behavior.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or research problem needs to be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe observable behavior, not only an implementation.
+    validations:
+      required: true
+  - type: dropdown
+    id: asset
+    attributes:
+      label: Asset scope
+      options:
+        - US large-cap equities
+        - ETF or index proxy
+        - Candidate equity screening
+        - Large-cap crypto
+        - Cross-asset infrastructure
+        - Not asset-specific
+        - Outside current product scope
+    validations:
+      required: true
+  - type: textarea
+    id: contracts
+    attributes:
+      label: Contract impact
+      description: Data provenance, LLM/schema, portfolio/risk, privacy/security, human approval, and release impact.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List measurable success and failure behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Required evidence
+      description: Tests, snapshots, evaluation, runtime/provider, and external gates.
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundary
+    attributes:
+      label: Product boundary
+      options:
+        - label: This does not introduce live broker execution without a separate approved contract.
+          required: true
+        - label: LLM output will not bypass deterministic data-quality or risk policy.
+          required: true

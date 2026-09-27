@@ -1,0 +1,62 @@
+"""Owner-authorized component QA; never modifies an existing run/report."""
+import json
+import os
+from uuid import UUID
+
+from dotenv import load_dotenv
+
+load_dotenv('/Volumes/Data/Project/TradingAgents/.env', override=False)
+
+from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
+from tradingagents.agents.utils.financial_validation import create_financial_validation
+from tradingagents.agents.utils.report_localization import create_report_presentation
+from tradingagents.agents.utils.research_scope import RESEARCH_SCOPE
+from tradingagents.default_config import DEFAULT_CONFIG
+from tradingagents.graph.trading_graph import TradingAgentsGraph
+from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+from tradingagents.platform.analysis.observer import ResearchObserver
+from tradingagents.platform.analysis.snapshots import load_snapshot_context
+from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
+from tradingagents.platform.persistence import Database, PlatformRepository
+from tradingagents.platform.persistence.models import ArtifactRow
+
+database = Database(os.environ['TRADINGAGENTS_DATABASE_URL'])
+store = LocalArtifactStore(os.environ['TRADINGAGENTS_ARTIFACT_ROOT'])
+artifact_id = UUID('ea962da8-15a4-500e-a58e-9336387b7046')
+with database.session() as session:
+    row = session.get(ArtifactRow, artifact_id)
+    repository = PlatformRepository(session, artifact_store=store)
+    artifacts = ArtifactService(store, repository)
+    run = repository.get_run(row.run_id, row.owner_id)
+    report = json.loads(artifacts.read(artifact_id, row.owner_id)[1])
+    context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst)
+    instrument = repository.get_instrument(run.instrument_id)
+database.dispose()
+
+marker = 'UNVALIDATED RESEARCH — structured output failed after one format repair.\n\n'
+candidate_text = report['narrative'].split(marker, 1)[1].strip()
+if candidate_text.startswith('```json\n') and candidate_text.endswith('\n```'):
+    candidate_text = candidate_text[8:-4]
+candidate = CanonicalSnapshotDecision.model_validate_json(candidate_text)
+reports = context.reports(run.instrument_id, run.selected_analysts)
+facts = {s['snapshot_id']: SnapshotMarketFacts(s).fact_catalog() for s in json.loads(reports['market'])}
+observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *_: None)
+config = {**DEFAULT_CONFIG, 'output_language':'English and Vietnamese',
+    'data_cache_dir': str(store.root / 'worker-runtime' / 'cache'),
+    'results_dir': str(store.root / 'worker-runtime' / 'reports')}
+graph = TradingAgentsGraph(selected_analysts=run.selected_analysts, config=config,
+    snapshot_reports=reports, callbacks=[observer])
+state = {'structured_decision': candidate.model_dump(mode='json'), 'structured_diagnostics': [],
+    'instrument_context': instrument.model_dump_json() + '\n' + RESEARCH_SCOPE + '\nVerified fact_catalog: ' + json.dumps(facts)}
+with graph.config_scope():
+    result = create_financial_validation(graph.deep_thinking_llm, reports)(state)
+    state.update(result)
+    if state.get('structured_decision'):
+        state.update(create_report_presentation(graph.deep_thinking_llm)(state))
+receipt = {'kind':'component_qa_only', 'parent_report_id':str(artifact_id),
+    'state':state, 'execution':observer.receipt()}
+blob = store.put_json(receipt)
+print(json.dumps({'artifact':blob.storage_key, 'diagnostics':state['structured_diagnostics'],
+    'canonical_valid':state.get('structured_decision') is not None,
+    'localized':bool((state.get('structured_decision') or {}).get('localized_report')),
+    'usage':observer.receipt()['usage']}))
