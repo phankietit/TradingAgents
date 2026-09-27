@@ -63,8 +63,10 @@ live validation; the historical checkpoint below is not current certification.
 Reader-facing prose uses financial labels rather than fact IDs, boolean arrays
 or internal policy codes. The Portfolio Manager has a Vietnamese editorial
 glossary and avoids literal translations of debating metaphors. This remains a
-generation instruction: the inspected live retry still had awkward phrasing;
-the follow-up editorial prompt has not yet passed a new live acceptance run.
+generation instruction: the additional authorized live run still had awkward
+phrasing and changed number formatting in Vietnamese. Both PM outputs failed
+the parity check. The editorial prompt alone has not passed live acceptance;
+see the remediation receipt. No failed report was rewritten or promoted.
 
 ## Historical bilingual checkpoint (2026-09-27)
 

@@ -2,7 +2,7 @@
 
 Candidate branch: `fix/TA-R01-research-quality`.
 Backend checkpoint: `e3c269725bf109436091408cfb6b2acd179caa1a`.
-Frontend/readability checkpoint: `6621fb8` (backend behavior unchanged).
+Frontend/readability checkpoint: `a09dfd7a29dbd6a2124f160b3d7021e3eaf9cd23` (backend behavior unchanged).
 Runtime: macOS, Python 3.14.7, Node 26.8.1, npm 11.19.0.
 No hosted CI, broker, public deployment, provider replacement or policy change.
 
@@ -71,6 +71,19 @@ and was explicitly disclosed. None evaluated an owner portfolio or placed orders
   Run `f3d03960-c88a-4b22-a111-0516f37a2c74`, job
   `ff4f2e50-07b3-4d12-bec4-f8f641f66196`, submitted through the actual UI after
   price preparation. The worker is invoked with `--once`, not a retry loop.
+- The additional run finished 06:40:42–06:48:52 UTC at e3c2697. Processing
+  **PASS**, all nine stages; report acceptance **FAIL**,
+  `structured_output_missing`. Trader's structured miss repaired, but PM initial
+  and repaired outputs both failed localized numeric parity. Read-only inspection
+  of the preserved raw repair found Vietnamese decimal/thousands separators
+  changed despite the fixed-format contract, words converted into extra numeric
+  tokens, remaining reversed percentage statements and awkward financial prose.
+  No validated decision/evidence graph was published. The rejected artifact is
+  `a57e0c4b-1693-53f6-b662-450f580e6126` and remains unchanged.
+  Usage: 333166 input / 92180 output / 425346 total tokens across 13 reported
+  calls. Dollar cost is not reported. Worker exited; no further run/retry is
+  started under this authorization. This is evidence about these runs and this
+  output design, not a claim that MiniMax can never perform the task.
 
 ## Operational and review boundaries
 
@@ -112,8 +125,15 @@ owner tabs and portfolio records were preserved.
   now offers an explicit reload with an unsaved-form warning.
 - Screenshots remain local outside Git under the task runtime directory:
   `remediation-mobile-decisions.png` and `remediation-desktop-progress.png`.
-  They are UI evidence, not proof that the pending live report is valid.
+  They are UI evidence, not proof that the live report is valid.
 
-Final live report acceptance remains UNVERIFIED pending the separately approved
-post-fix BTC run. Saved EN/VI switching was verified on the rejected report;
-that proves presentation behavior, not research validity or translation quality.
+Final live report acceptance is FAIL. Saved EN/VI switching was verified on the
+earlier rejected report; that proves presentation behavior, not research
+validity or translation quality. Draft PR #7 stays unmerged. The goal remains
+incomplete, with no background worker or automatic paid retry active.
+
+Recommended next design decision: retain the complete research graph, but
+separate validated canonical financial content from localized presentation,
+with explicit numeric anchors and a bounded translation-repair stage. This is
+a proposed follow-up, not implemented or permission to weaken numeric checks,
+replace the provider, rewrite history or consume more quota.
