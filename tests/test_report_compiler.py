@@ -7,7 +7,7 @@ import pytest
 from tests.test_financial_validation_stage import candidate
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
-from tradingagents.agents.utils.report_compiler import compile_report
+from tradingagents.agents.utils.report_compiler import compile_report, validate_percentage_context
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
@@ -138,3 +138,23 @@ def test_binding_diagnostics_identify_repair_without_weakening_gate(mutation, co
     assert failure.value.issues == (code,)
     assert "untrusted-secret" not in str(failure.value)
     assert raw == before
+
+
+@pytest.mark.parametrize("prose,fact,value", [
+    ("The close is {{QA}}% below the window high.", "observed_window.latest_close_vs_high_pct", -1.24),
+    ("The 50-SMA is currently {{QA}}% below the latest close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
+    ("A move to the SMA would represent a {{QA}}% drawdown from the current close.", "indicator.close_50_sma.latest_close_distance_magnitude_pct", 5.98),
+])
+def test_reproduced_percentage_semantic_errors_fail_closed(prose, fact, value):
+    with pytest.raises(PublicationValidationError) as error:
+        validate_percentage_context(prose, {"key":"QA", "fact_id":fact}, value)
+    assert error.value.issues == ("percentage_relation_requires_review",)
+
+
+def test_percentage_guard_tracks_binding_not_coincidentally_equal_numbers():
+    validate_percentage_context("Price is {{QA}}% above its SMA; return {{QB}}%.",
+        {"key":"QA", "fact_id":"indicator.close_50_sma.latest_close_distance_magnitude_pct"}, 5.98)
+    validate_percentage_context("The close is {{QA}}% below the window high.",
+        {"key":"QA", "fact_id":"observed_window.drawdown_magnitude_pct"}, 1.24)
+    validate_percentage_context("The 50-SMA is currently {{QA}}% below the latest close.",
+        {"key":"QA", "fact_id":"calc.abs_pct_change(indicator.close_50_sma,latest.close)"}, 5.64)

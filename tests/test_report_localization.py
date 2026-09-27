@@ -10,6 +10,7 @@ from tradingagents.agents.utils.report_localization import (
     protect_quantities,
     reader_report,
     restore_quantities,
+    validate_financial_terms,
 )
 
 
@@ -68,3 +69,19 @@ def test_translation_has_one_bounded_repair_then_fails_closed():
 def test_canonical_generation_cannot_embed_a_second_language_report():
     with pytest.raises(ValueError):
         CanonicalSnapshotDecision.model_validate({**decision().model_dump(), "localized_report": {"en": "a", "vi": "b"}})
+
+
+@pytest.mark.parametrize("english,vietnamese", [
+    ("Low volatility may persist.", "Thanh khoản thấp có thể kéo dài."),
+    ("Volume expands.", "Thanh khoản giãn nở."),
+    ("MACD signal cross.", "Phân kỳ MACD."),
+])
+def test_financial_concept_substitution_is_rejected(english, vietnamese):
+    with pytest.raises(ValueError):
+        validate_financial_terms(english, vietnamese)
+
+
+def test_distinct_financial_terms_and_genuine_liquidity_divergence_are_allowed():
+    validate_financial_terms("Volume expands; volatility rises; MACD crosses signal.",
+                             "Khối lượng giao dịch tăng; biến động tăng; MACD giao cắt đường tín hiệu.")
+    validate_financial_terms("No liquidity or divergence evidence.", "Chưa có bằng chứng thanh khoản hay phân kỳ.")

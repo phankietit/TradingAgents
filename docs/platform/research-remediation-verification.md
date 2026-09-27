@@ -1,5 +1,11 @@
 # R01–R14 verification receipt
 
+Historical checkpoint receipt. For subsequent implementations, renewed owner
+authorization and current acceptance, see
+[the 2026-09-27 continuation receipt](research-acceptance-20260927.md).
+The final design recommendation below records what was proposed at this older
+checkpoint; it is not the current implementation status.
+
 Candidate branch: `fix/TA-R01-research-quality`.
 Backend checkpoint: `e3c269725bf109436091408cfb6b2acd179caa1a`.
 Frontend/readability checkpoint: `a09dfd7a29dbd6a2124f160b3d7021e3eaf9cd23` (backend behavior unchanged).

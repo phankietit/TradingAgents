@@ -130,3 +130,29 @@ browser acceptance must pass before completion can be claimed.
   Targeted compiler, financial-stage, structured-agent, engine and localization
   checks passed 81 tests in 5.55 seconds; Ruff passed. The full regression above
   predates only this prompt-boundary change and its regression test.
+
+## Continuation audit
+
+- PASS: clean `1bf543323ae78b658df80a1012d20a07ba6a1e00`, full local gate:
+  1,378 tests + 88 subtests, 20 classified skips, 142.40 seconds.
+- PASS: fresh core-only Python 3.14 venv installed a non-editable wheel built
+  from that SHA, resolving dependencies independently. Isolated CLI/graph
+  imports ran outside the checkout, `pip check` passed, and neither SQLAlchemy
+  nor exchange-calendars was installed. Wheel SHA-256:
+  `b070e9bb0ee7ef4b31ee42ca45af526ae95b6c6d80846ad92214e0049ff57aea`.
+  This proves core installation on this interpreter, not the platform extra,
+  every supported Python version or unchanged dependency resolution forever.
+- Publication replay on that SHA passed schema, source-bound numerical values
+  and protected numeric translation, using 50,007 tokens (19,803 input + 30,204
+  output), four calls. **Manual financial/language acceptance remained FAIL**:
+  the prose reused an indicator-relative percentage for a move from the close,
+  used a negative signed change as a magnitude below a high, and translated
+  volatility/volume as liquidity and a crossover as divergence. No full run was
+  registered, no old artifact was rewritten and this was not promoted to a
+  successful investment conclusion.
+- Follow-up adds placeholder-specific rejection of those reproduced percentage
+  relations, explicit formula feedback, a financial translation glossary and
+  conservative terminology-substitution checks. It does not silently rewrite
+  prose, select another fact, relax schema validation or remove research roles.
+  Other qualitative entailment and translation quality still require review.
+  Initial targeted regression: 45 PASS; final candidate/live evidence pending.

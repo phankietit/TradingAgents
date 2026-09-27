@@ -12,6 +12,35 @@ from tradingagents.platform.analysis.research_validation import (
 ANCHOR = re.compile(r"\{\{(Q[A-Z]{1,5})\}\}")
 
 
+def validate_percentage_context(prose, binding, value):
+    """Reject reproduced relation errors, not claim universal semantic proof.
+
+    Check the original placeholder, not its rendered number: two unrelated facts
+    can round to the same value. Never rewrite a claim or select a different fact.
+    """
+    anchor = re.escape("{{" + binding["key"] + "}}")
+    fact_id = binding["fact_id"]
+    if not fact_id.endswith("pct"):
+        return
+    if value < 0 and re.search(anchor + r"\s*%\s*(?:below|under)\b", prose, re.I):
+        raise PublicationValidationError(["percentage_relation_requires_review"])
+    # This family measures the close relative to an indicator, not a move
+    # from the close to that indicator. The reciprocal denominators differ.
+    if not fact_id.endswith((".latest_close_distance_magnitude_pct", ".latest_close_vs_indicator_pct")):
+        return
+    if re.search(anchor + r"\s*%\s*(?:drawdown|drop|decline|fall|retracement)\s+from\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
+        raise PublicationValidationError(["percentage_relation_requires_review"])
+    indicator = fact_id.split(".")[1]
+    labels = {"close_10_ema":r"(?:10[- ](?:day[- ])?EMA|EMA[- ]?10)",
+              "close_50_sma":r"(?:50[- ](?:day[- ])?SMA|SMA[- ]?50)",
+              "close_200_sma":r"(?:200[- ](?:day[- ])?SMA|SMA[- ]?200)",
+              "boll_ub":r"upper Bollinger band", "boll_lb":r"lower Bollinger band"}
+    label = labels.get(indicator)
+    if label and re.search(label + r"\s+is\s+(?:currently\s+)?" + anchor
+            + r"\s*%\s*(?:below|above)\b[^.!?\n]{0,60}\b(?:close|price)\b", prose, re.I):
+        raise PublicationValidationError(["percentage_relation_requires_review"])
+
+
 def compile_report(raw, facts):
     draft = SnapshotReportDraft.model_validate(raw)
     material = [*draft.investment_thesis, *draft.risks, *draft.invalidation_conditions]
@@ -42,6 +71,7 @@ def compile_report(raw, facts):
             raise PublicationValidationError(["quantity_binding_duplicate"])
         if value is None:
             raise PublicationValidationError(["quantity_binding_unknown_fact"])
+        validate_percentage_context(prose, binding, value)
         number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
         if not number.is_finite():
             raise PublicationValidationError(["numeric_claim_not_supported"])
@@ -84,6 +114,12 @@ QUANTITY CONTRACT: Write ALL monetary amounts, percentages and calculated quanti
 placeholders {{QA}}, {{QB}}, etc.; create quantity_bindings with key QA/QB, exact
 snapshot_id, verified fact_id and decimal_places. Do NOT put values in bindings.
 Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
+For close C and reference R, price premium over R is (C/R - 1)*100,
+but a move from C to R is (R/C - 1)*100. Never reuse the former for the latter.
+For a magnitude below a level, use a positive magnitude, not a signed negative
+return followed by 'below'. A percentage_relation_requires_review failure means
+the prose and chosen fact disagree about direction or denominator; correct the
+fact reference or relationship, not the underlying market values.
 Every binding must appear in the prose, and every placeholder must have exactly
 one binding. Do not copy the entire catalog into bindings. An unused-binding
 failure means remove only an unreferenced binding, NOT its supported arguments
