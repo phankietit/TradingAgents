@@ -189,7 +189,9 @@ below are satisfied. No production deployment or live trading is in scope.
 3. **UNVERIFIED — final candidate verification:** rerun frontend/backend gates
    on the final code candidate; repeat clean-install smoke if packaging changes
    after the successful installation receipt above;
-   final manual security, dependency and tracked-secret review with findings.
+   [Manual source security review](milestone-4-security-review.md), dependency
+   advisories and limited tracked-secret scan now have scoped evidence at
+   `cbb1bfe`; subsequent changes still need relevant re-review.
 4. **UNVERIFIED — delivery documentation:** reconcile README, CHANGELOG, startup,
    ingestion/cadence guidance and ticket statuses with actual runtime behavior.
 5. **UNVERIFIED — PR and merge:** fetch/compare current main, create/attach PR,
