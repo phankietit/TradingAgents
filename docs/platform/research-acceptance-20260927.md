@@ -237,3 +237,14 @@ browser acceptance must pass before completion can be claimed.
   promoted to readiness, no registered run was rewritten or added, and this
   replay does not test current-data ingestion, durable queue or browser UX.
   QA blob: `sha256/49/6b/496b75fa468735b1878e55d89e6d6b32124fcd7231d83c7b8f7838b3f63346a4`.
+- PASS: `340d0cb` targeted compiler/localization/repair/engine tests: 58 in
+  4.05 seconds; financial-validation-stage tests: 4 in 3.01 seconds; Ruff passed.
+  An initial command named a nonexistent test file and ran no tests; the actual
+  stage test file was subsequently run as recorded above. Full-suite evidence
+  remains tied to `f70907f`, not this later bounded regex fix.
+- Remaining design gap: numeric/source binding plus known prose-pattern guards
+  cannot guarantee arbitrary quantitative prose semantics. A typed relationship
+  representation (subject, reference, denominator and direction) should be
+  evaluated before further expensive whole-graph retries; it must preserve
+  original research arguments and cannot rewrite a model conclusion to pass.
+  This is pending design/implementation, not an implemented capability.
