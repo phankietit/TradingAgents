@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from datetime import datetime, timedelta
 from io import StringIO
 from uuid import uuid4
@@ -14,8 +15,11 @@ from tradingagents._compat import UTC
 from tradingagents.contracts import (
     ArtifactKind,
     AssetClass,
+    CashBalance,
     InstrumentAliasContract,
     InstrumentContract,
+    PolicyContract,
+    PortfolioSnapshot,
     PriceInterval,
     RunManifest,
     RunStatus,
@@ -180,6 +184,206 @@ def _run_payload(instrument_id):
     }
 
 
+@pytest.mark.unit
+@pytest.mark.parametrize("case", ["valid", "future_policy", "wrong_asset", "foreign_policy"])
+def test_risk_run_inputs_bind_owner_policy_asset_and_timestamp(api_context, case):
+    client = api_context["client"]
+    _login(client)
+    owner = api_context["principal"].owner_id
+    portfolio = PortfolioSnapshot(portfolio_id=uuid4(), owner_id=owner, as_of=NOW,
+        base_currency="USD", cash=(CashBalance(currency="USD", amount="10000"),), positions=(),
+        net_asset_value="10000", content_hash="sha256:" + "c" * 64)
+    policy = PolicyContract(policy_id=uuid4(), owner_id=uuid4() if case == "foreign_policy" else owner,
+        name="Synthetic risk input QA", policy_version="1", asset_class="crypto" if case == "wrong_asset" else "equity",
+        effective_at=NOW + timedelta(days=1) if case == "future_policy" else NOW, parameters={})
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        repository.add_portfolio_snapshot(portfolio)
+        repository.add_policy(policy)
+    payload = {"instrument_id": str(api_context["instrument"].instrument_id),
+        "analysis_as_of": NOW.isoformat(), "selected_analysts": ["market"], "decision_inputs": {
+            "snapshots_by_analyst": {"market": [str(api_context["time_series_snapshot"].snapshot_id)]},
+            "source_max_age_seconds": {"market": 172800}, "portfolio_snapshot_id": str(portfolio.portfolio_id),
+            "policy_id": str(policy.policy_id), "policy_version": "1", "requested_target_weight": .2}}
+    result = client.post("/api/v1/runs", headers=_csrf_headers(client, **{"Idempotency-Key": "risk-input-qa-001"}), json=payload)
+    assert result.status_code == (202 if case == "valid" else 422)
+
+
+@pytest.mark.unit
+def test_analysis_profile_is_authenticated_and_uses_backend_roles(api_context):
+    client = api_context["client"]
+    path = f"/api/v1/instruments/{api_context['instrument'].instrument_id}/analysis-profile"
+    assert client.get(path).status_code == 401
+    _login(client)
+    assert client.get(path).json() == {"name": "equity", "allowed_analysts": ["market", "social", "news", "fundamentals"], "investable": True}
+    assert client.get(f"/api/v1/instruments/{uuid4()}/analysis-profile").status_code == 404
+
+
+@pytest.mark.unit
+def test_watchlist_is_persistent_idempotent_and_csrf_protected(api_context):
+    client = api_context["client"]
+    instrument_id = api_context["instrument"].instrument_id
+    path = f"/api/v1/watchlist/{instrument_id}"
+    assert client.get("/api/v1/watchlist").status_code == 401
+    assert client.put(path, headers={"Origin": ORIGIN}).status_code == 401
+    _login(client)
+    assert client.get("/api/v1/watchlist").json() == []
+    assert client.put(path, headers={"Origin": ORIGIN}).status_code == 403
+    assert client.put(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.put(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.get("/api/v1/watchlist").json() == [api_context["instrument"].model_dump(mode="json")]
+    assert client.get("/api/v1/watchlist", params={"offset": 1}).json() == []
+    assert client.get("/api/v1/watchlist", params={"limit": 201}).status_code == 422
+    assert client.put(f"/api/v1/watchlist/{uuid4()}", headers=_csrf_headers(client)).status_code == 404
+    assert client.post("/api/v1/auth/logout", headers=_csrf_headers(client)).status_code == 200
+    _login(client)
+    assert len(client.get("/api/v1/watchlist").json()) == 1
+    # A different owner cannot read or remove the current owner's entry.
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        assert repository.list_watchlist(uuid4()) == ()
+        repository.remove_watchlist_entry(uuid4(), instrument_id)
+    assert len(client.get("/api/v1/watchlist").json()) == 1
+    assert client.delete(path, headers={"Origin": ORIGIN}).status_code == 403
+    assert client.delete(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.delete(path, headers=_csrf_headers(client)).status_code == 200
+    assert client.get("/api/v1/watchlist").json() == []
+
+
+@pytest.mark.unit
+def test_snapshot_discovery_reports_temporal_eligibility_without_claiming_content_validation(api_context):
+    client = api_context["client"]
+    instrument_id = api_context["instrument"].instrument_id
+    path = f"/api/v1/instruments/{instrument_id}/snapshots"
+    params = {"analysis_as_of": NOW.isoformat(), "max_age_seconds": 172800}
+    assert client.get(path, params=params).status_code == 401
+    _login(client)
+    response = client.get(path, params=params)
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    item = response.json()[0]
+    assert item["snapshot"]["snapshot_id"] == str(api_context["time_series_snapshot"].snapshot_id)
+    assert item["metadata_eligible"] is True
+    assert item["content_validation"] == "required_on_run_creation"
+    assert item["ineligibility_reasons"] == []
+    stale = client.get(path, params={**params, "max_age_seconds": 0}).json()[0]
+    assert stale["metadata_eligible"] is False
+    assert "stale" in stale["ineligibility_reasons"]
+    historical = client.get(path, params={**params, "analysis_as_of": (NOW - timedelta(days=2)).isoformat()}).json()[0]
+    assert historical["metadata_eligible"] is False
+    assert "not_available_at_analysis_time" in historical["ineligibility_reasons"]
+    for changes in ({"analysis_as_of": "2026-09-23T12:00:00"},
+                    {"analysis_as_of": (NOW + timedelta(days=1)).isoformat()},
+                    {"max_age_seconds": -1}, {"limit": 201}, {"offset": -1}):
+        assert client.get(path, params={**params, **changes}).status_code == 422
+    assert client.get(path, params={**params, "offset": 1}).json() == []
+    assert client.get(f"/api/v1/instruments/{uuid4()}/snapshots", params=params).status_code == 404
+    # The manifest alone grants no access: payload ownership is required.
+    from sqlalchemy import update
+
+    from tradingagents.platform.persistence.models import ArtifactRow
+    with client.app.state.database.session() as session:
+        session.execute(update(ArtifactRow).where(
+            ArtifactRow.snapshot_id == api_context["time_series_snapshot"].snapshot_id
+        ).values(owner_id=uuid4()))
+    assert client.get(path, params=params).json() == []
+
+
+@pytest.mark.unit
+def test_workspace_discovery_is_owner_scoped_bounded_and_read_only(api_context):
+    client = api_context["client"]
+    assert client.get("/api/v1/portfolios").status_code == 401
+    assert client.get("/api/v1/policies").status_code == 401
+    owner_id = api_context["principal"].owner_id
+    portfolio = PortfolioSnapshot(
+        portfolio_id=uuid4(), owner_id=owner_id, as_of=NOW, base_currency="USD",
+        cash=(CashBalance(currency="USD", amount="10000"),), positions=(),
+        net_asset_value="10000", content_hash="sha256:" + "c" * 64,
+    )
+    policy = PolicyContract(
+        policy_id=uuid4(), owner_id=owner_id, name="Fixture policy", policy_version="1.0.0",
+        asset_class=AssetClass.EQUITY, effective_at=NOW, parameters={"max_weight": 0.1},
+    )
+    other_portfolio = portfolio.model_copy(update={"portfolio_id": uuid4(), "owner_id": uuid4()})
+    other_policy = policy.model_copy(update={"policy_id": uuid4(), "owner_id": uuid4()})
+    older = portfolio.model_copy(update={"portfolio_id": uuid4(), "as_of": NOW - timedelta(days=1)})
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        for item in (portfolio, older, other_portfolio):
+            repository.add_portfolio_snapshot(item)
+        for item in (policy, other_policy):
+            repository.add_policy(item)
+    _login(client)
+    assert client.get("/api/v1/portfolios", params={"limit": 1}).json() == [portfolio.model_dump(mode="json")]
+    assert client.get("/api/v1/portfolios", params={"limit": 1, "offset": 1}).json() == [older.model_dump(mode="json")]
+    assert client.get(f"/api/v1/portfolios/{portfolio.portfolio_id}").json() == portfolio.model_dump(mode="json")
+    assert client.get(f"/api/v1/portfolios/{other_portfolio.portfolio_id}").status_code == 404
+    assert client.get(f"/api/v1/portfolios/{uuid4()}").status_code == 404
+    assert client.get("/api/v1/policies").json() == [policy.model_dump(mode="json")]
+    assert client.get("/api/v1/policies", params={"asset_class": "crypto"}).json() == []
+    assert client.get(f"/api/v1/policies/{policy.policy_id}/1.0.0").json() == policy.model_dump(mode="json")
+    assert client.get(f"/api/v1/policies/{other_policy.policy_id}/1.0.0").status_code == 404
+    assert client.get(f"/api/v1/policies/{policy.policy_id}/unknown").status_code == 404
+    for path in ("portfolios", "policies"):
+        for params in ({"limit": 0}, {"limit": 201}, {"offset": -1}, {"offset": 100001}):
+            assert client.get(f"/api/v1/{path}", params=params).status_code == 422
+    assert client.get("/api/v1/policies", params={"asset_class": "unknown"}).status_code == 422
+
+
+@pytest.mark.unit
+def test_run_artifact_discovery_excludes_storage_and_other_owners(api_context):
+    client = api_context["client"]
+    owner_id = api_context["principal"].owner_id
+    run = api_context["other_run"].model_copy(update={"run_id": uuid4(), "owner_id": owner_id})
+    path = f"/api/v1/runs/{run.run_id}/artifacts"
+    assert client.get(path).status_code == 401
+    with client.app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        repository.save_run(run)
+        service = ArtifactService(client.app.state.artifact_store, repository)
+        artifact = service.create(owner_id=owner_id, run_id=run.run_id,
+            kind=ArtifactKind.ANALYSIS_REPORT, media_type="text/markdown",
+            content=b"Synthetic report", created_at=NOW)
+    _login(client)
+    response = client.get(path)
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    assert response.json()[0]["artifact_id"] == str(artifact.artifact_id)
+    assert "storage_key" not in response.text
+    assert "owner_id" not in response.text
+    assert client.get(path, params={"offset": 1}).json() == []
+    assert client.get(path, params={"limit": 201}).status_code == 422
+    assert client.get(f"/api/v1/runs/{api_context['other_run'].run_id}/artifacts").status_code == 404
+    assert client.get(f"/api/v1/runs/{uuid4()}/artifacts").status_code == 404
+
+
+def test_benchmark_response_includes_owner_readable_provenance(api_context):
+    client = api_context["client"]
+    instrument = api_context["instrument"]
+    owner_id = api_context["principal"].owner_id
+    benchmark = instrument.model_copy(update={"instrument_id": uuid4(), "symbol": "SPY",
+        "canonical_symbol": "SPY", "display_name": "Synthetic benchmark", "asset_class": AssetClass.ETF})
+    with client.app.state.database.session() as session:
+        repo = PlatformRepository(session)
+        repo.add_instrument(benchmark)
+        service = TimeSeriesSnapshotService(repo, ArtifactService(client.app.state.artifact_store, repo))
+        _, series = service.load(owner_id=owner_id, instrument_id=instrument.instrument_id,
+                                 dataset="ohlcv.daily", as_of=NOW)
+        source = service.persist(owner_id=owner_id,
+            series=series.model_copy(update={"instrument_id": benchmark.instrument_id}),
+            vendor="SYNTHETIC BENCHMARK", retrieved_at=NOW)
+    _login(client)
+    path = f"/api/v1/instruments/{instrument.instrument_id}/timeseries"
+    response = client.get(path, params={"benchmark_instrument_id": str(benchmark.instrument_id)})
+    assert response.status_code == 200
+    assert response.json()["benchmark_snapshot"] == source.model_dump(mode="json")
+    assert response.json()["view"]["benchmark"]["aligned_observations"] == 2
+    assert response.json()["view"]["benchmark"]["excess_return"] == 0
+    assert client.get(path).json()["benchmark_snapshot"] is None
+    assert client.get(path, params={"benchmark_instrument_id": str(benchmark.instrument_id),
+                                   "as_of": (NOW - timedelta(hours=2)).isoformat()}).status_code == 404
+
+
 def test_snapshot_run_inputs_are_owner_validated_and_idempotent(api_context):
     client = api_context["client"]
     _login(client)
@@ -249,6 +453,60 @@ def test_login_sets_private_session_and_me_uses_server_principal(api_context):
     assert client.cookies.get("ta_session")
     assert client.cookies.get("ta_csrf")
     assert client.get("/api/v1/auth/me").json()["email"] == "owner@example.com"
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_authenticates_and_preserves_cookie_scope(api_context):
+    client = api_context["client"]
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+    login = _login(client)
+    assert all("Path=/api/v1" in value for value in login.headers.get_list("set-cookie"))
+    response = client.get("/api/v1/auth/csrf")
+    assert response.status_code == 200
+    assert response.json() == {"csrf_token": client.cookies.get("ta_csrf")}
+    assert response.headers["cache-control"] == "no-store"
+    assert "set-cookie" not in response.headers
+    cross_origin = client.get("/api/v1/auth/csrf", headers={"Origin": "https://evil.example"})
+    assert "access-control-allow-origin" not in cross_origin.headers
+    logout = client.post("/api/v1/auth/logout", headers={
+        "Origin": ORIGIN, "X-CSRF-Token": response.json()["csrf_token"],
+    })
+    assert logout.status_code == 200
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("csrf_value", [None, "forged-csrf-token-value-000000000000"])
+def test_csrf_bootstrap_rejects_missing_or_forged_cookie(api_context, csrf_value):
+    client = api_context["client"]
+    _login(client)
+    client.cookies.delete("ta_csrf")
+    if csrf_value is not None:
+        client.cookies.set("ta_csrf", csrf_value, path="/api/v1")
+    response = client.get("/api/v1/auth/csrf")
+    assert response.status_code == 403
+    assert response.json() == {"detail": "CSRF validation failed"}
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_rejects_expired_session(api_context):
+    client = api_context["client"]
+    _login(client)
+    client.app.state.settings = replace(
+        client.app.state.settings, clock=lambda: NOW + timedelta(days=1)
+    )
+    assert client.get("/api/v1/auth/csrf").status_code == 401
+
+
+@pytest.mark.unit
+def test_csrf_bootstrap_rejects_another_session_token(api_context):
+    client = api_context["client"]
+    _login(client)
+    old_csrf = client.cookies.get("ta_csrf")
+    _login(client)
+    client.cookies.delete("ta_csrf")
+    client.cookies.set("ta_csrf", old_csrf, path="/api/v1")
+    assert client.get("/api/v1/auth/csrf").status_code == 403
 
 
 @pytest.mark.unit

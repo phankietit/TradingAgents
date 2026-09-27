@@ -7,11 +7,13 @@ from typing import TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from tradingagents._compat import UTC
 from tradingagents.contracts import (
+    ArtifactKind,
     ArtifactManifest,
     AssetClass,
     DecisionCandidate,
@@ -40,6 +42,7 @@ from .models import (
     PortfolioSnapshotRow,
     RunRow,
     SnapshotRow,
+    WatchlistRow,
 )
 
 ContractT = TypeVar("ContractT", bound=BaseModel)
@@ -221,6 +224,95 @@ class PlatformRepository:
         row = self.session.get(InstrumentRow, instrument_id)
         return InstrumentContract.model_validate(row.payload) if row else None
 
+    def list_run_artifacts(
+        self, run_id: UUID, owner_id: UUID, *, limit: int = 50, offset: int = 0
+    ) -> tuple[ArtifactManifest, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(ArtifactRow)
+            .where(ArtifactRow.owner_id == owner_id, ArtifactRow.run_id == run_id)
+            .order_by(ArtifactRow.created_at.desc(), ArtifactRow.artifact_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(ArtifactManifest.model_validate(row.payload) for row in rows)
+
+    def list_screening_artifacts(
+        self, owner_id: UUID, *, available_at: datetime, limit: int = 50, offset: int = 0,
+    ) -> tuple[ArtifactManifest, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(ArtifactRow)
+            .where(ArtifactRow.owner_id == owner_id,
+                   ArtifactRow.kind == ArtifactKind.SCREENING_SNAPSHOT.value,
+                   ArtifactRow.created_at <= available_at)
+            .order_by(ArtifactRow.created_at.desc(), ArtifactRow.artifact_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(ArtifactManifest.model_validate(row.payload) for row in rows)
+
+    def list_watchlist(
+        self, owner_id: UUID, *, limit: int = 50, offset: int = 0,
+    ) -> tuple[InstrumentContract, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(InstrumentRow).join(WatchlistRow, WatchlistRow.instrument_id == InstrumentRow.instrument_id)
+            .where(WatchlistRow.owner_id == owner_id)
+            .order_by(InstrumentRow.canonical_symbol, InstrumentRow.instrument_id)
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(InstrumentContract.model_validate(row.payload) for row in rows)
+
+    def add_watchlist_entry(self, owner_id: UUID, instrument_id: UUID, *, now: datetime) -> None:
+        if self.get_instrument(instrument_id) is None:
+            raise ValueError("instrument not found")
+        if self.session.get(WatchlistRow, (owner_id, instrument_id)) is not None:
+            return
+        try:
+            with self.session.begin_nested():
+                self.session.add(WatchlistRow(owner_id=owner_id, instrument_id=instrument_id, created_at=now))
+                self.session.flush()
+        except IntegrityError:
+            # Concurrent idempotent PUT may win. Never hide an unrelated failure.
+            if self.session.get(WatchlistRow, (owner_id, instrument_id)) is None:
+                raise
+
+    def remove_watchlist_entry(self, owner_id: UUID, instrument_id: UUID) -> None:
+        self.session.execute(delete(WatchlistRow).where(
+            WatchlistRow.owner_id == owner_id, WatchlistRow.instrument_id == instrument_id,
+        ))
+
+    @staticmethod
+    def _validate_page(limit: int, offset: int) -> None:
+        if not 1 <= limit <= 200 or not 0 <= offset <= 100_000:
+            raise ValueError("invalid pagination bounds")
+
+    def list_portfolio_snapshots(
+        self, owner_id: UUID, *, limit: int = 50, offset: int = 0
+    ) -> tuple[PortfolioSnapshot, ...]:
+        self._validate_page(limit, offset)
+        rows = self.session.scalars(
+            select(PortfolioSnapshotRow)
+            .where(PortfolioSnapshotRow.owner_id == owner_id)
+            .order_by(PortfolioSnapshotRow.as_of.desc(), PortfolioSnapshotRow.portfolio_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(PortfolioSnapshot.model_validate(row.payload) for row in rows)
+
+    def list_policies(
+        self, owner_id: UUID, *, asset_class: AssetClass | None = None,
+        limit: int = 50, offset: int = 0,
+    ) -> tuple[PolicyContract, ...]:
+        self._validate_page(limit, offset)
+        statement = select(PolicyRow).where(PolicyRow.owner_id == owner_id)
+        if asset_class is not None:
+            statement = statement.where(PolicyRow.asset_class == asset_class.value)
+        rows = self.session.scalars(
+            statement.order_by(
+                PolicyRow.effective_at.desc(), PolicyRow.policy_id.desc(), PolicyRow.policy_version.desc()
+            ).limit(limit).offset(offset)
+        ).all()
+        return tuple(PolicyContract.model_validate(row.payload) for row in rows)
+
     def list_instrument_aliases(
         self, instrument_id: UUID
     ) -> tuple[InstrumentAliasContract, ...]:
@@ -310,6 +402,24 @@ class PlatformRepository:
     def get_snapshot(self, snapshot_id: UUID) -> SnapshotManifest | None:
         row = self.session.get(SnapshotRow, snapshot_id)
         return SnapshotManifest.model_validate(row.payload) if row else None
+
+    def list_owner_snapshots(
+        self, instrument_id: UUID, owner_id: UUID, *, limit: int = 50, offset: int = 0,
+    ) -> tuple[SnapshotManifest, ...]:
+        self._validate_page(limit, offset)
+        owner_payload = select(ArtifactRow.artifact_id).where(
+            ArtifactRow.snapshot_id == SnapshotRow.snapshot_id,
+            ArtifactRow.owner_id == owner_id,
+            ArtifactRow.kind == "snapshot_payload",
+            ArtifactRow.instrument_id == SnapshotRow.instrument_id,
+            ArtifactRow.content_hash == SnapshotRow.content_hash,
+        ).exists()
+        rows = self.session.scalars(
+            select(SnapshotRow).where(SnapshotRow.instrument_id == instrument_id, owner_payload)
+            .order_by(SnapshotRow.as_of.desc(), SnapshotRow.snapshot_id.desc())
+            .limit(limit).offset(offset)
+        ).all()
+        return tuple(SnapshotManifest.model_validate(row.payload) for row in rows)
 
     def latest_snapshot(
         self,

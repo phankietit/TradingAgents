@@ -221,3 +221,10 @@ __marimo__/
 # Enterprise env file (secrets) and generated run reports
 .env.enterprise
 reports/
+
+# Local web dependencies and verification output
+node_modules/
+web/coverage/
+web/test-results/
+web/playwright-report/
+*.tsbuildinfo

@@ -8,12 +8,14 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from tradingagents.contracts import (
+    ArtifactKind,
     DecisionCandidate,
     DecisionLifecycleEvent,
     DecisionStatus,
     InstrumentAliasContract,
     InstrumentContract,
     JobRecord,
+    JobStatus,
     RunManifest,
     SnapshotManifest,
     TimeSeriesView,
@@ -39,14 +41,65 @@ class LoginResponse(OwnerResponse):
     expires_at: AwareDatetime
 
 
+class CsrfResponse(ApiModel):
+    csrf_token: str = Field(repr=False)
+
+
+class AnalysisConfigurationResponse(ApiModel):
+    provider: str
+    quick_model: str
+    deep_model: str
+    worker_status: Literal["UNVERIFIED"] = "UNVERIFIED"
+    provider_connection: Literal["UNVERIFIED"] = "UNVERIFIED"
+    max_job_attempts: int
+
+
+class RunJobStateResponse(ApiModel):
+    job_id: UUID
+    run_id: UUID
+    status: JobStatus
+    attempt: int
+    max_attempts: int
+    available_at: AwareDatetime
+    updated_at: AwareDatetime
+    completed_at: AwareDatetime | None
+
+
+class ArtifactMetadataResponse(ApiModel):
+    artifact_id: UUID
+    kind: ArtifactKind
+    media_type: str
+    content_hash: str
+    byte_size: int
+    created_at: AwareDatetime
+    run_id: UUID | None
+    instrument_id: UUID | None
+    snapshot_id: UUID | None
+
+
 class InstrumentDetailResponse(ApiModel):
     instrument: InstrumentContract
     aliases: tuple[InstrumentAliasContract, ...]
 
 
+class AnalysisProfileResponse(ApiModel):
+    name: str
+    allowed_analysts: tuple[str, ...]
+    investable: bool
+
+
 class TimeSeriesResponse(ApiModel):
     snapshot: SnapshotManifest
     view: TimeSeriesView
+    benchmark_snapshot: SnapshotManifest | None = None
+
+
+class SnapshotDiscoveryResponse(ApiModel):
+    snapshot: SnapshotManifest
+    metadata_eligible: bool
+    ineligibility_reasons: tuple[str, ...]
+    supported_analysts: tuple[str, ...]
+    content_validation: Literal["required_on_run_creation"] = "required_on_run_creation"
 
 
 class RunCreateRequest(ApiModel):

@@ -13,9 +13,11 @@ from sqlalchemy import inspect
 from tests.test_decision_event_persistence import seed
 from tests.test_decision_lifecycle import _approval
 from tests.test_persisted_evaluation import setup_evaluation
+from tests.test_platform_persistence import NOW, _instrument
 from tests.test_portfolio_valuation_service import setup_valuation
 from tradingagents.contracts import DecisionStatus
 from tradingagents.platform.artifacts import ArtifactService
+from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.evaluation.replay import PersistedEvaluationService
 from tradingagents.platform.persistence import (
     Database,
@@ -24,6 +26,7 @@ from tradingagents.platform.persistence import (
     upgrade_database,
 )
 from tradingagents.platform.persistence.models import Base, DecisionRow
+from tradingagents.platform.portfolio.evidence import load_valuation_evidence
 from tradingagents.platform.portfolio.service import PortfolioLedgerService
 
 pytestmark = pytest.mark.integration
@@ -49,6 +52,36 @@ def test_migration_schema_parity_and_rollback(postgres_url):
         downgrade_database(postgres_url)
         assert set(inspect(database.engine).get_table_names()) <= {"alembic_version"}
         upgrade_database(postgres_url)
+    finally:
+        database.dispose()
+
+
+def test_concurrent_watchlist_put_and_owner_isolation(postgres_url):
+    database = Database(postgres_url)
+    instrument = _instrument()
+    with database.session() as session:
+        owner = OwnerAuth(session).bootstrap_owner("watchlist@example.com", "synthetic-qa-password")
+        PlatformRepository(session).add_instrument(instrument)
+    barrier = Barrier(2)
+
+    def save(_):
+        barrier.wait(timeout=10)
+        with database.session() as session:
+            OwnerAuth(session).lock_owner(owner.owner_id)
+            PlatformRepository(session).add_watchlist_entry(owner.owner_id, instrument.instrument_id, now=NOW)
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            list(pool.map(save, range(2)))
+        with database.session() as session:
+            repository = PlatformRepository(session)
+            assert repository.list_watchlist(owner.owner_id) == (instrument,)
+            assert repository.list_watchlist(uuid4()) == ()
+            repository.remove_watchlist_entry(uuid4(), instrument.instrument_id)
+            assert repository.list_watchlist(owner.owner_id) == (instrument,)
+            repository.remove_watchlist_entry(owner.owner_id, instrument.instrument_id)
+        with database.session() as session:
+            assert PlatformRepository(session).list_watchlist(owner.owner_id) == ()
     finally:
         database.dispose()
 
@@ -95,6 +128,11 @@ def test_owner_ledger_snapshot_replay_on_postgresql(tmp_path, postgres_url):
             repo = PlatformRepository(session)
             assert PortfolioLedgerService(ArtifactService(store, repo)).replay(**args) == result
             assert repo.get_portfolio_snapshot(result.portfolio_id, uuid4()) is None
+            evidence = load_valuation_evidence(ArtifactService(store, repo), result, args["owner_id"])
+            assert evidence.portfolio_content_hash == result.content_hash
+            assert evidence.sources[0].quote.price == result.positions[0].market_price
+            assert evidence.sources[0].quote.snapshot_id == next(iter(args["price_snapshot_ids"].values()))
+            assert load_valuation_evidence(ArtifactService(store, repo), result, uuid4()) is None
     finally:
         database.dispose()
 

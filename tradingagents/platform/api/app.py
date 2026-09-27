@@ -13,6 +13,7 @@ from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Annotated
+from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
 import anyio
@@ -30,6 +31,7 @@ from fastapi import (
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.security import APIKeyCookie
+from pydantic import AwareDatetime
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -44,10 +46,13 @@ from tradingagents.contracts import (
     InstrumentContract,
     JobRecord,
     JobStatus,
+    PolicyContract,
+    PortfolioSnapshot,
     RunEvent,
     RunEventType,
     RunManifest,
     RunStatus,
+    StockUniverseSnapshot,
     Tradability,
 )
 from tradingagents.platform.artifacts import (
@@ -73,8 +78,14 @@ from tradingagents.platform.persistence import (
     Database,
     PlatformRepository,
 )
+from tradingagents.platform.portfolio.evidence import ValuationEvidence, load_valuation_evidence
+from tradingagents.platform.screening import DeterministicStockScreener
 
 from .schemas import (
+    AnalysisConfigurationResponse,
+    AnalysisProfileResponse,
+    ArtifactMetadataResponse,
+    CsrfResponse,
     DecisionStateResponse,
     DecisionTransitionRequest,
     InstrumentDetailResponse,
@@ -83,10 +94,13 @@ from .schemas import (
     OwnerResponse,
     RunAcceptedResponse,
     RunCreateRequest,
+    RunJobStateResponse,
+    SnapshotDiscoveryResponse,
     StatusResponse,
     TimeSeriesResponse,
 )
 from .settings import ApiSettings
+from .web import CSP, mount_built_web
 
 API_PREFIX = "/api/v1"
 SESSION_COOKIE = "ta_session"
@@ -251,7 +265,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         with request_id_scope(request_id):
             try:
-                if request.method in UNSAFE_METHODS and request.headers.get(
+                if settings.web_root is not None and request.headers.get("host") != urlparse(settings.allowed_origin).netloc:
+                    # Reject DNS-rebinding hosts even when they resolve to loopback.
+                    response = JSONResponse(status_code=400, content={"detail": "invalid host"})
+                elif request.method in UNSAFE_METHODS and request.headers.get(
                     "origin"
                 ) != settings.allowed_origin.rstrip("/"):
                     response = JSONResponse(
@@ -288,6 +305,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Cache-Control"] = "no-store"
+        if settings.web_root is not None:
+            response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+            if request.url.path in {"/", "/index.html"} or request.url.path.startswith("/assets/"):
+                response.headers["Content-Security-Policy"] = CSP
         return response
 
     @app.get("/health/live", response_model=StatusResponse, tags=["health"])
@@ -367,6 +388,75 @@ def create_app(settings: ApiSettings) -> FastAPI:
     def me(owner: OwnerDependency) -> OwnerResponse:
         return OwnerResponse(owner_id=owner.owner_id, email=owner.email)
 
+    @app.get(f"{API_PREFIX}/auth/csrf", response_model=CsrfResponse, tags=["auth"])
+    def csrf_token(
+        request: Request,
+        _owner: OwnerDependency,
+        session: SessionDependency,
+    ) -> CsrfResponse:
+        # Root-mounted web clients cannot read cookies scoped to /api/v1.
+        # Return only the existing session-bound value, never mint or rotate it.
+        csrf_cookie = request.cookies.get(CSRF_COOKIE, "")
+        if not csrf_cookie or not OwnerAuth(session).validate_csrf(
+            request.cookies.get(SESSION_COOKIE, ""), csrf_cookie
+        ):
+            raise HTTPException(status_code=403, detail="CSRF validation failed")
+        return CsrfResponse(csrf_token=csrf_cookie)
+
+    @app.get(f"{API_PREFIX}/analysis-configuration", response_model=AnalysisConfigurationResponse, tags=["runs"])
+    def analysis_configuration(owner: OwnerDependency):
+        # API settings describe future runs, not worker liveness or credentials.
+        # Never serialize environment, endpoint URLs or the full settings object.
+        return AnalysisConfigurationResponse(
+            provider=settings.llm_provider, quick_model=settings.quick_model,
+            deep_model=settings.deep_model, max_job_attempts=settings.max_job_attempts,
+        )
+
+    @app.get(f"{API_PREFIX}/screenings", response_model=list[ArtifactMetadataResponse], tags=["screening"])
+    def screening_history(owner: OwnerDependency, session: SessionDependency,
+                          limit: int = Query(default=50, ge=1, le=200),
+                          offset: int = Query(default=0, ge=0, le=100_000)):
+        return [ArtifactMetadataResponse.model_validate({key: value for key, value in item.model_dump().items()
+                if key in ArtifactMetadataResponse.model_fields})
+                for item in PlatformRepository(session).list_screening_artifacts(
+                    owner.owner_id, available_at=_now(settings), limit=limit, offset=offset)]
+
+    @app.get(f"{API_PREFIX}/screenings/{{screening_id}}", response_model=StockUniverseSnapshot, tags=["screening"])
+    def screening_detail(screening_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        service = DeterministicStockScreener(ArtifactService(artifact_store, PlatformRepository(session)))
+        try:
+            snapshot = service.load(owner_id=owner.owner_id, screening_snapshot_id=screening_id)
+            if snapshot.as_of > _now(settings) or snapshot.generated_at > _now(settings):
+                raise ValueError("future screening snapshot")
+            return snapshot
+        except LookupError as error:
+            raise HTTPException(status_code=404, detail="screening unavailable") from error
+        except (ArtifactIntegrityError, ValueError) as error:
+            raise HTTPException(status_code=409, detail="screening validation failed") from error
+
+    @app.get(f"{API_PREFIX}/watchlist", response_model=list[InstrumentContract], tags=["watchlist"])
+    def watchlist(
+        owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[InstrumentContract, ...]:
+        return PlatformRepository(session).list_watchlist(owner.owner_id, limit=limit, offset=offset)
+
+    @app.put(f"{API_PREFIX}/watchlist/{{instrument_id}}", response_model=StatusResponse, tags=["watchlist"])
+    def watchlist_add(instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency) -> StatusResponse:
+        OwnerAuth(session).lock_owner(owner.owner_id)
+        try:
+            PlatformRepository(session).add_watchlist_entry(owner.owner_id, instrument_id, now=_now(settings))
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail="instrument not found") from error
+        return StatusResponse(status="saved")
+
+    @app.delete(f"{API_PREFIX}/watchlist/{{instrument_id}}", response_model=StatusResponse, tags=["watchlist"])
+    def watchlist_remove(instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency) -> StatusResponse:
+        OwnerAuth(session).lock_owner(owner.owner_id)
+        PlatformRepository(session).remove_watchlist_entry(owner.owner_id, instrument_id)
+        return StatusResponse(status="removed")
+
     @app.get(
         f"{API_PREFIX}/instruments",
         response_model=list[InstrumentContract],
@@ -443,6 +533,22 @@ def create_app(settings: ApiSettings) -> FastAPI:
             aliases=repository.list_instrument_aliases(instrument.instrument_id),
         )
 
+    @app.get(f"{API_PREFIX}/instruments/{{instrument_id}}/analysis-profile",
+             response_model=AnalysisProfileResponse, tags=["instruments"])
+    def analysis_profile(instrument_id: UUID, _owner: OwnerDependency, session: SessionDependency) -> AnalysisProfileResponse:
+        from tradingagents.platform.analysis.profiles import resolve_analysis_profile
+
+        instrument = PlatformRepository(session).get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        try:
+            profile = resolve_analysis_profile(instrument)
+        except ValueError as error:
+            raise HTTPException(status_code=422, detail="unsupported analysis profile") from error
+        return AnalysisProfileResponse(name=profile.name, allowed_analysts=tuple(
+            role for role in profile.allowed_analysts if role in settings.allowed_analysts
+        ), investable=profile.investable)
+
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/timeseries",
         response_model=TimeSeriesResponse,
@@ -483,8 +589,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
             )
             series = slice_time_series(series, start=start, end=end)
             benchmark = None
+            benchmark_snapshot = None
             if benchmark_instrument_id is not None:
-                _benchmark_snapshot, benchmark = snapshots.load(
+                benchmark_snapshot, benchmark = snapshots.load(
                     owner_id=owner.owner_id,
                     instrument_id=benchmark_instrument_id,
                     dataset=dataset,
@@ -502,7 +609,35 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail=str(error),
             ) from error
-        return TimeSeriesResponse(snapshot=snapshot, view=view)
+        return TimeSeriesResponse(snapshot=snapshot, view=view, benchmark_snapshot=benchmark_snapshot)
+
+    @app.get(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",
+        response_model=list[SnapshotDiscoveryResponse], tags=["instruments"],
+    )
+    def discover_snapshots(
+        instrument_id: UUID, owner: OwnerDependency, session: SessionDependency,
+        analysis_as_of: AwareDatetime,
+        max_age_seconds: int = Query(ge=0, le=315360000),
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[SnapshotDiscoveryResponse, ...]:
+        from tradingagents.platform.analysis.snapshots import (
+            snapshot_ineligibility,
+            supported_snapshot_analysts,
+        )
+
+        if analysis_as_of > _now(settings):
+            raise HTTPException(status_code=422, detail="future as_of")
+        repository = PlatformRepository(session)
+        if repository.get_instrument(instrument_id) is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        result = []
+        for item in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=limit, offset=offset):
+            reasons = snapshot_ineligibility(item, instrument_id, analysis_as_of, max_age_seconds)
+            result.append(SnapshotDiscoveryResponse(snapshot=item, metadata_eligible=not reasons,
+                ineligibility_reasons=reasons, supported_analysts=supported_snapshot_analysts(item.dataset)))
+        return tuple(result)
 
     @app.post(
         f"{API_PREFIX}/runs",
@@ -593,7 +728,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 if inputs.portfolio_snapshot_id is not None:
                     portfolio = repository.get_portfolio_snapshot(inputs.portfolio_snapshot_id, owner.owner_id)
                     policy = repository.get_policy(inputs.policy_id, inputs.policy_version, owner.owner_id)
-                    if portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None:
+                    if (portfolio is None or portfolio.as_of != run.analysis_as_of or policy is None
+                            or policy.effective_at > run.analysis_as_of or policy.asset_class != instrument.asset_class
+                            or not resolve_analysis_profile(instrument).investable):
                         raise ValueError("risk inputs unavailable")
             except (ValueError, ArtifactIntegrityError) as error:
                 raise HTTPException(status_code=422, detail="ineligible snapshot analysis inputs") from error
@@ -641,6 +778,74 @@ def create_app(settings: ApiSettings) -> FastAPI:
         if run is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
         return run
+
+    @app.get(
+        f"{API_PREFIX}/runs/{{run_id}}/artifacts",
+        response_model=list[ArtifactMetadataResponse], tags=["artifacts"],
+    )
+    def run_artifacts(
+        run_id: UUID, owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[ArtifactMetadataResponse, ...]:
+        repository = PlatformRepository(session)
+        if repository.get_run(run_id, owner.owner_id) is None:
+            raise HTTPException(status_code=404, detail="run not found")
+        return tuple(
+            ArtifactMetadataResponse.model_validate(
+                item.model_dump(include=set(ArtifactMetadataResponse.model_fields))
+            )
+            for item in repository.list_run_artifacts(run_id, owner.owner_id, limit=limit, offset=offset)
+        )
+
+    @app.get(f"{API_PREFIX}/portfolios/{{portfolio_id}}/valuation-evidence", response_model=ValuationEvidence, tags=["portfolios"])
+    def portfolio_valuation_evidence(portfolio_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        repository = PlatformRepository(session)
+        portfolio = repository.get_portfolio_snapshot(portfolio_id, owner.owner_id)
+        if portfolio is None:
+            raise HTTPException(status_code=404, detail="valuation evidence unavailable")
+        try:
+            evidence = load_valuation_evidence(ArtifactService(artifact_store, repository), portfolio, owner.owner_id)
+            if evidence is None:
+                raise HTTPException(status_code=404, detail="valuation evidence unavailable")
+            return evidence
+        except (ArtifactIntegrityError, ValueError) as error:
+            raise HTTPException(status_code=409, detail="valuation evidence validation failed") from error
+
+    @app.get(f"{API_PREFIX}/portfolios", response_model=list[PortfolioSnapshot], tags=["portfolios"])
+    def portfolios(
+        owner: OwnerDependency, session: SessionDependency,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[PortfolioSnapshot, ...]:
+        return PlatformRepository(session).list_portfolio_snapshots(owner.owner_id, limit=limit, offset=offset)
+
+    @app.get(f"{API_PREFIX}/portfolios/{{portfolio_id}}", response_model=PortfolioSnapshot, tags=["portfolios"])
+    def portfolio(portfolio_id: UUID, owner: OwnerDependency, session: SessionDependency) -> PortfolioSnapshot:
+        result = PlatformRepository(session).get_portfolio_snapshot(portfolio_id, owner.owner_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="portfolio not found")
+        return result
+
+    @app.get(f"{API_PREFIX}/policies", response_model=list[PolicyContract], tags=["policies"])
+    def policies(
+        owner: OwnerDependency, session: SessionDependency,
+        asset_class: AssetClass | None = None,
+        limit: int = Query(default=50, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100_000),
+    ) -> tuple[PolicyContract, ...]:
+        return PlatformRepository(session).list_policies(
+            owner.owner_id, asset_class=asset_class, limit=limit, offset=offset
+        )
+
+    @app.get(f"{API_PREFIX}/policies/{{policy_id}}/{{policy_version}}", response_model=PolicyContract, tags=["policies"])
+    def policy(
+        policy_id: UUID, policy_version: str, owner: OwnerDependency, session: SessionDependency,
+    ) -> PolicyContract:
+        result = PlatformRepository(session).get_policy(policy_id, policy_version, owner.owner_id)
+        if result is None:
+            raise HTTPException(status_code=404, detail="policy not found")
+        return result
 
     @app.get(f"{API_PREFIX}/runs/{{run_id}}/events", tags=["runs"])
     def stream_run_events(
@@ -774,6 +979,16 @@ def create_app(settings: ApiSettings) -> FastAPI:
             )
         return cancelled
 
+    @app.get(f"{API_PREFIX}/runs/{{run_id}}/job", response_model=RunJobStateResponse, tags=["jobs"])
+    def run_job(run_id: UUID, owner: OwnerDependency, session: SessionDependency):
+        job = DurableJobQueue(session).get_by_run(run_id, owner.owner_id)
+        if job is None:
+            raise HTTPException(status_code=404, detail="job not found")
+        return RunJobStateResponse.model_validate({
+            key: value for key, value in job.model_dump().items()
+            if key in RunJobStateResponse.model_fields
+        })
+
     @app.get(f"{API_PREFIX}/jobs/{{job_id}}", response_model=JobRecord, tags=["jobs"])
     def get_job(
         job_id: UUID,
@@ -874,4 +1089,6 @@ def create_app(settings: ApiSettings) -> FastAPI:
             headers={"Content-Disposition": f'attachment; filename="{manifest.artifact_id}"'},
         )
 
+    if settings.web_root is not None:
+        mount_built_web(app, settings.web_root)
     return app

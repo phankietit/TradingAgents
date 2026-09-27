@@ -1,0 +1,68 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { afterEach, expect, it, vi } from 'vitest';
+import ArtifactPreview from './ArtifactPreview';
+import type { Artifact } from './ArtifactPreview';
+import { request } from './api';
+
+afterEach(() => vi.unstubAllGlobals());
+const artifact: Artifact = { artifact_id: 'artifact-fixture', kind: 'analysis_report', media_type: 'application/json',
+  byte_size: 500, content_hash: 'sha256:fixture', created_at: '2026-09-01T00:00:00Z' };
+const report = { run_id: 'run-fixture', decision_id: '12345678-1234-1234-1234-123456789abc', profile: 'equity',
+  reference_only: false, selected_analysts: ['market'], snapshot_attestation: 'PASS', narrative: '<img src=x onerror=alert(1)>', structured_narrative: { thesis: '<script>not executable</script>' } };
+
+it('loads only on demand and displays untrusted report text plus a bound decision link', async () => {
+  const fetch = vi.fn(async () => new Response(JSON.stringify(report)));
+  vi.stubGlobal('fetch', fetch);
+  const user = userEvent.setup(); render(<ArtifactPreview artifact={artifact} runId="run-fixture" />);
+  expect(fetch).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: 'Inspect analysis report' }));
+  expect(await screen.findByText(report.narrative)).toBeTruthy();
+  expect(document.querySelector('img')).toBeNull();
+  expect(screen.getByRole('link', { name: 'Review linked decision' }).getAttribute('href')).toBe(`#/decisions?decision=${report.decision_id}`);
+  await user.click(screen.getByText('Structured research output'));
+  expect(document.querySelector('script')).toBeNull();
+  await user.click(screen.getByRole('button', { name: 'Close analysis report' }));
+  expect(screen.queryByText(report.narrative)).toBeNull();
+});
+
+it.each(['wrong_run', 'invalid_schema', 'integrity_failure', 'invalid_json'] as const)('withholds preview on %s', async caseName => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(caseName === 'invalid_json' ? '<html>not json</html>' : JSON.stringify(
+    { ...report, ...(caseName === 'wrong_run' ? { run_id: 'other-run' } : caseName === 'invalid_schema' ? { narrative: {} } : {}) }),
+    { status: caseName === 'integrity_failure' ? 409 : 200 })));
+  const user = userEvent.setup(); render(<ArtifactPreview artifact={artifact} runId="run-fixture" />);
+  await user.click(screen.getByRole('button', { name: 'Inspect analysis report' }));
+  expect((await screen.findByRole('alert')).textContent).toContain('No report contents are shown');
+  expect(screen.queryByRole('link')).toBeNull();
+});
+
+it('refuses unsupported formats and large manifest sizes without fetching', () => {
+  const fetch = vi.fn(); vi.stubGlobal('fetch', fetch);
+  const view = render(<ArtifactPreview artifact={{ ...artifact, media_type: 'text/html' }} runId="run-fixture" />);
+  expect(screen.queryByRole('button')).toBeNull();
+  view.rerender(<ArtifactPreview artifact={{ ...artifact, byte_size: 1_000_001 }} runId="run-fixture" />);
+  expect(screen.queryByRole('button')).toBeNull();
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+it('bounds streamed response bytes even without a content-length header', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ text: 'x'.repeat(50) }))));
+  await expect(request('/artifacts/fixture', {}, 20)).rejects.toMatchObject({ status: 502 });
+});
+
+it('renders linked evidence provenance and refuses broken graph links', async () => {
+  let broken = false;
+  const graph = { graph_id: artifact.artifact_id, run_id: report.run_id, as_of: artifact.created_at,
+    claims: [{ claim_id: 'claim', claim: 'Synthetic claim', evidence_ids: ['source'] }],
+    evidence: [{ evidence_id: 'source', snapshot_id: 'snapshot', claim: 'Synthetic claim', source_name: 'SYNTHETIC QA', content_hash: 'sha256:fixture', source_at: artifact.created_at, observed_at: artifact.created_at }] };
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ ...graph, evidence: broken ? [] : graph.evidence }))));
+  const user = userEvent.setup(); render(<ArtifactPreview artifact={{ ...artifact, kind: 'decision_evidence' }} runId="run-fixture" />);
+  await user.click(screen.getByRole('button', { name: 'Inspect decision evidence' }));
+  await user.click(await screen.findByText('Synthetic claim'));
+  expect(screen.getByText('SYNTHETIC QA')).toBeTruthy();
+  expect(screen.getByText('snapshot')).toBeTruthy();
+  await user.click(screen.getByRole('button', { name: 'Close decision evidence' })); broken = true;
+  await user.click(screen.getByRole('button', { name: 'Inspect decision evidence' }));
+  await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Preview unavailable'));
+  expect(screen.queryByText('Synthetic claim')).toBeNull();
+});

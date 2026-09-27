@@ -10,6 +10,16 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Added
 
+- Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
+  Decisions workspaces, owner sessions, same-origin CSRF and opt-in built-asset
+  serving through the loopback API.
+- Add persisted owner watchlists, saved benchmark/source inspection and stock
+  screening history, snapshot-bound analysis configuration, durable processing
+  status, report/evidence inspection and explicit human review.
+- Add immutable valuation source receipts for newly valued portfolios; legacy
+  snapshots without receipts remain explicitly unavailable, never backfilled.
+- Add synthetic-only browser QA modes for invalid output, worker failure and
+  session expiry, with no live model/vendor fallback.
 - Add a stable `AnalysisEngine` platform adapter around the existing LangGraph
   research runtime while preserving the CLI and programmatic graph API.
 - Add enforced equity, ETF, reference-market, and BTC/ETH analysis profiles so
@@ -51,8 +61,8 @@ Breaking changes within the 0.x line are called out explicitly.
   relative-strength/breadth factors, and a unified six-state data-health
   engine.
 
-The platform additions are local decision-support foundations. They do not add
-a Web UI, production data vendor, portfolio simulator, broker connectivity,
+The platform additions include a local decision-support Web UI. They do not add
+a production data vendor, public deployment, portfolio simulator, broker connectivity,
 order execution, or autonomous trading.
 
 ## [0.5.0] — 2026-09-18

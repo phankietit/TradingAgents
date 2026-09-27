@@ -10,6 +10,37 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 from tradingagents.contracts import DataQualityStatus, SnapshotManifest
 
 
+def supported_snapshot_analysts(dataset: str) -> tuple[str, ...]:
+    """Explicit dataset semantics; unknown feeds need a reviewed mapping."""
+    if dataset in {"daily_prices", "price", "futures.reference"} or dataset in {
+        "ohlcv.daily", "ohlcv.hourly", "ohlcv.15m", "ohlcv.5m", "ohlcv.1m",
+    }:
+        return ("market",)
+    return {
+        "news": ("news",), "fundamentals": ("fundamentals",),
+        "social": ("social",), "sentiment": ("social",),
+    }.get(dataset, ())
+
+
+def snapshot_ineligibility(manifest: SnapshotManifest, instrument_id: UUID,
+                          as_of, max_age_seconds: int) -> tuple[str, ...]:
+    """Shared metadata gate; content integrity is independently checked on load."""
+    reasons = []
+    if manifest.instrument_id != instrument_id:
+        reasons.append("instrument_mismatch")
+    if manifest.quality_status is not DataQualityStatus.OK:
+        reasons.append("quality_not_ok")
+    if manifest.source_end is None:
+        reasons.append("source_time_missing")
+    elif manifest.source_end > manifest.retrieved_at:
+        reasons.append("source_after_retrieval")
+    if manifest.retrieved_at > as_of or manifest.as_of > as_of:
+        reasons.append("not_available_at_analysis_time")
+    if manifest.source_end is not None and (as_of - manifest.source_end).total_seconds() > max_age_seconds:
+        reasons.append("stale")
+    return tuple(reasons)
+
+
 class AnalysisSnapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -46,15 +77,12 @@ class SnapshotAnalysisContext(BaseModel):
                 raise ValueError("snapshot role requires nonempty unique sources")
             for source in sources:
                 manifest = source.manifest
-                if (manifest.instrument_id != instrument_id
-                        or manifest.quality_status is not DataQualityStatus.OK
-                        or manifest.source_end is None
-                        or manifest.source_end > manifest.retrieved_at
-                        or manifest.retrieved_at > validated.as_of
-                        or manifest.as_of > validated.as_of):
-                    raise ValueError("analysis source is not point-in-time eligible")
-                if (validated.as_of - manifest.source_end).total_seconds() > validated.source_max_age_seconds[role]:
-                    raise ValueError("analysis source is stale for its role")
+                if role not in supported_snapshot_analysts(manifest.dataset):
+                    raise ValueError("snapshot dataset is not supported for analyst role")
+                reasons = snapshot_ineligibility(manifest, instrument_id, validated.as_of,
+                                                validated.source_max_age_seconds[role])
+                if reasons:
+                    raise ValueError("analysis source is not point-in-time eligible: " + ", ".join(reasons))
             reports[role] = json.dumps([
                 {"snapshot_id": str(s.manifest.snapshot_id),
                  "provenance": s.manifest.model_dump(mode="json"),

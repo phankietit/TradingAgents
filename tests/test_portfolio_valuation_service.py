@@ -10,6 +10,7 @@ from tradingagents.contracts import NormalizedTimeSeries
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.market_data import TimeSeriesSnapshotService
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
+from tradingagents.platform.portfolio.evidence import evidence_id, load_valuation_evidence
 from tradingagents.platform.portfolio.service import PortfolioLedgerService
 
 
@@ -48,6 +49,24 @@ def test_persisted_valuation_replays_raw_close_and_is_idempotent(tmp_path):
         assert result.net_asset_value == Decimal(1050)
         assert repo.get_portfolio_snapshot(result.portfolio_id, args["owner_id"]) == result
         assert repo.get_portfolio_snapshot(result.portfolio_id, uuid4()) is None
+        evidence = load_valuation_evidence(service.artifacts, result, args["owner_id"])
+        assert evidence.portfolio_content_hash == result.content_hash
+        assert evidence.sources[0].vendor == "fixture"
+        assert evidence.sources[0].quote.price == Decimal(110)
+        assert evidence.sources[0].quote.snapshot_id == next(iter(args["price_snapshot_ids"].values()))
+        assert load_valuation_evidence(service.artifacts, result, uuid4()) is None
+    database.dispose()
+
+
+def test_replay_does_not_backfill_legacy_portfolio_evidence(tmp_path, monkeypatch):
+    database, store, args = setup_valuation(tmp_path)
+    with database.session() as session:
+        artifacts = ArtifactService(store, PlatformRepository(session))
+        with monkeypatch.context() as patch:
+            patch.setattr(artifacts, "create", lambda **kwargs: None)
+            original = PortfolioLedgerService(artifacts).replay(**args)
+        assert PortfolioLedgerService(artifacts).replay(**args) == original
+        assert artifacts.repository.get_artifact(evidence_id(original.portfolio_id), args["owner_id"]) is None
     database.dispose()
 
 

@@ -55,6 +55,14 @@ class InstrumentAliasRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class WatchlistRow(Base):
+    __tablename__ = "watchlist_entries"
+
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), primary_key=True)
+    instrument_id: Mapped[UUID] = mapped_column(ForeignKey("instruments.instrument_id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class SnapshotRow(Base):
     __tablename__ = "snapshots"
     __table_args__ = (

@@ -15,7 +15,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -58,7 +58,13 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 payload["target_weight"] = .99
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Buy"
 
-    handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=Graph))
+    if case in {"fixture_graph", "invalid_fixture_graph"}:
+        from scripts.web_fixture import InvalidSyntheticGraph, SyntheticSnapshotGraph
+        graph_factory = InvalidSyntheticGraph if case == "invalid_fixture_graph" else SyntheticSnapshotGraph
+        assert not hasattr(graph_factory, "propagate")  # No live-tool fallback.
+    else:
+        graph_factory = Graph
+    handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=graph_factory))
     if case == "cancel_after_publish":
         complete = DurableJobQueue.complete
 
@@ -78,12 +84,16 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             with pytest.raises(ValueError, match="successfully completed"):
                 repo.add_decision_event(_approval(decision))
             assert repo.list_decision_events(decision.decision_id, run.owner_id) == ()
-        elif case == "valid":
+        elif case in {"valid", "fixture_graph"}:
             assert decision.status is DecisionStatus.READY_FOR_APPROVAL
             assert decision.target_weight == .3  # Owner input, not model output.
             assert len(job.output_artifact_ids) == 2
             evidence = EvidenceGraphService(ArtifactService(store, repo)).read(job.output_artifact_ids[1], run.owner_id)
-            assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation"}
+            if case == "valid":
+                assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation"}
+            else:
+                assert "SYNTHETIC LOCAL QA" in decision.thesis
+                assert len(evidence.claims) == 3
             assert all(ref.snapshot_id == source for ref in evidence.evidence)
             repo.add_decision_event(_approval(decision))
         else:

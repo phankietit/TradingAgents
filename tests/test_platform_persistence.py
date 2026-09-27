@@ -100,6 +100,7 @@ def test_migration_upgrades_and_downgrades_all_tables(tmp_path):
         "portfolio_snapshots",
         "run_events",
         "snapshots",
+        "watchlist_entries",
     } <= tables
 
     downgrade_database(url)

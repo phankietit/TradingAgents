@@ -374,11 +374,15 @@ What does not vary anymore: the analyzed company identity is resolved determinis
 
 Backtest results are not guaranteed to match any published figure. Returns depend on the model, the temperature, the date range, data quality, and the sampling above. Treat the framework as a research scaffold for studying multi-agent analysis, not as a strategy with a fixed, replicable return.
 
-## Private platform data foundation
+## Private local research workspace
 
 The optional `platform` extra now includes a private, authenticated FastAPI
-foundation for durable analysis jobs and owner-scoped results. It is intended
-for the future Web UI and currently binds locally through `tradingagents-api`.
+foundation for durable analysis jobs and owner-scoped results. The `web/`
+application provides Markets, Analysis, Portfolio and Decisions workspaces,
+served locally through `tradingagents-api` after a separate frontend build.
+It uses saved evidence, not a live trading feed. See the
+[local startup guide](docs/platform/local-web-startup.md) and
+[web build and verification guide](web/README.md).
 
 The current platform layer also provides canonical instrument identity,
 immutable normalized price series, vendor-neutral equity/ETF evidence,
@@ -408,8 +412,12 @@ model knowledge or portfolio performance. See [ledger](docs/platform/portfolio-l
 [risk](docs/platform/risk-engine.md), [approval](docs/platform/decision-lifecycle.md),
 and [historical evaluation](docs/platform/historical-evaluation-v2.md).
 
-There is no Web UI, portfolio simulator, broker connection, order execution,
-or autonomous trading path in this repository. See `docs/platform/api.md` and
+The UI supports saved watchlists, price/benchmark charts, screening history,
+queued research, reports and evidence, persisted portfolio valuations, and
+explicit decision review. Reloading data does not ingest new prices or call a
+model. A completed research run is not a valid or approved investment conclusion.
+No portfolio simulator, broker connection, order execution,
+or autonomous trading path is included. See `docs/platform/api.md` and
 the contracts under `docs/platform/` for the current runtime and data
 boundaries.
 
