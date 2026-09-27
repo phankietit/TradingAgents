@@ -31,7 +31,7 @@ from tradingagents.contracts import (
     StockScreeningInput,
 )
 from tradingagents.platform.analysis import AnalysisEngine
-from tradingagents.platform.api import ApiSettings, create_app
+from tradingagents.platform.api import ApiSettings, create_app as create_platform_app
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
 from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.instruments import InstrumentMaster
@@ -81,6 +81,19 @@ class FailedSyntheticGraph(SyntheticSnapshotGraph):
 
     def propagate_snapshots(self, *args, **kwargs):
         raise RuntimeError("SYNTHETIC LOCAL QA failure — no provider was contacted")
+
+
+def create_app(settings):
+    """Synthetic browser fixtures must never acquire live market data."""
+    from tradingagents.dataflows.platform_prices import PricePreparationError
+
+    app = create_platform_app(settings)
+
+    def unavailable(_instrument):
+        raise PricePreparationError("unavailable")
+
+    app.state.fetch_daily_prices = unavailable
+    return app
 
 
 def fixture_session_seconds(value):

@@ -6,12 +6,14 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import re
 import secrets
 import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from datetime import datetime
+from threading import Lock
 from typing import Annotated
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
@@ -92,6 +94,7 @@ from .schemas import (
     LoginRequest,
     LoginResponse,
     OwnerResponse,
+    PrepareDataResponse,
     RunAcceptedResponse,
     RunCreateRequest,
     RunJobStateResponse,
@@ -119,7 +122,7 @@ def _now(settings: ApiSettings) -> datetime:
     return value.astimezone(UTC)
 
 
-def _config_hash(settings: ApiSettings, analysts: tuple[str, ...]) -> str:
+def _config_hash(settings: ApiSettings, analysts: tuple[str, ...], report_language: str | None = None) -> str:
     value = json.dumps(
         {
             "llm_provider": settings.llm_provider,
@@ -127,6 +130,7 @@ def _config_hash(settings: ApiSettings, analysts: tuple[str, ...]) -> str:
             "deep_model": settings.deep_model,
             "prompt_version": settings.prompt_version,
             "selected_analysts": analysts,
+            **({"report_language": report_language} if report_language is not None else {}),
         },
         separators=(",", ":"),
         sort_keys=True,
@@ -237,6 +241,12 @@ def create_app(settings: ApiSettings) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.database = database
+    # One bounded acquisition at a time on the private, single-process server.
+    from tradingagents.dataflows.platform_prices import fetch_daily_prices
+    app.state.fetch_daily_prices = fetch_daily_prices
+    preparation_lock = Lock()
+    preparation_attempts: dict[tuple[UUID, UUID], float] = {}
+    preparation_failures: dict[tuple[UUID, UUID], str] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -611,6 +621,104 @@ def create_app(settings: ApiSettings) -> FastAPI:
             ) from error
         return TimeSeriesResponse(snapshot=snapshot, view=view, benchmark_snapshot=benchmark_snapshot)
 
+    @app.post(f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-data",
+              response_model=PrepareDataResponse, tags=["market-data"])
+    def prepare_data(instrument_id: UUID, owner: CsrfOwnerDependency,
+                     session: SessionDependency) -> PrepareDataResponse:
+        from tradingagents.contracts import NormalizedTimeSeries
+        from tradingagents.dataflows.platform_prices import (
+            DATASET,
+            VENDOR,
+            PricePreparationError,
+            approved_symbol,
+            history_start,
+            session_closes,
+            validate_price_coverage,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        now = _now(settings)
+
+        def outcome(code, **kwargs):
+            key = (owner.owner_id, instrument_id)
+            if code in {"no_data", "stale", "coverage_gap", "rate_limited", "unavailable"}:
+                preparation_failures[key] = code
+            if code in {"ready", "invalid", "unsupported"}:
+                preparation_failures.pop(key, None)
+            elapsed = time.monotonic() - preparation_attempts.get(key, time.monotonic() - 60)
+            wait = max(0, math.ceil(60 - elapsed))
+            return PrepareDataResponse(status=code, analysis_as_of=_now(settings),
+                retry_after_seconds=wait if code != "ready" else 0,
+                last_failure=preparation_failures.get(key), **kwargs)
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            from datetime import timedelta
+            expected_closes = {close for close in session_closes(instrument, now).values()
+                               if history_start(now) <= close <= now - timedelta(hours=1)}
+            latest_close = max(expected_closes)
+            artifacts = ArtifactService(artifact_store, repository)
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.vendor != VENDOR or snapshot.dataset != DATASET
+                        or snapshot.source_end != latest_close
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                artifact = repository.get_snapshot_artifact(snapshot.snapshot_id, owner.owner_id)
+                if artifact is None or artifact.content_hash != snapshot.content_hash:
+                    return outcome("invalid")
+                try:
+                    loaded = artifacts.read(artifact.artifact_id, owner.owner_id)
+                    if loaded is None:
+                        return outcome("invalid")
+                    series = NormalizedTimeSeries.model_validate_json(loaded[1])
+                    if (series.instrument_id != instrument_id or series.dataset != DATASET
+                            or series.as_of != snapshot.as_of):
+                        return outcome("invalid")
+                    if not expected_closes.issubset({bar.timestamp for bar in series.bars}):
+                        continue
+                except (ValueError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            if time.monotonic() - preparation_attempts.get(key, float("-inf")) < 60:
+                return outcome("cooldown")
+            preparation_attempts[key] = time.monotonic()
+            # Release the authentication/read transaction before the network request.
+            session.close()
+            try:
+                series = app.state.fetch_daily_prices(instrument)
+            except PricePreparationError as error:
+                return outcome(error.code)
+            except Exception:
+                return outcome("unavailable")
+            retrieved_at = _now(settings)
+            if (series.instrument_id != instrument_id or series.dataset != DATASET
+                    or series.as_of > retrieved_at or series.as_of < now):
+                return outcome("invalid")
+            try:
+                coverage = validate_price_coverage(instrument,
+                    (bar.timestamp for bar in series.bars), now=series.as_of)
+            except PricePreparationError as error:
+                return outcome(error.code)
+            with database.session() as write_session:
+                write_repository = PlatformRepository(write_session)
+                snapshot = TimeSeriesSnapshotService(write_repository,
+                    ArtifactService(artifact_store, write_repository)).persist(
+                        owner_id=owner.owner_id, series=series, vendor=VENDOR,
+                        retrieved_at=retrieved_at, source_metadata=coverage)
+            return outcome("ready", snapshot=snapshot)
+        finally:
+            preparation_lock.release()
+
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",
         response_model=list[SnapshotDiscoveryResponse], tags=["instruments"],
@@ -672,7 +780,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="instrument not found"
             )
-        config_hash = _config_hash(settings, payload.selected_analysts)
+        config_hash = _config_hash(settings, payload.selected_analysts, payload.report_language)
         job_payload = {
             "instrument_id": str(instrument.instrument_id),
             "analysis_as_of": payload.analysis_as_of.astimezone(UTC).isoformat(),
@@ -681,6 +789,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
         }
         if payload.decision_inputs is not None:
             job_payload["decision_inputs"] = payload.decision_inputs.model_dump(mode="json")
+        if payload.report_language is not None:
+            job_payload["report_language"] = payload.report_language
         queue = DurableJobQueue(session)
         existing_job = queue.get_by_idempotency(owner.owner_id, idempotency_key)
         if existing_job:
@@ -710,6 +820,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             deep_model=settings.deep_model,
             config_hash=config_hash,
             prompt_version=settings.prompt_version,
+            report_language=payload.report_language,
             snapshot_ids=payload.decision_inputs.snapshot_ids() if payload.decision_inputs else (),
             decision_inputs=payload.decision_inputs,
         )

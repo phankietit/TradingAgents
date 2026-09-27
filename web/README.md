@@ -1,5 +1,22 @@
 # Local research Web UI (M4)
 
+## English / Tiếng Việt
+
+Use VI/EN on login or in the workspace header. Only the locale code is stored
+in `tradingagents.ui-language.v1`; storage denial falls back to in-memory
+selection. An unset preference follows a Vietnamese browser locale, otherwise
+English. Switching does not remount forms, submit requests or translate saved
+source text. Currency/percentage displays follow the locale; timestamps stay
+explicitly UTC and numeric input values retain their existing API conventions.
+
+New analysis defaults to **English + Vietnamese**; English and Vietnamese
+alone are also selectable. The language is included in the immutable run,
+configuration hash and job payload. Changing it resets paid-call consent.
+Old reports are shown verbatim with legacy language attribution, not silently
+translated. The bilingual model instruction preserves JSON keys/enums, amounts,
+citations, uncertainty and risks; compliance is not independently certified.
+See [the full language contract](../docs/platform/bilingual.md).
+
 This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
 backend metrics and source provenance. Analysis now supports snapshot selection,

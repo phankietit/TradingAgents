@@ -153,3 +153,8 @@ dt { color: var(--muted); } dd { margin: 0; }
   .login .wordmark { margin-bottom: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; } }
+.language-switch { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 4px; border: 1px solid var(--border); border-radius: 10px; }
+.language-switch button { font-size: .8rem; padding: 6px 10px; border: 0; background: transparent; }
+.language-switch button[aria-pressed="true"] { color: var(--accent); background: #1b293c; box-shadow: inset 0 0 0 1px var(--border); }
+.login .language-switch { margin: 20px 0 0; }
+@media (max-width: 650px) { .language-name { display: none; } .workspace-header { flex-wrap: wrap; gap: 10px; } }

@@ -8,7 +8,36 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ## [Unreleased]
 
+### Fixed
+
+- Allow owner-approved latest-available crypto research with at most one missing
+  trailing daily candle, preserving internal-gap rejection and current retrieval
+  time. Disclose the actual cutoff in source metadata, UI and bilingual reports;
+  never fill missing prices or reuse delayed snapshots as current evidence.
+- Show bounded price-preparation progress and automatic retry countdowns before
+  a final source failure. Separate local cooldown from Yahoo rate limits, retain
+  the source cause, and support cancellation without starting paid analysis.
+- Align web price acquisition to the original engine's five-calendar-year
+  history window via a shared constant; retain old one-year snapshots without
+  reusing them as complete history. This does not claim full CLI/tool parity.
+- Connect the local analysis form to bounded Yahoo daily-price preparation,
+  owner-scoped verified reuse and immutable snapshots. Explain missing data,
+  coverage failures, paid-AI consent and queued-worker state in English/Vietnamese.
+  Current bootstrap stocks/ETFs, cash indices and BTC/ETH are supported; NQ/ES
+  preparation and automatic non-price ingestion remain unavailable.
+- Honor explicit provider, quick-model and deep-model environment settings in
+  the local API so new run manifests retain the operator's model selection.
+  Existing runs and API defaults are unchanged.
+
 ### Added
+
+- Add English/Vietnamese UI localization, persistent VI/EN controls and localized
+  financial display formatting without changing saved amounts, UTC cutoffs or
+  risk/approval states.
+- Add immutable per-run `report_language` selection (English, Vietnamese or
+  English–Vietnamese), worker propagation and schema-preserving bilingual
+  narrative instructions. Existing reports remain unchanged; no translation
+  service or automatic paid calls are introduced.
 
 - Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
   Decisions workspaces, owner sessions, same-origin CSRF and opt-in built-asset
