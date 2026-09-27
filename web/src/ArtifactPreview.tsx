@@ -100,7 +100,7 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
     return () => controller.abort();
   }, [artifact, runId]);
   if (state.error) return <p role="alert" className="danger">{t("Preview unavailable.")} {t(errorMessage(state.error))}  {t("No report contents are shown.")}</p>;
-  if (!state.data) return <p role="status">{t("Loading verified artifact…")}</p>;
+  if (!state.data) return <p role="status">{t("Loading saved report…")}</p>;
   const data = state.data;
   const rating = data.type === 'report' && data.structured && typeof data.structured === 'object' && !Array.isArray(data.structured)
     ? (data.structured as JsonObject).rating : null;

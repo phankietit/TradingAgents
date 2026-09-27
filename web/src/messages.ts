@@ -202,7 +202,7 @@ export const vietnamese: Record<string, string> = {
   'Retrying unchanged inputs reuses the same request key.': 'Thử lại với đầu vào không đổi sẽ dùng lại mã yêu cầu, tránh tạo trùng.',
   'Submitting…': 'Đang gửi…', 'Queue analysis': 'Gửi phân tích', 'Close configuration': 'Đóng thiết lập', 'correlation snapshot': 'dữ liệu tương quan', 'No correlation source selected': 'Chưa chọn nguồn tương quan', 'Metadata eligible': 'Thông tin nguồn đủ điều kiện',
   'Inspect': 'Xem', 'Inline preview unavailable for this format or size; use the integrity-checked download.': 'Định dạng hoặc kích thước này không hỗ trợ xem trước; hãy tải tệp đã kiểm tra tính toàn vẹn.',
-  'Preview unavailable.': 'Không thể xem trước.', 'No report contents are shown.': 'Không hiển thị nội dung báo cáo.', 'Loading verified artifact…': 'Đang tải báo cáo đã xác minh…',
+  'Preview unavailable.': 'Không thể xem trước.', 'No report contents are shown.': 'Không hiển thị nội dung báo cáo.', 'Loading saved report…': 'Đang tải báo cáo đã lưu…',
   'Immutable research artifact · Not current approval state. Text is displayed without executing HTML or external content.': 'Báo cáo gốc được lưu bất biến · Không phản ánh trạng thái phê duyệt hiện tại. Nội dung được hiển thị an toàn, không chạy HTML hay nội dung bên ngoài.',
   'Profile:': 'Loại phân tích:', '· Analysts:': '· Nhóm phân tích:', 'Reference only — not investable.': 'Chỉ tham chiếu — không dùng để phân bổ đầu tư.', 'Snapshot attestation:': 'Xác minh nguồn đã lưu:',
   'Research narrative': 'Nội dung phân tích', 'Structured research output': 'Dữ liệu phân tích có cấu trúc', 'Review linked decision': 'Xem quyết định liên quan',
