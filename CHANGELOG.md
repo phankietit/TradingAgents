@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Compile final report quantities from immutable snapshot bindings, with a
+  separate bounded financial validation stage and protected EN/VI presentation.
+  Preserve original research/debate flow and rejected reports for audit.
+- Separate analysis setup, actual-event progress and report reading; add
+  summary/history/research/verification sections and a compact mobile run picker.
+  Read-only polling no longer blanks the report, and deep links retain run identity.
+
 - Preserve quantitative references on rejected reports, distinguish reciprocal
   percentage denominators in snapshot facts, and allow ten minutes for long
   final model responses without reducing flow.

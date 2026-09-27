@@ -28,6 +28,7 @@ export default function Analysis() {
   const [newRun, setNewRun] = useState(!!initialInstrument);
   const refresh = () => { setObservedStatuses({}); setVersion(value => value + 1); };
   const runId = selected ?? history.data?.[0]?.run_id;
+  const selectRun = (id: string) => { setSelected(id); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(id)}`); };
   return <>
     <div className="section-actions"><p className="muted">{t("Snapshot-based research · Results require review, not automatic execution.")}</p>
       {!newRun ? <><button className="primary" onClick={() => setNewRun(true)}>{t("New analysis")}</button><button onClick={refresh}>{t("Refresh runs")}</button></> : null}</div>
@@ -38,9 +39,16 @@ export default function Analysis() {
     {catalog.error ? <p role="alert" className="danger">{t("Instrument discovery failed.")} {t(errorMessage(catalog.error))}</p> : null}
     {!newRun ? <div className="market-layout research-workspace">
       <section className="instrument-list" aria-label={t("Analysis history")}><div className="list-heading">{t("Recent runs")} <span>{history.data?.length ?? '—'}</span></div>
+        {history.data?.length ? <label className="compact-run-picker">{t('Select analysis')}
+          <select value={runId ?? ''} onChange={event => selectRun(event.target.value)}>
+            {runId && !history.data.some(item => item.run_id === runId) ? <option value={runId}>{t('Selected analysis')}</option> : null}
+            {history.data.map(item => <option key={item.run_id} value={item.run_id}>
+              {catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t('Instrument')} · {timestamp(item.created_at)}
+            </option>)}
+          </select></label> : null}
         {history.loading ? <p role="status">{t("Loading runs…")}</p> : history.error ? <p role="alert" className="danger">{t(errorMessage(history.error))}</p>
           : !history.data?.length ? <p className="muted">{t("No runs yet. Create one using saved evidence.")}</p>
-          : <ul>{history.data.map(item => <li key={item.run_id}><button aria-pressed={runId === item.run_id} onClick={() => { setSelected(item.run_id); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(item.run_id)}`); }}>
+          : <ul className="desktop-run-history">{history.data.map(item => <li key={item.run_id}><button aria-pressed={runId === item.run_id} onClick={() => selectRun(item.run_id)}>
             <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t("Instrument")}</strong><span>{t(processingLabels[observedStatuses[item.run_id] ?? item.status] ?? 'Status unavailable')}</span></span>
             <span className="instrument-name">{timestamp(item.created_at)}</span>
           </button></li>)}</ul>}

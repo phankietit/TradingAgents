@@ -262,3 +262,9 @@ input, select, textarea, .safe-text { background: #141614; color: #ecece8; }
 .language-switch button[aria-pressed="true"] { color: var(--accent); background: #2b3026; box-shadow: inset 0 0 0 1px var(--border); }
 .login .language-switch { margin: 20px 0 0; }
 @media (max-width: 650px) { .language-name { display: none; } .workspace-header { gap: 10px; } }
+.compact-run-picker { display: none; }
+@media (max-width: 900px) {
+  .research-workspace .desktop-run-history, .research-workspace .list-heading { display: none; }
+  .compact-run-picker { display: grid; gap: 8px; padding: 16px 0; font-size: .85rem; color: var(--muted); }
+  .compact-run-picker select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+}

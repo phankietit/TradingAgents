@@ -2,7 +2,22 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import Analysis from './Analysis';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
+
+it('opens the exact deep-linked run outside the history page instead of another run', async () => {
+  window.history.replaceState(null, '', '#/analysis?run=older-run');
+  vi.stubGlobal('EventSource', vi.fn(function () { return {addEventListener:vi.fn(),close:vi.fn()}; }));
+  const latest = {run_id:'latest',instrument_id:'apple',status:'succeeded',created_at:'2026-09-26T00:00:00Z'};
+  const fetch = vi.fn(async (url:string) => new Response(JSON.stringify(
+    url.includes('/instruments?') || url.includes('/artifacts?') ? [] : url.includes('/runs?') ? [latest] :
+      {...latest,run_id:'older-run',analysis_as_of:'2026-09-20T00:00:00Z',selected_analysts:['market'],snapshot_ids:[]}
+  )));
+  vi.stubGlobal('fetch', fetch);
+  render(<Analysis />);
+  await screen.findByText(/2026-09-20 00:00:00 UTC/);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs/older-run'))).toBe(true);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs/latest'))).toBe(false);
+});
 
 it('explains failed research and keeps its diagnostic code collapsed', async () => {
   const run = {run_id:'failed-run',instrument_id:'apple',status:'failed',created_at:'2026-09-26T00:00:00Z',analysis_as_of:'2026-09-26T00:00:00Z',selected_analysts:['market'],snapshot_ids:[],error_code:'HANDLER_ERROR'};

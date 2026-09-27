@@ -174,11 +174,12 @@ submit orders. Use a dedicated local test database for command smoke tests;
 `--once` is not a dry run when eligible jobs are present.
 # Canonical report and protected presentation (2026-09-27)
 
-Snapshot Portfolio Manager generation now produces canonical English structured
-research only. Before its one bounded repair, numeric references, financial
-amount coverage, authority checks and exact material-claim citations are checked
-against the immutable inputs. Repair receives the rejected schema-valid candidate
-and allowlisted failure codes; it cannot change source data or bypass the gates.
+Snapshot Portfolio Manager generation produces an unpublished English draft.
+The separate Financial validation node compiles quantity bindings and checks
+numeric references, financial amount coverage, authority and exact material-claim
+citations against immutable inputs. Its bounded repair receives the rejected
+candidate and allowlisted failure codes; it cannot change source data or bypass
+the gates. This is separate from the manager's schema-format repair budget.
 
 After the complete research/risk graph, the `Report presentation` node translates
 the accepted reader-facing report when Vietnamese is requested. Application-owned
