@@ -189,3 +189,15 @@ browser acceptance must pass before completion can be claimed.
 - Translation-only follow-up targets financial Vietnamese wording, retaining
   the accepted canonical report, numerical anchors, opposing case and conditions.
   It is not another research or whole-graph run.
+- PASS: clean `9d9f8f4f35a26a054c58a16afc470ccabd660bb2`, local regression:
+  1,390 tests + 88 subtests, 20 classified skips, 181.46 seconds; Ruff passed.
+- FAIL: translation-only replay used 53,377 tokens (10,546 input + 42,831
+  output), two calls, and failed localized numeric parity. Canonical English
+  remained intact. Rejected raw translation was not retained, so its exact
+  offending phrase is UNVERIFIED.
+- Independently reproduced a lexer inconsistency: `EMA10` versus `EMA 10`
+  falsely failed parity, while range `3-6` was protected as separate `3` and
+  `-6` anchors. Shared recognition now counts indicator digits consistently and
+  protects dates/ranges intact. Tests still reject changed periods, endpoints
+  and signs. This fixes a proven checker defect, not proof of the live failure's
+  exact wording; subsequent live acceptance remains required.

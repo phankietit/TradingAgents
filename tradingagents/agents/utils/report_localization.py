@@ -13,12 +13,15 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from tradingagents.agents.research_schemas import LocalizedResearchReport
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
-from tradingagents.platform.analysis.research_validation import PublicationValidationError
+from tradingagents.platform.analysis.research_validation import (
+    NUMBER_PATTERN,
+    PublicationValidationError,
+)
 
 ANCHOR = re.compile(r"⟦Q[A-Z]+⟧")
 # Protect every digit, including indicator names and dates. No locale-specific
 # number parsing or arithmetic is delegated to the translator.
-QUANTITY = re.compile(r"[+−-]?\d+(?:,\d{3})*(?:\.\d+)?%?")
+QUANTITY = NUMBER_PATTERN
 
 
 class ReportTranslation(BaseModel):

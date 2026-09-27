@@ -10,6 +10,8 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Use one numeric lexer for protected translation and parity checks, including
+  indicator periods, dates and ranges; preserve strict rejection of changed values.
 - Compile final report quantities from immutable snapshot bindings, with a
   separate bounded financial validation stage and protected EN/VI presentation.
   Preserve original research/debate flow and rejected reports for audit.

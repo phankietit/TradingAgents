@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.messages import AIMessage
 
-from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
+from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, LocalizedResearchReport
 from tradingagents.agents.utils.report_localization import (
     localize_report,
     protect_quantities,
@@ -27,6 +27,23 @@ def test_roundtrip_protects_prices_signed_percentages_dates_and_indicator_digits
     protected, values = protect_quantities(original)
     assert not any(char.isdecimal() for char in protected)
     assert restore_quantities(protected, values) == original
+
+
+def test_ranges_and_dates_remain_indivisible_translation_atoms():
+    protected, values = protect_quantities("EMA10; horizon 3-6 months; as of 2026-09-27.")
+    assert list(values.values()) == ["10", "3-6", "2026-09-27"]
+    restored = restore_quantities(protected.replace("EMA", "EMA "), values)
+    LocalizedResearchReport(en="EMA10; horizon 3-6 months; as of 2026-09-27.", vi=restored)
+
+
+@pytest.mark.parametrize("vietnamese", [
+    "EMA20, kỳ hạn 3-6 tháng, lợi suất -3.38%.",
+    "EMA10, kỳ hạn 3-7 tháng, lợi suất -3.38%.",
+    "EMA10, kỳ hạn 3-6 tháng, lợi suất 3.38%.",
+])
+def test_shared_parity_still_rejects_indicator_period_range_and_sign_changes(vietnamese):
+    with pytest.raises(ValueError):
+        LocalizedResearchReport(en="EMA10, horizon 3-6 months, return -3.38%.", vi=vietnamese)
 
 
 @pytest.mark.parametrize("mutation", ["missing", "duplicate", "unknown", "added_digit", "unicode_digit"])

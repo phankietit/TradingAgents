@@ -11,7 +11,10 @@ from contextlib import suppress
 from decimal import Decimal, InvalidOperation
 
 UUID_PATTERN = re.compile(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", re.I)
-NUMBER_PATTERN = re.compile(r"(?<![\w])[-+]?\d+(?:,\d{3})*(?:\.\d+)?%?")
+# Match digits in indicator names as well as prose. Keep dates and numeric
+# ranges intact so protecting '3-6 months' does not hide the range separator
+# inside a separate negative-number anchor. Shared with protected translation.
+NUMBER_PATTERN = re.compile(r"[+−-]?\d+(?:,\d{3})*(?:\.\d+)?(?:[–—-]\d+(?:\.\d+)?)*%?")
 
 PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_requires_verified_reference",
     "research_authority_requires_review", "material_claim_citation_mismatch", "unknown_snapshot_reference",
@@ -54,7 +57,7 @@ def validate_canonical_report(decision, fact_sources, snapshot_ids):
 
 
 def number_tokens(text: str) -> Counter:
-    text = UUID_PATTERN.sub("", text).replace("−", "-")
+    text = UUID_PATTERN.sub("", text).replace("−", "-").replace("–", "-").replace("—", "-")
     return Counter(token.replace(",", "").lstrip("+") for token in NUMBER_PATTERN.findall(text))
 
 
