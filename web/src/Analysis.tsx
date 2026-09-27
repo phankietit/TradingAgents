@@ -26,6 +26,16 @@ export default function Analysis() {
   }, []);
   const [initialInstrument, setInitialInstrument] = useState(() => new URLSearchParams(window.location.hash.split('?')[1]).get('instrument') ?? undefined);
   const [newRun, setNewRun] = useState(!!initialInstrument);
+  useEffect(() => {
+    const synchronizeLocation = () => {
+      const params = new URLSearchParams(window.location.hash.split('?')[1]);
+      setSelected(params.get('run'));
+      setInitialInstrument(params.get('instrument') ?? undefined);
+      setNewRun(params.has('instrument'));
+    };
+    window.addEventListener('hashchange', synchronizeLocation);
+    return () => window.removeEventListener('hashchange', synchronizeLocation);
+  }, []);
   const refresh = () => { setObservedStatuses({}); setVersion(value => value + 1); };
   const runId = selected ?? history.data?.[0]?.run_id;
   const selectRun = (id: string) => { setSelected(id); window.history.replaceState(null, '', `#/analysis?run=${encodeURIComponent(id)}`); };

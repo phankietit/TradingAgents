@@ -17,6 +17,11 @@ it('opens the exact deep-linked run outside the history page instead of another 
   await screen.findByText(/2026-09-20 00:00:00 UTC/);
   expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs/older-run'))).toBe(true);
   expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs/latest'))).toBe(false);
+  act(() => {
+    window.history.replaceState(null, '', '#/analysis?run=another-run');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  });
+  await waitFor(() => expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs/another-run'))).toBe(true));
 });
 
 it('explains failed research and keeps its diagnostic code collapsed', async () => {
