@@ -8,6 +8,12 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ## [Unreleased]
 
+### Fixed
+
+- Honor explicit provider, quick-model and deep-model environment settings in
+  the local API so new run manifests retain the operator's model selection.
+  Existing runs and API defaults are unchanged.
+
 ### Added
 
 - Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
