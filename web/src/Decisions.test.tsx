@@ -10,10 +10,10 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
 });
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/decisions'); });
-function setup(rejectFails = false) {
+function setup(rejectFails = false, selectedCandidate = candidate) {
   let rejected = false;
   const fetch = vi.fn(async (url: string, init: RequestInit) => {
-    const state = { candidate, current_status: rejected ? 'rejected' : 'review', events: rejected ? [{ event_id: 'event', from_status: 'review', to_status: 'rejected', actor_type: 'owner', occurred_at: candidate.as_of, reason: 'Insufficient evidence' }] : [] };
+    const state = { candidate: selectedCandidate, current_status: rejected ? 'rejected' : 'review', events: rejected ? [{ event_id: 'event', from_status: 'review', to_status: 'rejected', actor_type: 'owner', occurred_at: candidate.as_of, reason: 'Insufficient evidence' }] : [] };
     if (url.endsWith('/transitions')) { if (rejectFails) return new Response('{}', {status:409}); expect(init.method).toBe('POST'); rejected = true; return new Response(JSON.stringify(state)); }
     if (url.endsWith('/auth/csrf')) return new Response(JSON.stringify({ csrf_token: 'fixture' }));
     if (url.endsWith('/state')) return new Response(JSON.stringify(state));
@@ -61,9 +61,27 @@ it('does not claim success when backend rejects the transition', async () => {
 
 it('loads a deep-linked candidate outside the history page instead of substituting the first row', async () => {
   window.history.replaceState(null, '', '#/decisions?decision=older-candidate');
-  const fetch = setup(); render(<Decisions />);
+  const fetch = setup(false, {...candidate, decision_id: 'older-candidate'}); render(<Decisions />);
   expect(await screen.findByText(candidate.thesis)).toBeTruthy();
   expect(fetch.mock.calls.some(([url]) => url === '/api/v1/decisions/older-candidate/state')).toBe(true);
+});
+
+it('withholds a mismatched deep-link response and never fetches its run', async () => {
+  window.history.replaceState(null, '', '#/decisions?decision=older-candidate');
+  const fetch = setup(); render(<Decisions />);
+  expect((await screen.findByRole('alert')).textContent).toContain('does not match');
+  expect(screen.queryByText(candidate.thesis)).toBeNull();
+  expect(screen.queryByRole('button', {name:'Reject decision'})).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url.includes('/runs/'))).toBe(false);
+});
+
+it.each(['run_id', 'instrument_id', 'analysis_as_of', null])('requires matching research identity before approval: %s', async field => {
+  const ready = {...candidate, status:'ready_for_approval', data_quality:'OK', policy_checks:[{check_id:'max_position_weight',policy_id:'p',policy_version:'1',result:'PASS',blocking:true,reason:'Within allocation limit',observed_value:.2,limit_value:.3}]};
+  const run = {run_id:candidate.run_id,instrument_id:candidate.instrument_id,analysis_as_of:candidate.as_of,status:'succeeded', ...(field ? {[field]:'mismatched'} : {})};
+  vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/state') ? {candidate:ready,current_status:'ready_for_approval',events:[]} : url.includes('/decisions?') ? [ready] : url.includes('/runs/') ? run : []))));
+  render(<Decisions />);
+  await screen.findByText(field ? 'Matching research status unavailable. Approval remains disabled.' : 'Research processing: Research complete');
+  expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(field !== null);
 });
 
 it('does not substitute another candidate when the deep link is missing or forbidden', async () => {

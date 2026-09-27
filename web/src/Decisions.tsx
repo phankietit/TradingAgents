@@ -56,15 +56,19 @@ export default function Decisions() {
 function DecisionDetail({ id, version, catalog }: { id: string; version: number; catalog: Instrument[] }) {
   const [tick, setTick] = useState(0);
   const state = useResource<State>(`/decisions/${encodeURIComponent(id)}/state`, version + tick);
-  const candidate = state.data?.candidate;
+  // Never render or act on a different candidate returned for the selected URL.
+  const candidate = state.data?.candidate?.decision_id === id ? state.data.candidate : undefined;
   const run = useResource<Run>(candidate ? `/runs/${encodeURIComponent(candidate.run_id)}` : null, version + tick);
   const [action, setAction] = useState<'approve' | 'reject' | null>(null);
   if (state.loading) return <p role="status">Loading decision state…</p>;
+  if (state.data && !candidate) return <p role="alert" className="danger">The returned research does not match the selected decision. Refresh decisions to try again. Review actions are unavailable.</p>;
   if (state.error || !candidate || !state.data) return <p role="alert" className="danger">{errorMessage(state.error)}</p>;
   const current = state.data.current_status;
   const instrumentName = catalog.find(item => item.instrument_id === candidate.instrument_id)?.canonical_symbol ?? 'Instrument name unavailable';
   const policies = new Set(candidate.policy_checks.map(check => `${check.policy_id}:${check.policy_version}`));
-  const canApprove = current === 'ready_for_approval' && candidate.data_quality === 'OK' && run.data?.status === 'succeeded'
+  const runMatches = run.data?.run_id === candidate.run_id && run.data?.instrument_id === candidate.instrument_id
+    && Date.parse(run.data.analysis_as_of) === Date.parse(candidate.as_of);
+  const canApprove = current === 'ready_for_approval' && candidate.data_quality === 'OK' && runMatches && run.data?.status === 'succeeded'
     && candidate.policy_checks.length > 0 && policies.size === 1 && candidate.policy_checks.every(check => !check.blocking || check.result === 'PASS');
   return <section className="instrument-detail" aria-label="Decision details">
     <h2>{instrumentName} · {candidate.rating} <span className="muted">· Research rating</span></h2>
@@ -78,7 +82,7 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
     {!candidate.policy_checks.length ? <p className="warning">No risk checks. Approval is unavailable.</p> : <div className="table-scroll" role="region" aria-label="Policy checks" tabIndex={0}><table><thead><tr><th>Check</th><th>Result</th><th>Observed</th><th>Limit</th><th>Reason</th></tr></thead><tbody>{candidate.policy_checks.map(check => <tr key={check.check_id}><th scope="row">{riskLabel(check.check_id)}<small>{check.blocking ? 'Required for approval' : 'Informational'}</small></th><td className={check.result === 'PASS' ? '' : 'warning'}>{check.result === 'PASS' ? 'Passed' : check.result === 'FAIL' ? 'Not passed' : 'Needs review'}</td><td>{riskValue(check.check_id,check.observed_value)}</td><td>{riskValue(check.check_id,check.limit_value)}</td><td className="wrap-cell">{check.reason}</td></tr>)}</tbody></table></div>}
     <h3>Evidence</h3>{!candidate.evidence.length ? <p className="warning">No cited evidence.</p> : candidate.evidence.map(item => <details className="provenance" key={item.evidence_id}><summary>{item.source_name} · {item.claim}</summary><p>Source: {timestamp(item.source_at)} · Observed: {timestamp(item.observed_at)}</p><p className="mono">Snapshot {item.snapshot_id}</p><p className="mono">{item.content_hash}</p>{safeSourceUrl(item.source_url) ? <a href={safeSourceUrl(item.source_url)} target="_blank" rel="noopener noreferrer">Open external source</a> : null}</details>)}
     <h3>Owner review</h3><p className="muted">This records a decision; it does not place an order. The backend revalidates run, policy and evidence on approval.</p>
-    {run.error ? <p className="warning">Run status unavailable. Approval remains disabled.</p> : <p>Research processing: {run.data ? processingLabels[run.data.status] ?? 'Status unavailable' : 'Loading…'}</p>}
+    {run.error || run.data && !runMatches ? <p className="warning">Matching research status unavailable. Approval remains disabled.</p> : <p>Research processing: {run.data ? processingLabels[run.data.status] ?? 'Status unavailable' : 'Loading…'}</p>}
     {!canApprove && ['review', 'ready_for_approval'].includes(current) ? <p className="warning">Approval is unavailable until the candidate is ready, its run succeeds and blocking checks pass.</p> : null}
     <div className="section-actions"><button className="primary" disabled={!canApprove} onClick={() => setAction('approve')}>Approve decision</button><button disabled={!['review', 'ready_for_approval'].includes(current)} onClick={() => setAction('reject')}>Reject decision</button></div>
     <h3>Review history</h3>{!state.data.events.length ? <p className="muted">No review recorded yet.</p> : <ol className="event-list">{state.data.events.map(event => <li key={event.event_id}><strong>{reviewStatus(event.from_status)} → {reviewStatus(event.to_status)}</strong><time>{timestamp(event.occurred_at)} · {event.actor_type}</time><p>{event.reason}</p></li>)}</ol>}

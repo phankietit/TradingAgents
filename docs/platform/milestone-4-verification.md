@@ -63,9 +63,35 @@ below are satisfied. No production deployment or live trading is in scope.
   not backfilled. Missing receipts stay unavailable, not inferred from current data.
 - Model configuration disclosure explicitly reports service/provider liveness as
   UNVERIFIED. It is not an authenticated connectivity or capability probe.
-- Latest frontend checkpoint: 77 tests, lint/typecheck/build PASS. Precise decimal
+- Latest frontend checkpoint: 82 tests, lint/typecheck/build PASS. Precise decimal
   display, invalid portfolio/policy responses and view-level recovery are tested;
   injected render failures have component evidence, not browser evidence yet.
+
+## Decision identity and concurrent review — 2026-09-27
+
+- Source: `cf8009f` plus accompanying `Decisions.tsx` and test changes.
+  Candidate identity must match the selected decision before display or actions.
+  Approval additionally requires matching run ID, instrument and as-of timestamp;
+  backend approval validation remains authoritative. Tests cover wrong decision,
+  each mismatched run field and a valid matching run. No risk rule was loosened.
+- **PASS:** 82 frontend tests, ESLint, TypeScript and built Vite bundle
+  `index-AtEe107Q.js`. An initial test expected the wrong display label; corrected
+  to the actual `Research complete` text before the complete passing test run.
+- **PASS — real browser/API/SQLite:** isolated synthetic fixture, built web at
+  `http://127.0.0.1:8000`, Codex IAB. Two tabs opened the same rejection dialog.
+  First confirmation persisted one review; second confirmation displayed conflict,
+  kept its dialog/reason, and did not claim success. Cancel and refresh showed only
+  the first review, with both review actions disabled on the rejected candidate.
+- **PASS — revoked session:** signing out in one tab followed by refreshing the
+  other returned it to sign-in with `Your session ended`; private workspace content
+  was unmounted. This proves revoked-session recovery, not time-based TTL expiry.
+- Page title/URL, meaningful content, no framework overlay and empty error/warning
+  console verified. Screenshots `review-conflict.png` and `session-ended.png` are
+  retained in the external clean-install run's `Results/` directory above.
+  Both temporary tabs and fixture process were closed. No worker/provider ran.
+- Mismatched-response injection remains component-only evidence. Approval-specific
+  conflict, time-based expiry and the rest of the browser failure matrix below
+  still require their own evidence; this checkpoint does not close the matrix.
 
 ## Remaining M4 acceptance gates
 
