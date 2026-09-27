@@ -72,14 +72,19 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   return <form className="analysis-form" onSubmit={submit} aria-label="New analysis" aria-busy={pending}>
     <h2>Configure analysis</h2>
     <ResearchSetup />
-    <p className="muted">Choose evidence for each analyst. The server verifies content and freshness again before queuing. Portfolio evaluation is optional and uses an explicit owner target, never a model-generated weight.</p>
+    <p className="muted">Choose the instrument, research date and supporting sources. You can also review the impact on your portfolio using an allocation you specify.</p>
     <fieldset disabled={pending}><div className="form-grid">
       <label>Instrument<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
-      <label>Analysis as of (ISO with timezone)<input value={asOf} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value); setConfirmed(false); }} required /></label>
-      <label>Maximum source age (seconds)<input inputMode="numeric" value={maxAge} onChange={event => { setMaxAge(event.target.value); setConfirmed(false); }} required /></label>
+      <label>Research date & time (UTC)<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
     </div>
-    {!dateValid ? <p className="warning">Enter an ISO timestamp with timezone, not in the future.</p> : null}
-    {!ageValid ? <p className="warning">Source age must be an integer from 0 to 315360000.</p> : null}
+    <p className="muted">All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.</p>
+    <details><summary>Advanced data settings</summary>
+      <label>Maximum source age (seconds)<input inputMode="numeric" value={maxAge} onChange={event => { setMaxAge(event.target.value); setConfirmed(false); }} required /></label>
+      <p className="muted">The existing limit is measured against the research time. Changing it does not override source quality or portfolio policy checks.</p>
+      <p className="mono">Exact research timestamp: {asOf || 'Not selected'}</p>
+    </details>
+    {!dateValid ? <p className="warning">Select a valid research date and time, not in the future.</p> : null}
+    {!ageValid ? <p className="warning">Check Advanced data settings: source age must be a whole number from 0 to 315360000 seconds.</p> : null}
     {profile.loading || discovery.loading ? <p role="status">Checking analysis profile and saved sources…</p> : null}
     {profile.error || discovery.error ? <p role="alert" className="danger">{errorMessage(profile.error || discovery.error)}</p> : null}
     {profile.data && !profile.data.investable ? <p className="notice warning">Reference-only research. This instrument cannot become an investable position.</p> : null}

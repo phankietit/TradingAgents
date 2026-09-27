@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import RunForm from './RunForm';
@@ -32,8 +32,8 @@ it('withholds price snapshots from news and pins risk request to portfolio time'
   expect((await within(news).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', {name:/Evaluate against my portfolio/}));
   await user.selectOptions(screen.getByLabelText('Portfolio snapshot'), 'portfolio1');
-  expect((screen.getByLabelText('Analysis as of (ISO with timezone)') as HTMLInputElement).value).toBe('2026-09-01T00:00:00Z');
-  expect((screen.getByLabelText('Analysis as of (ISO with timezone)') as HTMLInputElement).disabled).toBe(true);
+  expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).value).toBe('2026-09-01T00:00');
+  expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).disabled).toBe(true);
   await user.selectOptions(screen.getByLabelText('Risk policy version'), 'policy1:1');
   await user.type(screen.getByLabelText('Owner target weight (0–1)'), '0.2');
   await user.click(await within(screen.getByRole('group', {name:'market analyst'})).findByRole('checkbox'));
@@ -42,7 +42,25 @@ it('withholds price snapshots from news and pins risk request to portfolio time'
   await screen.findByRole('alert');
   const calls = fetch.mock.calls as unknown as [string, RequestInit][];
   const body = JSON.parse(calls.find(([url]) => url.endsWith('/runs'))![1].body as string);
+  expect(body.analysis_as_of).toBe('2026-09-01T00:00:00Z');
   expect(body.decision_inputs).toMatchObject({ portfolio_snapshot_id:'portfolio1', policy_id:'policy1', policy_version:'1', requested_target_weight:0.2, risk_snapshot_ids:[] });
+});
+it('uses explicit UTC date controls and keeps advanced freshness unchanged',async () => {
+  const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const date = screen.getByLabelText('Research date & time (UTC)');
+  fireEvent.change(date,{target:{value:'2026-08-31T13:45:12.123'}});
+  expect((screen.getByLabelText('Maximum source age (seconds)') as HTMLInputElement).value).toBe('604800');
+  expect(screen.getByLabelText('Maximum source age (seconds)').closest('details')?.open).toBe(false);
+  await user.click(await within(await screen.findByRole('group',{name:'market analyst'})).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Queue analysis'}));
+  await screen.findByRole('alert');
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  const body = JSON.parse(calls.find(([url])=>url.endsWith('/runs'))![1].body as string);
+  expect(body.analysis_as_of).toBe('2026-08-31T13:45:12.123Z');
+  expect(body.decision_inputs.source_max_age_seconds).toEqual({market:604800});
+  fireEvent.change(date,{target:{value:''}});
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
 });
 it('disables stale evidence', async () => {
   setup(true); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);

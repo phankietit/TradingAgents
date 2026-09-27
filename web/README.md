@@ -201,3 +201,13 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   frontend: 48 PASS, lint/typecheck/build PASS. Built-mode IAB verified keyboard
   disclosure, truthful synthetic model settings, clean console and narrow layout.
   This does not prove a production worker or provider is available.
+- Research-time form: native date/time selection explicitly labelled UTC replaces
+  routine ISO entry. Exact timestamps and the unchanged source-age setting live
+  in Advanced data settings. Portfolio-bound timestamps retain their exact
+  original value and remain locked; tests assert request payloads, UTC conversion,
+  unchanged 604800-second default and empty-date denial. 49 frontend tests plus
+  lint/typecheck/build PASS. Built IAB desktop/390px: native keyboard date change
+  matches the exact UTC display, earlier date makes future sources ineligible,
+  advanced disclosure works, no document overflow or console errors. The browser
+  driver's fill alone did not dispatch a React state update for the native date
+  field; validation used the visible native keyboard interaction instead.
