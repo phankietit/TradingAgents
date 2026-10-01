@@ -60,6 +60,10 @@ def test_sec_prepare_auth_reuse_and_structured_fact_binding(sec_api):
     with app.state.database.session() as session:
         repository = PlatformRepository(session)
         service = SecSnapshotService(repository, ArtifactService(app.state.artifact_store, repository))
+        with pytest.raises(LookupError, match="owner SEC snapshot unavailable"):
+            service.load(owner_id=UUID("00000000-0000-0000-0000-000000000001"),
+                snapshot_id=UUID(manifest["snapshot_id"]), instrument_id=AAPL.instrument_id,
+                as_of=NOW, max_age_seconds=31536000)
         loaded, payload = service.load(owner_id=owner, snapshot_id=UUID(manifest["snapshot_id"]),
             instrument_id=AAPL.instrument_id, as_of=NOW, max_age_seconds=31536000)
         artifact = repository.get_snapshot_artifact(loaded.snapshot_id, owner)
