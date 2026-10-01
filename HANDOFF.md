@@ -24,6 +24,13 @@ chưa nghiệm thu vận hành, live full-graph BTC/AAPL/NQ chưa chạy trên c
 mới. NQ cần chọn rõ reference `NQ=F` hay `^NDX` trước khi coi là acceptance.
 Không lấy kết quả local/synthetic/news smoke để nâng thành release approval.
 
+Tiếp nối: chủ repo đã chọn `NQ=F` reference-only. Không thay bằng `^NDX` hay
+QQQ. Yahoo continuous không có metadata active/next contract và rollover mà
+pipeline futures yêu cầu, nên live NQ vẫn BLOCKED đến khi có nguồn hợp lệ.
+Commit `cd033dd` thêm cảnh báo song ngữ bắt buộc cho news feed không đầy đủ;
+1.496 Python tests + 88 subtests PASS, 20 skips. Chưa chạy thêm AI; xem
+receipt 2026-10-01 để phân biệt gate đã/chưa nghiệm thu.
+
 Yêu cầu mới nhất của chủ repo: lưu toàn bộ code, phần dở và ngữ cảnh lên GitHub
 để có thể tiếp tục từ máy khác hoặc Claude. Đây là checkpoint công việc, chưa
 nghiệm thu sản phẩm và chưa merge PR.

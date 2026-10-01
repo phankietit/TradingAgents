@@ -57,3 +57,21 @@ local synthetic QA artifacts outside Git and are not production evidence.
    permits a futures position or broker action.
 5. Keep PR #7 draft and the goal active until every required acceptance gate
    is actually met. Skipped external gates stay UNVERIFIED, not PASS.
+
+## Follow-up candidate: deterministic news disclosure
+
+Code commit `cd033ddfd1ef04f424c6c7cc867c58138a0f3a51` adds a bilingual,
+application-owned report notice when an eligible Yahoo news snapshot is marked
+`recent_feed_not_exhaustive`. The model cannot omit this notice from the saved
+report; it does not assert that missing news means a neutral market. Local
+regression at this code SHA: **1,496 passed, 20 skipped, 88 subtests passed**
+in 37.49 s; focused Ruff and `git diff --check` PASS. The skips include 18
+PostgreSQL environment tests and two optional-provider tests. No paid model or
+live API-to-report run occurred at this candidate.
+
+The owner selected **NQ=F** for reference-only acceptance, not `^NDX` or an
+ETF substitute. Live NQ acceptance remains **BLOCKED**: the existing Yahoo
+continuous symbol lacks the active/next-contract and roll metadata required by
+`FuturesReferencePipeline`. No futures position, order, or substitute source
+is permitted by this selection. A source and its data/licensing contract must
+be explicitly resolved before claiming a valid live NQ report.
