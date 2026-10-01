@@ -26,7 +26,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle and live usage/failure; latest full-flow FAIL at wall budget before publication; request-in-flight may overrun the stage-boundary deadline |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle/immutable working-note retention, live usage/failure; latest full-flow FAIL at wall budget; operator allowance, dedicated reader and actual resume UNVERIFIED |
 | R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS UI and real processing flow; valid final report FAIL |
@@ -55,6 +55,19 @@ so a failure does not force blind paid recomputation. These must preserve all
 roles, immutable source/config bindings, lease/owner fencing, and final
 publication/approval gates. Do not simply increase budgets silently, skip
 roles, publish partial work as a decision, or retry whole paid jobs automatically.
+
+The next code slice adds `research_stage` immutable artifacts for returned
+allowlisted reader text, fenced by the existing job lease/cancellation boundary.
+These remain unvalidated/non-approvable even after Financial validation returns;
+only the separate final pipeline can publish a decision. No raw prompts,
+messages, reasoning metadata or executable state is serialized. Returned text
+can survive a boundary deadline without claiming stage/run completion.
+
+This is working-note retention, **not graph resume**. The existing CLI SQLite
+checkpoint signature lacks web owner/source/model/prompt binding, so it is not
+enabled for this path. The original failed BTC has no saved notes to backfill.
+Next: dedicated clean reader, explicit allowance/request-timeout behavior and
+properly fingerprinted/fenced recovery without repeating completed paid work.
 
 ### Renewed acceptance scope
 

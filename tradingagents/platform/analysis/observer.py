@@ -22,9 +22,12 @@ class ResearchObserver(BaseCallbackHandler):
     raise_error = True
     run_inline = True
 
-    def __init__(self, *, check_cancelled, emit, clock=monotonic, max_seconds=1800, max_calls=128):
+    def __init__(self, *, check_cancelled, emit, clock=monotonic, max_seconds=1800, max_calls=128,
+                 save_stage=None):
         self.check_cancelled = check_cancelled
         self.emit = emit
+        # Separate private artifact publication; outputs never enter events/logs.
+        self.save_stage = save_stage
         self.active = {}
         self.completed = []
         self.seen_model_runs = set()
@@ -52,9 +55,14 @@ class ResearchObserver(BaseCallbackHandler):
     def on_chain_end(self, outputs, *, run_id, **kwargs):
         name = self.active.pop(run_id, None)
         if name:
+            self.check_cancelled()
+            artifact_id = self.save_stage(name, outputs) if self.save_stage is not None else None
+            # Retain returned research before a boundary deadline stops the
+            # graph. It remains unvalidated, not a completed run or decision.
             self._check()
             self.completed.append(name)
-            self.emit("stage.completed", {"stage": name})
+            self.emit("stage.completed", {"stage": name,
+                **({"research_artifact_id": str(artifact_id)} if artifact_id is not None else {})})
 
     def on_chat_model_start(self, serialized, messages, **kwargs):
         self._check()

@@ -15,6 +15,7 @@ from tradingagents.graph import trading_graph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
 from tradingagents.platform.analysis.observer import ResearchObserver
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot, SnapshotAnalysisContext
+from tradingagents.platform.analysis.stage_records import stage_sections
 
 
 def context(instrument):
@@ -38,7 +39,8 @@ def test_price_snapshot_cannot_masquerade_as_other_analyst_evidence(role):
 
 
 @pytest.mark.parametrize("all_roles", [False, True])
-def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch, all_roles):
+@pytest.mark.parametrize("capture_stages", [False, True])
+def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_path, monkeypatch, all_roles, capture_stages):
     calls = []
     structured_prompts = []
 
@@ -95,10 +97,20 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
         inputs = inputs.model_copy(update={"by_analyst": {**inputs.by_analyst, **extras},
                                           "source_max_age_seconds": dict.fromkeys(analysts, 0)})
     events = []
-    observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda kind, payload: events.append((kind, payload)))
+    captures = []
+
+    def capture(stage, outputs):
+        sections = stage_sections(stage, outputs)
+        if sections:
+            captures.append((stage, sections))
+            return uuid4()
+        return None
+
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda kind, payload: events.append((kind, payload)),
+        save_stage=capture if capture_stages else None)
     config = {**DEFAULT_CONFIG, "data_cache_dir": str(tmp_path / "cache"),
               "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 1,
-              "max_risk_discuss_rounds": 1}
+              "max_risk_discuss_rounds": 1, "output_language": "English"}
     result = AnalysisEngine(base_config=config).analyze(AnalysisRequest(
         instrument=instrument, analysis_date=NOW.date(), selected_analysts=analysts,
         snapshot_context=inputs, execution_observer=observer))
@@ -117,7 +129,13 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
     expected_analysts = ["Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst"] if all_roles else ["Market Analyst"]
     assert completed == [*expected_analysts, "Bull Researcher", "Bear Researcher", "Research Manager", "Trader",
                          "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Financial validation", "Report presentation"]
-    assert all(set(payload) == {"stage"} for _, payload in events)
+    if capture_stages:
+        assert [stage for stage, _ in captures] == completed[:-1]  # English-only presentation has no translated fragment.
+        assert all("research_artifact_id" in payload for kind, payload in events
+                   if kind == "stage.completed" and payload["stage"] != "Report presentation")
+        assert all("messages" not in sections for _, sections in captures)
+    else:
+        assert all(set(payload) == {"stage"} for _, payload in events)
     assert observer.receipt()["usage"]["status"] == "incomplete"  # fake model has no provider usage
 
 

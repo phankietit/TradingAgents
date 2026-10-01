@@ -13,6 +13,7 @@ from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 from tradingagents.platform.analysis.observer import ResearchObserver
 from tradingagents.platform.analysis.profiles import resolve_analysis_profile
 from tradingagents.platform.analysis.snapshots import load_snapshot_context
+from tradingagents.platform.analysis.stage_records import ResearchStageService
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.persistence import PlatformRepository
@@ -126,7 +127,30 @@ class AnalysisJobHandler:
                     event_type=RunEventType(event_type), occurred_at=datetime.now(UTC),
                     payload={**payload, "attempt": job.attempt})
 
-        observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit)
+        stage_sequence = 0
+
+        def save_stage(stage, outputs):
+            nonlocal stage_sequence
+            from datetime import datetime
+
+            stage_sequence += 1
+            with context.publication_session() as stage_session:
+                stage_repository = PlatformRepository(stage_session, artifact_store=self.artifact_store)
+                service = ResearchStageService(ArtifactService(self.artifact_store, stage_repository))
+                manifest = service.persist(run, stage=stage, outputs=outputs,
+                    attempt=job.attempt, sequence=stage_sequence,
+                    snapshot_attestation="PASS" if snapshot_context is not None else "UNVERIFIED")
+                if manifest is not None:
+                    RunEventStore(stage_session).append(owner_id=run.owner_id, run_id=run.run_id,
+                        event_type=RunEventType.ARTIFACT_CREATED, occurred_at=datetime.now(UTC),
+                        payload={"artifact_id": str(manifest.artifact_id),
+                                 "kind": manifest.kind.value, "stage": stage,
+                                 "attempt": job.attempt, "research_quality": "unvalidated"})
+                    return manifest.artifact_id
+            return None
+
+        observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit,
+                                    save_stage=save_stage)
         result = self.engine.analyze(AnalysisRequest(
             instrument=instrument, analysis_date=run.analysis_as_of.date(),
             selected_analysts=run.selected_analysts,
