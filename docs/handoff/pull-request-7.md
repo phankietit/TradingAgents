@@ -25,6 +25,9 @@ PR remains draft.
   dates and exact fact IDs; no CLI-default or provider substitution.
 - Application-owned SEC metric/period/unit sentences and structural protection
   against translated negation or unit changes; qualitative review is still required.
+- Immutable owner/source/config-bound stage working notes, published behind
+  cancellation/lease fences. They are always unvalidated and ineligible for
+  approval; dedicated web reading and graph resume remain unfinished.
 - Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
@@ -35,10 +38,14 @@ GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
 
-- PASS on code SHA `af5349dc81b01f24529a013c6b914e4003f613a7`: 1,567 backend
+- PASS on code SHA `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0`: 1,600 backend
   tests + 88 subtests, Ruff, diff check; 20 classified skips. Web: 122 tests,
   typecheck/lint/build PASS. PostgreSQL (18), optional Bedrock and live DeepSeek
   remain unverified.
+- Local lifecycle tests prove returned notes survive failure/deadline without
+  publishing a decision, and cancellation/lease loss prevent stale publication.
+  Original native LangGraph fake-model checks retain all 14 roles. These are
+  not provider, financial, translation or resumability acceptance.
 - Built-web browser synthetic verification PASS at 1280×900 and 390×844:
   compiler/worker/API → saved bilingual report; tab/language switching retains
   quantities, zero new run POSTs, linked decision preserves approval gates,

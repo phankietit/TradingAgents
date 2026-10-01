@@ -234,3 +234,47 @@ establish qualitative entailment or comprehensive translation accuracy.
 No raw report, article text, owner database, credential, contact value or runtime
 artifact is included in Git. No CI, broker, risk-limit, provider or deployment
 change. Existing QA and owner history remain intact; PR #7 stays Draft.
+
+## R08 returned-stage working notes: local retention, not graph resume
+
+Code SHA: `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0` on
+`fix/TA-R01-research-quality`, clean candidate. The real analysis handler now
+persists role-owned reader text as private immutable `research_stage` artifacts.
+The allowlist covers every original role, excludes raw messages/prompts/tool
+payloads/arbitrary state and executable portfolio fields, and preserves exact
+reader text without truncation. Each record is bound to owner, run, instrument,
+as-of, snapshots, config and prompt. It is always `unvalidated` and never
+approval-eligible. Publication uses the existing job cancellation/lease fence.
+
+A returned fragment is retained before the cooperative boundary budget check;
+an over-budget run still fails without a final report or decision. Cancellation
+before publication and a recovered lease prevent a stale worker from publishing.
+Already stored fragments remain immutable after cancellation. The historical
+failed BTC run above has no such fragments: no missing text was reconstructed
+and no prior evidence was rewritten.
+
+| Gate | Result | Exact candidate evidence |
+| --- | --- | --- |
+| Python full regression | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,600 passed, 20 skipped, 88 subtests, 92.21 s; Python 3.14.7 |
+| Ruff | PASS | `.venv/bin/ruff check .` |
+| Working-note tests | PASS | 31 tests: owner/context isolation, immutable collision, excluded fields, nonapproval, success/failure/deadline/cancel/lease lifecycle using the actual worker/handler |
+| Native graph compatibility | PASS | Fake-model native LangGraph checks retain all 14 roles with capture enabled/disabled; no live tools, memory or CLI checkpoint side effects |
+| Web tests/type/lint/build | PASS | 122 tests/22 files; `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; Node 26.8.1/npm 11.19.0 |
+| Dedicated working-note UI / graph resume | UNVERIFIED | Not implemented by this slice; owner artifact API retention is not a clean web reader or execution checkpoint |
+| New live/provider/browser acceptance | UNVERIFIED | No paid or vendor call and no new browser proof in this slice |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, optional Bedrock and live DeepSeek skips; no inference from SQLite |
+| NQ=F | BLOCKED | Owner-selected hold for valid contract/roll source remains unchanged |
+| Overall R01–R14 | FAIL | Runtime allowance/resume, remaining sources, semantic/editorial quality and representative live outputs still incomplete |
+
+The current CLI checkpoint signature is not owner/source/model/prompt complete;
+do not enable it for web to claim recovery. Next work requires a dedicated clean
+bilingual working-note reader and explicit allowance/request timeout behavior,
+then properly bound and fenced execution checkpoints preserving all roles.
+The pending request for exactly one additional BTC run after those fixes has
+not been approved in the current continuation. AAPL remains previously approved
+but has not run on this candidate. No automatic paid replay is authorized.
+
+Continuation refresh on the same source SHA: `.venv/bin/python -m pytest -q
+tests/test_research_stage_records.py tests/test_snapshot_analysis.py
+--disable-warnings` **PASS**, 46 tests in 7.40 s; Ruff **PASS**. This confirms
+the focused local proof, not a new full regression or live acceptance.

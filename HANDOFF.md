@@ -2,10 +2,14 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
-**Mới nhất:** code `af5349dc81b01f24529a013c6b914e4003f613a7` đã chặn
-model đổi đơn vị/chỉ tiêu/kỳ của số SEC, và chặn dịch thêm phủ định/đơn vị vào
-câu số liệu đã bảo vệ. Full Python **1.567 + 88 subtests PASS** (20 skips),
-Ruff PASS; Web 122 tests, lint/typecheck/build PASS. Chưa live-test code mới.
+**Mới nhất:** code `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0` lưu bản nháp
+nghiên cứu bất biến sau khi từng vai trò trả kết quả, chỉ giữ reader text đã
+allowlist và ràng buộc owner/run/source/config. Cancellation và lease chặn worker
+cũ xuất thêm nội dung. Bản nháp luôn unvalidated, không đủ điều kiện phê duyệt;
+không phải checkpoint để resume graph. Full Python **1.600 + 88 subtests PASS**
+(20 skips), Ruff PASS; Web 122 tests, lint/typecheck/build PASS. Chưa live-test
+code mới; UI đọc bản nháp riêng và graph resume vẫn chưa hoàn thành. Các sửa
+SEC/translation tại `af5349d` vẫn được giữ.
 
 Lượt BTC market+news tại `f73d1a9` **FAIL**: 37m38s / 539.339 token / 13 calls,
 `RESEARCH_BUDGET_EXHAUSTED`, attempt 1/1, không xuất report/decision. Đã xong
@@ -13,9 +17,10 @@ chín stage trước Portfolio Manager; chưa chạy Financial validation/Report
 presentation. Trần 30 phút hiện là kiểm tra giữa các bước, không ngắt request
 model đang chạy. Không dùng sự kiện tiến trình để coi nội dung đã nghiệm thu.
 
-Tiếp theo ưu tiên R08: allowance hiện rõ, tương thích request timeout và durable
-recovery/đọc phần nghiên cứu đã hoàn tất, giữ source/config/owner/lease và toàn
-bộ vai trò. Không tự tăng trần hay replay paid BTC; cần chủ repo duyệt lượt mới
+Tiếp theo ưu tiên R08: UI đọc bản nháp có cảnh báo chưa kiểm chứng, allowance
+hiện rõ, tương thích request timeout và graph recovery có fingerprint đầy đủ,
+giữ source/config/model/prompt/owner/lease và toàn bộ vai trò. Không tự tăng trần
+hay replay paid BTC; cần chủ repo duyệt lượt mới
 sau khi sửa flow. AAPL full graph chưa chạy ở candidate mới; SEC source đã PASS.
 NQ=F giữ BLOCKED theo quyết định chủ repo, không thêm provider. Xem phần cuối
 receipt 2026-10-01 để có exact SHA và trạng thái. Goal và Draft PR #7 vẫn mở.
@@ -93,7 +98,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `af5349dc81b01f24529a013c6b914e4003f613a7`.
+- Code đã full-test gần nhất: `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0`.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
@@ -164,7 +169,8 @@ trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay 
 
 ## Công việc tiếp theo có thứ tự
 
-1. R08 allowance/timeout và durable completed-stage recovery phải xử lý trước
+1. R08 đã lưu reader text riêng tư bằng publication fence; chưa phải resume.
+   Hoàn thiện UI đọc bản nháp, allowance/timeout và durable graph recovery trước
    paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
    không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
    local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
