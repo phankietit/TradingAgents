@@ -101,6 +101,13 @@ of existing owner reports is needed. See [language behavior](bilingual.md).
 
 The UI reads existing owner-scoped records. Empty lists are expected for a fresh
 database; never copy synthetic QA evidence into an investment workspace.
+For offline browser verification only, `python -m scripts.web_fixture
+--synthetic-local-only --built-web --fixture-worker --graph-result bilingual`
+creates a separate labelled fixture database. Its synthetic report passes the
+real quantity compiler, worker publication and artifact API; it does not test
+live model reasoning, translation or graph role parity. Reading the saved EN/VI
+report and switching tabs must not enqueue another job. In completed research,
+the saved report appears first and processing details remain expandable.
 Follow [snapshot contracts](normalized-time-series.md),
 [portfolio ledger](portfolio-ledger.md), [risk policy](risk-engine.md) and
 [analysis engine](analysis-engine.md) for operator-controlled inputs.

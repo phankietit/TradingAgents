@@ -113,7 +113,7 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
     ? readerSections(data.localized[locale], locale) : null;
   return <section className="artifact-preview" aria-label={`${t(artifact.kind.replaceAll('_', ' '))} preview`}>
     {data.type === 'report' ? <>
-      <header className="report-header"><div><h3>{t('Research brief')}</h3><p className="muted caption">{profileLabel(data.profile)} · {data.analysts.map(researchLabel).join(', ')}</p></div>
+      <header className="report-header"><div><h2>{t('Research brief')}</h2><p className="muted caption">{profileLabel(data.profile)} · {data.analysts.map(researchLabel).join(', ')}</p></div>
         <span className={data.issues.length || !data.structured ? 'warning' : 'coverage-included'}>{t(data.issues.length || !data.structured ? 'Needs validation' : 'For human review')}</span></header>
       {data.referenceOnly ? <p className="warning">{t("Reference only — not investable.")}</p> : null}
       {data.issues.length ? <p className="notice warning">{t('This report has unresolved validation findings. It is available for inspection, not an approved investment conclusion.')}</p> : null}

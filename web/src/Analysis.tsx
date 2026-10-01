@@ -115,7 +115,8 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  return <section className="instrument-detail" aria-label={t("Run details")}>
+  const savedReport = run.data?.status === 'succeeded' && artifacts.data?.some(item => item.kind === 'analysis_report');
+  const processing = <>
     <h2>{t("Research progress")}</h2>
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
       <p className="muted caption">{t("As of")} {timestamp(run.data.analysis_as_of)}</p>
@@ -131,11 +132,20 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     <details><summary>{t("Processing timeline")}</summary><ol className="event-list">{events.map(event => <li key={event.sequence}><span>{eventLabel(event.event_type)}{event.stage ? ` · ${t(event.stage)}` : ''}</span><time>{timestamp(event.occurred_at)}</time></li>)}</ol>
     {!events.length ? <p className="muted">{t("No events received yet.")}</p> : null}
     </details>
-    <h3>{t("Reports & evidence")}</h3>
-    {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{artifacts.data.map(item => <li key={item.artifact_id}>
+  </>;
+  const reports = <>
+    {!savedReport ? <h3>{t("Reports & evidence")}</h3> : null}
+    {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{[...artifacts.data].sort((a, b) => Number(b.kind === 'analysis_report') - Number(a.kind === 'analysis_report')).map(item => <li key={item.artifact_id}>
       <ArtifactPreview artifact={item} runId={runId} embedded={item.kind === 'analysis_report'} />
       <details><summary>{t("File details")}</summary><a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))} {t("· Download")}</a><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
     </li>)}</ul> : <p className="muted">{t("No artifacts have been published for this run.")}</p>}
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
+  </>;
+  return <section className="instrument-detail" aria-label={t("Run details")}>
+    {savedReport ? <>
+      <p className="muted caption">{t("As of")} {timestamp(run.data!.analysis_as_of)}</p>
+      {reports}
+      <details className="completed-processing"><summary>{t('Completed analysis · View processing details')}</summary>{processing}</details>
+    </> : <>{processing}{reports}</>}
   </section>;
 }

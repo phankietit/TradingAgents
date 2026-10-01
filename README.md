@@ -394,6 +394,9 @@ workspace separates setup, actual-event progress and report summary/price/histor
 verification views; processing completion is not report approval. See the [implementation and verification
 ledger](docs/platform/research-remediation.md); local tests are not live-model
 quality or release approval.
+Completed runs lead with their saved report; the processing timeline remains
+available in a collapsed disclosure. Active and failed runs keep their status
+visible. Reports retain missing coverage and validation findings in the main view.
 New research offers English, Vietnamese or bilingual English–Vietnamese reports
 (bilingual is the web form default). The language choice is recorded on each
 run; changing the UI language never translates or overwrites saved analysis.

@@ -1,8 +1,35 @@
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import Analysis from './Analysis';
 
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
+
+it('leads completed research with its report and preserves processing in a collapsed disclosure', async () => {
+  const run = {run_id:'saved-run',instrument_id:'apple',status:'succeeded',created_at:'2026-09-26T00:00:00Z',
+    analysis_as_of:'2026-09-26T00:00:00Z',selected_analysts:['market'],snapshot_ids:['source']};
+  const artifacts = ['decision_evidence','analysis_report'].map(kind => ({artifact_id:kind,kind,
+    media_type:'application/json',byte_size:500,content_hash:'sha256:fixture',created_at:run.created_at}));
+  const report = {run_id:run.run_id,decision_id:'12345678-1234-1234-1234-123456789abc',profile:'equity',
+    reference_only:false,selected_analysts:['market'],snapshot_attestation:'PASS',
+    narrative:'Saved research content',structured_narrative:null,validation_issues:['structured_output_missing']};
+  vi.stubGlobal('EventSource',vi.fn(function(){return {addEventListener:vi.fn(),close:vi.fn()};}));
+  const fetch = vi.fn(async(url:string) => new Response(JSON.stringify(
+    url.includes('/instruments?') ? [] : url.includes('/artifacts?') ? artifacts :
+      url.endsWith('/artifacts/analysis_report') ? report : url.includes('/runs?') ? [run] : run)));
+  vi.stubGlobal('fetch',fetch);
+  const user = userEvent.setup(); render(<Analysis />);
+  await screen.findByRole('heading',{name:'Research brief'});
+  const processing = screen.getByText('Completed analysis · View processing details').closest('details')!;
+  expect(processing.open).toBe(false);
+  expect(screen.getByText(/The model response did not pass/)).toBeTruthy();
+  expect(document.querySelector('.artifact-list > li .artifact-preview')).not.toBeNull();
+  const calls = fetch.mock.calls.length;
+  await user.click(screen.getByText('Completed analysis · View processing details'));
+  expect(processing.open).toBe(true);
+  expect(within(processing).getByRole('heading',{name:'Research progress'})).toBeTruthy();
+  expect(fetch.mock.calls.length).toBe(calls);
+});
 
 it('opens the exact deep-linked run outside the history page instead of another run', async () => {
   window.history.replaceState(null, '', '#/analysis?run=older-run');

@@ -10,7 +10,10 @@
 .research-workflow .done .workflow-index { color: #a6bd9c; }
 .research-workflow > p { margin: 16px 0 0; }
 .report-header { display: flex; justify-content: space-between; gap: 20px; align-items: baseline; }
-.report-header h3 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.5px; }
+.report-header h2 { margin: 0 0 6px; font-size: 22px; letter-spacing: -.5px; }
+.completed-processing { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.completed-processing > summary { color: var(--muted); font-size: 13px; }
+.completed-processing[open] > summary { margin-bottom: 24px; }
 .report-header > span { font-size: 12px; flex-shrink: 0; }
 .report-navigation { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin: 24px 0 28px; }
 .report-navigation button { background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; color: var(--muted); padding: 12px 14px; }

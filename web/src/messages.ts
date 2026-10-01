@@ -341,6 +341,7 @@ export const vietnamese: Record<string, string> = {
   'Select analysis': 'Chọn phân tích',
   'Selected analysis': 'Phân tích đã chọn',
   'Research brief': 'Báo cáo nghiên cứu',
+  'Completed analysis · View processing details': 'Đã phân tích xong · Xem chi tiết xử lý',
   'For human review': 'Cần bạn xem xét',
   'Report sections': 'Các phần báo cáo',
   'Summary': 'Tổng kết',

@@ -76,6 +76,64 @@ class InvalidSyntheticGraph(SyntheticSnapshotGraph):
                 "structured_decision": {"rating": "not-a-valid-rating"}}, "Review"
 
 
+class BilingualSyntheticGraph(SyntheticSnapshotGraph):
+    """Exercise saved bilingual reading through the real compiler/publication gates.
+
+    This substitutes graph/model output for browser QA only. It is not evidence
+    of LangGraph role parity, provider availability or financial translation.
+    """
+
+    def __init__(self, *, snapshot_reports, **kwargs):
+        super().__init__(snapshot_reports=snapshot_reports, **kwargs)
+        from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+
+        self.facts = {source["snapshot_id"]: SnapshotMarketFacts(source)
+                      for source in json.loads(snapshot_reports.get("market", "[]"))
+                      if source["provenance"]["dataset"] == "ohlcv.daily"}
+        if not self.facts:
+            raise ValueError("bilingual fixture requires immutable daily prices")
+
+    def propagate_snapshots(self, *args, **kwargs):
+        from tradingagents.agents.research_schemas import LocalizedResearchReport
+        from tradingagents.agents.utils.report_compiler import compile_report
+        from tradingagents.agents.utils.report_localization import reader_report
+        from tradingagents.platform.analysis.research_validation import validate_canonical_report
+
+        snapshot_id = next(iter(self.facts))
+        thesis = ("SYNTHETIC LOCAL QA — the saved fixture close is ${{QA}}. "
+                  "The opposing case is that generated price movements cannot establish a live trend. "
+                  "Coverage is limited to synthetic price and volume.")
+        risk = "Synthetic prices do not establish company fundamentals, news or market sentiment."
+        invalidation = "Discard this fixture conclusion when reviewing any real investment."
+        raw = {"rating": "Hold", "confidence": .5,
+               "executive_summary": "SYNTHETIC LOCAL QA — saved bilingual reading test; no model or vendor call.",
+               "investment_thesis": [{"claim": thesis, "snapshot_ids": [snapshot_id]}],
+               "risks": [{"claim": risk, "snapshot_ids": [snapshot_id]}],
+               "invalidation_conditions": [{"claim": invalidation, "snapshot_ids": [snapshot_id]}],
+               "time_horizon": "Browser verification only.",
+               "quantity_bindings": [{"key": "QA", "snapshot_id": snapshot_id,
+                                      "fact_id": "latest.close", "decimal_places": 2}]}
+        report = compile_report(raw, self.facts)
+        validate_canonical_report(report, self.facts, set(self.sources))
+        amount = f"{report.observed_numbers[0].value:.2f}"
+        localized = LocalizedResearchReport(en=reader_report(report), vi=(
+            "## Tóm tắt\n\nDỮ LIỆU KIỂM THỬ SYNTHETIC LOCAL QA — kiểm tra cách đọc báo cáo song ngữ đã lưu; không gọi model hay nguồn dữ liệu.\n\n"
+            "## Luận điểm đầu tư\n\n"
+            f"DỮ LIỆU KIỂM THỬ SYNTHETIC LOCAL QA — giá đóng cửa giả lập đã lưu là ${amount}. "
+            "Luận điểm đối lập: biến động giá được tạo giả lập không xác lập xu hướng thị trường thực tế. "
+            "Phạm vi chỉ gồm giá và khối lượng giả lập.\n\n"
+            "## Rủi ro\n\n- Giá giả lập không phản ánh phân tích cơ bản doanh nghiệp, tin tức hay tâm lý thị trường.\n\n"
+            "## Điều kiện mất hiệu lực\n\n- Loại bỏ kết luận giả lập này khi xem xét bất kỳ khoản đầu tư thực tế nào.\n\n"
+            "## Khung thời gian nghiên cứu\n\nChỉ dùng để kiểm tra trình duyệt."
+        ))
+        decision = report.model_dump(mode="json") | {"localized_report": localized.model_dump()}
+        return {"structured_draft": raw, "structured_decision": decision,
+                "final_trade_decision": localized.en,
+                "market_report": "SYNTHETIC LOCAL QA — immutable generated daily prices; no live market research.",
+                "investment_debate_state": {"history": "SYNTHETIC LOCAL QA — opposing case retained in the saved thesis."},
+                "risk_debate_state": {"history": "SYNTHETIC LOCAL QA — real financial use is invalid."}}, "Hold"
+
+
 class FailedSyntheticGraph(SyntheticSnapshotGraph):
     """Exercise durable retry/exhaustion without contacting a provider."""
 
@@ -124,8 +182,8 @@ def main():
                         help="Seed labelled synthetic daily charts for ETF, BTC/ETH and NQ/ES QA")
     parser.add_argument("--screening", action="store_true",
                         help="Seed a deterministic screening from labelled synthetic input facts")
-    parser.add_argument("--graph-result", choices=("valid", "invalid", "failed"), default="valid",
-                        help="Synthetic worker outcome; invalid exercises REVIEW, failed exercises retries")
+    parser.add_argument("--graph-result", choices=("valid", "bilingual", "invalid", "failed"), default="valid",
+                        help="Synthetic worker outcome; bilingual exercises compiled saved reading, invalid exercises REVIEW, failed exercises retries")
     parser.add_argument("--session-seconds", type=fixture_session_seconds, default=43200,
                         help="Synthetic-only session TTL for browser expiry QA (300–43200)")
     args = parser.parse_args()
@@ -231,6 +289,7 @@ def main():
         worker_database = Database(url)
         handler = AnalysisJobHandler(worker_database, LocalArtifactStore(directory / "artifacts"),
             engine=AnalysisEngine(graph_factory={"valid": SyntheticSnapshotGraph,
+                "bilingual": BilingualSyntheticGraph,
                 "invalid": InvalidSyntheticGraph, "failed": FailedSyntheticGraph}[args.graph_result]))
         worker = JobWorker(worker_database, worker_id="synthetic-local-qa",
                            handlers={JobKind.ANALYSIS_RUN: handler})
