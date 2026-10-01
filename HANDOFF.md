@@ -41,6 +41,16 @@ unavailable, chưa phải live SEC. `SEC_EDGAR_USER_AGENT` chưa có trong workt
 semantic finance/translation và live BTC/AAPL chưa được nghiệm thu. NQ=F chủ
 repo chọn giữ BLOCKED, chưa thêm provider; không thay bằng ^NDX/QQQ.
 
+Tiếp nối tại `2547669`: đã sửa layout để báo cáo hiện trước sau khi hoàn tất,
+tiến trình được giữ trong mục mở rộng; active/error vẫn hiển thị trực tiếp.
+Fixture song ngữ đi qua compiler/validation/worker/API thật với đầu ra synthetic
+được ghi nhãn rõ. Browser desktop 1280×900/mobile 390×844 PASS các tab và chuyển
+EN/VI, giữ nguyên số, không tạo run mới khi đọc, không tràn ngang/pageerror;
+trang quyết định liên kết giữ phê duyệt disabled khi không có portfolio/risk.
+Full Python 1.506 + 88 subtests PASS (20 skips), Web 122 tests PASS,
+typecheck/lint/build PASS. Đây là UI/integration proof, không phải live model
+hay translation acceptance. SEC vẫn chờ contact, các live gates vẫn mở.
+
 Yêu cầu mới nhất của chủ repo: lưu toàn bộ code, phần dở và ngữ cảnh lên GitHub
 để có thể tiếp tục từ máy khác hoặc Claude. Đây là checkpoint công việc, chưa
 nghiệm thu sản phẩm và chưa merge PR.
@@ -58,7 +68,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `50dd0df7e3ddfbfc166f1f6fbb84c97f7989f515`.
+- Code đã full-test gần nhất: `25476690deac0e6035c34d65759d660b4bc4f3a3`.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
@@ -71,7 +81,7 @@ git rev-parse HEAD
 
 Đọc tiếp: [AGENTS](AGENTS.md), [routing](docs/ops/agent-map.md),
 [backlog R01–R14](docs/platform/research-remediation.md),
-[bằng chứng mới nhất](docs/platform/research-acceptance-20260927.md).
+[bằng chứng mới nhất](docs/platform/research-acceptance-20261001.md).
 Receipt milestone cũ chỉ chứng minh SHA ghi trong receipt, không chứng minh HEAD.
 
 ## Mục tiêu và yêu cầu đã chốt

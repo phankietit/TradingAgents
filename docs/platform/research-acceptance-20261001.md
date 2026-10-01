@@ -106,3 +106,35 @@ visible. No finding is hidden and no model conclusion is changed by this UI.
 The fixture server was stopped after browser checks. Its labelled synthetic
 database is private, ignored local test state, not investment evidence. No
 secrets, provider payloads or populated `.env` were committed.
+
+## Follow-up candidate: completed report first and bilingual browser proof
+
+Code commit `25476690deac0e6035c34d65759d660b4bc4f3a3` fixes a rendered
+workflow issue: completed processing occupied the first viewport and evidence
+downloads appeared before the report. Completed research now presents the saved
+report first, with processing retained in a collapsed disclosure. Active and
+failed runs keep their processing/error information visible. Validation findings
+and missing coverage remain in the report's primary view.
+
+The explicit `--graph-result bilingual` synthetic fixture uses the real quantity
+compiler, canonical publication checks, durable worker, artifact/evidence
+persistence and authenticated API. It substitutes graph/model output solely for
+UI QA; its labelled generated prices and fixed translations do not establish
+live reasoning, translation accuracy or graph-role parity.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Python full regression | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,506 passed, 20 skipped, 88 subtests, 38.78 s; Python 3.14.7 |
+| Ruff and diff | PASS | `.venv/bin/ruff check .`, `git diff --check` |
+| Web test/type/lint/build | PASS | 122 tests/22 files, typecheck/lint; production build PASS; Node 26.8.1/npm 11.19.0 |
+| Bilingual durable publication integration | PASS | Synthetic immutable daily-price binding → compiler → validation → worker → report/evidence; exact close fact retained in both languages |
+| Desktop/mobile saved-report reading | PASS | Playwright at loopback 127.0.0.1:8000, 1280×900 and 390×844; Summary, Price history, Research detail, Verification; EN/VI switches retain `$198.02`; completed processing collapsed; no pageerror or horizontal overflow |
+| Read-only behavior and linked decision | PASS | Saved-report language/tab switches made zero run POSTs; linked decision displays Vietnamese saved content; absent portfolio/risk evaluation keeps approval disabled; zero decision mutations |
+| Invalid report visibility | PASS | Regression preserves missing-format explanation in report-first layout; processing can be opened without another fetch |
+| SEC live / BTC–AAPL semantic finance / live translation | UNVERIFIED | No provider/model request in this slice; prior rejected live acceptance remains unresolved |
+| PostgreSQL | UNVERIFIED | 18 environment-dependent PostgreSQL skips, plus optional Bedrock and live DeepSeek skips |
+
+Local screenshots are under `/Volumes/Data/TradingAgents-runtime/qa-reader-ObuWOH/`
+outside Git. Browser plugin was absent, so existing bundled Playwright was used.
+The synthetic server was stopped after verification. NQ=F remains **BLOCKED**
+by the owner's source decision; no provider was added. Goal/PR remain unfinished.
