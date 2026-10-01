@@ -129,3 +129,36 @@ def test_presentation_restores_verified_relationship_without_model_translation()
     result = localize_report(Model(), canonical, [])
     assert vi in result.vi and en not in result.vi
     assert result.en == english
+
+
+@pytest.mark.parametrize("surrounding", ["Không đúng: {anchor}", "{anchor} triệu USD"])
+def test_translator_cannot_attach_negation_or_units_to_a_complete_verified_statement(surrounding):
+    import json
+
+    from langchain_core.messages import AIMessage
+
+    from tradingagents.agents.utils.report_localization import ANCHOR
+
+    raw, data = draft()
+    raw["quantity_bindings"].append({**raw["quantity_bindings"][0], "key": "QB",
+                                    "fact_id": "return.30_calendar_days.pct"})
+    raw["investment_thesis"][0]["claim"] += " {{QB}}. Opposing evidence remains material."
+    canonical = compile_report(raw, {data["snapshot_id"]: SnapshotMarketFacts(data)})
+    bad = None
+
+    class Model:
+        def with_structured_output(self, schema):
+            def invoke(prompt):
+                nonlocal bad
+                blocks = translated_blocks(prompt)
+                block = next(item for item in blocks if "Opposing evidence" in item["vi"])
+                anchor = ANCHOR.findall(block["vi"])[-1]
+                block["vi"] = block["vi"].replace(anchor, surrounding.format(anchor=anchor))
+                bad = {"blocks": blocks}
+                return schema.model_validate(bad)
+            return SimpleNamespace(invoke=invoke)
+
+        def invoke(self, _):
+            return AIMessage(content=json.dumps(bad))
+
+    assert localize_report(Model(), canonical, []) is None

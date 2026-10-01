@@ -429,6 +429,11 @@ and immutable provenance using the existing SEC EDGAR adapter. It requires a
 real `SEC_EDGAR_USER_AGENT` contact in the ignored local environment; no key or
 AI tokens are used for preparation. SEC facts are not a complete company profile,
 and their current retrieval cannot be backdated. CLI vendor defaults are unchanged.
+Final SEC quantities use application-owned sentences for the reported metric,
+period and USD-million/per-share unit, rather than a model-written scale label.
+The bilingual presentation protects complete verified fact sentences as well
+as numbers. These structural checks do not prove qualitative reasoning or
+translation quality; human review is still required.
 NQ/ES automatic preparation remains unsupported.
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,

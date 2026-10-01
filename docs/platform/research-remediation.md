@@ -26,7 +26,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local + live stage/retry/usage/completion; completion does not imply valid research |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle and live usage/failure; latest full-flow FAIL at wall budget before publication; request-in-flight may overrun the stage-boundary deadline |
 | R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS UI and real processing flow; valid final report FAIL |
@@ -38,6 +38,23 @@ Overall goal is not complete. The previous extra BTC execution failed report
 acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
 renewed implementation and live-test authorization for BTC, AAPL and NQ, including
 the operational research journey and final decision-report presentation.
+
+### Current operational finding · 2026-10-01
+
+The authenticated live BTC market+news job at `f73d1a9` ended in
+`RESEARCH_BUDGET_EXHAUSTED` after about 37m38s / 539,339 reported tokens.
+All nine preceding stages completed; Portfolio Manager started and its bounded
+repair consumed the remaining time. Financial validation/presentation did not
+start. No final report or decision was published; this is FAIL, not finance or
+translation acceptance. The 30-minute observer deadline is checked between
+stages/calls and cannot interrupt an already-running SDK request.
+
+R08 still needs an explicit operator-visible execution allowance consistent
+with request timeouts, and durable recovery/read-only completed-stage research
+so a failure does not force blind paid recomputation. These must preserve all
+roles, immutable source/config bindings, lease/owner fencing, and final
+publication/approval gates. Do not simply increase budgets silently, skip
+roles, publish partial work as a decision, or retry whole paid jobs automatically.
 
 ### Renewed acceptance scope
 

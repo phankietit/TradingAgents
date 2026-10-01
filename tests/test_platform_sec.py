@@ -83,8 +83,12 @@ def test_sec_live_path_requires_real_contact_not_placeholder(monkeypatch):
 
 
 def test_sec_final_quantity_binding_uses_filed_fact_and_explicit_millions_unit():
+    from types import SimpleNamespace
+
     from tests.test_report_compiler import draft
+    from tests.test_report_localization import translated_blocks
     from tradingagents.agents.utils.report_compiler import compile_report
+    from tradingagents.agents.utils.report_localization import localize_report
     from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
     from tradingagents.platform.analysis.research_validation import validate_canonical_report
 
@@ -97,7 +101,7 @@ def test_sec_final_quantity_binding_uses_filed_fact_and_explicit_millions_unit()
         "data": collection.model_dump(mode="json")}
     facts = SnapshotFundamentalFacts(source)
     raw, _ = draft()
-    raw["investment_thesis"] = [{"claim": "Reported assets were ${{QA}} million. Coverage excludes unreported tags.",
+    raw["investment_thesis"] = [{"claim": "{{QA}}. Coverage excludes unreported tags.",
         "snapshot_ids": [snapshot_id]}]
     raw["risks"] = [{"claim": "Other disclosures require review.", "snapshot_ids": [snapshot_id]}]
     raw["invalidation_conditions"] = [{"claim": "If the filing is amended, reassess.",
@@ -105,6 +109,52 @@ def test_sec_final_quantity_binding_uses_filed_fact_and_explicit_millions_unit()
     raw["quantity_bindings"] = [{"key": "QA", "snapshot_id": snapshot_id,
         "fact_id": "sec.total_assets.annual.2025-09-27.usd_millions", "decimal_places": 2}]
     result = compile_report(raw, {snapshot_id: facts})
-    assert "$100.00 million" in result.investment_thesis
+    assert "Total assets as of 2025-09-27, reported in the annual filing: USD 100.00 million." in result.investment_thesis
     assert result.observed_numbers[0].value == 100
     validate_canonical_report(result, {snapshot_id: facts}, {snapshot_id})
+    original = result.model_dump()
+
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt: schema(blocks=translated_blocks(prompt)))
+
+        def invoke(self, _):
+            pytest.fail("valid protected SEC statement must not trigger repair")
+
+    localized = localize_report(Model(), result, [])
+    assert "Tổng tài sản tại ngày 2025-09-27, theo báo cáo năm: 100.00 triệu USD." in localized.vi
+    assert "USD 100.00 million" not in localized.vi
+    assert "100.00 triệu USD.." not in localized.vi
+    assert result.model_dump() == original
+
+
+@pytest.mark.parametrize("claim", [
+    "Reported assets were ${{QA}} billion.",
+    "Reported assets were ${{QA}} per share.",
+    "Quarterly revenue was ${{QA}} million.",
+    "Assets for the current quarter were ${{QA}} million.",
+])
+def test_sec_bound_scalar_cannot_change_unit_metric_or_reporting_period(claim):
+    from tests.test_report_compiler import draft
+    from tradingagents.agents.utils.report_compiler import compile_report
+    from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
+    from tradingagents.platform.analysis.research_validation import PublicationValidationError
+
+    collection = collect(document([fact(100_000_000, "2025-11-01")]))
+    snapshot_id = str(uuid4())
+    source = {"snapshot_id": snapshot_id,
+        "provenance": {"dataset": "fundamentals", "vendor": "sec_edgar",
+            "instrument_id": str(AAPL.instrument_id),
+            "retrieved_at": collection.retrieved_at.isoformat()},
+        "data": collection.model_dump(mode="json")}
+    raw, _ = draft()
+    raw["investment_thesis"] = [{"claim": claim, "snapshot_ids": [snapshot_id]}]
+    raw["risks"] = [{"claim": "Other disclosures require review.", "snapshot_ids": [snapshot_id]}]
+    raw["invalidation_conditions"] = [{"claim": "If the filing is amended, reassess.",
+        "snapshot_ids": [snapshot_id]}]
+    raw["quantity_bindings"] = [{"key": "QA", "snapshot_id": snapshot_id,
+        "fact_id": "sec.total_assets.annual.2025-09-27.usd_millions", "decimal_places": 2}]
+    with pytest.raises(PublicationValidationError) as failure:
+        compile_report(raw, {snapshot_id: SnapshotFundamentalFacts(source)})
+    assert failure.value.issues == ("fundamental_statement_requires_standalone_anchor",)
+    assert failure.value.binding_keys == ("QA",)

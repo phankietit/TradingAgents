@@ -14,7 +14,9 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from tradingagents.agents.research_schemas import LocalizedResearchReport
+from tradingagents.agents.utils.fundamental_statements import fundamental_statement
 from tradingagents.agents.utils.quantitative_statements import percentage_statement
+from tradingagents.agents.utils.statement_anchors import non_standalone_anchors
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
 from tradingagents.platform.analysis.research_validation import (
     NUMBER_PATTERN,
@@ -59,19 +61,29 @@ def protect_quantities(text, statements=None, *, offset=0):
     def replace(match):
         key = "⟦Q" + _letters(offset + len(values)) + "⟧"
         values[key] = statements.get(match.group(), match.group())
-        return key
+        # Preserve the visible sentence boundary while hiding its whole content.
+        return key + "." if match.group() in statements else key
 
     pattern = re.compile("|".join(re.escape(value) for value in sorted(statements, key=len, reverse=True))
                          + "|(?i:" + QUANTITY.pattern + ")") if statements else QUANTITY
     return pattern.sub(replace, text), values
 
 
-def restore_quantities(text, values):
+def restore_quantities(text, values, *, standalone_anchors=()):
     if Counter(ANCHOR.findall(text)) != Counter(values.keys()):
         raise PublicationValidationError(["translation_anchor_mismatch"])
     if any(char.isdecimal() for char in ANCHOR.sub("", text)):
         raise PublicationValidationError(["translation_numeric_token_added"])
-    return ANCHOR.sub(lambda match: values[match.group()], text)
+    if non_standalone_anchors(text, standalone_anchors):
+        raise PublicationValidationError(["translation_statement_requires_standalone_anchor"])
+
+    def replace(match):
+        value = values[match.group()]
+        # Complete statements include their own period; the protected version
+        # also shows that boundary to the translator. Restore exactly one.
+        return value.removesuffix(".") if value.endswith(".") and text[match.end():].startswith(".") else value
+
+    return ANCHOR.sub(replace, text)
 
 
 def validate_financial_terms(english, vietnamese):
@@ -125,9 +137,10 @@ def localize_report(llm, decision, diagnostics):
     for observed in decision.observed_numbers:
         number = format(Decimal(str(observed.value)).quantize(Decimal(1).scaleb(-observed.decimal_places)), "f")
         try:
-            en = percentage_statement(observed.fact_id, number)
-            if en:
-                statements[en] = percentage_statement(observed.fact_id, number, vi=True)
+            for renderer in (percentage_statement, fundamental_statement):
+                en = renderer(observed.fact_id, number)
+                if en:
+                    statements[en] = renderer(observed.fact_id, number, vi=True)
         except ValueError:
             # Legacy reports remain readable. Only exact deterministic sentences
             # are protected as statements; never reinterpret historical prose.
@@ -160,7 +173,8 @@ def localize_report(llm, decision, diagnostics):
             original, block_values = blocks[block.block_id]
             if not block.vi.strip() or re.search(r"(?m)^\s*#{1,6}\s", block.vi):
                 raise PublicationValidationError(["translation_block_structure_mismatch"])
-            value = restore_quantities(block.vi, block_values)
+            value = restore_quantities(block.vi, block_values,
+                standalone_anchors=[key for key, value in block_values.items() if value in statements.values()])
             validate_financial_terms(original, value)
             validate_editorial_quality(value)
             LocalizedResearchReport(en=original, vi=value)

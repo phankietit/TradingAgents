@@ -26,8 +26,10 @@ python -m pytest -q
 git diff --check
 ```
 
-CI remains authoritative across the complete supported Python matrix. A local
-pass on one version is not proof for every CI version.
+CI is currently disabled by the owner; use local/manual gates and preserve
+their exact Python/platform evidence. A local pass on one version is not proof
+for the complete supported Python matrix. If CI is re-enabled, record its
+matrix results separately rather than treating older green checks as current.
 
 ## Clean Install Gate
 

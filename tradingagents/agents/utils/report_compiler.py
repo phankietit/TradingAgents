@@ -4,10 +4,15 @@ import re
 from decimal import Decimal
 
 from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, SnapshotReportDraft
+from tradingagents.agents.utils.fundamental_statements import (
+    fundamental_statement,
+    is_fundamental_fact,
+)
 from tradingagents.agents.utils.quantitative_statements import (
     is_percentage_fact,
     percentage_statement,
 )
+from tradingagents.agents.utils.statement_anchors import non_standalone_anchors
 from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
     unsupported_financial_numbers,
@@ -38,8 +43,9 @@ def compile_report(raw, facts):
     bindings = data.pop("quantity_bindings")
     values = {}
     observations = []
-    percentage_keys = set()
+    statement_keys = set()
     relation_failures = []
+    fundamental_failures = []
     for binding in bindings:
         key = binding["key"]
         source = facts.get(binding["snapshot_id"])
@@ -55,25 +61,27 @@ def compile_report(raw, facts):
         if not is_percentage_fact(binding["fact_id"]) and re.search(
                 re.escape("{{" + key + "}}") + r"\s*(?:%|percent\b|per\s+cent\b)", prose, re.I):
             raise PublicationValidationError(["quantity_binding_unit_mismatch"], binding_keys=(key,))
-        if is_percentage_fact(binding["fact_id"]):
-            percentage_keys.add(key)
-            # A percentage is a complete fact sentence, not a number that the
-            # model may attach to the reciprocal relationship in free prose.
-            for occurrence in re.finditer(re.escape("{{" + key + "}}"), prose):
-                before, after = prose[:occurrence.start()], prose[occurrence.end():]
-                if ((before.strip() and not re.search(r"(?:[.!?]\s*|\n[ \t]*)$", before))
-                        or (after.strip() and not after.startswith((".", "\n")))):
-                    relation_failures.append(key)
+        if is_percentage_fact(binding["fact_id"]) or is_fundamental_fact(binding["fact_id"]):
+            statement_keys.add(key)
+            # Complete owned statements prevent changing a percentage's
+            # denominator or an accounting fact's metric, period or units.
+            fundamental = is_fundamental_fact(binding["fact_id"])
+            if non_standalone_anchors(prose, ["{{" + key + "}}"]):
+                (fundamental_failures if fundamental else relation_failures).append(key)
             try:
-                values[key] = percentage_statement(binding["fact_id"], values[key])
+                renderer = fundamental_statement if fundamental else percentage_statement
+                values[key] = renderer(binding["fact_id"], values[key])
             except ValueError:
-                raise PublicationValidationError(["percentage_statement_unsupported"], binding_keys=(key,)) from None
+                code = "fundamental_statement_unsupported" if fundamental else "percentage_statement_unsupported"
+                raise PublicationValidationError([code], binding_keys=(key,)) from None
         observations.append(
             {name: binding[name] for name in ("snapshot_id", "fact_id", "decimal_places")}
             | {"value": float(number)}
         )
     if relation_failures:
         raise PublicationValidationError(["percentage_statement_requires_standalone_anchor"], binding_keys=relation_failures)
+    if fundamental_failures:
+        raise PublicationValidationError(["fundamental_statement_requires_standalone_anchor"], binding_keys=fundamental_failures)
     used = set()
 
     def render(value):
@@ -84,7 +92,7 @@ def compile_report(raw, facts):
                 if key not in values:
                     raise PublicationValidationError(["quantity_binding_missing"])
                 used.add(key)
-                if key in percentage_keys and match.string[match.end():].startswith("."):
+                if key in statement_keys and match.string[match.end():].startswith("."):
                     return values[key].removesuffix(".")
                 return values[key]
 
@@ -118,7 +126,16 @@ indicator percentages, drawdown and calc.pct_change/abs_pct_change. Retain ALL
 material comparisons by selecting the correct fact IDs, not by dropping them.
 Keep the associated financial interpretation, opposing case and uncertainty in
 separate sentences. Do not negate, quote as false or contradict the observation.
-Non-percentage price/volume bindings remain inline numeric anchors as before.
+SEC ACCOUNTING STATEMENTS: Every sec.* binding MUST also occupy a complete
+standalone sentence '{{QA}}.' without surrounding currency, scale, metric,
+period or other prose. The application renders the exact reported metric,
+annual/quarterly period and USD millions or USD per-share unit from the fact ID,
+in both languages. Do not label a million-unit fact as billions or earnings
+per share, or an annual balance as current-quarter revenue. Keep accounting
+interpretations and opposing evidence in separate sentences. A
+fundamental_statement_requires_standalone_anchor failure means move the SEC
+anchor into its own complete sentence; do not remove the underlying evidence.
+Other non-percentage price/volume bindings remain inline numeric anchors.
 Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
 For close C and reference R, price premium over R is (C/R - 1)*100,
 but a move from C to R is (R/C - 1)*100. Never reuse the former for the latter.
@@ -142,8 +159,10 @@ never invent an alias. A missing-binding failure means bind the actual reference
 quantity. A malformed-anchor failure means fix placeholder syntax only.
 Example prose: 'The close was ${{QA}}. {{QB}}. Momentum remains positive.' Bind QA
 to latest.close and QB to return.30_calendar_days.pct from the supplied snapshot.
-Keep currency outside non-percentage placeholders. NEVER append % to a percentage
-placeholder; its complete sentence owns the unit and relationship. Reuse each binding consistently
+Keep currency outside INLINE MARKET-PRICE placeholders only. SEC placeholders
+own their entire accounting sentence; never attach currency, scale or period.
+NEVER append % to a percentage placeholder; its complete sentence owns the unit
+and relationship. Reuse each binding consistently
 in source-linked claim objects. Leave observed_numbers empty and price_target null. Application
 code resolves all quantities; do not calculate or copy numeric observations into
 prose, INCLUDING approximate or conditional quantities. Do not replace a bound

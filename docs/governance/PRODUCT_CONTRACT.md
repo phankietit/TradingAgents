@@ -2,7 +2,7 @@
 
 ## 1. Current Product
 
-TradingAgents is currently a Python research framework. It provides:
+The supported package baseline is a Python research framework. It provides:
 
 - A Typer/Rich interactive CLI.
 - A programmatic `TradingAgentsGraph` API.
@@ -12,9 +12,24 @@ TradingAgents is currently a Python research framework. It provides:
 - Markdown reports, a local decision/reflection log, optional checkpoints, and
   an independent-cell backtest.
 
-It does not currently provide a web application, authenticated multi-user API,
-portfolio database, portfolio simulator, paper broker, live broker, order
-execution, or autonomous trading system.
+The draft `fix/TA-R01-research-quality` candidate additionally implements a
+private FastAPI/worker/React workspace with owner authorization, immutable
+snapshots/artifacts, bilingual saved reports, portfolio records, deterministic
+risk checks and human review. Its R01–R14 acceptance is incomplete; see
+`HANDOFF.md` and the dated research acceptance receipts for exact-SHA evidence.
+Implemented web controls do not establish live financial/editorial quality or
+release readiness.
+
+Current candidate acquisition covers Yahoo daily prices and non-exhaustive
+recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
+Social/macro ingestion and other-asset fundamentals remain unfinished. Missing
+coverage stays explicit; analyst readers alone do not prove source acquisition.
+NQ=F is the owner-selected reference; live acceptance is BLOCKED until eligible
+active-contract/roll data exists. No substitute source has been approved.
+
+Neither the baseline nor this candidate provides a portfolio simulator, paper
+or live broker, order execution, or autonomous trading system. The web candidate
+is for a private owner; public hosting and multi-user deployment are unverified.
 
 ## 2. Intended Direction
 
