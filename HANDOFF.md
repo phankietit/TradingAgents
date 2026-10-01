@@ -49,7 +49,12 @@ EN/VI, giữ nguyên số, không tạo run mới khi đọc, không tràn ngang
 trang quyết định liên kết giữ phê duyệt disabled khi không có portfolio/risk.
 Full Python 1.506 + 88 subtests PASS (20 skips), Web 122 tests PASS,
 typecheck/lint/build PASS. Đây là UI/integration proof, không phải live model
-hay translation acceptance. SEC vẫn chờ contact, các live gates vẫn mở.
+hay translation acceptance. Kiểm tra tiếp đã tìm thấy contact SEC hợp lệ trong
+`.env` ignored ở checkout gốc: AAPL API live SEC PASS 1.159 facts, zero invalid,
+latest filing 2026-07-31. BTC API giá/news PASS và bind hai snapshot; chưa phải
+full graph. Worktree chưa tự nạp root env, nên QA phải nạp rõ file gốc và assert
+MiniMax-M3; initial QA default-OpenAI run đã cancel trước model call. Các gate
+live finance/translation vẫn mở.
 
 Yêu cầu mới nhất của chủ repo: lưu toàn bộ code, phần dở và ngữ cảnh lên GitHub
 để có thể tiếp tục từ máy khác hoặc Claude. Đây là checkpoint công việc, chưa

@@ -138,3 +138,23 @@ Local screenshots are under `/Volumes/Data/TradingAgents-runtime/qa-reader-ObuWO
 outside Git. Browser plugin was absent, so existing bundled Playwright was used.
 The synthetic server was stopped after verification. NQ=F remains **BLOCKED**
 by the owner's source decision; no provider was added. Goal/PR remain unfinished.
+
+### Live source/API follow-up at the same code candidate
+
+- **PASS** AAPL SEC: authenticated `prepare-fundamentals` against live existing
+  EDGAR adapter returned `ready`/`OK`, persisted 1,159 selected facts with zero
+  invalid records, latest filing 2026-07-31. A real contact is already present
+  in the root checkout's ignored `.env`; no contact value was printed or copied
+  to the public receipt. This proves source/API persistence, not a full AAPL
+  research report.
+- **PASS** BTC source/API binding: five-year Yahoo price preparation returned
+  `ready`/`OK` through 2026-09-30T00:00Z, explicitly marked delayed by one
+  completed daily candle. News preparation returned `ready`/`OK`, 99 eligible
+  recent articles, `recent_feed_not_exhaustive`. Two snapshots passed the real
+  API run-input loader. No model call occurred during preparation.
+- The initial isolated QA process did not load the root model env and queued
+  a run with default OpenAI configuration. It was cancelled before any worker
+  invocation. This is not MiniMax acceptance. Subsequent paid verification must
+  explicitly load the existing root config and assert MiniMax-M3 before running.
+- All source checks used fresh, task-created QA databases/artifact stores under
+  `/Volumes/Data/TradingAgents-runtime/`; existing owner history was untouched.

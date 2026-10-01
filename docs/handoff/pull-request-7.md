@@ -14,11 +14,14 @@ translation fidelity. The product is incomplete and this PR remains draft.
   paged analyst tools; canonical research and bounded EN/VI presentation.
 - MiniMax whole-message JSON/schema validation, bounded repair, usage and
   real stage progress; research separated from deterministic portfolio approval.
-- Responsive web workflow and report layout with technical details secondary.
-- Yahoo recent-news collector with timestamp/provenance/failure contracts.
-  Web still prepares prices only; non-price ingestion is unfinished.
-- `NewsSnapshotService` is saved WIP, compiled/linted but not integration-tested
-  or connected to API/UI. It must be reviewed before use.
+- Responsive web workflow, with completed reports displayed first and processing
+  preserved in an expandable section. Saved bilingual summaries, charts,
+  research and verification are readable without another model call.
+- Yahoo recent-news collection, immutable owner-scoped storage, authenticated
+  preparation API and EN/VI controls. Feed coverage remains non-exhaustive.
+- Owner-approved existing SEC EDGAR ingestion for AAPL web, preserving filing
+  dates and exact fact IDs; no CLI-default or provider substitution.
+- Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
 
@@ -28,18 +31,24 @@ GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
 
-- PASS on `50dd0df`: 1,482 backend tests + 88 subtests, Ruff; 20 classified skips.
-  PostgreSQL (18), optional Bedrock and live DeepSeek were not verified there.
-- WIP checkpoint: source compile, Ruff, staged diff check, handoff link check
-  and staged credential scan. Earlier full-suite results do not certify WIP.
+- PASS on code SHA `25476690deac0e6035c34d65759d660b4bc4f3a3`: 1,506 backend
+  tests + 88 subtests, Ruff, diff check; 20 classified skips. Web: 122 tests,
+  typecheck/lint/build PASS. PostgreSQL (18), optional Bedrock and live DeepSeek
+  remain unverified.
+- Built-web browser synthetic verification PASS at 1280×900 and 390×844:
+  compiler/worker/API → saved bilingual report; tab/language switching retains
+  quantities, zero new run POSTs, linked decision preserves approval gates,
+  no pageerror or overflow. This is not live model/translation acceptance.
 - Live BTC on `5bbbdee`: full 11-stage backend replay, 14 model calls, 480,325
   reported tokens. Automatic checks passed; manual semantic/editorial acceptance
   failed. It used market-only snapshots and was not registered as an owner decision.
 - AAPL live full-graph and later component replay results are recorded in
   `docs/platform/research-acceptance-20260927.md`; manual acceptance remains FAIL.
-- Current browser validation is unavailable due to admin-policy verification
-  failure on the original machine. NQ reference identity still needs resolution;
-  no NQ live acceptance is claimed. Current PostgreSQL verification is unavailable.
+- NQ identity is owner-selected `NQ=F`, reference-only. Owner chose BLOCKED until
+  a valid contract/roll source exists; no substitute provider or index is added.
+- SEC live, BTC/AAPL live semantic/editorial acceptance, social/macro ingestion
+  and PostgreSQL still require evidence. See the current dated receipt rather
+  than promoting an older test result to HEAD.
 
 Use `HANDOFF.md` as the continuation entry point and the dated acceptance ledger
 for exact SHA/usage/evidence. No hosted CI is used: workflow was explicitly
