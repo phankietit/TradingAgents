@@ -247,10 +247,10 @@ tool-choice support, graph roles or readiness requirements.
 
 ## Non-price acquisition status
 
-The web preparation endpoint currently captures prices only. Existing readers
-for news/fundamentals/social snapshots do not establish automatic acquisition.
-`dataflows.platform_news.collect_yahoo_news` is adapter groundwork for explicit
-Yahoo selection, not yet wired to web preparation or snapshot persistence.
+The web has separate current-price and optional current-news preparation actions.
+Existing readers for fundamentals/social snapshots do not establish automatic
+acquisition. `dataflows.platform_news.collect_yahoo_news` is explicitly wired
+to owner-scoped `prepare-news` and immutable news snapshot persistence.
 It returns structured articles with instrument identity, requested window,
 publication timestamps, retrieval timestamp, URL and publisher. Source text is
 untrusted evidence. No article URL is fetched by this collector.
@@ -260,7 +260,7 @@ be backdated using their original publication dates. It distinguishes empty
 reachable feeds, unavailable requests, malformed records and out-of-window
 coverage. A malformed record prevents the batch being marked usable. An OK
 result means eligible articles exist, not exhaustive coverage of the requested
-week. The downstream integration must retain `recent_feed_not_exhaustive`,
-persist a new immutable owner-bound artifact, and select a run cutoff no earlier
-than retrieval. Fundamentals, social and macro acquisition remain separate
+week. The downstream run retains `recent_feed_not_exhaustive`, selects a cutoff
+no earlier than retrieval, and adds a deterministic bilingual coverage notice
+to the report. Fundamentals, social and macro acquisition remain separate
 unfinished work; this adapter must not cause them to be labeled available.

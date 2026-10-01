@@ -24,15 +24,28 @@ def publication_warning(snapshot_context):
     """Deterministic disclosure retained even if a model omits its limitation."""
     if snapshot_context is None:
         return ""
+    warnings = []
     delayed = {source.manifest.source_end for sources in snapshot_context.by_analyst.values()
                for source in sources if source.manifest.metadata.get("freshness") == "delayed"}
-    if not delayed:
-        return ""
-    cutoffs = ", ".join(sorted(value.isoformat() for value in delayed if value is not None))
-    return (f"DATA LIMITATION / GIỚI HẠN DỮ LIỆU: Source publication delayed; completed candles through "
+    if delayed:
+        cutoffs = ", ".join(sorted(value.isoformat() for value in delayed if value is not None))
+        warnings.append(
+            f"DATA LIMITATION / GIỚI HẠN DỮ LIỆU: Source publication delayed; completed candles through "
             f"{cutoffs}. Not a current-market assessment. No missing candle filled. / "
             f"Nguồn cập nhật trễ; nến hoàn tất đến {cutoffs}. Không phản ánh thị trường hiện tại; "
-            "không tự bù nến thiếu.\n\n")
+            "không tự bù nến thiếu."
+        )
+    if any(source.manifest.dataset == "news"
+           and source.manifest.metadata.get("coverage") == "recent_feed_not_exhaustive"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "NEWS COVERAGE / PHẠM VI TIN TỨC: Recent vendor headlines are not an exhaustive "
+            "record of market or economic events. Missing coverage is unavailable, not neutral; "
+            "do not infer the absence of catalysts. / Tin gần đây từ nguồn không bao quát mọi "
+            "sự kiện thị trường hay kinh tế. Thiếu nguồn là chưa có dữ liệu, không phải trung lập; "
+            "không suy luận rằng không có chất xúc tác."
+        )
+    return "\n\n".join(warnings) + ("\n\n" if warnings else "")
 
 
 class AnalysisJobHandler:

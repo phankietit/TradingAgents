@@ -87,6 +87,34 @@ def test_news_prepare_auth_reuse_discovery_and_run_binding(news_api):
     assert response.json()["run"]["snapshot_ids"] == [result["snapshot"]["snapshot_id"]]
 
 
+def test_recent_news_publication_disclosure_is_not_model_optional(news_api):
+    from uuid import UUID
+
+    from tradingagents.platform.analysis.snapshots import AnalysisSnapshot, SnapshotAnalysisContext
+    from tradingagents.platform.artifacts import ArtifactService
+    from tradingagents.platform.jobs.analysis import publication_warning
+
+    client, app = news_api
+    app.state.collect_yahoo_news = Mock(return_value=_collection(AAPL, [_article()]))
+    result = client.post(
+        f"/api/v1/instruments/{AAPL.instrument_id}/prepare-news", headers=login(client),
+    ).json()
+    manifest = result["snapshot"]
+    owner = UUID(client.get("/api/v1/auth/me").json()["owner_id"])
+    with app.state.database.session() as session:
+        repository = PlatformRepository(session)
+        artifact = repository.get_snapshot_artifact(UUID(manifest["snapshot_id"]), owner)
+        loaded = ArtifactService(app.state.artifact_store, repository).read(artifact.artifact_id, owner)
+    context = SnapshotAnalysisContext(
+        as_of=NOW,
+        by_analyst={"news": (AnalysisSnapshot(manifest=manifest, payload=loaded[1].decode()),)},
+        source_max_age_seconds={"news": 604800},
+    )
+    warning = publication_warning(context)
+    assert "not an exhaustive" in warning
+    assert "Thiếu nguồn là chưa có dữ liệu, không phải trung lập" in warning
+
+
 @pytest.mark.parametrize("raw,status", [
     ([], DataQualityStatus.NO_DATA),
     ([{}], DataQualityStatus.INVALID),
