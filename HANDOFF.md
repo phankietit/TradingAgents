@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Mới nhất:** code `af5349dc81b01f24529a013c6b914e4003f613a7` đã chặn
+model đổi đơn vị/chỉ tiêu/kỳ của số SEC, và chặn dịch thêm phủ định/đơn vị vào
+câu số liệu đã bảo vệ. Full Python **1.567 + 88 subtests PASS** (20 skips),
+Ruff PASS; Web 122 tests, lint/typecheck/build PASS. Chưa live-test code mới.
+
+Lượt BTC market+news tại `f73d1a9` **FAIL**: 37m38s / 539.339 token / 13 calls,
+`RESEARCH_BUDGET_EXHAUSTED`, attempt 1/1, không xuất report/decision. Đã xong
+chín stage trước Portfolio Manager; chưa chạy Financial validation/Report
+presentation. Trần 30 phút hiện là kiểm tra giữa các bước, không ngắt request
+model đang chạy. Không dùng sự kiện tiến trình để coi nội dung đã nghiệm thu.
+
+Tiếp theo ưu tiên R08: allowance hiện rõ, tương thích request timeout và durable
+recovery/đọc phần nghiên cứu đã hoàn tất, giữ source/config/owner/lease và toàn
+bộ vai trò. Không tự tăng trần hay replay paid BTC; cần chủ repo duyệt lượt mới
+sau khi sửa flow. AAPL full graph chưa chạy ở candidate mới; SEC source đã PASS.
+NQ=F giữ BLOCKED theo quyết định chủ repo, không thêm provider. Xem phần cuối
+receipt 2026-10-01 để có exact SHA và trạng thái. Goal và Draft PR #7 vẫn mở.
+
+### Nhật ký các checkpoint trước
+
 Goal R01–R14 vẫn **chưa hoàn thành**; Draft PR #7 chưa được merge. Nhánh
 `fix/TA-R01-research-quality` nay có bước news hiện tại ngoài price: thu Yahoo
 trong subprocess 45 giây, lưu snapshot bất biến và owner-scoped, xác minh
@@ -73,7 +93,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `25476690deac0e6035c34d65759d660b4bc4f3a3`.
+- Code đã full-test gần nhất: `af5349dc81b01f24529a013c6b914e4003f613a7`.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
@@ -144,19 +164,23 @@ trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay 
 
 ## Công việc tiếp theo có thứ tự
 
-1. News service và prepare-news đã có local test, browser synthetic, một lượt
+1. R08 allowance/timeout và durable completed-stage recovery phải xử lý trước
+   paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
+   không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
+   local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
+2. News service và prepare-news đã có local test, browser synthetic, một lượt
    Yahoo AAPL trực tiếp; còn cần live API/snapshot/run acceptance và kiểm soát
    coverage theo từng nguồn. Không coi một feed gần đây là lịch sử tin tức.
-2. Hoàn thiện nguồn fundamentals, social, macro phù hợp từng asset và hợp đồng
+3. Hoàn thiện nguồn fundamentals, social, macro phù hợp từng asset và hợp đồng
    evidence/number tương ứng; giữ nguyên provider hiện có.
-3. Xử lý semantic evidence và tiếng Việt từ các lỗi live đã lưu. Tránh tiếp tục
+4. Xử lý semantic evidence và tiếng Việt từ các lỗi live đã lưu. Tránh tiếp tục
    chỉ thêm blacklist từng câu hoặc dùng numeric parity để chứng nhận ý nghĩa.
-4. Hoàn thiện flow chuẩn bị → nghiên cứu → kiểm tra → đọc quyết định; tổng kết,
+5. Hoàn thiện flow chuẩn bị → nghiên cứu → kiểm tra → đọc quyết định; tổng kết,
    luận điểm đối lập, rủi ro, invalidation và coverage cần dễ đọc trên desktop/mobile.
-5. Chạy scope-appropriate local gates; sau khi có sửa đáng kể mới làm live BTC,
+6. Chạy scope-appropriate local gates; sau khi có sửa đáng kể mới làm live BTC,
    AAPL, NQ nghiệm thu. Ghi SHA/input/coverage/usage/kết quả manual. Không replay
    tốn phí tự động chỉ vì clone repo hoặc đọc tài liệu bàn giao.
-6. Chỉ complete khi acceptance toàn bộ đạt. Giữ PR draft đến khi đủ bằng chứng.
+7. Chỉ complete khi acceptance toàn bộ đạt. Giữ PR draft đến khi đủ bằng chứng.
 
 ## Chạy trên máy mới
 

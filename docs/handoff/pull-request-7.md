@@ -5,7 +5,9 @@ relationships or Vietnamese report were not usable. This branch retains the
 original analysis/debate/risk graph, adds immutable data and quantitative
 publication checks, and provides a private bilingual financial web workspace.
 Manual live acceptance still fails on unsupported qualitative claims and
-translation fidelity. The product is incomplete and this PR remains draft.
+translation fidelity; the latest market+news BTC job also exhausted its stage-
+boundary time budget before publication. The product is incomplete and this
+PR remains draft.
 
 ## Scope
 
@@ -21,6 +23,8 @@ translation fidelity. The product is incomplete and this PR remains draft.
   preparation API and EN/VI controls. Feed coverage remains non-exhaustive.
 - Owner-approved existing SEC EDGAR ingestion for AAPL web, preserving filing
   dates and exact fact IDs; no CLI-default or provider substitution.
+- Application-owned SEC metric/period/unit sentences and structural protection
+  against translated negation or unit changes; qualitative review is still required.
 - Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
@@ -31,7 +35,7 @@ GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
 
-- PASS on code SHA `25476690deac0e6035c34d65759d660b4bc4f3a3`: 1,506 backend
+- PASS on code SHA `af5349dc81b01f24529a013c6b914e4003f613a7`: 1,567 backend
   tests + 88 subtests, Ruff, diff check; 20 classified skips. Web: 122 tests,
   typecheck/lint/build PASS. PostgreSQL (18), optional Bedrock and live DeepSeek
   remain unverified.
@@ -46,9 +50,17 @@ GitHub Issues are disabled; repository tickets are the backlog.
   `docs/platform/research-acceptance-20260927.md`; manual acceptance remains FAIL.
 - NQ identity is owner-selected `NQ=F`, reference-only. Owner chose BLOCKED until
   a valid contract/roll source exists; no substitute provider or index is added.
-- SEC live, BTC/AAPL live semantic/editorial acceptance, social/macro ingestion
-  and PostgreSQL still require evidence. See the current dated receipt rather
-  than promoting an older test result to HEAD.
+- Live SEC/API source PASS: AAPL has 1,159 selected filed facts, zero invalid;
+  BTC real API prepared and bound price/recent-news snapshots. Source success
+  is not a validated final research report.
+- Latest BTC on `f73d1a9`: FAIL `RESEARCH_BUDGET_EXHAUSTED`, about 37m38s,
+  13 calls / 539,339 tokens, attempt 1/1. Nine stages completed; Portfolio Manager
+  started; validation/presentation did not start; zero published outputs.
+  Existing observer checks the 30-minute budget at boundaries, not mid-request.
+- Live BTC/AAPL semantic/editorial acceptance after the newest fix, operational
+  allowance/recovery, social/macro ingestion and PostgreSQL still require
+  evidence. No extra paid replay occurred on the new code SHA. See the dated
+  receipt rather than promoting an older test result to HEAD.
 
 Use `HANDOFF.md` as the continuation entry point and the dated acceptance ledger
 for exact SHA/usage/evidence. No hosted CI is used: workflow was explicitly

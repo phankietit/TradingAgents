@@ -1,5 +1,8 @@
 # R04 current-news checkpoint — 2026-10-01
 
+Latest code/evidence: see **SEC statement boundaries and live BTC deadline**
+at the end. Earlier sections remain exact-SHA historical receipts.
+
 Class: local private decision-support candidate, **not release approval**.
 Code candidate: `a0bfaae6a1efa5266517a84e4d2f37dc68a56a2f` on
 `fix/TA-R01-research-quality`, Draft PR #7 against `main`. This receipt
@@ -158,3 +161,76 @@ by the owner's source decision; no provider was added. Goal/PR remain unfinished
   explicitly load the existing root config and assert MiniMax-M3 before running.
 - All source checks used fresh, task-created QA databases/artifact stores under
   `/Volumes/Data/TradingAgents-runtime/`; existing owner history was untouched.
+
+## SEC statement boundaries and live BTC deadline
+
+### Paid live candidate: FAIL, not a completed report
+
+Runtime code SHA: `f73d1a946c19be9a0a94bcceb41b6c3e198edd63` on
+`fix/TA-R01-research-quality`, clean at launch. Existing production Python
+modules were unchanged until this job became terminal; independent new modules,
+tests and docs were prepared while waiting. Provider/model remained MiniMax /
+MiniMax-M3 for both roles; original graph/debate settings were not reduced.
+
+Procedure: load the root ignored model env explicitly before importing config;
+assert MiniMax-M3; create an isolated task QA database/artifact store; use the
+real authenticated/CSRF API to prepare BTC prices and recent news; create one
+`en-vi` market+news run bound to both immutable snapshots; execute exactly one
+`JobWorker.run_once()` with the real `AnalysisEngine`/`AnalysisJobHandler`.
+Job maximum attempts was one. Existing bounded per-stage format repairs remain.
+
+- Run: `3bd8ef30-8b8c-41f5-afda-90c7d11ef922`.
+- Private QA state: `/Volumes/Data/TradingAgents-runtime/qa-live-btc-final-uwsqvq8t/`.
+- UTC: 2026-10-01 01:35:08.354612 → 02:12:45.946781; **2,257.592 seconds**.
+- **FAIL**: run/job terminal `failed`, `RESEARCH_BUDGET_EXHAUSTED`; attempt 1/1,
+  zero output artifacts and no published decision. No automatic full-run retry.
+- Completed: Market Analyst, News Analyst, Bull, Bear, Research Manager, Trader,
+  Aggressive, Conservative, Neutral. Portfolio Manager started but was not
+  marked completed. Financial validation and Report presentation did not start.
+- Usage: **13 model calls**, input **363,700**, output **175,639**, total
+  **539,339** tokens; 13 calls reported usage, zero provider-call failures
+  recorded. Trader and Portfolio Manager each used an existing bounded format
+  repair. Token usage is not a USD invoice; provider did not report cost.
+- The observer's 1,800-second budget is checked at stage/model boundaries.
+  An already-running SDK request can overrun that time. The final model usage
+  was retained even though publication subsequently failed.
+- Five-year daily prices stop at the disclosed 2026-09-30 completed UTC candle;
+  recent news has 99 eligible articles and is not exhaustive. Social/macro are
+  absent. This is not a comprehensive crypto report or translation acceptance.
+
+No completed report exists to review; do not infer financial quality from stage
+progress or repair completion. The older manual semantic/translation failures
+remain unresolved. R08 requires an explicit operator-visible allowance and
+durable recovery/read-only completed-stage research; do not silently raise the
+budget, skip roles, publish partial results as a decision or spend on retries.
+
+### Code follow-up: bounded accounting and presentation contracts
+
+Code SHA: `af5349dc81b01f24529a013c6b914e4003f613a7`, clean candidate.
+Reproduced six local acceptance holes before fixing them: four SEC scalar
+bindings could change the unit, metric or reporting period; two translations
+could wrap a protected fact sentence in a negation or a different unit while
+retaining every digit. These reproductions failed before the fix.
+
+SEC quantities now render complete application-owned EN/VI observations with
+the exact metric, annual/quarterly period and USD-million/per-share unit. Balance
+sheet instants are distinguished from accounting flows. Unsupported identities
+fail closed; source facts and existing reports are not rewritten. The translator
+must keep complete fact anchors in standalone sentences; one bounded repair
+remains, and an invalid result is withheld. These structural checks do not
+establish qualitative entailment or comprehensive translation accuracy.
+
+| Gate | Result | Evidence at code SHA |
+| --- | --- | --- |
+| Python full regression | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,567 passed, 20 skipped, 88 subtests, 47.56 s; Python 3.14.7 |
+| Ruff/diff | PASS | `.venv/bin/ruff check .`, `git diff --check` |
+| Focused compiler/SEC/presentation checks | PASS | 154 focused tests before the final prompt-only clarification; full regression above covers the committed version |
+| Web tests/type/lint/build | PASS | 122 tests/22 files; `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; Node 26.8.1/npm 11.19.0 |
+| Live finance/translation after code fix | UNVERIFIED | No paid request on this code candidate; f73d1a9's failed job is not acceptance for newer code |
+| PostgreSQL/optional provider checks | UNVERIFIED | 18 PostgreSQL skips; optional Bedrock missing dependency and live DeepSeek key absent |
+| NQ=F live | BLOCKED | Owner holds contract/roll-source selection; no new provider or substitute |
+| Overall R01–R14 | FAIL | Runtime recovery, remaining sources, semantic/editorial quality and representative live reports remain unfinished |
+
+No raw report, article text, owner database, credential, contact value or runtime
+artifact is included in Git. No CI, broker, risk-limit, provider or deployment
+change. Existing QA and owner history remain intact; PR #7 stays Draft.
