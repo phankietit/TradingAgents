@@ -101,6 +101,37 @@ A 60-second owner/instrument cooldown limits repeated requests. It does not
 call a model, create a run or automatically include fundamentals/social/macro
 sources. Source coverage must be reviewed before a separate paid-AI consent.
 
+## Optional AAPL SEC fundamentals
+
+Owner-approved `POST /api/v1/instruments/{id}/prepare-fundamentals` is limited to
+the catalog AAPL equity. It uses the existing SEC EDGAR companyfacts adapter,
+without changing the CLI's default fundamentals vendor or adding a fallback.
+The server must have `SEC_EDGAR_USER_AGENT` set to a real name/contact email in
+its ignored local environment; an unset or example contact fails unavailable.
+The action uses no model tokens. Other equities, ETFs, crypto and NQ/ES remain
+unsupported by this automatic SEC path.
+
+The collector retains every eligible annual/quarterly US GAAP period for the
+existing balance-sheet, income-statement and cash-flow tags; it does not replace
+a missing tag, derive Q4 by subtraction, treat a fiscal period end as a filing
+date, or sum alternate tags. The latest filed amendment per metric/period is
+selected as observed at retrieval. Each fact carries its tag, unit, period,
+filing date, form and accession. Malformed facts fail the collection closed.
+`NO_DATA`, `INVALID` and `UNAVAILABLE` remain distinct; only `OK` is selectable.
+The saved snapshot is owner-bound, hash-checked and immutable. Its `as_of` is
+retrieval time, not an earlier filing date, so today's companyfacts response
+cannot enter a historical run. A verified snapshot may be reused for 24 hours.
+
+The web uses a separate one-year maximum age since the latest filing for this
+role, while retaining the existing price/news freshness limit. This is a
+source-freshness check, not a change to portfolio risk policy. The analyst sees
+a compact latest-per-metric overview and can page the complete saved fact
+history through a read-only tool. Quantities used in the final conclusion have
+fact IDs with deterministic USD-millions or USD-per-share units; claims still
+require source links and human financial review. The report carries an
+application-owned bilingual warning that SEC tags are not the complete company
+profile or live valuation. Social/macro and full-source parity remain open.
+
 ## Failure, concurrency and cost
 
 The response distinguishes `ready`, `no_data`, `stale`, `coverage_gap`,

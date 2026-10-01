@@ -419,9 +419,14 @@ The analysis form can also **Add recent headlines** from the existing
 Yahoo/yfinance source as an independent, optional, owner-scoped news snapshot.
 The seven-day feed is explicitly non-exhaustive and current-vintage only;
 empty, malformed or unavailable news cannot be selected as evidence. This
-does not add social, fundamentals, filings or macro acquisition, nor does it
-make a price-only or market-plus-news report comprehensive. NQ/ES automatic
-preparation remains unsupported.
+does not add social or macro acquisition, nor does it make a price-only or
+market-plus-news report comprehensive. An owner-approved, separate **Add SEC
+fundamentals** action now prepares AAPL US GAAP companyfacts with filing dates
+and immutable provenance using the existing SEC EDGAR adapter. It requires a
+real `SEC_EDGAR_USER_AGENT` contact in the ignored local environment; no key or
+AI tokens are used for preparation. SEC facts are not a complete company profile,
+and their current retrieval cannot be backdated. CLI vendor defaults are unchanged.
+NQ/ES automatic preparation remains unsupported.
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked

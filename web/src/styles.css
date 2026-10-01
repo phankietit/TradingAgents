@@ -23,9 +23,21 @@
 .report-reading .research-prose { font-size: 15px; line-height: 1.85; }
 .report-reading .research-prose h2 { font-size: 18px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
 .report-reading .research-prose h2:first-child { margin-top: 0; padding-top: 0; border: 0; }
+.reader-summary { display: grid; gap: 28px; }
+.reader-summary section { min-width: 0; }
+.reader-summary h4 { margin: 0 0 12px; color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; }
+.reader-lead { padding: 22px 24px; background: #20241f; border: 1px solid #353c32; border-radius: 10px; }
+.reader-lead .research-prose { font-size: clamp(16px, 1.7vw, 19px); line-height: 1.65; }
+.reader-lead .research-prose > :last-child, .reader-summary .research-prose > :last-child { margin-bottom: 0; }
+.reader-thesis { padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+.reader-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.reader-pair section { padding: 20px; border: 1px solid var(--border); border-radius: 10px; background: #1b1e1a; }
+.reader-pair ul { padding-left: 20px; }
+.reader-horizon { padding-top: 4px; }
+.full-report { margin-top: 28px; padding-top: 18px; border-top: 1px solid var(--border); }
 .report-footnote { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 20px; margin-top: 32px; }
 @media(max-width: 1100px) { .research-workflow ol { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media(max-width: 600px) { .research-workflow ol { grid-template-columns: 1fr; gap: 18px; } .report-header { display: block; } .report-navigation button { padding-inline: 10px; } }
+@media(max-width: 600px) { .research-workflow ol { grid-template-columns: 1fr; gap: 18px; } .report-header { display: block; } .report-navigation button { padding-inline: 10px; } .reader-pair { grid-template-columns: 1fr; } .reader-lead { padding: 18px; } }
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input, select, textarea { font: inherit; }

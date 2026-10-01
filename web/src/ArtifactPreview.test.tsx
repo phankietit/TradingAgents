@@ -43,6 +43,27 @@ it('loads only on demand and displays untrusted report text plus a bound decisio
   expect(screen.queryByText(report.narrative)).toBeNull();
 });
 
+it('presents validated bilingual sections as a readable brief without altering saved text', async () => {
+  setLocale('en');
+  const en = '## Executive summary\nBalanced outlook.\n\n## Investment thesis\nSaved evidence **-22.94%**.\n\n## Risks\n- Rival case.\n\n## Invalidation conditions\n- If filing changes.';
+  const vietnamese = '## Tóm tắt\nGóc nhìn cân bằng.\n\n## Luận điểm đầu tư\nCăn cứ đã lưu **-22.94%**.\n\n## Rủi ro\n- Luận điểm đối lập.\n\n## Điều kiện mất hiệu lực\n- Nếu báo cáo thay đổi.';
+  const fetch = vi.fn(async () => new Response(JSON.stringify({...report,
+    structured_narrative:{rating:'Hold'}, validation_issues:[], localized_report:{en,vi:vietnamese},
+    coverage:{missing:['news','social']}, report_language:'en-vi'})));
+  vi.stubGlobal('fetch', fetch);
+  render(<ArtifactPreview artifact={artifact} runId="run-fixture" defaultOpen />);
+  expect(await screen.findByRole('heading',{name:'Executive summary',level:4})).toBeTruthy();
+  expect(screen.getAllByText('Saved evidence', {exact:false})).toHaveLength(2);
+  expect(screen.getByText(/Not covered in this run:/)).toBeTruthy();
+  expect(screen.getByText('Read the complete saved report')).toBeTruthy();
+  const calls = fetch.mock.calls.length;
+  act(() => setLocale('vi'));
+  expect(screen.getByRole('heading',{name:'Tóm tắt',level:4})).toBeTruthy();
+  expect(screen.getAllByText('Căn cứ đã lưu', {exact:false})).toHaveLength(2);
+  expect(fetch.mock.calls.length).toBe(calls);
+  act(() => setLocale('en'));
+});
+
 it.each(['wrong_run', 'invalid_schema', 'integrity_failure', 'invalid_json'] as const)('withholds preview on %s', async caseName => {
   vi.stubGlobal('fetch', vi.fn(async () => new Response(caseName === 'invalid_json' ? '<html>not json</html>' : JSON.stringify(
     { ...report, ...(caseName === 'wrong_run' ? { run_id: 'other-run' } : caseName === 'invalid_schema' ? { narrative: {} } : {}) }),

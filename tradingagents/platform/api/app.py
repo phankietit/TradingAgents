@@ -246,10 +246,13 @@ def create_app(settings: ApiSettings) -> FastAPI:
     app.state.fetch_daily_prices = fetch_daily_prices
     from tradingagents.dataflows.platform_news import fetch_current_yahoo_news
     app.state.collect_yahoo_news = fetch_current_yahoo_news
+    from tradingagents.dataflows.platform_sec import fetch_current_sec_facts
+    app.state.collect_sec_facts = fetch_current_sec_facts
     preparation_lock = Lock()
     preparation_attempts: dict[tuple[UUID, UUID], float] = {}
     preparation_failures: dict[tuple[UUID, UUID], str] = {}
     news_attempts: dict[tuple[UUID, UUID], float] = {}
+    sec_attempts: dict[tuple[UUID, UUID], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -805,6 +808,92 @@ def create_app(settings: ApiSettings) -> FastAPI:
                     manifest = NewsSnapshotService(
                         write_repository, ArtifactService(artifact_store, write_repository),
                     ).persist(owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            if collection.quality_status is DataQualityStatus.OK:
+                return outcome("ready", snapshot=manifest)
+            return outcome(collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-fundamentals",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_fundamentals(
+        instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """Prepare AAPL SEC filed facts; no Yahoo fallback or historical backdating."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_sec import (
+            SecCollection,
+            SecPreparationError,
+            _approved,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.sec_facts import SecSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(
+                status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds,
+            )
+
+        try:
+            _approved(instrument)
+        except SecPreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            service = SecSnapshotService(
+                repository, ArtifactService(artifact_store, repository),
+            )
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "fundamentals" or snapshot.vendor != "sec_edgar"
+                        or snapshot.retrieved_at < now - timedelta(hours=24)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 31536000)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=31536000)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            elapsed = time.monotonic() - sec_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            sec_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_sec_facts(instrument)
+                collection = SecCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, SecCollection) else acquired)
+            except SecPreparationError as error:
+                return outcome(error.code)
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (collection.instrument_id != instrument_id
+                    or collection.retrieved_at > _now(settings)):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = SecSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
             except (ValueError, ArtifactIntegrityError):
                 return outcome("invalid")
             except OSError:

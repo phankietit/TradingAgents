@@ -248,8 +248,16 @@ tool-choice support, graph roles or readiness requirements.
 ## Non-price acquisition status
 
 The web has separate current-price and optional current-news preparation actions.
-Existing readers for fundamentals/social snapshots do not establish automatic
-acquisition. `dataflows.platform_news.collect_yahoo_news` is explicitly wired
+Existing readers for social snapshots do not establish automatic acquisition.
+An owner-approved AAPL-only `prepare-fundamentals` path now uses the existing
+SEC EDGAR adapter to save filed-date-aware US GAAP facts as a distinct immutable
+`fundamentals` snapshot. It leaves CLI defaults unchanged. The analyst receives
+a compact latest-by-metric view with a read-only full-history paging tool;
+final quantitative bindings can resolve exact SEC fact IDs and units. The
+report adds an application-owned bilingual coverage warning. This is not a
+complete company profile, live valuation, or historical vintage, and other
+equities/ETFs/crypto/references do not gain company-financial acquisition.
+`dataflows.platform_news.collect_yahoo_news` is explicitly wired
 to owner-scoped `prepare-news` and immutable news snapshot persistence.
 It returns structured articles with instrument identity, requested window,
 publication timestamps, retrieval timestamp, URL and publisher. Source text is
@@ -262,5 +270,5 @@ coverage. A malformed record prevents the batch being marked usable. An OK
 result means eligible articles exist, not exhaustive coverage of the requested
 week. The downstream run retains `recent_feed_not_exhaustive`, selects a cutoff
 no earlier than retrieval, and adds a deterministic bilingual coverage notice
-to the report. Fundamentals, social and macro acquisition remain separate
-unfinished work; this adapter must not cause them to be labeled available.
+to the report. Social and macro acquisition remain separate unfinished work;
+the news adapter must not cause them to be labeled available.

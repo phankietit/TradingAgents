@@ -45,6 +45,17 @@ def publication_warning(snapshot_context):
             "sự kiện thị trường hay kinh tế. Thiếu nguồn là chưa có dữ liệu, không phải trung lập; "
             "không suy luận rằng không có chất xúc tác."
         )
+    if any(source.manifest.dataset == "fundamentals"
+           and source.manifest.vendor == "sec_edgar"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "FILING COVERAGE / PHẠM VI BÁO CÁO: SEC facts cover reported US GAAP tags "
+            "and their filing dates, not a complete company profile or live valuation. "
+            "The saved response is current-vintage evidence and cannot be backdated. / "
+            "Số liệu SEC chỉ gồm các chỉ tiêu US GAAP được công bố và ngày nộp báo cáo, "
+            "không phải toàn bộ hồ sơ doanh nghiệp hay định giá trực tiếp. Bản đã lưu "
+            "là dữ liệu ghi nhận hiện tại, không được gán ngược cho thời điểm quá khứ."
+        )
     return "\n\n".join(warnings) + ("\n\n" if warnings else "")
 
 

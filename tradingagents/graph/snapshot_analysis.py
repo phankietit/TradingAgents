@@ -12,6 +12,7 @@ from langchain_core.tools import tool
 from tradingagents.agents.schemas import SentimentReport, render_sentiment_report
 from tradingagents.agents.utils.agent_utils import get_language_instruction
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
+from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 
 from .analyst_execution import ANALYST_NODE_SPECS
@@ -68,6 +69,9 @@ def snapshot_analyst_nodes(llm, reports):
         sources = json.loads(evidence)
         markets = {source["snapshot_id"]: SnapshotMarketFacts(source)
                    for source in sources if source["provenance"]["dataset"] == "ohlcv.daily"}
+        fundamentals = {source["snapshot_id"]: SnapshotFundamentalFacts(source)
+                        for source in sources if source["provenance"]["dataset"] == "fundamentals"
+                        and source["provenance"]["vendor"] == "sec_edgar"}
 
         @tool
         def get_snapshot_candles(snapshot_id: str, offset: int = 0, limit: int = 100) -> dict:
@@ -107,14 +111,29 @@ def snapshot_analyst_nodes(llm, reports):
             return {"snapshot_id": snapshot_id, "fact_id": fact_id, "value": value,
                     "status": "available" if value is not None else "unavailable"}
 
-        tools = [get_snapshot_candles, get_snapshot_indicator, get_snapshot_return, get_snapshot_calculation] if markets else []
+        @tool
+        def get_snapshot_fundamentals(snapshot_id: str, offset: int = 0, limit: int = 50) -> dict:
+            """Page immutable SEC annual/quarterly filed facts, oldest to newest.
+
+            Follow next_offset to inspect full history. Every row carries a
+            filing date, fiscal period, accession, exact fact ID, unit and value.
+            USD values are displayed in millions; EPS stays USD per share.
+            """
+            return fundamentals[snapshot_id].page(offset=offset, limit=limit)
+
+        tools = ([get_snapshot_candles, get_snapshot_indicator, get_snapshot_return,
+                  get_snapshot_calculation] if markets else [])
+        if fundamentals:
+            tools.append(get_snapshot_fundamentals)
         by_name = {item.name: item for item in tools}
         model = llm.bind_tools(tools) if tools else llm
         sentiment_model = bind_structured(llm, SentimentReport, "Sentiment Analyst") if role == "social" else None
         # Summaries do not discard history: the full validated snapshot stays
         # in the tool closures, avoiding a 300KB raw-candle prompt each round.
         supplied = [{**source, "data": markets[source["snapshot_id"]].summary()}
-                    if source["snapshot_id"] in markets else source for source in sources]
+                    if source["snapshot_id"] in markets else
+                    {**source, "data": fundamentals[source["snapshot_id"]].summary()}
+                    if source["snapshot_id"] in fundamentals else source for source in sources]
 
         def analyze(state):
             messages = [

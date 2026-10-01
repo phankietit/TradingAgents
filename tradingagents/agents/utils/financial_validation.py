@@ -10,6 +10,7 @@ from tradingagents.agents.utils.structured import (
     bind_structured,
     invoke_structured_or_freetext,
 )
+from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
@@ -22,6 +23,9 @@ def create_financial_validation(llm, reports):
     snapshot_ids = {source["snapshot_id"] for source in sources}
     facts = {source["snapshot_id"]: SnapshotMarketFacts(source) for source in sources
              if source["provenance"]["dataset"] == "ohlcv.daily"}
+    facts.update({source["snapshot_id"]: SnapshotFundamentalFacts(source) for source in sources
+                  if source["provenance"]["dataset"] == "fundamentals"
+                  and source["provenance"]["vendor"] == "sec_edgar"})
 
     def validate(state):
         is_draft = state.get("structured_draft") is not None

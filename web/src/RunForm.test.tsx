@@ -187,6 +187,38 @@ it('does not select an empty recent-news feed', async () => {
   expect(within(screen.getByRole('group',{name:'News & events'})).queryByRole('checkbox')).toBeNull();
 });
 
+it('prepares AAPL SEC facts separately with a filing-specific freshness limit and no AI call', async () => {
+  const now = new Date().toISOString();
+  const fundamental = { snapshot: { snapshot_id: 'sec1', dataset: 'fundamentals', vendor: 'sec_edgar',
+    source_end: '2026-07-30T00:00:00Z', quality_status: 'OK', metadata: { vintage: 'current_retrieval_filed_date_filter' } },
+    metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['fundamentals'] };
+  let prepared = false;
+  const fetch = vi.fn(async (url: string) => {
+    if (url.includes('/analysis-profile')) return json({allowed_analysts:['market','fundamentals'], investable:true});
+    if (url.includes('/snapshots?')) return json(url.includes('max_age_seconds=31536000')
+      ? prepared ? [fundamental] : [] : [source]);
+    if (url.endsWith('/auth/csrf')) return json({csrf_token:'test'});
+    if (url.endsWith('/prepare-fundamentals')) {
+      prepared = true;
+      return json({status:'ready',snapshot:fundamental.snapshot,analysis_as_of:now,reused:false});
+    }
+    if (url.includes('/portfolios?') || url.includes('/policies?')) return json([]);
+    return json({},503);
+  });
+  vi.stubGlobal('fetch', fetch);
+  const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await user.click(await screen.findByRole('button',{name:'Add SEC fundamentals'}));
+  expect(await screen.findByText(/reported US GAAP tags, not a complete company profile/)).toBeTruthy();
+  await waitFor(() => expect((within(screen.getByRole('group',{name:'Business fundamentals'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true));
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Queue analysis'}));
+  const calls = fetch.mock.calls as unknown as [string, RequestInit][];
+  const body = JSON.parse(calls.find(([url])=>url.endsWith('/runs'))![1].body as string);
+  expect(body.decision_inputs.source_max_age_seconds).toEqual({fundamentals:31536000});
+});
+
 it('explains source failure and keeps AI submission disabled',async()=>{
   const fetch=setup();
   fetch.mockImplementation(async (url:string)=>{

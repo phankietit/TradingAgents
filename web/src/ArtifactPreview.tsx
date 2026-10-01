@@ -5,6 +5,7 @@ import { timestamp } from './data';
 import { profileLabel, researchLabel } from './researchLabels';
 import ResearchMarkdown from './ResearchMarkdown';
 import ResearchChart, { reportHistories, type ReportHistory } from './ResearchChart';
+import { readerSections } from './readerSections';
 
 export interface Artifact { artifact_id: string; kind: string; media_type: string; content_hash: string; byte_size: number; created_at: string }
 export function artifactList(value: Artifact[]): Artifact[] {
@@ -29,7 +30,7 @@ function list(value: unknown): unknown[] {
   return value;
 }
 interface Source { id: string; snapshot: string; name: string; hash: string; claim: string; sourceAt: string | null; observedAt: string }
-type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null; sections: {title:string; body:string}[] }
+type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; missingAnalysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null; sections: {title:string; body:string}[] }
   | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] };
 
 function parse(value: unknown, artifact: Artifact, runId: string): Preview {
@@ -41,11 +42,14 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
     const localized = data.localized_report ? object(data.localized_report) : null;
     const research = data.research_sections === undefined ? {} : object(data.research_sections);
     const debates = data.debate_sections === undefined ? {} : object(data.debate_sections);
+    const coverage = data.coverage === undefined ? null : object(data.coverage);
     const sectionNames: Record<string,string> = {market_report:'Market Analyst',sentiment_report:'Sentiment Analyst',news_report:'News Analyst',fundamentals_report:'Fundamentals Analyst',investment_plan:'Research Manager',trader_investment_plan:'Trader',investment_debate_state:'Bull & bear debate',risk_debate_state:'Risk debate'};
     const sections = Object.entries({...research,...debates}).filter(([key]) => Object.hasOwn(sectionNames,key))
       .map(([key,value]) => ({title:sectionNames[key],body:text(value)})).filter(section => section.body.length > 0);
     return { type: 'report', decisionId, profile: text(data.profile), referenceOnly: data.reference_only,
-      analysts: list(data.selected_analysts).map(text), attestation: text(data.snapshot_attestation),
+      analysts: list(data.selected_analysts).map(text),
+      missingAnalysts: coverage ? list(coverage.missing).map(text) : [],
+      attestation: text(data.snapshot_attestation),
       narrative: text(data.narrative), structured: data.structured_narrative,
       reportLanguage: ['en', 'vi', 'en-vi'].includes(String(data.report_language)) ? String(data.report_language) : null,
       histories: reportHistories(data.market_history),
@@ -105,12 +109,15 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
   const rating = data.type === 'report' && data.structured && typeof data.structured === 'object' && !Array.isArray(data.structured)
     ? (data.structured as JsonObject).rating : null;
   const outlook = typeof rating === 'string' && ['Buy','Overweight','Hold','Underweight','Sell'].includes(rating) && data.type === 'report' && !data.issues.length ? rating : null;
+  const reading = data.type === 'report' && data.localized && data.structured && !data.issues.length
+    ? readerSections(data.localized[locale], locale) : null;
   return <section className="artifact-preview" aria-label={`${t(artifact.kind.replaceAll('_', ' '))} preview`}>
     {data.type === 'report' ? <>
       <header className="report-header"><div><h3>{t('Research brief')}</h3><p className="muted caption">{profileLabel(data.profile)} · {data.analysts.map(researchLabel).join(', ')}</p></div>
         <span className={data.issues.length || !data.structured ? 'warning' : 'coverage-included'}>{t(data.issues.length || !data.structured ? 'Needs validation' : 'For human review')}</span></header>
       {data.referenceOnly ? <p className="warning">{t("Reference only — not investable.")}</p> : null}
       {data.issues.length ? <p className="notice warning">{t('This report has unresolved validation findings. It is available for inspection, not an approved investment conclusion.')}</p> : null}
+      {data.missingAnalysts.length ? <p className="notice warning">{t('Not covered in this run:')} {data.missingAnalysts.map(researchLabel).join(', ')}. {t('These areas were not inferred by AI.')}</p> : null}
       <nav className="report-navigation" aria-label={t('Report sections')}>
         {[['summary','Summary'],['prices','Price history'],['research','Research detail'],['audit','Verification']].map(([key,label]) =>
           <button key={key} aria-pressed={section === key} onClick={() => setSection(key)}>{t(label)}</button>)}
@@ -124,6 +131,17 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
       {data.issues.includes('structured_output_missing') ? <>
         <p>{t('The model response did not pass the report format checks. The saved market chart remains available; no validated conclusion was published.')}</p>
         <details><summary>{t('Inspect the unvalidated model response')}</summary><ResearchMarkdown text={data.narrative} /></details>
+      </> : reading ? <>
+        <div className="reader-summary" lang={locale}>
+          <section className="reader-lead"><h4>{t('Executive summary')}</h4><ResearchMarkdown text={reading.summary} language={locale} /></section>
+          <section className="reader-thesis"><h4>{t('Investment thesis')}</h4><ResearchMarkdown text={reading.thesis} language={locale} /></section>
+          <div className="reader-pair">
+            <section><h4>{t('Key risks')}</h4><ResearchMarkdown text={reading.risks} language={locale} /></section>
+            <section><h4>{t('Invalidation conditions')}</h4><ResearchMarkdown text={reading.invalidation} language={locale} /></section>
+          </div>
+          {reading.horizon ? <section className="reader-horizon"><h4>{t('Research horizon')}</h4><ResearchMarkdown text={reading.horizon} language={locale} /></section> : null}
+        </div>
+        <details className="full-report"><summary>{t('Read the complete saved report')}</summary><ResearchMarkdown text={data.localized![locale]} language={locale} /></details>
       </> : <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />}
       <p className="report-footnote">{t('Saved research, not a live market signal. Review the evidence, limitations and your portfolio before deciding.')}</p>
       <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a>

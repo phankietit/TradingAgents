@@ -87,6 +87,7 @@ def create_app(settings):
     """Synthetic browser fixtures must never acquire live market data."""
     from tradingagents.dataflows.platform_news import NewsPreparationError
     from tradingagents.dataflows.platform_prices import PricePreparationError
+    from tradingagents.dataflows.platform_sec import SecPreparationError
 
     app = create_platform_app(settings)
 
@@ -96,8 +97,12 @@ def create_app(settings):
     def unavailable_news(_instrument):
         raise NewsPreparationError("unavailable")
 
+    def unavailable_sec(_instrument):
+        raise SecPreparationError("unavailable")
+
     app.state.fetch_daily_prices = unavailable
     app.state.collect_yahoo_news = unavailable_news
+    app.state.collect_sec_facts = unavailable_sec
     return app
 
 

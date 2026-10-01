@@ -25,6 +25,7 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.portfolio import PortfolioContext
 
 from .decisions import StructuredDecisionNarrative
+from .fundamental_facts import SnapshotFundamentalFacts
 from .market_facts import SnapshotMarketFacts
 from .profiles import resolve_analysis_profile, select_analysts
 from .research_validation import (
@@ -98,6 +99,10 @@ class AnalysisEngine:
             fact_sources = {source["snapshot_id"]: SnapshotMarketFacts(source)
                 for source in json.loads(snapshot_options["snapshot_reports"].get("market", "[]"))
                 if source["provenance"]["dataset"] == "ohlcv.daily"}
+            fact_sources.update({source["snapshot_id"]: SnapshotFundamentalFacts(source)
+                for source in json.loads(snapshot_options["snapshot_reports"].get("fundamentals", "[]"))
+                if source["provenance"]["dataset"] == "fundamentals"
+                and source["provenance"]["vendor"] == "sec_edgar"})
             fact_catalog = {key: source.fact_catalog() for key, source in fact_sources.items()}
             if request.execution_observer is not None:
                 snapshot_options["execution_observer"] = request.execution_observer

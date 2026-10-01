@@ -18,6 +18,7 @@ export interface Run {
 }
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
+const FUNDAMENTALS_MAX_AGE_SECONDS = 31_536_000;
 const preparationMessages: Record<string, string> = {
   unsupported: 'Automatic preparation is not available for this instrument. Futures references require contract and roll data; no substitute is used.',
   invalid: 'The data failed validation. Nothing was selected. Please retry later or check the source.',
@@ -55,10 +56,13 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const [preparing, setPreparing] = useState(false);
   const [newsPending, setNewsPending] = useState(false);
   const [newsNote, setNewsNote] = useState('');
+  const [fundamentalsPending, setFundamentalsPending] = useState(false);
+  const [fundamentalsNote, setFundamentalsNote] = useState('');
   const [preparationProgress, setPreparationProgress] = useState<PreparationProgress | null>(null);
   const preparationController = useRef<AbortController | null>(null);
   const newsController = useRef<AbortController | null>(null);
-  useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); }, []);
+  const fundamentalsController = useRef<AbortController | null>(null);
+  useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); }, []);
   const [preparationNote, setPreparationNote] = useState('');
   const [preparationExhausted, setPreparationExhausted] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
@@ -67,22 +71,26 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const dateValid = /(?:Z|[+-]\d\d:\d\d)$/.test(asOf) && Number.isFinite(Date.parse(asOf)) && Date.parse(asOf) <= Date.now();
   const ageValid = /^\d+$/.test(maxAge) && Number(maxAge) <= 315360000;
   const discovery = useResource<Source[]>(instrumentId && dateValid && ageValid ? `/instruments/${encodeURIComponent(instrumentId)}/snapshots?${new URLSearchParams({ analysis_as_of: asOf, max_age_seconds: maxAge, limit: '200' })}` : null, dataVersion);
+  const fundamentalsDiscovery = useResource<Source[]>(instrumentId && dateValid && profile.data?.allowed_analysts.includes('fundamentals')
+    ? `/instruments/${encodeURIComponent(instrumentId)}/snapshots?${new URLSearchParams({ analysis_as_of: asOf, max_age_seconds: String(FUNDAMENTALS_MAX_AGE_SECONDS), limit: '200' })}` : null, dataVersion);
+  const discoveredSources = [...(discovery.data ?? []).filter(item => item.snapshot.dataset !== 'fundamentals'),
+    ...(fundamentalsDiscovery.data ?? []).filter(item => item.snapshot.dataset === 'fundamentals')];
   const selectedRoles = (profile.data?.allowed_analysts ?? []).filter(role => sources[role]?.length);
-  const eligible = new Set(discovery.data?.filter(item => item.metadata_eligible).map(item => item.snapshot.snapshot_id));
+  const eligible = new Set(discoveredSources.filter(item => item.metadata_eligible).map(item => item.snapshot.snapshot_id));
   const riskReady = !riskEnabled || profile.data?.investable && portfolio && policy && portfolio.as_of === asOf
     && target.trim() !== '' && Number.isFinite(Number(target)) && Number(target) >= 0 && Number(target) <= 1;
   const correlationInstruments = riskEnabled && portfolio && Number(target) > 0
     && portfolio.positions.some(item => Number(item.weight) > 0 && item.instrument_id !== instrumentId)
     ? Array.from(new Set([instrumentId, ...portfolio.positions.filter(item => Number(item.weight) > 0).map(item => item.instrument_id)])) : [];
-  const ready = !pending && !preparing && !newsPending && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !discovery.error
+  const ready = !pending && !preparing && !newsPending && !fundamentalsPending && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !fundamentalsDiscovery.loading && !discovery.error && !fundamentalsDiscovery.error
     && dateValid && ageValid && riskReady && selectedRoles.every(role => sources[role].every(id => eligible.has(id)
-      && discovery.data?.find(item => item.snapshot.snapshot_id === id)?.supported_analysts.includes(role)));
+      && discoveredSources.find(item => item.snapshot.snapshot_id === id)?.supported_analysts.includes(role)));
   function toggle(role: string, id: string) {
     setSources(previous => ({ ...previous, [role]: previous[role]?.includes(id) ? previous[role].filter(value => value !== id) : [...(previous[role] ?? []), id].slice(0, 16) }));
     setConfirmed(false);
   }
   async function prepare() {
-    if (preparationController.current || preparing || newsPending || pending || riskEnabled) return;
+    if (preparationController.current || preparing || newsPending || fundamentalsPending || pending || riskEnabled) return;
     const controller = new AbortController();
     preparationController.current = controller;
     setPreparing(true); setPreparationNote(''); setPreparationExhausted(false); setConfirmed(false); setError('');
@@ -105,7 +113,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     finally { preparationController.current = null; setPreparationProgress(null); setPreparing(false); }
   }
   async function prepareNews() {
-    if (preparing || newsPending || pending || riskEnabled || !profile.data?.allowed_analysts.includes('news')) return;
+    if (preparing || newsPending || fundamentalsPending || pending || riskEnabled || !profile.data?.allowed_analysts.includes('news')) return;
     const controller = new AbortController();
     newsController.current = controller;
     setNewsPending(true); setNewsNote(''); setConfirmed(false); setError('');
@@ -136,11 +144,43 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setNewsNote(errorMessage(cause)); }
     finally { newsController.current = null; setNewsPending(false); }
   }
+  async function prepareFundamentals() {
+    if (preparing || newsPending || fundamentalsPending || pending || riskEnabled || asset?.canonical_symbol !== 'AAPL') return;
+    const controller = new AbortController();
+    fundamentalsController.current = controller;
+    setFundamentalsPending(true); setFundamentalsNote(''); setConfirmed(false); setError('');
+    try {
+      const result = await mutate<Prepared>(
+        `/instruments/${encodeURIComponent(instrumentId)}/prepare-fundamentals`,
+        undefined, 'POST', {}, AbortSignal.any([controller.signal, AbortSignal.timeout(90_000)]),
+      );
+      if (result.status !== 'ready' || !result.snapshot?.snapshot_id || !Number.isFinite(Date.parse(result.analysis_as_of))) {
+        const message: Record<string, string> = {
+          no_data: 'SEC has no eligible filed facts for this company. Fundamentals were not selected.',
+          unavailable: 'SEC facts are unavailable. Check the SEC contact configuration or try later; no AI call was made.',
+          invalid: 'SEC filing data failed validation and was not selected.',
+          busy: 'Another data request is in progress. Please try again shortly.',
+          cooldown: 'Please wait one minute before checking SEC filings again.',
+          unsupported: 'Automatic SEC filings are not available for this instrument.',
+        };
+        setFundamentalsNote(message[result.status] ?? 'SEC filings could not be prepared. No AI analysis was started.');
+        return;
+      }
+      setAsOf(result.analysis_as_of);
+      setSources(previous => ({ ...previous, fundamentals: [result.snapshot!.snapshot_id] }));
+      setDataVersion(value => value + 1);
+      setFundamentalsNote(result.reused
+        ? 'Saved SEC filing facts are verified. Review their filing dates and scope before authorizing AI.'
+        : 'SEC filing facts are ready. They cover reported US GAAP tags, not a complete company profile. Review before authorizing AI.');
+    } catch (cause) { setFundamentalsNote(errorMessage(cause)); }
+    finally { fundamentalsController.current = null; setFundamentalsPending(false); }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!ready) return;
     const payload = { instrument_id: instrumentId, analysis_as_of: asOf, selected_analysts: selectedRoles, report_language: reportLanguage,
       decision_inputs: { snapshots_by_analyst: Object.fromEntries(selectedRoles.map(role => [role, sources[role]])),
-        source_max_age_seconds: Object.fromEntries(selectedRoles.map(role => [role, Number(maxAge)])),
+        source_max_age_seconds: Object.fromEntries(selectedRoles.map(role => [role,
+          role === 'fundamentals' ? FUNDAMENTALS_MAX_AGE_SECONDS : Number(maxAge)])),
         ...(riskEnabled && portfolio && policy ? { portfolio_snapshot_id: portfolio.portfolio_id,
           policy_id: policy.policy_id, policy_version: policy.policy_version, requested_target_weight: Number(target),
           risk_snapshot_ids: correlationInstruments.map(id => riskSources[id]).filter(Boolean) } : {}) } };
@@ -153,7 +193,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || preparing || newsPending}>
+  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || preparing || newsPending || fundamentalsPending}>
     <h2>{t("Configure analysis")}</h2>
     {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
       <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
@@ -169,8 +209,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     </select></label>
     <p className="muted">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
     <p className="muted">{t("Choose the instrument, research date and supporting sources. You can also review the impact on your portfolio using an allocation you specify.")}</p>
-    <fieldset disabled={pending || preparing || newsPending}><div className="form-grid">
-      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
+    <fieldset disabled={pending || preparing || newsPending || fundamentalsPending}><div className="form-grid">
+      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
     </div>
     <section className="notice" aria-label={t('Prepare market data')}>
@@ -178,26 +218,32 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <p>{t('Download five years of completed daily prices, matching the original research engine, or reuse verified history. Yahoo needs no API key. This step does not use AI tokens.')}</p>
       <p className="muted">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
       <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
-      <button type="button" disabled={riskEnabled || !instrumentId || newsPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
+      <button type="button" disabled={riskEnabled || !instrumentId || newsPending || fundamentalsPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
       {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
       {preparationNote ? <p role={preparationExhausted ? 'alert' : 'status'}>{preparationExhausted ? `${t('Data is still incomplete after three checks.')} ` : ''}{t(preparationNote)}</p> : null}
       {profile.data?.allowed_analysts.includes('news') ? <div className="news-supplement">
         <h4>{t('Current headlines · optional')}</h4>
         <p>{t('Collect recent Yahoo headlines as a separate source. Coverage is not exhaustive or historical. This step uses no AI tokens.')}</p>
-        <button type="button" disabled={riskEnabled || !instrumentId || preparing || newsPending} onClick={() => void prepareNews()}>{newsPending ? t('Checking headlines…') : t('Add recent headlines')}</button>
+        <button type="button" disabled={riskEnabled || !instrumentId || preparing || newsPending || fundamentalsPending} onClick={() => void prepareNews()}>{newsPending ? t('Checking headlines…') : t('Add recent headlines')}</button>
         {newsNote ? <p role="status">{t(newsNote)}</p> : null}
+      </div> : null}
+      {asset?.canonical_symbol === 'AAPL' ? <div className="news-supplement">
+        <h4>{t('SEC filings · optional')}</h4>
+        <p>{t('Collect filed-date-aware company facts from SEC EDGAR. Reported US GAAP tags are not a complete company profile. This step uses no AI tokens.')}</p>
+        <button type="button" disabled={riskEnabled || !instrumentId || preparing || newsPending || fundamentalsPending} onClick={() => void prepareFundamentals()}>{fundamentalsPending ? t('Checking SEC filings…') : t('Add SEC fundamentals')}</button>
+        {fundamentalsNote ? <p role="status">{t(fundamentalsNote)}</p> : null}
       </div> : null}
     </section>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>
       <label>{t("Maximum source age (seconds)")}<input inputMode="numeric" value={maxAge} onChange={event => { setMaxAge(event.target.value); setConfirmed(false); }} required /></label>
-      <p className="muted">{t("The existing limit is measured against the research time. Changing it does not override source quality or portfolio policy checks.")}</p>
+      <p className="muted">{t("The existing limit applies to prices and news. SEC fundamentals use a separate one-year filing freshness limit. Neither overrides source quality or portfolio policy checks.")}</p>
       <p className="mono">{t("Exact research timestamp:")} {asOf || 'Not selected'}</p>
     </details>
     {!dateValid ? <p className="warning">{t("Select a valid research date and time, not in the future.")}</p> : null}
     {!ageValid ? <p className="warning">{t("Check Advanced data settings: source age must be a whole number from 0 to 315360000 seconds.")}</p> : null}
-    {profile.loading || discovery.loading ? <p role="status">{t("Checking analysis profile and saved sources…")}</p> : null}
-    {profile.error || discovery.error ? <p role="alert" className="danger">{t(errorMessage(profile.error || discovery.error))}</p> : null}
+    {profile.loading || discovery.loading || fundamentalsDiscovery.loading ? <p role="status">{t("Checking analysis profile and saved sources…")}</p> : null}
+    {profile.error || discovery.error || fundamentalsDiscovery.error ? <p role="alert" className="danger">{t(errorMessage(profile.error || discovery.error || fundamentalsDiscovery.error))}</p> : null}
     {profile.data && !profile.data.investable ? <p className="notice warning">{t("Reference-only research. This instrument cannot become an investable position.")}</p> : null}
     <label className="source-option"><input type="checkbox" checked={riskEnabled} disabled={!profile.data?.investable}
       onChange={event => { setRiskEnabled(event.target.checked); setConfirmed(false); }} /><span>{t("Evaluate against my portfolio and an existing risk policy")}</span></label>
@@ -221,7 +267,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     </section>
     <details className="source-inspector"><summary>{t('Inspect or change evidence sources')}</summary>
     {profile.data?.allowed_analysts.map(role => <fieldset key={role} className="source-role"><legend>{researchLabel(role)}</legend>
-      {!discovery.data?.some(item => item.supported_analysts.includes(role)) ? <p className="muted">{t("No suitable saved sources for this research area. It will not be included.")}</p> : discovery.data.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
+      {!discoveredSources.some(item => item.supported_analysts.includes(role)) ? <p className="muted">{t("No suitable saved sources for this research area. It will not be included.")}</p> : discoveredSources.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}
           checked={sources[role]?.includes(item.snapshot.snapshot_id) ?? false} onChange={() => toggle(role, item.snapshot.snapshot_id)} />
         <span>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)}  {t("· Quality:")} {item.snapshot.quality_status} · {item.metadata_eligible ? t("Available to select; verified before research") : item.ineligibility_reasons.join(', ')}</small>
