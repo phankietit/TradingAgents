@@ -22,7 +22,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
 | R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
 | R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
-| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures and local current-news ingestion; fundamentals/social/macro and non-price live UNVERIFIED |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures plus local current-news and AAPL SEC ingestion; social/macro, other-asset fundamentals and non-price live UNVERIFIED |
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |

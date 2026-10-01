@@ -31,6 +31,16 @@ Commit `cd033dd` thêm cảnh báo song ngữ bắt buộc cho news feed không 
 1.496 Python tests + 88 subtests PASS, 20 skips. Chưa chạy thêm AI; xem
 receipt 2026-10-01 để phân biệt gate đã/chưa nghiệm thu.
 
+Tiếp nối tại `f69e329`: chủ repo đã duyệt dùng SEC EDGAR hiện có riêng cho
+AAPL web, không đổi CLI default. Có collector filed-date-aware, snapshot bất
+biến, endpoint/UI tùy chọn, fact-ID cho kiểm chứng số và bố cục báo cáo song
+ngữ dễ đọc hơn. Local PASS 1.505 Python tests + 88 subtests (20 skips), 121
+Web tests, build/lint/typecheck; browser synthetic desktop/mobile PASS cho SEC
+unavailable, chưa phải live SEC. `SEC_EDGAR_USER_AGENT` chưa có trong worktree
+ở lúc kiểm tra; không dùng contact mẫu. Social/macro vẫn chưa acquisition;
+semantic finance/translation và live BTC/AAPL chưa được nghiệm thu. NQ=F chủ
+repo chọn giữ BLOCKED, chưa thêm provider; không thay bằng ^NDX/QQQ.
+
 Yêu cầu mới nhất của chủ repo: lưu toàn bộ code, phần dở và ngữ cảnh lên GitHub
 để có thể tiếp tục từ máy khác hoặc Claude. Đây là checkpoint công việc, chưa
 nghiệm thu sản phẩm và chưa merge PR.

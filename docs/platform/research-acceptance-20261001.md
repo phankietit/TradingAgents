@@ -75,3 +75,34 @@ continuous symbol lacks the active/next-contract and roll metadata required by
 `FuturesReferencePipeline`. No futures position, order, or substitute source
 is permitted by this selection. A source and its data/licensing contract must
 be explicitly resolved before claiming a valid live NQ report.
+
+## Follow-up candidate: AAPL SEC and report reading
+
+Code commit `f69e3293e74ee0f1f32b7daec38a99a64c585942` adds the
+owner-approved existing SEC EDGAR path for AAPL only, leaving CLI defaults and
+all other asset groups unchanged. Current-vintage facts retain accession,
+filing date, period, tag and unit; missing/malformed/outage remain distinct.
+The web has a separate optional SEC action and one-year latest-filing freshness
+check. The analyst can page the complete immutable fact history, while final
+quantities resolve exact fact IDs. An application-owned bilingual notice says
+US GAAP tags are not a complete company profile or historical vintage.
+
+The saved bilingual report's application-owned headings can now render a
+scannable executive summary, thesis, risks, invalidation and horizon; unknown
+layouts fall back to the unmodified full Markdown. Missing analyst roles stay
+visible. No finding is hidden and no model conclusion is changed by this UI.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Python regression at code SHA | PASS | 1,505 passed, 20 skipped, 88 subtests, 46.86 s |
+| Python Ruff/diff | PASS | `.venv/bin/ruff check .`, `git diff --check` |
+| Web tests/type/lint/build | PASS | 121 tests/22 files; `npm run typecheck`, `npm run lint`, `npm run build` |
+| SEC collector/API/quantity fixtures | PASS | Mocked filed-vintage/restatement, owner API preparation/reuse, run binding and fact-ID compilation; no SEC request |
+| Browser synthetic desktop/mobile | PASS | Built web, fixture-only API/worker: AAPL SEC action returns expected unavailable without AI job; EN/VI, no pageerror, no 1280/390 px overflow. Synthetic processing remains visibly Needs validation. |
+| Live SEC companyfacts | UNVERIFIED | A real `SEC_EDGAR_USER_AGENT` contact has not yet been configured in this worktree; no live SEC request |
+| Valid bilingual report browser reading | UNVERIFIED | Component parser/render tests PASS; synthetic graph does not publish a financially validated localized report |
+| Paid BTC/AAPL/NQ finance/translation acceptance | UNVERIFIED | No paid run at this code SHA; NQ=F remains blocked on source contract/roll metadata |
+
+The fixture server was stopped after browser checks. Its labelled synthetic
+database is private, ignored local test state, not investment evidence. No
+secrets, provider payloads or populated `.env` were committed.
