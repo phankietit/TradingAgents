@@ -1,8 +1,9 @@
-# Current-price preparation in the web
+# Current-data preparation in the web
 
-The analysis form now provides **Prepare latest prices** before paid AI consent.
-No Yahoo API key or AI call is needed. This is a current price/trend workflow,
-not full fundamental, news, macro or historical-vintage research.
+The analysis form provides **Prepare latest prices** and an independent optional
+**Add recent headlines** action before paid AI consent. Neither action needs a
+Yahoo API key or AI call. They are current-vintage evidence workflows, not a
+full fundamental, social, macro or historical replay.
 
 ## Flow and boundaries
 
@@ -52,7 +53,7 @@ The chart in a new report is pinned to that run's snapshot, never today's feed.
 The v4 acquisition contract writes v1.1 bars with `session_date`; `timestamp`
 remains the close instant. Old v1.0 payloads remain readable and labels remain
 unknown rather than inferred for an unrecognized source. No historical bytes
-are rewritten. News, financials, social and macro still require eligible
+are rewritten. Financials, social and macro still require eligible
 snapshots; automatic acquisition of those feeds is not implemented here. Never describe a
 price-only report as a full replication of the original multi-source pipeline.
 Completeness must follow each source's original contract, not an arbitrary
@@ -68,8 +69,37 @@ reference-only. New catalog entries require an adapter contract update.
 
 NQ/ES preparation is explicitly unsupported: continuous Yahoo symbols alone
 do not provide the governed contract/roll evidence. No ETF/index substitution.
-News, fundamentals, sentiment and FRED evidence still require separately
-approved ingestion. Missing research areas are not invented or auto-selected.
+Fundamentals, sentiment and FRED evidence still require separately governed
+ingestion. Missing research areas are not invented or auto-selected.
+
+## Optional current headlines
+
+The authenticated, CSRF-protected
+`POST /api/v1/instruments/{id}/prepare-news` accepts only a catalog identity.
+It uses the existing Yahoo/yfinance `Ticker.get_news` path in an isolated
+subprocess with a 45-second total deadline and the same single-process
+acquisition lock as price preparation. The collector requests a seven-day
+publication window; `requested_at`, `retrieved_at`, each article publication
+time, vendor, retrieval path and canonical instrument identity are persisted
+with immutable content-addressed bytes. A recent owner-readable snapshot can
+be reused for 15 minutes after full payload and manifest validation.
+
+An article's publication time does **not** make today's revised article text
+historically available. The snapshot `as_of` is retrieval time; it is withheld
+from earlier analysis cutoffs. This recent feed is non-exhaustive, not a proof
+of all events in the seven-day window. `NO_DATA`, `COVERAGE_GAP`,
+`UNAVAILABLE` and `INVALID` batches remain auditable but ineligible for
+research; no missing-news result is turned into neutral sentiment. Price and
+news selections retain separate analyst roles and freshness checks. Adding
+headlines clears paid-AI consent and updates the research cutoff to server
+time. Portfolio valuation timestamps stay pinned, so the current-news action
+is disabled during portfolio evaluation. NQ/ES automatic news preparation
+remains unsupported; no alternate symbol is substituted.
+
+The news action is a single owner click, not the three-check price retry loop.
+A 60-second owner/instrument cooldown limits repeated requests. It does not
+call a model, create a run or automatically include fundamentals/social/macro
+sources. Source coverage must be reviewed before a separate paid-AI consent.
 
 ## Failure, concurrency and cost
 

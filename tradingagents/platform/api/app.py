@@ -12,7 +12,7 @@ import secrets
 import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
 from threading import Lock
 from typing import Annotated
 from urllib.parse import urlparse
@@ -244,9 +244,12 @@ def create_app(settings: ApiSettings) -> FastAPI:
     # One bounded acquisition at a time on the private, single-process server.
     from tradingagents.dataflows.platform_prices import fetch_daily_prices
     app.state.fetch_daily_prices = fetch_daily_prices
+    from tradingagents.dataflows.platform_news import fetch_current_yahoo_news
+    app.state.collect_yahoo_news = fetch_current_yahoo_news
     preparation_lock = Lock()
     preparation_attempts: dict[tuple[UUID, UUID], float] = {}
     preparation_failures: dict[tuple[UUID, UUID], str] = {}
+    news_attempts: dict[tuple[UUID, UUID], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -716,6 +719,99 @@ def create_app(settings: ApiSettings) -> FastAPI:
                         owner_id=owner.owner_id, series=series, vendor=VENDOR,
                         retrieved_at=retrieved_at, source_metadata=coverage)
             return outcome("ready", snapshot=snapshot)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-news",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_news(
+        instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """Collect current Yahoo headlines as an independent, optional source."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_news import NewsCollection, NewsPreparationError
+        from tradingagents.dataflows.platform_prices import PricePreparationError, approved_symbol
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.news import NewsSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        now = _now(settings)
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(
+                status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds,
+            )
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            artifacts = ArtifactService(artifact_store, repository)
+            service = NewsSnapshotService(repository, artifacts)
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (
+                    snapshot.dataset != "news"
+                    or snapshot.vendor != "yfinance"
+                    or snapshot.retrieved_at < now - timedelta(minutes=15)
+                    or snapshot_ineligibility(snapshot, instrument_id, now, 604800)
+                ):
+                    continue
+                try:
+                    service.load(
+                        owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now,
+                        max_age_seconds=604800,
+                    )
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            elapsed = time.monotonic() - news_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            news_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_yahoo_news(instrument)
+                collection = NewsCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, NewsCollection) else acquired
+                )
+            except PricePreparationError:
+                return outcome("unsupported")
+            except NewsPreparationError as error:
+                return outcome(error.code)
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (
+                collection.instrument_id != instrument_id
+                or collection.retrieved_at > _now(settings)
+            ):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = NewsSnapshotService(
+                        write_repository, ArtifactService(artifact_store, write_repository),
+                    ).persist(owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            if collection.quality_status is DataQualityStatus.OK:
+                return outcome("ready", snapshot=manifest)
+            return outcome(collection.quality_status.value.lower(), snapshot=manifest)
         finally:
             preparation_lock.release()
 

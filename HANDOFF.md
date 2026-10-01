@@ -1,4 +1,28 @@
-# TradingAgents — bàn giao ngày 2026-09-27
+# TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-01
+
+## Cập nhật đang triển khai · 2026-10-01
+
+Goal R01–R14 vẫn **chưa hoàn thành**; Draft PR #7 chưa được merge. Nhánh
+`fix/TA-R01-research-quality` nay có bước news hiện tại ngoài price: thu Yahoo
+trong subprocess 45 giây, lưu snapshot bất biến và owner-scoped, xác minh
+publication/retrieval/cutoff/hash/identity, endpoint `prepare-news` có auth/CSRF,
+UI Anh–Việt cho phép chọn news tùy chọn trước consent AI. Feed bảy ngày là
+`recent_feed_not_exhaustive`, không phải lịch sử đầy đủ hay nguồn social/
+fundamentals/macro. Synthetic QA chặn mọi vendor/model.
+
+PASS local tại worktree trước commit: Ruff toàn repo; Python **1.495 tests +
+88 subtests**, 20 skips; Web **117 tests/21 files**, lint/typecheck/build; UI
+synthetic desktop 1280px và mobile 390px có thao tác news lỗi, không gọi AI,
+không tràn ngang, không pageerror. Direct Yahoo AAPL news smoke trả
+`OK`, 100 bài trong khoảng 2,68 giây; chứng minh đúng **một lượt đọc nguồn**
+trên máy này, không chứng minh toàn bộ flow live. Xem receipt mới nhất
+[2026-10-01](docs/platform/research-acceptance-20261001.md) sau khi commit.
+
+Còn mở: acquisition và hợp đồng evidence cho fundamentals/social/macro theo
+asset, semantic finance và chất lượng dịch đã FAIL live, UI research/review
+chưa nghiệm thu vận hành, live full-graph BTC/AAPL/NQ chưa chạy trên candidate
+mới. NQ cần chọn rõ reference `NQ=F` hay `^NDX` trước khi coi là acceptance.
+Không lấy kết quả local/synthetic/news smoke để nâng thành release approval.
 
 Yêu cầu mới nhất của chủ repo: lưu toàn bộ code, phần dở và ngữ cảnh lên GitHub
 để có thể tiếp tục từ máy khác hoặc Claude. Đây là checkpoint công việc, chưa
@@ -59,12 +83,10 @@ không ImageGen. Test local/manual; GitHub CI đã được disable trong checkp
   từ chối truy cập vì không xác minh được chính sách admin trên máy cũ.
 - `tradingagents/dataflows/platform_news.py` đã commit/test: collector Yahoo news
   có publication/retrieval time, nhận diện asset và trạng thái lỗi/phạm vi nguồn.
-- **WIP vừa được lưu**: `tradingagents/platform/market_data/news.py`, lớp
-  `NewsSnapshotService`. File được viết ngay trước khi user yêu cầu checkpoint.
-  Mới qua Ruff và compile, **chưa có unit/integration test**, chưa nối API/UI.
-  Đừng coi nó đã sẵn sàng vận hành.
-- Web `prepare-data` hiện chỉ persist giá. Có reader snapshot news/social/
-  fundamentals không đồng nghĩa có ingestion. R04 chưa hoàn tất.
+- Tại checkpoint 2026-09-27, `NewsSnapshotService` mới là WIP chưa test hoặc
+  nối API/UI. Bản tiếp nối 2026-10-01 đã xử lý phần này; xem cập nhật trên.
+- Web `prepare-data` vẫn chỉ persist giá; `prepare-news` là bước riêng. Có
+  reader social/fundamentals không đồng nghĩa có ingestion. R04 chưa hoàn tất.
 
 ## Kết quả kiểm chứng và lỗi phải xử lý
 
@@ -90,12 +112,11 @@ trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay 
 
 ## Công việc tiếp theo có thứ tự
 
-1. Review/test `NewsSnapshotService`: owner isolation, identity/hash/manifest
-   consistency, cutoff >= retrieval, immutable writes, malformed/no-data batches,
-   rollback khi persistence lỗi. Không giả định file WIP đã đúng.
-2. Nối news vào chuẩn bị dữ liệu theo provider đang cấu hình; lưu source coverage
-   riêng từng nguồn và gắn snapshots vào run. Hoàn thiện nguồn fundamentals,
-   social, macro phù hợp từng asset và hợp đồng evidence/number tương ứng.
+1. News service và prepare-news đã có local test, browser synthetic, một lượt
+   Yahoo AAPL trực tiếp; còn cần live API/snapshot/run acceptance và kiểm soát
+   coverage theo từng nguồn. Không coi một feed gần đây là lịch sử tin tức.
+2. Hoàn thiện nguồn fundamentals, social, macro phù hợp từng asset và hợp đồng
+   evidence/number tương ứng; giữ nguyên provider hiện có.
 3. Xử lý semantic evidence và tiếng Việt từ các lỗi live đã lưu. Tránh tiếp tục
    chỉ thêm blacklist từng câu hoặc dùng numeric parity để chứng nhận ý nghĩa.
 4. Hoàn thiện flow chuẩn bị → nghiên cứu → kiểm tra → đọc quyết định; tổng kết,

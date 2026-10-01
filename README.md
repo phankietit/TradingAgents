@@ -410,9 +410,18 @@ market-data vendor. The web now also offers **Prepare latest prices** using the
 existing Yahoo/yfinance integration for AAPL, SPY/QQQ, cash indices and BTC/ETH.
 It verifies five years of completed daily sessions using the original engine's
 shared history window, saves immutable evidence, then
-requires separate paid-AI consent. It is not automatic news/fundamental/macro
-ingestion or a historical-vintage feed; NQ/ES preparation remains unsupported.
+requires separate paid-AI consent. The price action itself does not ingest
+news/fundamental/macro sources and is not a historical-vintage feed;
+NQ/ES preparation remains unsupported.
 See [data preparation](docs/platform/data-preparation.md).
+
+The analysis form can also **Add recent headlines** from the existing
+Yahoo/yfinance source as an independent, optional, owner-scoped news snapshot.
+The seven-day feed is explicitly non-exhaustive and current-vintage only;
+empty, malformed or unavailable news cannot be selected as evidence. This
+does not add social, fundamentals, filings or macro acquisition, nor does it
+make a price-only or market-plus-news report comprehensive. NQ/ES automatic
+preparation remains unsupported.
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked

@@ -141,6 +141,52 @@ it('prepares current evidence without AI and requires fresh consent before submi
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(false);
 });
 
+it('adds recent news as a separate, non-exhaustive source without starting AI', async () => {
+  const now = new Date().toISOString();
+  const headline = { snapshot: { snapshot_id: 'news1', dataset: 'news', vendor: 'yfinance',
+    source_end: now, quality_status: 'OK', metadata: { coverage: 'recent_feed_not_exhaustive' } },
+    metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['news'] };
+  let newsPrepared = false;
+  const fetch = vi.fn(async (url: string) => {
+    if (url.includes('/analysis-profile')) return json({allowed_analysts:['market','news'], investable:true});
+    if (url.includes('/snapshots?')) return json(newsPrepared ? [source, headline] : [source]);
+    if (url.endsWith('/auth/csrf')) return json({csrf_token:'test'});
+    if (url.endsWith('/prepare-news')) {
+      newsPrepared = true;
+      return json({status:'ready',snapshot:headline.snapshot,analysis_as_of:now,reused:false});
+    }
+    if (url.includes('/portfolios?') || url.includes('/policies?')) return json([]);
+    return json({},503);
+  });
+  vi.stubGlobal('fetch',fetch);
+  const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(await screen.findByRole('button',{name:'Add recent headlines'}));
+  expect(await screen.findByText(/not a complete record of all news/)).toBeTruthy();
+  await waitFor(() => expect((within(screen.getByRole('group',{name:'News & events'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true));
+  expect((within(screen.getByRole('group',{name:'Price & trend'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+});
+
+it('does not select an empty recent-news feed', async () => {
+  const fetch = setup();
+  fetch.mockImplementation(async (url:string) => {
+    if (url.includes('/analysis-profile')) return json({allowed_analysts:['market','news'],investable:true});
+    if (url.includes('/snapshots?')) return json([source]);
+    if (url.endsWith('/auth/csrf')) return json({csrf_token:'test'});
+    if (url.endsWith('/prepare-news')) return json({status:'no_data',snapshot:null,analysis_as_of:new Date().toISOString(),reused:false});
+    return json([]);
+  });
+  const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await user.click(await screen.findByRole('button',{name:'Add recent headlines'}));
+  expect(await screen.findByText(/News research was not selected/)).toBeTruthy();
+  expect(within(screen.getByRole('group',{name:'News & events'})).queryByRole('checkbox')).toBeNull();
+});
+
 it('explains source failure and keeps AI submission disabled',async()=>{
   const fetch=setup();
   fetch.mockImplementation(async (url:string)=>{

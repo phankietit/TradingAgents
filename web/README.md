@@ -40,6 +40,14 @@ the charcoal/sage workspace redesign. Current status and live limitations are
 tracked in [research remediation](../docs/platform/research-remediation.md);
 historical M4 receipts do not certify this candidate.
 
+The analysis setup now has an independent **Add recent headlines** action
+beside price preparation. It saves owner-scoped Yahoo news only when the
+current-vintage feed passes identity, content and cutoff checks. The action is
+optional, does not start AI, clears prior paid-call consent, and never presents
+the recent feed as exhaustive or historically replayable. Social,
+fundamentals and macro acquisition remain unimplemented; see
+[data preparation](../docs/platform/data-preparation.md).
+
 ## Development
 
 Verified with Node 26.8.1 and npm 11.19.0. Dependencies are locked; TypeScript
@@ -107,6 +115,9 @@ This creates a new ignored database/store and uses labelled synthetic graph
 output; it does not load owner records or call models/vendors. Never point the
 fixture script at an owner database. Stop with Ctrl-C; fixture data is retained
 for inspection. This is not a populated investment product or live-data demo.
+The synthetic app explicitly refuses both price and news vendor acquisition;
+the news button can be used to verify its unavailable state without a Yahoo
+request.
 Add `--all-assets` only for cross-asset QA: it seeds labelled synthetic daily
 series for SPY/QQQ, BTC/ETH and NQ/ES, in addition to AAPL. Values are scaled
 fixtures, not real market returns, calendar-session coverage or futures roll

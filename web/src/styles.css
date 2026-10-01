@@ -205,6 +205,10 @@ dt { color: var(--muted); } dd { margin: 0; }
 .analysis-form h3 { font-size: 16px; font-weight: 550; }
 .analysis-form .notice { background: #1c201a; border: 1px solid #353e2f; border-radius: 10px; padding: 22px; }
 .analysis-form .notice p { font-size: 13px; }
+.news-supplement { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 18px; }
+.news-supplement h4 { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+.news-supplement p { max-width: 68ch; }
+.news-supplement button { margin-top: 4px; }
 .coverage-overview { margin: 28px 0 16px; }
 .coverage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; border: 1px solid var(--border); background: var(--border); border-radius: 9px; overflow: hidden; margin-bottom: 12px; }
 .coverage-grid > div { background: #181b17; padding: 18px; font-size: 12px; }

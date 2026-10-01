@@ -5,6 +5,10 @@ article text was available in the past. Persistence must use retrieved_at.
 This adapter does not replace the legacy CLI or silently select a provider.
 """
 
+import contextlib
+import json
+import subprocess
+import sys
 from datetime import datetime, timedelta
 from typing import Literal
 from uuid import UUID
@@ -17,6 +21,12 @@ from tradingagents.contracts import DataQualityStatus, InstrumentContract
 from tradingagents.dataflows.platform_prices import approved_symbol
 from tradingagents.dataflows.stockstats_utils import yf_retry
 from tradingagents.dataflows.yfinance_news import _extract_article_data
+
+
+class NewsPreparationError(ValueError):
+    def __init__(self, code: str):
+        self.code = code
+        super().__init__(code)
 
 
 class NewsArticle(BaseModel):
@@ -125,3 +135,47 @@ def collect_yahoo_news(instrument: InstrumentContract, *, lookback_days=7,
     return NewsCollection(**base, retrieved_at=observed, quality_status=status,
         reason=reason, articles=tuple(sorted(articles, key=lambda item: item.published_at)),
         excluded_out_of_window=excluded, invalid_records=invalid)
+
+
+def fetch_current_yahoo_news(instrument: InstrumentContract) -> NewsCollection:
+    """Isolate vendor access and cap the entire acquisition at 45 seconds."""
+    approved_symbol(instrument)
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", __name__],
+            input=instrument.model_dump_json(),
+            text=True,
+            capture_output=True,
+            timeout=45,
+            check=False,
+        )
+        if result.returncode:
+            raise NewsPreparationError("unavailable")
+        if len(result.stdout) > 2_000_000:
+            raise NewsPreparationError("invalid")
+        value = json.loads(result.stdout)
+        if "error" in value:
+            raise NewsPreparationError("unavailable")
+        collection = NewsCollection.model_validate(value)
+        if collection.instrument_id != instrument.instrument_id:
+            raise NewsPreparationError("invalid")
+        return collection
+    except NewsPreparationError:
+        raise
+    except (subprocess.TimeoutExpired, OSError, ValueError) as error:
+        raise NewsPreparationError("unavailable") from error
+
+
+def main():
+    try:
+        instrument = InstrumentContract.model_validate_json(sys.stdin.read(16_384))
+        with contextlib.redirect_stdout(sys.stderr):
+            result = collect_yahoo_news(instrument)
+        output = result.model_dump(mode="json")
+    except Exception:
+        output = {"error": "unavailable"}
+    print(json.dumps(output, allow_nan=False))
+
+
+if __name__ == "__main__":
+    main()

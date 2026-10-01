@@ -106,3 +106,20 @@ def test_default_adapter_calls_existing_yahoo_method_without_fallback(monkeypatc
     result = collect_yahoo_news(INSTRUMENT, clock=lambda: NOW, article_limit=25)
     assert result.quality_status is DataQualityStatus.OK
     assert calls == ["AAPL", 25]
+
+
+def test_current_news_acquisition_has_hard_deadline(monkeypatch):
+    import subprocess
+
+    from tradingagents.dataflows.platform_news import (
+        NewsPreparationError,
+        fetch_current_yahoo_news,
+    )
+
+    def timeout(*args, **kwargs):
+        assert kwargs["timeout"] == 45
+        raise subprocess.TimeoutExpired("synthetic", 45)
+
+    monkeypatch.setattr(subprocess, "run", timeout)
+    with pytest.raises(NewsPreparationError, match="unavailable"):
+        fetch_current_yahoo_news(INSTRUMENT)
