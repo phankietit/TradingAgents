@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Initialized-client prerequisite 2026-10-03:** source
+`a120d5f33d6ed3653da187b470bf3f6c276ce638` đọc endpoint, timeout/retry và model
+options từ SDK sync thật của các class OpenAI-compatible đã review, gồm MiniMax,
+không invoke/network hay đọc auth headers. Builder chỉ chấp nhận trailing slash
+do SDK thêm, không normalize bỏ host/path/query/credential khác. 62 focused tests
+PASS; full Python **1.942 + 88 subtests PASS**, 20 skips, 22 warnings, 102,05 s;
+Ruff/diff/templates PASS. Không bật recovery/restart, không AI/vendor call.
+Đây chưa là complete transport attestation: cần trusted construction và bảo vệ
+SDK/header/HTTP mutations, async/SDK khác còn UNVERIFIED. Tiếp theo xử lý các gate
+này và private durable parent lease-fenced commit/ack; không bỏ execution_started
+fence hoặc reset allowance. Receipt 2026-10-03 ghi source và limitation; R01–R14
+vẫn mở, live finance/MT chưa đạt và NQ=F giữ BLOCKED.
+
 **Recovery identity prerequisite 2026-10-03:** source
 `c705cad32c3e6579c94942d8131ea32f0ac34def` thêm fingerprint riêng, không sửa
 API config_hash/lịch sử và chưa bật worker recovery. Bind owner/run/asset/as-of/

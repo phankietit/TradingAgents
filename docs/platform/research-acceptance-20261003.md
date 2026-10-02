@@ -49,3 +49,34 @@ Next: derive trusted effective-client descriptors, then integrate the private
 durable saver and supervised parent commit/ack, preserving execution_started
 and explicit continuation consent. See `research-recovery-contract.md` and
 `HANDOFF.md`; older dated receipts remain immutable.
+
+## Initialized-client observation follow-up
+
+Source `a120d5f33d6ed3653da187b470bf3f6c276ce638`, same branch/worktree,
+clean source throughout full gate. No new dependencies, provider/endpoint/prompt/
+risk-limit change, worker restart, private-history rewrite or paid/vendor call.
+New internal adapter constructs descriptors from initialized OpenAI-compatible
+sync SDK clients, rather than inventing effective settings from config alone.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Initialized SDK endpoint/options | PASS | Actual NormalizedChatOpenAI/MiniMax SDK instances with synthetic credentials; effective wire params, scalar/per-phase timeout, root retries and response settings hash. Mutation changes identity; descriptors exclude the credential |
+| No model/network invocation | PASS | All new fixtures forbid sync/async HTTP send and model invoke; close both SDK clients. No vendor calls |
+| Fail-closed configuration | PASS | Unreviewed object, declared custom headers/query/transports and credential-bearing extra-body rejected; fixed error text, no credential echo |
+| SDK normalization / builder coupling | PASS | SDK-appended slash accepted; host/path/extra slash/query/credential changes rejected. Actual descriptor builds fingerprint; retry mutation changes it |
+| Focused local gate | PASS | `.venv/bin/python -m pytest -q tests/test_initialized_client_binding.py tests/test_recovery_fingerprint.py --disable-warnings`: 62 passed, 4.21 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q`: 1,942 passed + 88 subtests, 20 skipped, 22 warnings, 102.05 s; Python 3.14.7/macOS, exact a120d5f source |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML load of issue templates |
+| Initial focused attempt | FAIL | Timeout assertion assumed SDK stored httpx.Timeout but it stored float 600; corrected test to interpret scalar, adapter already handled both. Initial import-order Ruff finding corrected before source commit |
+| Full transport attestation | UNVERIFIED | Worker-controlled initialization/provenance, post-construction SDK/header/HTTP mutations, async invocation and other provider SDKs require review before production use |
+| PostgreSQL/optional providers | UNVERIFIED | 18 missing TEST_POSTGRES_URL gates, missing langchain_aws and absent live DeepSeek key; skips not passes |
+| Web recovery / durable storage | UNVERIFIED | No worker/API/CLI integration, private saver, lease-fenced commit/ack, continuation consent or crash accounting enabled |
+| Live financial/MT acceptance | UNVERIFIED | No new report or paid run; earlier FAIL evidence unchanged |
+| NQ=F live acceptance | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+The adapter observes selected safe initialized settings, not all possible
+transport mutations. Its exact class allowlist does not attest construction
+origin or ownership. It must not be treated as a browser-controlled recovery
+permission. Next: trusted construction/mutation guards and durable supervised
+parent commit/ack, with existing no-blind-replay and consent/accounting gates.
+R01–R14 remains incomplete; no CI or public deployment.
