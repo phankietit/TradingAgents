@@ -101,6 +101,15 @@ The component does not mutate old rows, reset budget, expose a browser endpoint
 or activate worker recovery. General DB read transactions are not hard network/
 pool/disk deadlines; PostgreSQL live and concurrent consent remain unverified.
 
+Accounting observations additionally bind original owner/run/config hash and
+scalar immutable wall/call limits (including legacy defaults). Internal
+`recheck_accounting_evidence` reloads the complete bounded prefix and compares
+the complete frozen observation, rejecting another owner/run, changed limits,
+counter substitution or a newly appended event, even a non-accounting event.
+The recheck returns no permission/token. It does not lock a writer or authenticate
+browser input and cannot replace a transactional consent/lease fence: another
+event may commit after its read. Production dispatch remains disabled.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

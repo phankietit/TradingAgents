@@ -1,6 +1,7 @@
 """Owner-scoped durable cumulative evidence, not continuation authority."""
 
 from copy import deepcopy
+from dataclasses import FrozenInstanceError, replace
 from types import SimpleNamespace
 from uuid import uuid4
 
@@ -13,9 +14,11 @@ from tradingagents.contracts import RunEventType
 from tradingagents.platform.analysis.accounting import (
     AccountingEvidenceError,
     load_accounting_evidence,
+    recheck_accounting_evidence,
 )
 from tradingagents.platform.analysis.observer import ResearchObserver
 from tradingagents.platform.events import RunEventStore
+from tradingagents.platform.persistence import PlatformRepository
 from tradingagents.platform.persistence.models import RunEventRow
 
 
@@ -49,6 +52,9 @@ def test_reopened_attempts_use_latest_cumulative_not_sum_every_receipt(tmp_path)
         with database.session() as session:
             result = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
             assert result.evidence_status == "PASS" and result.attempts == (1, 2)
+            assert result.owner_id == owner and result.run_id == run.run_id
+            assert result.config_hash == run.config_hash
+            assert result.original_wall_seconds == 1800 and result.original_model_calls == 128
             assert result.started_calls == 3 and result.completed_calls == 2
             assert result.unreported_started_calls == 1
             assert result.reported_input_tokens == 20 and result.reported_total_tokens == 30
@@ -71,8 +77,44 @@ def test_missing_or_legacy_evidence_is_not_zero_cost(tmp_path, kind):
         with database.session() as session:
             result = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
             assert result.evidence_status == "UNVERIFIED"
+            assert result.owner_id == owner and result.run_id == run.run_id
             assert result.started_calls is None and result.reported_total_tokens is None
             assert result.elapsed_lower_bound is None and result.exact_elapsed_known is False
+    finally:
+        database.dispose()
+
+
+@pytest.mark.parametrize("kind", ["unchanged", "new_event", "owner", "run", "counter", "limits", "type"])
+def test_accounting_recheck_binds_identity_and_full_observation(tmp_path, kind):
+    database, owner, run = _database(tmp_path)
+    try:
+        with database.session() as session:
+            append(session, owner, run, 1, receipt())
+            other = run.model_copy(update={"run_id": uuid4()})
+            PlatformRepository(session).save_run(other)
+            append(session, owner, other, 1, receipt())
+        with database.session() as session:
+            evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+        if kind == "new_event":
+            with database.session() as session:
+                RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                    event_type=RunEventType.STAGE_STARTED, occurred_at=NOW, payload={"stage": "Market Analyst"})
+        elif kind == "counter":
+            evidence = replace(evidence, reported_total_tokens=0)
+        elif kind == "limits":
+            evidence = replace(evidence, original_wall_seconds=3600)
+        elif kind == "type":
+            evidence = SimpleNamespace(**evidence.__dict__)
+        with database.session() as session:
+            kwargs = {"session": session, "owner_id": uuid4() if kind == "owner" else owner,
+                      "run_id": other.run_id if kind == "run" else run.run_id, "expected": evidence}
+            if kind == "unchanged":
+                assert recheck_accounting_evidence(**kwargs) is None  # Not an authorization token.
+                with pytest.raises(FrozenInstanceError):
+                    evidence.original_wall_seconds = 3600
+            else:
+                with pytest.raises(AccountingEvidenceError, match="^accounting evidence requires review$"):
+                    recheck_accounting_evidence(**kwargs)
     finally:
         database.dispose()
 

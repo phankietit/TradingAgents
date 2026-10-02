@@ -2,6 +2,7 @@
 
 import math
 from dataclasses import dataclass
+from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -23,6 +24,11 @@ class AccountingEvidenceError(ValueError):
 
 @dataclass(frozen=True, repr=False)
 class AccountingEvidence:
+    owner_id: UUID
+    run_id: UUID
+    config_hash: str
+    original_wall_seconds: int
+    original_model_calls: int
     evidence_status: str
     high_water_sequence: int
     attempts: tuple[int, ...]
@@ -78,6 +84,9 @@ def load_accounting_evidence(*, session, owner_id, run_id):
         if run is None:
             raise ValueError()
         limits = run.execution_limits or ResearchExecutionLimits()
+        identity = {"owner_id": run.owner_id, "run_id": run.run_id,
+                    "config_hash": run.config_hash, "original_wall_seconds": limits.wall_seconds,
+                    "original_model_calls": limits.model_calls}
         high = session.scalar(select(func.coalesce(func.max(RunEventRow.sequence), 0)).where(
             RunEventRow.owner_id == owner_id, RunEventRow.run_id == run_id))
         if not 0 <= high <= MAX_ACCOUNTING_EVENTS:
@@ -122,13 +131,31 @@ def load_accounting_evidence(*, session, owner_id, run_id):
                 latest[attempt] = (value, elapsed)
         attempts = tuple(sorted(seen_attempts))
         if legacy or not attempts or set(latest) != seen_attempts:
-            return AccountingEvidence("UNVERIFIED", high, attempts)
+            return AccountingEvidence(**identity, evidence_status="UNVERIFIED", high_water_sequence=high,
+                                      attempts=attempts)
         totals = {key: sum(value[key] for value, _ in latest.values()) for key in COUNTERS}
         elapsed_total = sum(elapsed for _, elapsed in latest.values())
         if not math.isfinite(elapsed_total):
             raise ValueError()
-        return AccountingEvidence("PASS", high, attempts, totals["started_model_calls"], totals["model_calls"],
-            totals["started_model_calls"] - totals["calls_with_usage"], totals["input_tokens"],
-            totals["output_tokens"], totals["total_tokens"], elapsed_total)
+        return AccountingEvidence(**identity, evidence_status="PASS", high_water_sequence=high,
+            attempts=attempts, started_calls=totals["started_model_calls"], completed_calls=totals["model_calls"],
+            unreported_started_calls=totals["started_model_calls"] - totals["calls_with_usage"],
+            reported_input_tokens=totals["input_tokens"], reported_output_tokens=totals["output_tokens"],
+            reported_total_tokens=totals["total_tokens"], elapsed_lower_bound=elapsed_total)
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError, SQLAlchemyError):
+        raise AccountingEvidenceError("accounting evidence requires review") from None
+
+
+def recheck_accounting_evidence(*, session, owner_id, run_id, expected):
+    """Refuse a changed observation; NOT a lock, consent or admission grant.
+
+    Future callers must own the authorization and transaction/lease fence. This
+    comparison does not prevent another writer after the read and must never
+    be used as a standalone check-then-dispatch continuation mechanism.
+    """
+    if (type(expected) is not AccountingEvidence or expected.owner_id != owner_id
+            or expected.run_id != run_id):
+        raise AccountingEvidenceError("accounting evidence requires review") from None
+    current = load_accounting_evidence(session=session, owner_id=owner_id, run_id=run_id)
+    if current != expected:
         raise AccountingEvidenceError("accounting evidence requires review") from None

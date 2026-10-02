@@ -590,6 +590,9 @@ aggregate elapsed also fail closed. Its high-water
 sequence is an observation, not a transaction fence; elapsed stays a lower bound.
 The reader is not wired to browser consent, worker continuation or budget
 admission and cannot authorize resume or infer actual provider cost.
+Observations now retain original owner/run/config/allowance identity. An internal
+recheck compares the full observation against freshly loaded evidence and rejects
+changes; it is not a database lock, consent token or check-then-dispatch fence.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
