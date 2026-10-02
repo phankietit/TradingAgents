@@ -579,3 +579,29 @@ merge or deployment.
 No allowance reset, refund or inferred provider cost follows from positive
 arithmetic. Full R01–R14 goal and Draft PR #7 stay open; default recorder/resume
 remains disabled and existing private history remains immutable.
+
+## Internal retained observer enforcement follow-up
+
+Source `ff0e3be987e6aa28707adbff5c362df2577a1f74`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Internal budget
+enforcement, no default worker/CLI/API selection, new provider/dependency/table,
+paid/vendor call, private DB migration/restart/history rewrite, CI, risk-limit
+change, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original evidence reload | PASS | Builder accepts no caller cap/time and reloads complete owner/run accounting. Wrong owner/run/type, altered allowance, newly appended event, unknown duration and exhausted original cap reject before observer construction |
+| Retained wall/call enforcement | PASS | Original max_seconds/max_calls stay 60/3 in fixture. Prior 10 seconds/one logical start debit every new boundary; only two new calls fit, third denied. At new-attempt elapsed 50 seconds wall budget is exhausted, not reset to another 60 |
+| Attempt-local event accounting | PASS | New events record only current-attempt elapsed/counters/tokens; reopened aggregation produces three starts, 45 synthetic tokens and 20 seconds (10 prior plus 10 new), not prior-inclusive duplicate time/calls |
+| Post-emit deadline | PASS | Original retained deadline expiring during emit prevents provider entry; reservation remains incomplete, current-attempt elapsed remains 49.5 seconds rather than adding prior 10 into the event |
+| Spawned fixture integration | PASS | Existing simple SpawnFixtureEngine traverses actual supervised bridge with retained parent observer, one remaining logical call, original cap and child reaping. Aggregate starts reaches three and remaining cap zero; frozen clock is synthetic, not latency or original-graph recovery proof |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_retained_observer.py tests/test_remaining_allowance.py tests/test_research_budget_clock.py tests/test_usage_reservation.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 44 passed, 48 warnings, 48.65 s. Earlier 29-pass gate preceded final cases; Ruff import/nested-with formatting fixed, no behavioral failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,294 passed + 88 subtests, 20 skipped, 156 warnings, 254.40 s, exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Consent/restore/production acceptance | UNVERIFIED | Internal observer is not authenticated consent, a linked execution identity, writer locking or checkpoint restoration. Read comparison cannot fence later writers. Trusted transaction/lease/consent and original graph restoration/transport are still required; no default selection enabled |
+| Live/operational/PostgreSQL | UNVERIFIED | No fresh live financial/translation/billing or runtime/browser proof; remaining ingestion/UX and 18 PostgreSQL plus optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+No builder may be presented as permission for a paid replay. Full R01–R14 goal,
+immutable private history, explicit human approval and no-blind-replay remain
+intact; goal and Draft PR #7 stay open.

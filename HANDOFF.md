@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Retained observer enforcement 2026-10-03:** source
+`ff0e3be987e6aa28707adbff5c362df2577a1f74` builder reload original accounting và
+so toàn bộ expected observation; chặn wrong owner/run/type/altered/stale/unknown/
+exhausted trước construction. Observer giữ max wall/calls gốc, debit prior elapsed/
+starts tại boundary/admission nhưng events/counters/clock chỉ current attempt,
+không fresh budget hay double-count. 44 focused PASS, 48,65 s; full **2.294 + 88
+subtests PASS**, 20 skips, 156 warnings, 254,40 s tại source sạch; Ruff/diff/
+templates PASS. Initial Ruff import/nested-with đã sửa, không behavioral FAIL;
+29-pass gate trước final cases không thay final proof. Fixture spawn đơn giản
+kiểm chứng retained parent cap/cleanup; chưa original graph recovery/consent.
+Builder chưa nối default worker/CLI/API. Transaction consent/linked execution/
+trusted restore/transport, ingestion/UX/live còn UNVERIFIED, NQ=F BLOCKED.
+Không AI/vendor/CI/private DB migration/restart/history rewrite/provider/risk
+change/merge/deploy; goal và Draft PR #7 vẫn mở.
+
 **Original allowance arithmetic 2026-10-03:** source
 `eb799a08adf79863c1e3f6f846a3698fb32c776f` reader load authoritative accounting,
 trừ mọi logical starts và local elapsed upper bound khỏi cap gốc. Không nhận
