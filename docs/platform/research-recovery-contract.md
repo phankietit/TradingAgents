@@ -76,6 +76,21 @@ grant consent or validate a lease. These remain existing/future worker obligatio
 Do not expose the builder as a browser-controlled recovery authority. Hash
 equality is not a signature or an authorization to spend/publish.
 
+`client_binding.py` now derives descriptors from actual initialized sync SDK
+clients of the exact reviewed OpenAI-compatible classes, including MiniMax.
+Endpoint, scalar/per-phase timeout, retries, wire model options and LangChain
+response/stream settings bind without a network/model call or SDK auth-header
+inspection. Declared custom headers/query/transports, unknown classes and
+credential-bearing options fail closed with fixed errors. The builder accepts
+only the SDK's precise appended trailing slash alongside an unchanged configured
+endpoint; host/path/query/credential changes are not normalized away.
+
+This adapter is not wired to the worker and is not a complete transport
+attestation: post-construction SDK/header/HTTP-stack mutations, async execution,
+other provider SDKs and trusted construction provenance remain unverified.
+These must be reviewed before enabling recovery; no caller-supplied descriptor
+or hash is sufficient permission to continue a paid run.
+
 Full package/dependency invalidation is conservative: a new machine must restore
 the compatible runtime, not silently waive mismatches. Missing versus flat book
 remains distinct; an exhausted run's limits cannot be changed by hashing a new

@@ -469,6 +469,12 @@ content, effective graph configuration/options, supplied resolved-client binding
 package source bytes and installed dependency versions. It returns only a digest;
 it does not authenticate the caller, attest supplied SDK bindings, save a
 checkpoint or authorize paid continuation. Worker integration remains unfinished.
+An internal initialized-client adapter reads actual endpoint, timeout/retry and
+model options from reviewed OpenAI-compatible classes (including MiniMax), without
+invoking models or reading SDK authentication headers. It rejects declared custom
+headers/query/transports and unreviewed classes. This is not a complete transport
+attestation: worker-controlled construction, SDK mutation protection, other SDK
+adapters and durable recovery remain unverified and are not enabled.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

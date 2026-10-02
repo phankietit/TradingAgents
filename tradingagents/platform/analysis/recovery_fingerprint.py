@@ -155,8 +155,12 @@ def build_recovery_fingerprint(*, owner_id, run: RunManifest, request: AnalysisR
         if run.report_language and config["output_language"] != languages[run.report_language]:
             _reject()
         if config["backend_url"] is not None:
-            _endpoint(config["backend_url"])
-            if binding.quick_endpoint != config["backend_url"] or binding.deep_endpoint != config["backend_url"]:
+            endpoint = _endpoint(config["backend_url"])
+            # OpenAI SDK enforces a trailing slash on base_url. Accept only
+            # that precise normalization, not changed paths/hosts or removed
+            # query/credential components. Original config still binds below.
+            accepted_endpoints = {endpoint, endpoint if endpoint.endswith("/") else endpoint + "/"}
+            if binding.quick_endpoint not in accepted_endpoints or binding.deep_endpoint not in accepted_endpoints:
                 _reject()
         # Pure option calculation; never initialize an SDK or read a key.
         graph = object.__new__(TradingAgentsGraph)
