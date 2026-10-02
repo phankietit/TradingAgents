@@ -180,7 +180,7 @@ git rev-parse HEAD
 
 Đọc tiếp: [AGENTS](AGENTS.md), [routing](docs/ops/agent-map.md),
 [backlog R01–R14](docs/platform/research-remediation.md),
-[bằng chứng mới nhất](docs/platform/research-acceptance-20261001.md).
+[bằng chứng mới nhất](docs/platform/research-acceptance-20261002.md).
 Receipt milestone cũ chỉ chứng minh SHA ghi trong receipt, không chứng minh HEAD.
 
 ## Mục tiêu và yêu cầu đã chốt
@@ -205,8 +205,9 @@ không ImageGen. Test local/manual; GitHub CI đã được disable trong checkp
   analyst truy vấn snapshot đã khóa. Dữ liệu thiếu không được biến thành trung tính.
 - Strict MiniMax JSON parser, một lần format repair, kiểm tra số liệu/provenance,
   percentage statements EN/VI xác định, dịch theo block với protected quantities.
-- UI đã được cải thiện; browser nghiệm thu cuối vẫn chưa thực hiện được do tool
-  từ chối truy cập vì không xác minh được chính sách admin trên máy cũ.
+- UI đã có browser synthetic desktop/mobile receipts; các lỗi browser tool ở
+  checkpoint cũ không còn là mô tả trạng thái mới nhất. Chất lượng tài chính và
+  vận hành live vẫn chưa được nghiệm thu; không lấy screenshot làm finance proof.
 - `tradingagents/dataflows/platform_news.py` đã commit/test: collector Yahoo news
   có publication/retrieval time, nhận diện asset và trạng thái lỗi/phạm vi nguồn.
 - Tại checkpoint 2026-09-27, `NewsSnapshotService` mới là WIP chưa test hoặc
@@ -233,14 +234,15 @@ nhưng manual FAIL vì mất qualifier “aggressive” và văn phong lặp. Pr
 ở `5bbbdee`; sửa prompt không chứng minh khả năng dịch đúng một cách tổng quát.
 
 Không có USD cost chính xác từ provider. Token usage không phải hóa đơn.
-NQ chưa live-test; còn cần phân biệt `NQ=F` reference futures và `^NDX` cash index
-trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay bằng ETF.
+NQ chưa live-test: chủ repo đã chọn `NQ=F`, giữ BLOCKED do thiếu contract/roll
+metadata. Không thay bằng `^NDX` hoặc ETF; đây không phải acceptance đã đạt.
 
 ## Công việc tiếp theo có thứ tự
 
 1. R08 đã lưu reader text riêng tư bằng publication fence; chưa phải resume.
-   UI đọc bản nháp đã có synthetic proof; allowance đã bind ở API. Hoàn thiện
-   lựa chọn allowance trên UI, request deadline và durable graph recovery trước
+   UI đọc bản nháp/chọn allowance đã có synthetic proof, allowance bind API và
+   default worker process supervision đã triển khai. Nghiệm thu supervised
+   bilingual path và durable graph recovery trước
    paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
    không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
    local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
@@ -336,8 +338,10 @@ Các script này có thể gọi MiniMax và tiêu token; không có job tự ch
 
 > Đọc HANDOFF.md, CLAUDE.md, AGENTS.md và docs/ops/agent-map.md. Tiếp tục trên
 > fix/TA-R01-research-quality, Draft PR #7. Giữ mục tiêu R01–R14 và các boundary đã
-> chốt. Bắt đầu review/test NewsSnapshotService đang dở, rồi hoàn thiện ingestion
-> ngoài giá, semantic quality và UI/process theo backlog. Kiểm tra trạng thái Git
+> chốt. Bắt đầu từ receipt mới nhất để kiểm tra supervision/recovery còn thiếu,
+> rồi hoàn thiện ingestion ngoài giá, semantic quality và UI/process theo backlog.
+> NewsSnapshotService đã có API/UI, không bắt đầu lại như một WIP chưa tích hợp.
+> Kiểm tra trạng thái Git
 > và bằng chứng mới trước khi hành động. Dùng local tests; không CI, không tự merge,
 > không sửa lịch sử, không đổi model/provider hay mở paid runs từ riêng prompt
 > bàn giao này. Báo cáo rõ mọi acceptance chưa đạt, đừng gọi toàn bộ goal complete.

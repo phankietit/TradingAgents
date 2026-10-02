@@ -2,10 +2,13 @@
 
 import json
 import os
+import signal
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager, suppress
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from multiprocessing import get_context
 from pathlib import Path
 from threading import Event, Thread
 from time import monotonic, sleep
@@ -106,6 +109,50 @@ def assert_child_stopped(marker):
     if os.name == "posix":
         with pytest.raises(ProcessLookupError):
             os.kill(pid, 0)
+
+
+def _orphan_parent(marker):
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *_: None, max_seconds=60)
+    SupervisedAnalysisEngine(base_config={"marker": marker, "mode": "hang"},
+        engine_factory=SpawnFixtureEngine).analyze(request_with(observer))
+
+
+def _process_running(pid):
+    result = subprocess.run(["ps", "-p", str(pid), "-o", "stat="],
+        check=False, capture_output=True, text=True)
+    state = result.stdout.strip()
+    return bool(state) and not state.startswith("Z")
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX crash/orphan acceptance only")
+def test_killed_parent_does_not_leave_an_executing_orphan_child(tmp_path):
+    marker = tmp_path / "orphan-child"
+    parent = get_context("spawn").Process(target=_orphan_parent, args=(str(marker),))
+    child_pid = None
+    try:
+        parent.start()
+        until = monotonic() + 20
+        while not marker.exists() and monotonic() < until and parent.is_alive():
+            sleep(0.05)
+        assert marker.exists(), "isolated fixture child did not start"
+        child_pid = int(marker.read_text())
+        assert _process_running(child_pid)
+        parent.kill()
+        parent.join(timeout=3)
+        assert not parent.is_alive()
+        until = monotonic() + 5
+        while _process_running(child_pid) and monotonic() < until:
+            sleep(0.05)
+        assert not _process_running(child_pid), "child kept executing after its parent died"
+    finally:
+        if parent.is_alive():
+            parent.kill()
+        parent.join(timeout=3)
+        parent.close()
+        # Only the PID written by this task-created private fixture is in scope.
+        if child_pid is not None and _process_running(child_pid):
+            with suppress(ProcessLookupError):
+                os.kill(child_pid, signal.SIGKILL)
 
 
 def test_spawn_retains_events_usage_and_reader_text_but_not_raw_messages(tmp_path):
