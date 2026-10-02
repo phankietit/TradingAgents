@@ -1,6 +1,19 @@
-# TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-02
+# TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
 ## Cập nhật đang triển khai · 2026-10-01
+
+**Recovery identity prerequisite 2026-10-03:** source
+`c705cad32c3e6579c94942d8131ea32f0ac34def` thêm fingerprint riêng, không sửa
+API config_hash/lịch sử và chưa bật worker recovery. Bind owner/run/asset/as-of/
+roles, verified snapshots, full book/policy/risk-source content, actual config/
+graph options/plan, supplied resolved-client descriptors và actual package source/
+Python/dependency versions. 44 focused tests PASS; full Python **1.924 + 88
+subtests PASS**, 20 skips, 131,46 s; Ruff/diff/templates PASS. Không gọi AI/vendor,
+restart hay đổi provider/policy/frontend. Đọc
+[receipt 2026-10-03](docs/platform/research-acceptance-20261003.md): descriptors
+còn cần trusted attestation từ SDK client thật, chưa là auth/consent/lease proof.
+Tiếp theo client-binding attestation + private durable parent commit/ack; không
+bỏ execution_started fence hay tăng allowance. Goal R01–R14/PR #7 vẫn mở.
 
 **Restricted checkpoint JSON 2026-10-02:** source
 `25cb1d42f0b9372e475601c1cc39a7d9e373208b` thêm codec JSON native-v4, chưa nối
