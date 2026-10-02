@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Native saver restore mechanism 2026-10-03:** source
+`4e5b9aaf3015dd44970efe81b6a7c561931bfabb` nạp restricted tuple vào saver
+trống, kiểm thread/fingerprint và decoded tuple equality; giữ native versions/
+routing/pending writes, không republish history. Sai/malformed/repeated/partial
+import poison saver. Original graph fixtures dùng method này cho committed
+restore, không chọn next node thủ công. Initial focused FAIL do so byte JSON
+khác key order; sửa semantic equality, không bỏ field/control validation.
+365 graph/saver focused PASS (trước thêm partial-failure case); final saver
+18 PASS; full **2.301 + 88 subtests PASS**, 20 skips, 156 warnings, 214,37 s
+tại source sạch, Python 3.14.7/Darwin 25.5.0. Ruff/diff/templates PASS.
+Chưa new-child transport/restore, consent transaction hoặc default worker/API
+activation. Ingestion/UX/live còn UNVERIFIED; NQ=F BLOCKED theo owner. Không
+AI/vendor/CI/private DB migration/restart/history rewrite/provider/risk change/
+merge/deploy; goal và Draft PR #7 mở. Xem receipt ngày 2026-10-03.
+
 **Retained observer enforcement 2026-10-03:** source
 `ff0e3be987e6aa28707adbff5c362df2577a1f74` builder reload original accounting và
 so toàn bộ expected observation; chặn wrong owner/run/type/altered/stale/unknown/

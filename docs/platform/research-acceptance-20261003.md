@@ -605,3 +605,27 @@ change, merge or deployment.
 No builder may be presented as permission for a paid replay. Full R01–R14 goal,
 immutable private history, explicit human approval and no-blind-replay remain
 intact; goal and Draft PR #7 stay open.
+
+## Internal native saver restore mechanism
+
+Source `4e5b9aaf3015dd44970efe81b6a7c561931bfabb`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Internal restore
+mechanism only, no default worker/API/CLI activation, paid/vendor call, private
+DB migration/restart/history rewrite, CI, provider/risk change, merge or deploy.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Reviewed native import | PASS | Fresh saver only, expected thread and codec fingerprint binding; native versions/routing/metadata/parent/pending writes preserved with decoded tuple equality. Existing history is not republished during import |
+| Invalid/partial import | PASS | Wrong thread/fingerprint, malformed bytes, occupied/repeated targets and native pending-write failure reject with fixed diagnostics and poison saver; no commit callback during import |
+| Original graph equivalence | PASS | Committed native graph fixtures use actual restore method, not bespoke importer, across existing interruption/pending-write cases; prompt/model traces and final non-message results equal uninterrupted synthetic fixture. Same-process restore, not new-child recovery or live financial proof |
+| Initial focused gate | FAIL | 1 failed/1 passed, 1.23 s: native JSON key order differs despite equal tuple fields. Changed byte equality to equality of validated decoded tuples; no field/routing validation removed |
+| Focused gates | PASS | Saver/native graph suite: 365 passed, 76.94 s before final partial-failure case was added. Final saver suite: 18 passed, 1.18 s. Full gate below covers all final tests |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,301 passed + 88 subtests, 20 skipped, 156 warnings, 214.37 s, terminal exit 0 on exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; import ordering fixed before source commit |
+| Recovery activation | UNVERIFIED | Caller still needs initialized actual graph fingerprint, owner/lease/consent, linked execution, retained accounting and trusted new-child transport. This mechanism does not authenticate or authorize replay |
+| Live/operational/PostgreSQL | UNVERIFIED | Ingestion, UI/browser and fresh live finance/translation/billing gates remain open; 18 PostgreSQL and optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Next safe slice is trusted original-graph restoration into a new supervised
+child with retained original allowance, before consent/API/UI activation.
+Historical failures without checkpoints are not backfilled or replayed.
