@@ -128,6 +128,23 @@ False. This bound is local supervised execution, not the remote provider's
 processing/billing duration; unreported usage and cost remain unknown. Legacy
 history is not repaired, and this is not a consent or remaining-budget grant.
 
+### Original allowance arithmetic observation
+
+`load_remaining_allowance` loads authoritative accounting itself and accepts no
+caller-provided cap, elapsed, checkpoint or consent. It subtracts every logical
+start (including unfinished/failed reservations) across attempts from the
+original call cap. Only a known local elapsed upper bound can produce remaining
+seconds; legacy/missing accounting yields unknown values, not a new allowance.
+A known exhausted call cap or elapsed lower bound blocks even if stop evidence
+is missing. Values cannot become negative or increase the original limits.
+
+PASS means bounded arithmetic only, not admission, financial acceptance or
+permission to continue. The frozen private observation retains the complete
+accounting/high-water/original identity and unknown provider usage, and has no
+cost/refund/consent token. Transactional recheck/owner consent, linked execution,
+trusted checkpoint restoration and original-budget enforcement in the supervisor
+remain required before enablement. No reader mutates history or invokes models.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

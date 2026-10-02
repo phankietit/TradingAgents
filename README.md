@@ -598,6 +598,10 @@ reaping and reader shutdown. When every observed attempt has that boundary, the
 reader retains an upper bound on local supervised elapsed time. Missing stop
 evidence remains unknown, not inferred from run status. This does not bound
 remote provider duration/billing or authorize continuation; old rows are untouched.
+A read-only allowance observation subtracts all durable logical starts and the
+local elapsed upper bound from the original run limits. Missing time remains
+unknown; already exhausted limits remain blocked. A positive arithmetic result
+is not consent or admission and cannot reset caps or waive unreported usage.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

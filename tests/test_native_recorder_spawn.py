@@ -21,6 +21,7 @@ from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
 from tradingagents.platform.analysis.accounting import load_accounting_evidence
+from tradingagents.platform.analysis.allowance import load_remaining_allowance
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
@@ -193,6 +194,8 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert evidence.evidence_status == "PASS" and evidence.started_calls == 1
                 assert evidence.reported_total_tokens == 15 and evidence.exact_elapsed_known is False
                 assert evidence.elapsed_upper_bound is not None
+                allowance = load_remaining_allowance(session=session, owner_id=owner, run_id=run.run_id)
+                assert allowance.assessment_status == "BLOCKED" and allowance.remaining_model_calls == 0
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
             return
         result = supervised.analyze(request)
@@ -268,6 +271,9 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert evidence.reported_total_tokens == 15 * calls and evidence.unreported_started_calls == 0
                 assert evidence.exact_elapsed_known is False
                 assert evidence.elapsed_upper_bound is not None
+                allowance = load_remaining_allowance(session=session, owner_id=owner, run_id=run.run_id)
+                assert allowance.assessment_status == "PASS" and allowance.remaining_model_calls == 128 - calls
+                assert 0 < allowance.remaining_wall_seconds <= 1800
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
         assert list((tmp_path / "results").iterdir()) == []
     finally:
