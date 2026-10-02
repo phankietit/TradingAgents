@@ -278,3 +278,29 @@ Canonical HANDOFF now points to current receipts and recovery work rather than
 already-completed news/UI tasks. Original dated failures and historical SHA
 evidence remain intact. Goal and Draft PR #7 stay open; no merge, deployment,
 private-history mutation or permission to run a fresh paid BTC analysis.
+
+## R08 supervised bilingual presentation and rejection gate
+
+Source `97b110d02596e8d57be6b0dd0b21f581c1e1b83b`, same branch. Test/docs-only;
+production graph, localization code, supervisor, SDK settings, model/provider,
+risk/approval policies and frontend remain unchanged.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Native EN / VI / EN-VI through spawn | PASS | Four parametrized `tests/test_supervised_native_graph.py` cases, 7.83 s: original 14-stage graph at all three language selections, with a separate invalid bilingual case |
+| Canonical/presentation boundary | PASS | Fake model emits reviewed synthetic VI text through the real block translator; canonical thesis unchanged, horizon 3–6 preserved in EN/VI, parent reader fragment equals returned localized report |
+| Invalid translation cannot authorize readiness | PASS | Added 25% in VI is rejected by real validation; exactly one format repair, two diagnostics; localized report unavailable and decision_payload=None with report_translation_unavailable. All original stages remain observed, not skipped |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,640 tests + 88 subtests, 20 skips, 22 warnings, 108.29 s; Python 3.14.7/macOS |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby issue-template YAML load |
+| Web/production runtime change | NOT_IN_SCOPE | No frontend or production runtime files changed; prior source-specific receipts retained, not a new browser/live acceptance |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, missing Bedrock dependency and live DeepSeek key skips |
+| Live semantic/financial/MT quality / resume | UNVERIFIED | Synthetic models only, token status incomplete; no paid/provider call, worker restart, checkpoint resume or semantic quality certification |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+Fixture text and synthetic source manifests establish graph mechanics and
+validation behavior, not real coverage or investment correctness. Preserving
+one numeric range and rejecting one added percentage does not prove general
+translation fidelity or qualitative entailment. Earlier live manual failures
+remain unresolved. Next: fingerprinted checkpoint recovery, with original graph
+and owner/run/source/model/prompt/config/lease bindings intact and no blind paid
+replay. Goal and Draft PR #7 stay open; no release/merge/deployment authorization.

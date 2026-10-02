@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Bilingual supervised gate 2026-10-02:** source
+`97b110d02596e8d57be6b0dd0b21f581c1e1b83b` chạy native graph đủ 14 stage qua
+spawn ở English, Vietnamese và English + Vietnamese bằng fixture model. Giữ
+canonical và horizon 3–6; presentation EN/VI trả về cha đúng nội dung. Fixture
+tự thêm 25% bị từ chối sau một repair, không có decision payload hợp lệ và có
+`report_translation_unavailable`. Full Python **1.640 + 88 subtests PASS**,
+20 skips, 108,29 s; Ruff/diff/templates PASS. Chỉ test/docs, không đổi runtime,
+prompt, provider hay frontend; không dùng quota AI. Đây không phải live MT/
+financial acceptance. Tiếp theo ưu tiên fingerprinted graph recovery; các lỗi
+live và NQ=F BLOCKED vẫn giữ nguyên, không tự chạy paid replay.
+
 **Native/crash acceptance 2026-10-02:** source
 `c4414a67a1c2d3b28169a0b201211457d635f626`. Native LangGraph thật qua spawn với
 model giả lập chạy đủ 14 stage đúng thứ tự, giữ structured gate/600s SDK timeout/
@@ -178,7 +189,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Candidate đã full-test gần nhất: `c4414a67a1c2d3b28169a0b201211457d635f626`.
+- Candidate đã full-test gần nhất: `97b110d02596e8d57be6b0dd0b21f581c1e1b83b`.
   Runtime production của supervisor giữ nguyên từ `e1af4c3`; candidate này bổ
   sung test và cập nhật chỉ dẫn, không phải một lượt phân tích live mới.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
@@ -254,8 +265,8 @@ metadata. Không thay bằng `^NDX` hoặc ETF; đây không phải acceptance �
 
 1. R08 đã lưu reader text riêng tư bằng publication fence; chưa phải resume.
    UI đọc bản nháp/chọn allowance đã có synthetic proof, allowance bind API và
-   default worker process supervision đã triển khai. Nghiệm thu supervised
-   bilingual path và durable graph recovery trước
+   default worker process supervision đã triển khai; supervised bilingual path
+   đã có fixture proof. Hoàn thiện durable graph recovery trước
    paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
    không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
    local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
