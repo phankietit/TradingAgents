@@ -27,7 +27,7 @@ PR remains draft.
   against translated negation or unit changes; qualitative review is still required.
 - Immutable owner/source/config-bound stage working notes, published behind
   cancellation/lease fences. They are always unvalidated and ineligible for
-  approval; dedicated web reading and graph resume remain unfinished.
+  approval; dedicated bounded web reading is implemented, graph resume remains unfinished.
 - Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
@@ -37,6 +37,12 @@ Includes prerequisites from open PRs #5/#6; do not duplicate their changes.
 GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
+
+- PASS on web reader source `1a01f21455fa351017319ad6283bb8307defe0ee`:
+  134 Web tests, typecheck/lint/build; actual built app with synthetic API fixtures
+  at 1280×900/390×900, no console/page errors or overflow, one on-demand note GET
+  and zero mutations. Locale switching preserves original text; no approval
+  link. Not live model/source/financial acceptance. See receipt 2026-10-02.
 
 - PASS on code SHA `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0`: 1,600 backend
   tests + 88 subtests, Ruff, diff check; 20 classified skips. Web: 122 tests,

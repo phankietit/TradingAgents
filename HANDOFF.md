@@ -2,13 +2,23 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+Tiếp nối **2026-10-02**, source `1a01f21455fa351017319ad6283bb8307defe0ee`:
+web đã tách bản nháp khỏi báo cáo hoàn chỉnh, chỉ tải khi mở đọc, cảnh báo
+chưa kiểm chứng/không thể phê duyệt; đổi EN/VI không dịch nội dung gốc hay gọi AI.
+134 Web tests, typecheck/lint/build PASS; built-browser synthetic 1280×900 và
+390×900 PASS, zero console/page error/overflow/mutation, một note GET. Xem
+[receipt 2026-10-02](docs/platform/research-acceptance-20261002.md). Đây không
+phải live model/financial acceptance. Allowance/timeout và graph resume vẫn dở;
+goal/PR vẫn mở, không tự chạy paid retry.
+
 **Mới nhất:** code `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0` lưu bản nháp
 nghiên cứu bất biến sau khi từng vai trò trả kết quả, chỉ giữ reader text đã
 allowlist và ràng buộc owner/run/source/config. Cancellation và lease chặn worker
 cũ xuất thêm nội dung. Bản nháp luôn unvalidated, không đủ điều kiện phê duyệt;
 không phải checkpoint để resume graph. Full Python **1.600 + 88 subtests PASS**
 (20 skips), Ruff PASS; Web 122 tests, lint/typecheck/build PASS. Chưa live-test
-code mới; UI đọc bản nháp riêng và graph resume vẫn chưa hoàn thành. Các sửa
+code mới ở checkpoint đó; UI đọc bản nháp đã có tại 1a01f21 nhưng graph resume
+vẫn chưa hoàn thành. Các sửa
 SEC/translation tại `af5349d` vẫn được giữ.
 
 Lượt BTC market+news tại `f73d1a9` **FAIL**: 37m38s / 539.339 token / 13 calls,
@@ -17,8 +27,8 @@ chín stage trước Portfolio Manager; chưa chạy Financial validation/Report
 presentation. Trần 30 phút hiện là kiểm tra giữa các bước, không ngắt request
 model đang chạy. Không dùng sự kiện tiến trình để coi nội dung đã nghiệm thu.
 
-Tiếp theo ưu tiên R08: UI đọc bản nháp có cảnh báo chưa kiểm chứng, allowance
-hiện rõ, tương thích request timeout và graph recovery có fingerprint đầy đủ,
+Tiếp theo ưu tiên R08: allowance hiện rõ, tương thích request timeout và graph
+recovery có fingerprint đầy đủ,
 giữ source/config/model/prompt/owner/lease và toàn bộ vai trò. Không tự tăng trần
 hay replay paid BTC; cần chủ repo duyệt lượt mới
 sau khi sửa flow. AAPL full graph chưa chạy ở candidate mới; SEC source đã PASS.
@@ -170,7 +180,7 @@ trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay 
 ## Công việc tiếp theo có thứ tự
 
 1. R08 đã lưu reader text riêng tư bằng publication fence; chưa phải resume.
-   Hoàn thiện UI đọc bản nháp, allowance/timeout và durable graph recovery trước
+   UI đọc bản nháp đã có synthetic proof; hoàn thiện allowance/timeout và durable graph recovery trước
    paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
    không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
    local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
