@@ -651,3 +651,29 @@ runtime restart, history rewrite, provider/risk change, CI, merge or deploy.
 
 Full R01–R14 goal and Draft PR #7 remain open. Next gate is actual separate-child
 restoration under the parent retained allowance, not a new paid replay or budget.
+
+## Restricted restore transfer into a new original child
+
+Source `60e9200a1d47ac596c79c4135ef0bebb6628fcf8`, same branch/worktree;
+clean throughout the completed regression, Python 3.14.7/Darwin 25.5.0.
+No default worker/API/CLI activation, paid/vendor call, private DB migration,
+runtime restart, history rewrite, provider/risk change, CI, merge or deploy.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Parent/child restricted transfer | PASS | Optional codec bytes require exact original recording context and AnalysisEngine. Parent validates and revalidates thread/fingerprint before spawn. Original child recorder checks initialized actual graph/client fingerprint and parent allowance before invoking restored original scheduler; DB/lease/commit stay parent-only |
+| Invalid setup | PASS | Malformed bytes, wrong type/thread/fingerprint, missing original context and post-construction mutation reject with fixed diagnostic before spawn; no model admitted |
+| Actual new-child native equivalence | PASS | Four callback-enabled EN/VI/bilingual/invalid-translation fixtures run a distinct new original child with an intermediate tuple from a completed synthetic run. Remaining prompt/model trace equals baseline suffix; published fields equal baseline, SDKs closed, both children reaped, existing SQLite rows unchanged |
+| Retained accounting | PASS | Builder reloads first-attempt accounting; original 1,800 seconds/128 calls stay unchanged and all first-attempt calls/time debit, including work after the chosen tuple. Durable reader sums attempts 1/2 and synthetic tokens without resetting counters or inventing provider cost |
+| Focused gates | PASS | Previous turn on unchanged source: native recorder spawn suite 12 passed, 48 warnings, 43.71 s; recording context/recording allowance bridge/retained observer suite 61 passed, 15.49 s. Full completed gate below covers final source |
+| Interrupted full gate | UNVERIFIED | Previous handle 99476 disappeared after turn interruption; current process inventory contained no pytest. Terminal result was not captured, so no PASS inferred and no concurrent duplicate process started |
+| Completed full local gate | PASS | `.venv/bin/python -m pytest -q --disable-warnings`, new handle 27976: 2,316 passed +88 subtests, 20 skipped, 172 warnings, 261.25 s, terminal exit 0 on exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; import ordering fixed before source commit |
+| Production recovery/consent | UNVERIFIED | Fixture branch from completed synthetic run is deliberately NOT stopped/crashed recovery or authorization. Transactional owner consent/linked execution, stale writer exclusion, stopped/ACK/crash-boundary restoration, trusted construction/transport attestation and default API/UI activation remain open |
+| Live/operational/PostgreSQL | UNVERIFIED | Ingestion, UI/browser and fresh live financial/translation/billing gates remain open. Eighteen PostgreSQL and optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Next safe acceptance slice is original native recovery after an actual stopped
+fixture attempt, with retained accounting and immutable checkpoint selection.
+Consent and linked execution must still be established before product activation;
+historical failures without checkpoints are not backfilled or replayed.

@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Restricted new-child restore transfer 2026-10-03:** source
+`60e9200a1d47ac596c79c4135ef0bebb6628fcf8` supervisor opt-in bytes cùng exact
+original context/engine; parent validate/revalidate thread/fingerprint trước
+spawn, child recorder kiểm actual initialized graph và parent allowance.
+DB/lease/commit callback không chuyển sang child. EN/VI/song ngữ/invalid VI
+fixture chạy child mới với intermediate tuple của completed synthetic run;
+remaining trace/output khớp baseline, cả hai child reaped, old rows nguyên vẹn.
+Retained observer debit TOÀN BỘ attempt trước kể cả work sau tuple; accounting
+cộng hai attempts, không reset. Không phải consent hay stopped/crash recovery.
+12 native-spawn PASS (43,71 s) + 61 context/allowance PASS (15,49 s); full mới
+**2.316 + 88 subtests PASS**, 20 skips, 172 warnings, 261,25 s, terminal exit 0
+tại source sạch, Python 3.14.7/Darwin 25.5.0; Ruff/diff/templates PASS. Full
+lượt trước bị ngắt, handle mất và không còn process: UNVERIFIED, không lấy
+progress percentage làm PASS; chỉ chạy lại local suite, không paid analysis.
+Default worker/API/CLI resume chưa bật. Consent/linked execution, stopped/crash
+acceptance, transport attestation, ingestion/UX/live còn UNVERIFIED; NQ=F
+BLOCKED theo owner. Không AI/vendor/CI/private DB migration/restart/history
+rewrite/provider/risk change/merge/deploy; goal và Draft PR #7 mở.
+
 **Original recorder/graph restore hook 2026-10-03:** source
 `7c36a2609c33ec3352295fbcb694a6d42539b4fe` recorder optional restricted bytes
 sau initialized fingerprint/original observer allowance checks; native graph

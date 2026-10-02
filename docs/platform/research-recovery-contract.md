@@ -5,6 +5,15 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
+Current local checkpoint at source `60e9200`: restricted recorder/saver restore
+and transfer into a distinct original supervised child are exercised with
+retained accounting and synthetic responses. The new-child fixture branches
+from a completed synthetic run, not a stopped/crashed one. Production recovery
+is still UNVERIFIED and disabled. The prerequisite sections below retain their
+incremental evidence/limitations; later mechanism tests do not grant consent,
+attest all transport or establish live financial acceptance. See the exact
+2026-10-03 acceptance receipt for current gates.
+
 ### Internal original-context transfer (2026-10-03)
 
 `SnapshotRecordingInputs` is an explicit private JSON envelope for trusted
