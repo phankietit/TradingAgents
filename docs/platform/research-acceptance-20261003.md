@@ -210,3 +210,28 @@ This closes the characterized local SQLite checkpoint contention failure, not
 all parent I/O/deadline or product acceptance. Preserve execution_started,
 original allowance and no-blind-replay when wiring the production graph. The
 full R01–R14 goal and Draft PR #7 remain open.
+
+## Native snapshot recording hook follow-up
+
+Source `8b08628500df74e8641b151669bf8ee82cf9857d`, same branch/worktree,
+clean source throughout full regression. Added internal optional paired saver/
+canonical run-thread parameters to actual propagate_snapshots. Default engine/
+worker invocation unchanged; no private DB migration, restart, AI/vendor call,
+CI, provider/risk change or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Sync invocation/config isolation | PASS | Hook compiles original workflow locally, passes sync durability and canonical thread alongside original callbacks/recursion limit/config_scope; instance graph unchanged on success or invoke failure |
+| Invalid setup/default/CLI separation | PASS | Partial setup, non-saver, noncanonical/private invalid string, UUID object rejected before compile/invoke with fixed diagnostic; default snapshot path unchanged; non-snapshot graph rejects hook |
+| Native full-flow bridge | PASS | Four committed spawn fixture cases now use actual graph hook rather than monkeypatched graph.invoke: EN/VI/bilingual/invalid VI, all 14 original stages, parent-owned restricted commit/ACK and existing financial/translation gates |
+| Focused local gate | PASS | `.venv/bin/python -m pytest -q tests/test_snapshot_checkpoint_hook.py tests/test_supervised_native_graph.py -k 'internal_hook or incomplete_or_invalid_hook or default_snapshot_path or non_snapshot_graph or all_fourteen' --disable-warnings -x`: 18 passed, 340 deselected, 23.48 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,135 passed + 88 subtests, 20 skipped, 22 warnings, 199.46 s; Python 3.14.7/macOS, clean 8b08628 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Production construction/continuation | UNVERIFIED | Hook accepts a trusted internal saver, not browser authority; default engine/worker do not select it. Trusted fingerprint/client/source construction, new-child restoration, retained accounting and explicit consent/API/UI still required |
+| PostgreSQL/live finance/MT | UNVERIFIED | Same 18 PostgreSQL plus optional Bedrock/live DeepSeek skips; no paid report, older semantic/editorial failures remain |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+This adds the actual graph recording invocation boundary; it is not an enabled
+resume feature or product-completion claim. Preserve execution_started and the
+original allowance when integrating the trusted platform path. R01–R14 remains
+open, including outstanding asset ingestion, financial/translation and UX gates.

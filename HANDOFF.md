@@ -2,6 +2,18 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Native snapshot recording hook 2026-10-03:** source
+`8b08628500df74e8641b151669bf8ee82cf9857d` thêm paired saver/canonical run-thread
+hook vào propagate_snapshots thật; compile local và invoke sync, không thay
+instance/CLI graph kể cả failure. Native spawn fixture đủ 14 stage giờ dùng
+hook thật thay vì patch graph.invoke. 18 focused PASS, 23,48 s; full Python
+**2.135 + 88 subtests PASS**, 20 skips, 22 warnings, 199,46 s tại source sạch;
+Ruff/diff/templates PASS. Default AnalysisEngine/worker chưa chọn hook; không
+restore/resume, migrate DB riêng tư, restart hay gọi AI/vendor/CI/deploy.
+Tiếp theo trusted fingerprint/client construction và accounting/consent rồi
+new-child restore; không bỏ execution_started hoặc reset allowance. Live finance/
+MT, ingestion còn thiếu và operational UX vẫn thuộc goal; NQ=F giữ BLOCKED.
+
 **Checkpoint DB-lock follow-up 2026-10-03:** source
 `63d63d2b3aec6bf984080a15978cfea9464aa6bc` giới hạn từng thao tác chờ khóa
 checkpoint (mặc định 5 giây), không phải deadline toàn transaction/network/disk.
