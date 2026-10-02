@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Private checkpoint persistence 2026-10-03:** source
+`77b32d81a84f6abb4e5705fdd6a8e3e63e6c8852` thêm bảng riêng qua migration
+`0011_research_checkpoints` và internal store append-only. JSON codec kiểm tra
+owner/run/thread; ghi dưới publication_session hiện có, bind job/attempt/hash/
+fingerprint và chỉ ACK sau commit. Bản pending-write mới không ghi đè bản cũ;
+latest sai hash/identity không fallback về bản cũ. Không nằm trong ArtifactKind
+hay reader báo cáo. 72 focused tests PASS, 2 skips; full Python **1.955 + 88
+subtests PASS**, 20 skips, 22 warnings, 121,18 s; Ruff/diff/templates PASS.
+Chỉ upgrade/downgrade DB fixture, không migrate DB riêng tư/restart/AI/vendor
+call. PostgreSQL/concurrent writer và native saver/child bridge/crash/consent/
+accounting còn UNVERIFIED; worker/API/CLI chưa dùng store và chưa bật resume.
+Tiếp theo nối native saver qua supervised bridge, test commit/ack crash và
+giữ execution_started/allowance/explicit consent. R01–R14 và Draft PR #7 mở;
+NQ=F giữ BLOCKED, live finance/MT còn chưa đạt.
+
 **Initialized-client prerequisite 2026-10-03:** source
 `a120d5f33d6ed3653da187b470bf3f6c276ce638` đọc endpoint, timeout/retry và model
 options từ SDK sync thật của các class OpenAI-compatible đã review, gồm MiniMax,

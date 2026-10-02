@@ -80,3 +80,36 @@ origin or ownership. It must not be treated as a browser-controlled recovery
 permission. Next: trusted construction/mutation guards and durable supervised
 parent commit/ack, with existing no-blind-replay and consent/accounting gates.
 R01–R14 remains incomplete; no CI or public deployment.
+
+## Private checkpoint persistence follow-up
+
+Source `77b32d81a84f6abb4e5705fdd6a8e3e63e6c8852`, same branch/worktree,
+clean throughout full regression. Migration `0011_research_checkpoints` adds
+a separate recovery-only table; existing report/artifact/decision readers are
+unchanged. No private owner DB was migrated, no runtime restarted, no provider,
+endpoint, risk limit or execution authority changed. No AI/vendor call.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Private persistent records | PASS | Real disposable SQLite migration and database reopen retain restricted JSON; raw messages/reasoning absent; generic artifacts table empty |
+| Commit-before-ACK | PASS | Real publication transaction rollback after flush yields no return receipt and no stored row; normal ACK only after transaction exits |
+| Lease/cancellation fences | PASS | Real JobExecutionContext rejects expired lease, wrong worker, cancellation and recorded heartbeat failure; zero checkpoint rows |
+| Owner/run/thread/hash/identity | PASS | Wrong owner/thread cannot write or read; changed fingerprint, corrupt latest bytes or checkpoint ID rejected without fallback |
+| Append/idempotency | PASS | Same bytes return existing receipt; completed pending-write revision increments sequence and leaves original bytes unchanged; missing history returns None |
+| Migration roundtrip | PASS | Fixture downgrade to 0010 and upgrade to head removes/recreates only new table; existing run/job can still accept checkpoint. No real historical data touched |
+| Focused local gate | PASS | `.venv/bin/python -m pytest -q tests/test_private_checkpoint_store.py tests/test_snapshot_checkpoint_codec.py tests/test_durable_jobs.py tests/test_platform_persistence.py --disable-warnings`: 72 passed, 2 PostgreSQL skips, 7.20 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,955 tests + 88 subtests passed, 20 skipped, 22 warnings, 121.18 s; Python 3.14.7/macOS, clean 77b32d8 source |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Initial formatting gate | FAIL | Two import-order findings fixed before source commit; focused behavior gate had no failures |
+| PostgreSQL/concurrent durability | UNVERIFIED | No TEST_POSTGRES_URL; new store not characterized under PostgreSQL or concurrent writer/crash workload |
+| Native saver / production bridge | UNVERIFIED | No LangGraph saver or supervisor RPC invokes this store; separate-process write/ACK crash and accounting still required |
+| Continuation authority | UNVERIFIED | Trusted fingerprint/client construction, original allowance accounting, explicit owner consent/idempotency and operational UI remain open; store/readability is not permission to continue |
+| Runtime migration/deployment | NOT_IN_SCOPE | Only fresh disposable test DBs changed; no existing private DB, worker, public deployment or CI |
+| Financial/translation/live | UNVERIFIED | No new report, existing manual FAIL not cured by storage tests; BTC/AAPL acceptance outstanding |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+The parent-only internal service must receive trusted original context; its
+arguments are not authenticated browser inputs. DB commit/rollback tests are
+not native process crash or provider-billing proof. The next integration must
+preserve execution_started and no-blind-replay, refuse uncertain checkpoints,
+and not increase/reset the original allowance. R01–R14 remains open.
