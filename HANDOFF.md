@@ -2,6 +2,27 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Restore observer binding 2026-10-03:** source
+`6cd566f7e27a45ce247357bd2ee2b405c3d7c980` chặn opt-in restore dùng observer
+mới/copied, debit bị reset, caps/clock/callbacks thay đổi, attempt đã dùng/dừng,
+hoặc owner/run/config/limits khác original context, trước khi tạo process.
+Binding riêng frozen/repr-private từ builder đã reload accounting; không vào
+child/event và không phải consent token hay transaction fence. Deadline dùng
+clock gốc; cancellation vẫn ưu tiên cả khi hết giờ. Non-restore/default
+worker/API/CLI không đổi. Initial focused FAIL: fixture tạo alias AAPL trùng
+(1 failed, 1,51 s), sửa dùng disposable SQLite trống, không nới validator.
+73 context/retained tests PASS (4,98 s); 89 native-spawn/context/retained tests
+PASS (68 warnings, 59,44 s), trước hai cancellation cases cuối; final binding
+23 PASS (2,82 s). Full tại source sạch: **2.343 + 88 subtests PASS**, 20 skips,
+192 warnings, 350,14 s, terminal exit 0, Python 3.14.7/Darwin 25.5.0;
+Ruff/diff/templates PASS. Không paid/vendor call/CI/private DB migration/
+restart/history rewrite/provider/risk change/merge/deploy. Goal/PR #7 vẫn mở.
+Tiếp theo phải thiết kế consent/linked execution transactionally: JobRow có
+unique(run_id), original terminal run bị context từ chối, fingerprint/native
+thread bind original run ID. Không xóa error/completed_at hoặc đổi thread ID
+để lách flow. Dispatch/high-water fence, ingestion/UX/live vẫn UNVERIFIED;
+NQ=F giữ BLOCKED theo owner.
+
 **Stopped native attempt / lost-ACK recovery fixture 2026-10-03:** source
 `d87ee6261a41d26df6d1639ef937eee08e433a53` actual supervisor dừng/reap child
 sau durable nonempty market-report pending writes nhưng ACK bị mất. Child mới

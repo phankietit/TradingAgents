@@ -705,3 +705,37 @@ validate owner-authorized linked continuation identity/checkpoint/accounting
 transactionally before any product dispatch; readable bytes are not consent.
 Broader stopped/ACK boundaries and abrupt-crash uncertainty remain separate
 acceptance work, not waived by this fixture.
+
+## Supervised restore requires original retained observer construction
+
+Source `6cd566f7e27a45ce247357bd2ee2b405c3d7c980`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`.
+Clean throughout full regression; Python 3.14.7/Darwin 25.5.0.
+No paid/vendor call, CI, default recovery activation, private DB migration,
+runtime restart, history rewrite, provider/risk change, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Restore budget binding | PASS | Exact builder-created observer must match original owner/run/config/limits, prior elapsed/starts and clock/start/callback identities; fresh/copied/reset/mutated/used/stopped attempts reject before multiprocessing context creation |
+| Deadline/cancellation | PASS | An unused binding preserves original remaining time, not a restarted clock; expired restore cannot spawn. Original cancellation callback wins both before and at deadline expiry |
+| Private binding | PASS | Frozen binding suppresses field repr; request observer remains excluded from child request serialization. No binding enters events or grants consent; failed preflight admits no model and leaves disposable event rows unchanged |
+| Initial focused fixture | FAIL | 1 failed, 1.51 s: reused generic database fixture already owned AAPL alias, preventing setup before observer guard. Changed fixture to empty disposable SQLite; alias/owner validators unchanged. Initial Ruff import ordering also corrected |
+| Focused regression | PASS | `.venv/bin/python -m pytest -q tests/test_restore_observer_binding.py tests/test_recording_context.py tests/test_retained_observer.py --disable-warnings -x`: 73 passed, 4.98 s before final two cancellation cases |
+| Actual native-spawn regression | PASS | `.venv/bin/python -m pytest -q tests/test_native_recorder_spawn.py tests/test_restore_observer_binding.py tests/test_recording_context.py tests/test_retained_observer.py --disable-warnings -x`: 89 passed, 68 warnings, 59.44 s before final cancellation cases. Existing stopped/lost-ACK and completed-branch EN/VI/bilingual/invalid-VI equivalence remains exercised |
+| Final binding cases | PASS | `.venv/bin/python -m pytest -q tests/test_restore_observer_binding.py --disable-warnings -x`: 23 passed, 2.82 s, including original cancellation priority |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`, handle 51810: 2,343 passed +88 subtests, 20 skipped, 192 warnings, 350.14 s; actual terminal exit 0 on exact clean source, no source/test edits during the run |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; no public package/dependency/CLI entrypoint or frontend change |
+| Product authority/dispatch | UNVERIFIED | Private binding detects accidental trusted-parent substitution, not arbitrary Python mutation, authenticated consent, transactional checkpoint/accounting/high-water selection, later-writer exclusion or linked execution. No default resume endpoint/worker enabled |
+| Remaining acceptance | UNVERIFIED | Broader stopped/crash boundaries, trusted client/transport attestation, ingestion, operational browser/report UX and fresh live financial/editorial/provider evidence remain open; 18 PostgreSQL and optional Bedrock/live DeepSeek skips are not passes |
+| NQ=F | BLOCKED | Owner's active-contract/roll metadata hold unchanged; no source substitution |
+
+Read-only inspection additionally confirms constraints for the next linked
+execution integration: `JobRow` enforces unique run ID, private checkpoint commit
+requires the leased job's original run ID, recording context rejects terminal
+run lifecycle/error fields, and fingerprint/native thread retain original run
+identity. Do not erase old errors/completion, reset allowance or silently relabel
+the checkpoint to get past these guards. An append-only authenticated execution
+link and transactionally bound consent/checkpoint/accounting are still required;
+this source supplies no production continuation identity. R01–R14 goal and
+Draft PR #7 remain open, not complete or release-approved.
