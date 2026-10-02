@@ -31,6 +31,10 @@ PR remains draft.
 - Durable execution-entry marker and queue/lease guards prevent blind paid
   replay after uncertain execution; committed-output, model-free finalization
   remains idempotent. No SDK timeout/retry or execution allowance change.
+- Explicit snapshot-run allowance is hash/job/manifest-bound and consumed by
+  the worker; omitted limits preserve legacy defaults. Configuration disclosure
+  labels cooperative boundaries. UI controls, hard request deadlines and graph
+  resume remain unfinished; no live allowance was raised automatically.
 - Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
@@ -40,6 +44,11 @@ Includes prerequisites from open PRs #5/#6; do not duplicate their changes.
 GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
+
+- PASS on allowance source `648fa183ee90eed1e353b3e06cbcc2c249aebb82`: 1,619
+  Python tests + 88 subtests (20 classified skips), 59.09 s; Ruff/diff; 134 Web
+  tests, typecheck/lint/build. Focused strict API/worker binding: 44 tests. No new
+  paid/provider/browser acceptance and no SDK timeout/retry change.
 
 - PASS on runtime source `93e797576b9179e088f6ff809761bddd34cc3df6`: 1,608
   Python tests + 88 subtests, 20 classified skips, 50.14 s; Ruff/diff/templates.

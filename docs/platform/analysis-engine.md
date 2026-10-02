@@ -176,8 +176,10 @@ boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted
 analyst/research/trader/debate sections, not raw messages or hidden reasoning.
 
-Web retries currently restart the graph unless its final publication already
-committed. The CLI's ticker/date checkpoint is deliberately not reused across
+Preparation failures may retry before entering the engine. Uncertain execution
+or expired leases with execution evidence require review rather than blind graph
+restart. An already committed report/decision pair may retry storage-only
+finalization without a model call. The CLI's ticker/date checkpoint is deliberately not reused across
 owner-scoped web runs. Mid-graph web resume requires separately fenced,
 run/config/source-bound checkpoints; it is not an existing capability.
 

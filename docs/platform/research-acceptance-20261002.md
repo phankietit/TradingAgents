@@ -95,3 +95,30 @@ Web refresh on the same runtime source: **PASS**, `npm run typecheck`,
 Node 26.8.1/npm 11.19.0. No rendered UI source changed in this backend slice;
 the earlier 1a01f21 browser proof is retained with its original synthetic scope,
 not relabeled as new live/browser acceptance.
+
+## R08 explicit snapshot-run allowance contract
+
+Source: `648fa183ee90eed1e353b3e06cbcc2c249aebb82`, clean through regression.
+API requests may opt into strict immutable `execution_limits` (`wall_seconds`
+60–7200, `model_calls` 1–128). Defaults remain 1800/128. Explicit selection
+requires snapshot inputs and binds to run manifest/config hash/job payload;
+the worker verifies payload identity and uses the selected observer allowance.
+Legacy omission stays `None` and preserves the original job payload/hash, with
+no historical rewrite. Authenticated configuration disclosure now includes
+defaults and `deadline_mode=cooperative_boundaries`; no vendor probe or key leak.
+
+| Gate | Result | Exact source evidence |
+| --- | --- | --- |
+| Focused contract/API/worker | PASS | 44 tests, 5.12 s: strict ranges/types, idempotent reuse, changed allowance conflict/hash, immutable repository inputs, no legacy rewrite, real worker/handler observer and saved report limits |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,619 tests + 88 subtests, 20 skips, 22 warnings, 59.09 s; Python 3.14.7 |
+| Ruff/diff | PASS | `.venv/bin/ruff check .`, `git diff --check` |
+| Web regression/type/lint/build | PASS | 134 tests/22 files, 6.57 s, `npm run typecheck`, `npm run lint`, `npm test`, `npm run build`; Node 26.8.1/npm 11.19.0 |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, missing optional Bedrock dependency and live DeepSeek key skips |
+| UI allowance / request deadline / graph resume | UNVERIFIED | Not implemented by this API binding slice; SDK timeout/retry unchanged and in-flight requests can still overrun |
+| Live finance/translation | UNVERIFIED | No new paid/vendor call; earlier manual failures stay unresolved |
+| NQ=F | BLOCKED | Owner retains contract/roll-source hold; no new provider |
+
+Explicit 3600-second fixture selection is local proof, not approval to spend on
+a live 60-minute BTC run. That separate permission remains pending. All graph
+roles, source/risk/approval gates and CLI defaults are preserved. Goal remains
+active and Draft PR #7 is not eligible for release/merge approval.

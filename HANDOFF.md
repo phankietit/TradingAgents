@@ -2,7 +2,15 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
-**Mới nhất 2026-10-02:** runtime source
+**Checkpoint allowance mới 2026-10-02:** source
+`648fa183ee90eed1e353b3e06cbcc2c249aebb82` đã bind allowance rõ ràng cho API
+snapshot run → manifest/config hash/job → worker observer. Mặc định 1800s/128
+calls giữ nguyên; omission legacy không đổi hash/payload cũ. Full Python
+**1.619 + 88 subtests PASS**, 20 skips, 59,09 s; Web 134, type/lint/build PASS.
+Mode vẫn `cooperative_boundaries`, không phải ngắt cứng request. UI lựa chọn,
+deadline transport và graph resume chưa có; chưa chạy paid BTC/AAPL mới.
+
+**Checkpoint replay fencing trước, 2026-10-02:** runtime source
 `93e797576b9179e088f6ff809761bddd34cc3df6` ghi dấu mốc trước engine và chặn
 replay toàn-run sau lỗi execution/lease không rõ chi phí. Giữ retry hoàn tất
 report/decision đã commit mà không gọi model; nếu outputs không còn đọc được,
@@ -117,7 +125,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `93e797576b9179e088f6ff809761bddd34cc3df6`.
+- Code đã full-test gần nhất: `648fa183ee90eed1e353b3e06cbcc2c249aebb82`.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
@@ -189,7 +197,8 @@ trước khi coi một mã là nghiệm thu cho yêu cầu NQ. Không tự thay 
 ## Công việc tiếp theo có thứ tự
 
 1. R08 đã lưu reader text riêng tư bằng publication fence; chưa phải resume.
-   UI đọc bản nháp đã có synthetic proof; hoàn thiện allowance/timeout và durable graph recovery trước
+   UI đọc bản nháp đã có synthetic proof; allowance đã bind ở API. Hoàn thiện
+   lựa chọn allowance trên UI, request deadline và durable graph recovery trước
    paid acceptance mới; giữ tất cả analyst/debate/risk/validation/presentation,
    không tự nâng budget hoặc biến partial report thành decision. Kiểm tra bằng
    local fixtures trước. BTC mới cần duyệt; AAPL đã được duyệt nhưng chưa chạy.
