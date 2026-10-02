@@ -54,6 +54,7 @@ def _usage(payload, limits):
             or value["started_model_calls"] > limits.model_calls
             or value["failed_calls"] + value["calls_with_usage"] > value["model_calls"]
             or value["input_tokens"] + value["output_tokens"] != value["total_tokens"]
+            or (value["calls_with_usage"] == 0 and value["total_tokens"] != 0)
             or value["model_call_scope"] != "logical_langchain_invocations"
             or value["provider_request_attempts"] is not None or value["cost"] is not None
             or value["cost_status"] != "not_reported_by_provider"):
@@ -115,13 +116,19 @@ def load_accounting_evidence(*, session, owner_id, run_id):
                 previous = latest.get(attempt)
                 if previous and (elapsed < previous[1] or any(value[key] < previous[0][key] for key in COUNTERS)):
                     raise ValueError()
+                if previous and value["calls_with_usage"] == previous[0]["calls_with_usage"] and any(
+                        value[key] != previous[0][key] for key in ("input_tokens", "output_tokens", "total_tokens")):
+                    raise ValueError()
                 latest[attempt] = (value, elapsed)
         attempts = tuple(sorted(seen_attempts))
         if legacy or not attempts or set(latest) != seen_attempts:
             return AccountingEvidence("UNVERIFIED", high, attempts)
         totals = {key: sum(value[key] for value, _ in latest.values()) for key in COUNTERS}
+        elapsed_total = sum(elapsed for _, elapsed in latest.values())
+        if not math.isfinite(elapsed_total):
+            raise ValueError()
         return AccountingEvidence("PASS", high, attempts, totals["started_model_calls"], totals["model_calls"],
             totals["started_model_calls"] - totals["calls_with_usage"], totals["input_tokens"],
-            totals["output_tokens"], totals["total_tokens"], sum(elapsed for _, elapsed in latest.values()))
+            totals["output_tokens"], totals["total_tokens"], elapsed_total)
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError, SQLAlchemyError):
         raise AccountingEvidenceError("accounting evidence requires review") from None

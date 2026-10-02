@@ -584,7 +584,9 @@ An internal read-only accounting reader now validates an owner-scoped bounded
 event prefix, takes the latest cumulative counters per attempt, and aggregates
 reported tokens/reservations without double-counting earlier receipts. Missing
 or legacy attempt evidence yields unavailable totals, not zero usage. Invalid
-limits, counters, sequence gaps and unknown fields fail closed. Its high-water
+limits, counters, sequence gaps and unknown fields fail closed.
+Token growth without an additional usage-bearing completion and nonfinite
+aggregate elapsed also fail closed. Its high-water
 sequence is an observation, not a transaction fence; elapsed stays a lower bound.
 The reader is not wired to browser consent, worker continuation or budget
 admission and cannot authorize resume or infer actual provider cost.

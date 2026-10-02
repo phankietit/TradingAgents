@@ -135,3 +135,34 @@ def test_full_prefix_pagination_and_no_double_count(tmp_path):
             assert result.high_water_sequence == 504 and result.reported_total_tokens == 15
     finally:
         database.dispose()
+
+
+@pytest.mark.parametrize("kind", ["tokens_without_usage", "tokens_without_new_usage", "elapsed_overflow"])
+def test_impossible_accounting_totals_reject_without_mutation(tmp_path, kind):
+    database, owner, run = _database(tmp_path)
+    try:
+        payloads = receipt()
+        if kind == "tokens_without_usage":
+            payloads = payloads[:1]
+            payloads[0]["usage"].update(input_tokens=10, output_tokens=5, total_tokens=15)
+        elif kind == "tokens_without_new_usage":
+            extra = deepcopy(payloads[-1])
+            extra["usage"].update(input_tokens=20, output_tokens=10, total_tokens=30)
+            payloads.append(extra)
+        else:
+            for payload in payloads:
+                payload["elapsed_seconds"] = 1e308
+        with database.session() as session:
+            append(session, owner, run, 1, payloads)
+            if kind == "elapsed_overflow":
+                append(session, owner, run, 2, payloads)
+        with database.session() as session:
+            before = [(row.sequence, deepcopy(row.payload)) for row in session.scalars(
+                select(RunEventRow).order_by(RunEventRow.sequence)).all()]
+            with pytest.raises(AccountingEvidenceError, match="^accounting evidence requires review$"):
+                load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+            after = [(row.sequence, row.payload) for row in session.scalars(
+                select(RunEventRow).order_by(RunEventRow.sequence)).all()]
+            assert before == after
+    finally:
+        database.dispose()

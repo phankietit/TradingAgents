@@ -80,6 +80,9 @@ fixed high-water prefix, paging 500 rows at a time and rejecting a prefix over
 execution markers/attempt identity, exact immutable limits, strict logical
 counter/status/token semantics and monotonic cumulative counters/elapsed within
 each attempt. Latest counters per attempt are summed, never every receipt.
+Token totals must be zero without a usage-bearing completion and cannot change
+without an additional usage-bearing completion. Aggregate elapsed must remain
+finite; finite per-attempt values do not alone prove a valid aggregate.
 Malformed evidence produces fixed errors without raw event/DB content; missing
 or legacy evidence withholds all totals instead of inventing zero cost.
 
