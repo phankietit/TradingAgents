@@ -116,8 +116,8 @@ class ResearchCheckpointRow(Base):
 
     __tablename__ = "research_checkpoints"
     __table_args__ = (
-        UniqueConstraint("run_id", "sequence"),
-        UniqueConstraint("run_id", "content_hash"),
+        UniqueConstraint("run_id", "sequence", name="uq_research_checkpoints_run_sequence"),
+        UniqueConstraint("run_id", "content_hash", name="uq_research_checkpoints_run_content_hash"),
         Index("ix_research_checkpoints_owner_run", "owner_id", "run_id", "sequence"),
     )
 

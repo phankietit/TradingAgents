@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from copy import deepcopy
@@ -56,10 +57,25 @@ def history(database):
 
 @pytest.fixture
 def prepared(tmp_path, request):
+    mode = getattr(request, "param", False)
+    postgres = mode in ("postgres_failed", "postgres_cancelled")
+    url = os.getenv("TEST_POSTGRES_URL") if postgres else f"sqlite:///{tmp_path / 'consent.db'}"
+    if not url:
+        pytest.skip("TEST_POSTGRES_URL is required for the PostgreSQL integration gate")
+    fixture = _prepared(url, cancelled=mode is True or mode == "postgres_cancelled")
+    try:
+        yield from fixture
+    finally:
+        fixture.close()
+        if postgres:
+            # Explicit disposable integration database only, never private state.
+            downgrade_database(url)
+
+
+def _prepared(url, *, cancelled):
     args = inputs()
     run, owner = args["run"], args["owner_id"]
     now = run.created_at
-    url = f"sqlite:///{tmp_path / 'consent.db'}"
     upgrade_database(url)
     database = Database(url)
     worker = JobWorker(database, worker_id="fixture-worker", handlers={}, clock=lambda: now)
@@ -94,7 +110,7 @@ def prepared(tmp_path, request):
         append(session, owner, run, job.attempt, payloads)
     with database.session() as session:
         queue = DurableJobQueue(session)
-        if getattr(request, "param", False):
+        if cancelled:
             queue.request_cancel(job.job_id, owner_id=owner, now=now + timedelta(seconds=10))
             job = queue.complete(job.job_id, "fixture-worker", now=now + timedelta(seconds=10))
         else:
@@ -107,17 +123,21 @@ def prepared(tmp_path, request):
         observed = store.observe(session=session, owner_id=owner, run_id=run.run_id)
     values = {"session_token": issued.token, "csrf_token": issued.csrf_token,
         "expected_observation": observed, "idempotency_key": uuid4(), "confirm_continue": True}
-    yield database, store, values, clock
-    database.dispose()
+    try:
+        yield database, store, values, clock
+    finally:
+        database.dispose()
 
 
-@pytest.mark.parametrize("prepared", [False, True], indirect=True)
+@pytest.mark.parametrize("prepared", [False, True,
+    pytest.param("postgres_failed", marks=pytest.mark.integration),
+    pytest.param("postgres_cancelled", marks=pytest.mark.integration)], indirect=True)
 def test_durable_idempotent_private_link_preserves_all_original_history(prepared):
     database, store, values, _ = prepared
     before = history(database)
     first = store.record(**values)
     assert store.record(**values) == first
-    reopened = Database(str(database.engine.url))
+    reopened = Database(database.engine.url.render_as_string(hide_password=False))
     try:
         same = ContinuationConsentStore(reopened, codec=store.codec, clock=store.clock).record(**values)
         assert same == first
@@ -228,6 +248,8 @@ def test_auth_staleness_identity_uncertainty_and_input_refuse_without_history_mu
 
 
 @pytest.mark.parametrize("same_key", [False, True])
+@pytest.mark.parametrize("prepared", [False,
+    pytest.param("postgres_failed", marks=pytest.mark.integration)], indirect=True)
 def test_concurrent_requests_reserve_one_link_not_two_executions(prepared, same_key):
     database, store, values, _ = prepared
     barrier = Barrier(2)

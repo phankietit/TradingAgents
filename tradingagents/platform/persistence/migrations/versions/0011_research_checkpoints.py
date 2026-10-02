@@ -26,8 +26,8 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["run_id"], ["analysis_runs.run_id"]),
         sa.ForeignKeyConstraint(["job_id"], ["analysis_jobs.job_id"]),
         sa.PrimaryKeyConstraint("record_id"),
-        sa.UniqueConstraint("run_id", "sequence"),
-        sa.UniqueConstraint("run_id", "content_hash"),
+        sa.UniqueConstraint("run_id", "sequence", name="uq_research_checkpoints_run_sequence"),
+        sa.UniqueConstraint("run_id", "content_hash", name="uq_research_checkpoints_run_content_hash"),
     )
     op.create_index("ix_research_checkpoints_owner_run", "research_checkpoints",
                     ["owner_id", "run_id", "sequence"])

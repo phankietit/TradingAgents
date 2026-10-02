@@ -210,7 +210,9 @@ This trusted internal read alone is not an authenticated dispatch grant.
 session with CSRF using owner-then-session locks, derives owner from that session,
 requires literal confirmation and reloads the full expected observation under
 job-then-run locks. SQLite uses BEGIN IMMEDIATE before reads; PostgreSQL uses
-row locks/timeouts, but live PostgreSQL and race acceptance remain unverified.
+row locks/timeouts. Disposable PostgreSQL stopped-run/idempotency and two-writer
+fixtures are included; their execution receipts, not their presence, determine
+acceptance. Private runtime rollout and broader crash/race coverage remain open.
 Canonical JSON comparisons retain bool/int/float distinctions rather than rely
 on Python equality. Auth failure, stale evidence or failed/uncertain commit
 returns one fixed diagnostic; no reservation ACK precedes commit.
@@ -222,7 +224,8 @@ unknown provider cost disclosure and nonapproval status; raw source/error prose,
 session/CSRF credentials and owner email are not copied. Repeated identical
 requests return the same execution ID; competing different keys cannot reserve
 the same observation twice. Existing research rows and terminal errors remain
-unchanged. Only disposable SQLite migration/up-down tests have applied it.
+unchanged. Migrations and integration fixtures target disposable test databases
+only; they never migrate private runtime state automatically.
 
 This records authenticated owner intent, NOT actual browser disclosure proof,
 trusted effective-client/source reconstruction or permission to execute a model.
@@ -235,6 +238,13 @@ Remaining budget must include every linked attempt; never interpret this table
 as a fresh run, reset consent/budget, or replay history without checkpoints.
 An execution ID is not a bearer credential. Broader stopped/crash/transport,
 operational UI and live financial/editorial acceptance remain required.
+
+API integration must not nest `record` inside an outer authentication transaction
+that already holds the same session/owner write locks (for example a dependency
+updating session last_seen_at). Authentication and consent writes must share this
+single transaction, while cookie/header consistency and Origin checks remain
+mandatory at the request boundary. A nested transaction on another connection
+can self-block; silently removing those checks is not an acceptable workaround.
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,

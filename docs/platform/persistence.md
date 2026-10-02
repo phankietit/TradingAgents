@@ -36,9 +36,18 @@ Milestone 1 tickets.
 recovery/consent tables, separate from readable reports and historical jobs.
 The latter records authenticated owner intent bound to an immutable latest
 checkpoint/accounting observation; it does not enqueue or authorize a model.
-Only disposable SQLite migration and concurrency tests have applied these
-additions. PostgreSQL recovery/races and private runtime migration are not
-verified by that evidence. Follow backup/restore and explicit owner rollout
+Migration `0011` now uses distinct explicit names for its two checkpoint unique
+constraints, matching the model. The first draft's first-column naming convention
+gave both the same name: PostgreSQL rejected the DDL, whereas SQLite accepted it.
+This corrects draft DDL for a fresh database; it does not rename constraints or
+rewrite records in an already migrated private SQLite database. Do not drop or
+recreate that database to obtain cosmetic naming parity. An existing deployment
+needs a separately reviewed additive migration/backup plan before rollout.
+
+Disposable SQLite and PostgreSQL migration/concurrency fixtures cover these
+additions. See exact-SHA acceptance receipts for executed results; test presence
+does not prove PostgreSQL recovery or private runtime readiness. Follow
+backup/restore and explicit owner rollout
 before changing a private database; never downgrade/delete its checkpoint or
 consent history as an automatic recovery action. See
 [the recovery contract](research-recovery-contract.md) for activation gates.
