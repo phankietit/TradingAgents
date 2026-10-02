@@ -463,6 +463,12 @@ calls. Full fingerprint construction, owner/lease-fenced durable storage and
 explicit continuation consent remain unfinished; a caller-supplied digest alone
 is not recovery authorization. See the
 [recovery implementation contract](docs/platform/research-recovery-contract.md).
+An internal recovery-fingerprint builder now validates original run/request and
+snapshot identities, hashes verified source manifests, full portfolio/policy
+content, effective graph configuration/options, supplied resolved-client bindings,
+package source bytes and installed dependency versions. It returns only a digest;
+it does not authenticate the caller, attest supplied SDK bindings, save a
+checkpoint or authorize paid continuation. Worker integration remains unfinished.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

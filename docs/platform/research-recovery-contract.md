@@ -49,6 +49,39 @@ including pending writes, rather than assume checkpoint callbacks are synchronou
 
 ## Verified prerequisite
 
+### Fingerprint construction prerequisite
+
+`recovery_fingerprint.py` now constructs a separate versioned digest without
+changing API config_hash or stored history. It revalidates nested run/request/
+snapshot models, exact owner/run/instrument/as-of/ordered-role identities,
+freshness limits and source IDs; existing snapshot reports recheck payload
+hashes and point-in-time eligibility. All source manifests, risk-source hashes,
+full portfolio/policy content (not just their labels), rendered book, language,
+original allowance, effective graph config/options and analyst plan bind.
+
+It hashes actual package Python source bytes, Python version and all installed
+distribution versions, so uncommitted code/dependency changes invalidate
+recovery. Filesystem output/cache/memory paths are omitted for relocation;
+snapshot mode does not consume CLI memory. Unknown configuration keys and
+credential-bearing URL/config fields fail closed; no SDK/network call occurs,
+and only a digest is returned. Source symlinks outside the package are rejected.
+
+ResolvedClientBinding is mandatory and has no default for effective non-secret
+SDK options hashes. The future trusted worker must derive/attest endpoint,
+client implementation and these hashes from actual initialized client settings;
+the current builder does not verify this supplied descriptor. It also cannot
+authenticate owner_id, attest owner-readable DB/artifact loading, compare every
+rendered position to DB instrument mappings, replay all risk-series semantics,
+grant consent or validate a lease. These remain existing/future worker obligations.
+Do not expose the builder as a browser-controlled recovery authority. Hash
+equality is not a signature or an authorization to spend/publish.
+
+Full package/dependency invalidation is conservative: a new machine must restore
+the compatible runtime, not silently waive mismatches. Missing versus flat book
+remains distinct; an exhausted run's limits cannot be changed by hashing a new
+value. An authorized continuation needs the separately governed linked execution
+identity and retained accounting required below. No resume endpoint is enabled.
+
 Source `60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a` characterizes the native graph
 with synthetic models. Seventeen interruption boundaries cover all four analyst
 and message-clear nodes, researchers/managers/trader/risk nodes and financial
