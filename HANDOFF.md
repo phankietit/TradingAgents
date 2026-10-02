@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Native callback accounting/admission 2026-10-03:** source
+`c5e6314f6593a86fd5727747928b1deb217e94f3` bổ sung fixture chạy invoke và
+callback lifecycle LangChain thật, chỉ fake generation/schema binding. Không
+manually inject callbacks; parent logical starts/completions và synthetic
+10/5/15 token counters khớp SDK baseline cho EN/VI/bilingual/invalid VI. Budget
+fixture một call chặn call tiếp theo, giữ usage/event/checkpoints đầu tiên;
+không thay product risk/allowance. 26 focused PASS, 45,88 s; full **2.231 + 88
+subtests PASS**, 20 skips, 156 warnings, 230,77 s trên source sạch; Ruff/diff/
+templates PASS. Ruff import-only đã sửa trước commit, không behavioral FAIL.
+Synthetic reported usage không là vendor/billing proof; durable cross-attempt
+ledger, elapsed/unknown usage, consent/restore/transport vẫn UNVERIFIED. Default
+worker recorder/resume chưa bật; ingestion/UX/live finance/MT còn mở. Không AI/
+vendor/CI/deploy/restart/migrate DB riêng tư; NQ=F BLOCKED theo owner, goal/PR mở.
+
 **Actual recorder native spawn 2026-10-03:** source
 `5195f554fc512cabff1752d9dffea07578c7a527` kiểm chứng exact production child,
 AnalysisEngine, SnapshotRecorder và native graph trong process spawn thật.

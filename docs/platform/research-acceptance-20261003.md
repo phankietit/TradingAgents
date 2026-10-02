@@ -403,3 +403,28 @@ This closes the synthetic actual-engine/native-spawn recording acceptance,
 not live billing, financial quality, consent or production recovery. Default
 worker recorder/resume remains disabled. Full R01–R14 ingestion, operational
 UX and live requirements remain intact; goal and Draft PR #7 stay open.
+
+## Native callback accounting and admission follow-up
+
+Source `c5e6314f6593a86fd5727747928b1deb217e94f3`, same branch/worktree,
+clean during full regression; Python 3.14.7, Darwin 25.5.0. Test/contract changes
+only. No paid/vendor call, private DB migration/restart, CI, provider/risk change,
+historical rewrite, merge or deployment; default worker remains unchanged.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Actual callback lifecycle | PASS | NormalizedChatOpenAI invoke and LangChain start/end remain actual; only _generate and schema binding are synthetic. No manual observer/bridge callbacks. Logical starts/completions and token counters match actual-SDK uninterrupted baseline for EN/VI/bilingual/invalid VI, all four roles and two rounds |
+| Synthetic usage/authority | PASS | Each synthetic reply provides 10 input/5 output/15 total tokens; exact totals equal trace call counts. Parent original start/1800/128 allowance unchanged, cost and hidden provider request attempts stay None. This is not vendor-reported or billing evidence |
+| Exhausted admission | PASS | Separate one-call original fixture allowance stops next admission with ResearchBudgetExceeded. One logical start/completion, first 15-token event and parent-owned strict checkpoint bytes retained. No failed provider call invented for denied admission; original fixture history unchanged |
+| Native equivalence/persistence | PASS | Existing full published-result, prompt/stage trace, restricted SQLite reopen, child SDK cleanup/reaping and invalid-translation assertions also run in callback-enabled completion mode |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_native_recorder_spawn.py tests/test_native_analysis_recording.py tests/test_analysis_recording.py tests/test_supervised_native_graph.py -k 'exact_engine or actual_recorder or original_engine or all_fourteen' --disable-warnings -x`: 26 passed, 355 deselected, 76 warnings, 45.88 s. Earlier 8-pass run preceded exhausted cases; import-only Ruff formatting corrected before commit, no behavioral pytest failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,231 passed + 88 subtests, 20 skipped, 156 warnings, 230.77 s, exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Durable accounting / recovery | UNVERIFIED | No cross-attempt ledger or elapsed/unknown interrupted-usage retention, owner continuation consent/API/UI, restore or complete transport attestation enabled. Successful synthetic callback counters do not establish these gates |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No new live report; 18 PostgreSQL plus optional Bedrock and live DeepSeek-key skips unchanged. Financial/editorial acceptance remains incomplete |
+| NQ=F | BLOCKED | Owner-selected contract/roll-source hold unchanged |
+
+Next: durable original allowance and execution accounting/consent, then new-child
+restore while preserving execution_started/no-blind-replay and immutable history.
+Full R01–R14 ingestion/operational UX/live acceptance remains required; goal and
+Draft PR stay open. No synthetic token count may be published as actual cost.
