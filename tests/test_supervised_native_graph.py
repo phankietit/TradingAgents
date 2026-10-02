@@ -36,6 +36,7 @@ class NativeFixtureEngine:
     def __init__(self, *, base_config=None):
         self.config = base_config
         self.model_trace = []
+        self.trace_sink = None  # Fixture-only prefix evidence when a child is terminated.
         self.resume_evidence = None
         self.encoded_checkpoints = []
         self.checkpoint_commit = None
@@ -59,6 +60,8 @@ class NativeFixtureEngine:
             content = prompt if isinstance(prompt, str) else [
                 item.content if hasattr(item, "content") else item for item in prompt]
             self.model_trace.append((kind, content))
+            if self.trace_sink is not None:
+                self.trace_sink(self.model_trace)
 
         def resume_without_messages(graph, *args, **kwargs):
             codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=graph.workflow.nodes)

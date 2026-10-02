@@ -454,6 +454,15 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+Local stopped-attempt fixtures now lose an ACK after the first returned market
+report's pending writes are durably committed. The supervisor actually stops
+and reaps that child; a new original child restores the latest validated tuple
+using the retained observer. Prefix plus continuation prompt/model trace and
+final published fields match uninterrupted EN/VI/bilingual/invalid-translation
+fixtures, without repeating the completed model call or rewriting old rows.
+Killed SDK cleanup remains unknown; this is not abrupt-parent-crash recovery,
+authenticated consent, linked execution or live financial acceptance.
+
 The internal supervisor can optionally transfer restricted checkpoint bytes to
 a new spawned original engine/recorder after parent thread/fingerprint/context
 validation and revalidation before spawn. The child independently checks its

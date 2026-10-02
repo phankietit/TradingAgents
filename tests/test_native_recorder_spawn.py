@@ -26,11 +26,15 @@ from tradingagents.platform.analysis.allowance import (
     load_remaining_allowance,
 )
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
-from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
+from tradingagents.platform.analysis.checkpoint_store import (
+    CheckpointDatabaseError,
+    PrivateCheckpointStore,
+)
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
 from tradingagents.platform.analysis.observer import (
     STAGES,
     ResearchBudgetExceeded,
+    ResearchExecutionFailed,
     ResearchObserver,
 )
 from tradingagents.platform.analysis.recording import SnapshotRecorder
@@ -57,6 +61,10 @@ def fixture_child(connection, base_config, request_data, engine_factory, checkpo
     request = AnalysisRequest.model_validate(request_data)
     fixture = NativeFixtureEngine(base_config={**base_config, "_fixture_invalid_translation": invalid,
                                               "_fixture_callbacks": callbacks})
+    # Test-owned synthetic prompts only, outside Git. Prefix survives a real
+    # supervisor termination; unknown SDK cleanup must not be called closed.
+    fixture.trace_sink = lambda trace: Path(base_config["results_dir"] + ".fixture-trace.json").write_text(
+        json.dumps({"pid": os.getpid(), "trace": trace, "closed_clients": None}), encoding="utf-8")
     # Enable reviewed actual SDK construction in the reusable fixture. This
     # sentinel is never used by production child, which builds its own recorder.
     fixture.snapshot_recorder = SnapshotRecorder(owner_id=inputs.owner_id, run=inputs.run,
@@ -99,7 +107,7 @@ def restored_callback_fixture_child(connection, base_config, request_data, engin
 
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
-@pytest.mark.parametrize("callbacks", [False, True, "exhausted"])
+@pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped"])
 def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks):
     def forbidden(*args, **kwargs):
         raise AssertionError("parent fixture attempted provider/network invocation")
@@ -108,6 +116,7 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
     monkeypatch.setattr(httpx.Client, "send", forbidden)
     monkeypatch.setattr(httpx.AsyncClient, "send", forbidden)
     exhausted = callbacks == "exhausted"
+    stopped_attempt = callbacks == "stopped"
     child = ({False: fixture_child, True: invalid_fixture_child} if not callbacks else
              {False: callback_fixture_child, True: invalid_callback_fixture_child})[invalid and not exhausted]
     monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", child)
@@ -163,10 +172,17 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
         codec = SnapshotCheckpointCodec(fingerprint=fingerprint, nodes=graph.workflow.nodes)
         store = PrivateCheckpointStore(codec=codec)
         commit_pids = []
+        ack_lost = False
 
         def commit(raw):
+            nonlocal ack_lost
             commit_pids.append(os.getpid())
-            return store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=raw)
+            receipt = store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=raw)
+            if (stopped_attempt and not ack_lost and any(channel == "market_report" and value
+                    for _, channel, value in codec.decode(raw).pending_writes)):
+                ack_lost = True
+                raise CheckpointDatabaseError("fixture committed but acknowledgement lost")
+            return receipt
 
         recording = SnapshotRecordingInputs.create(owner_id=owner, run=run, expected_fingerprint=fingerprint)
         with job_context.publication_session() as session:
@@ -176,6 +192,69 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
         supervised = SupervisedAnalysisEngine(base_config=config, recording_inputs=recording,
             checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
             checkpoint_commit=commit)
+        if stopped_attempt:
+            with pytest.raises(ResearchExecutionFailed, match="^checkpoint commit requires review$"):
+                supervised.analyze(request)
+            assert ack_lost
+            prefix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
+            assert prefix["closed_clients"] is None  # Killed SDK cleanup is unknown.
+            assert prefix["pid"] != os.getpid()
+            with pytest.raises(ProcessLookupError):
+                os.kill(prefix["pid"], 0)
+            assert observer.started_calls == len(prefix["trace"]) == 1
+            assert observer.receipt()["usage"]["total_tokens"] == 15
+            with database.session() as session:
+                rows = session.scalars(select(ResearchCheckpointRow).order_by(ResearchCheckpointRow.sequence)).all()
+                saved = store.load_latest(session=session, owner_id=owner, run_id=run.run_id)
+                assert saved.pending_writes and any(channel == "market_report" for _, channel, _ in saved.pending_writes)
+                raw = rows[-1].payload
+                prior_rows = [(row.record_id, row.content_hash, row.payload) for row in rows]
+                evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert evidence.started_calls == 1 and evidence.elapsed_upper_bound is not None
+                retained = build_retained_observer(session=session, owner_id=owner, run_id=run.run_id,
+                    expected_accounting=evidence, check_cancelled=job_context.raise_if_cancelled, emit=emit)
+            baseline = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid,
+                                                       "_fixture_callbacks": True})
+            baseline.snapshot_recorder = SnapshotRecorder(owner_id=owner, run=run,
+                expected_fingerprint=fingerprint, commit=lambda raw: None)
+            baseline_request = request.model_copy(update={"execution_observer": ResearchObserver(
+                check_cancelled=lambda: None, emit=lambda *args: None)})
+            expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
+                AnalysisEngine(base_config=options).analyze(baseline_request))
+            event_attempt = 2
+            with job_context.publication_session() as session:
+                RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                    event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW, payload={"attempt": 2})
+            monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", restored_callback_fixture_child)
+            recovery = SupervisedAnalysisEngine(base_config={**config, "_fixture_restore_invalid": invalid},
+                recording_inputs=recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
+                checkpoint_commit=commit, restore_checkpoint=raw)
+            result = recovery.analyze(request.model_copy(update={"execution_observer": retained}))
+            suffix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
+            assert suffix["pid"] != prefix["pid"] and suffix["closed_clients"] == 2
+            with pytest.raises(ProcessLookupError):
+                os.kill(suffix["pid"], 0)
+            assert prefix["trace"] + suffix["trace"] == json.loads(json.dumps(baseline.model_trace))
+            expected_data = expected.model_dump()
+            expected_data["final_state"] = {key: value for key, value in expected_data["final_state"].items()
+                                            if key in RESULT_FIELDS}
+            for key in ("investment_debate_state", "risk_debate_state"):
+                expected_data["final_state"][key] = {"history": expected_data["final_state"][key].get("history", "")}
+            assert result.model_dump() == expected_data
+            assert retained._retained_started_calls == 1 and retained.max_calls == 128
+            assert retained._retained_elapsed_seconds == evidence.elapsed_upper_bound
+            with database.session() as session:
+                after = session.scalars(select(ResearchCheckpointRow).order_by(ResearchCheckpointRow.sequence)).all()
+                assert [(row.record_id, row.content_hash, row.payload) for row in after[:len(rows)]] == prior_rows
+                aggregate = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert aggregate.attempts == (1, 2)
+                assert aggregate.started_calls == len(baseline.model_trace)
+                assert aggregate.reported_total_tokens == len(baseline.model_trace) * 15
+                assert aggregate.elapsed_upper_bound >= evidence.elapsed_upper_bound
+                assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
+            assert list((tmp_path / "results").iterdir()) == []
+            assert set(commit_pids) == {os.getpid()}
+            return
         if exhausted:
             with pytest.raises(ResearchBudgetExceeded, match="research model-call budget exhausted"):
                 supervised.analyze(request)

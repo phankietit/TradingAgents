@@ -528,6 +528,19 @@ not select it; no resume, consent/accounting route or paid replay is enabled.
 
 ## Required acceptance before enablement
 
+Stopped-attempt fixtures now persist the first nonempty market report's native
+pending writes, then deliberately lose ACK. The actual original supervisor
+terminates/reaps that child and emits its bounded local stop accounting. A new
+original child restores the latest tuple after store hash/fingerprint/owner
+validation; the retained parent observer debits prior calls/time. Test-only
+synthetic prefix evidence survives termination, with killed SDK cleanup marked
+unknown rather than closed. Prefix plus continuation traces and published fields
+equal uninterrupted EN/VI/bilingual/invalid-translation fixtures; old rows and
+original fixture run are unchanged, both child PIDs absent, token totals sum
+exactly once. This covers one completed-pending-write/lost-ACK boundary, not all
+stages, abrupt parent crash, stale concurrent writer exclusion, transactional
+consent/linked execution or production enablement. No default/API activation.
+
 The supervisor has an internal opt-in restricted-byte restore transfer alongside
 the required exact original recording context/engine. Parent validates codec
 and thread before construction and before spawn, then the original child
