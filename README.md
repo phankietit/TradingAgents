@@ -654,7 +654,9 @@ research execution identity after locked owner-session/CSRF authentication,
 explicit confirmation and transactional reloading of the latest checkpoint,
 original terminal job/run and complete accounting prefix. Unknown/exhausted
 allowance, changed evidence, duplicate reservations and corrupt receipts fail
-closed. SQLite tests serialize writers; PostgreSQL locking remains unverified.
+closed. Disposable SQLite and PostgreSQL stopped-run/idempotency and writer-race
+fixtures are covered by dated exact-source receipts; these are not browser consent
+or private-runtime rollout evidence.
 Migration `0012_research_continuations` is additive and has only been applied
 to disposable tests. No old run/job/error/checkpoint is changed, no token/email
 is copied into the consent record and no model is invoked. This is NOT an API
@@ -663,6 +665,21 @@ approval. The separate linked worker/dispatch/consumption and browser journey
 still need implementation and verification; an execution ID is not a bearer
 permission or a fresh budget. Do not apply migrations to private history
 without the documented backup/owner rollout procedure.
+
+The internal linked-execution store additionally allocates that consent identity
+once into a separate private `0013_research_executions` lease record, not a new
+run or a default worker job. It rechecks authenticated owner/CSRF and the full
+original checkpoint/accounting observation before allocation and claim. One
+worker receives a hashed-token fence after commit; competing/expired/lost-ACK
+claims cannot reset the attempt. Renewal retains its original claim-time deadline
+minus all previously observed elapsed time. Cancellation of an unclaimed
+allocation is terminal; cancellation of a leased allocation stays requested
+until supervised termination is actually established. Expiration requires review,
+never automatic requeue or an invented zero-cost stop. No new research event,
+checkpoint, report, decision or model call is produced by these methods.
+Default API/worker/CLI do not consume this table. Linked publication/accounting,
+terminal-original-context loading, full multi-continuation history and actual
+supervised graph execution remain required before activation.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

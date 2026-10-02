@@ -246,6 +246,54 @@ single transaction, while cookie/header consistency and Origin checks remain
 mandatory at the request boundary. A nested transaction on another connection
 can self-block; silently removing those checks is not an acceptable workaround.
 
+### Separate allocation / lease consumption prerequisite
+
+`LinkedExecutionStore.allocate` authenticates the current owner/session/CSRF,
+rechecks the complete immutable consent/source/checkpoint/accounting observation
+in one bounded-lock transaction and creates at most one independent allocation
+using that consent execution UUID. Same requests return the same allocation.
+Migration `0013_research_executions` retains original owner/run/job and observation
+hash, with unique original-run/next-attempt identity. The original JobRow unique
+run ID, terminal manifest/error, events and checkpoint rows are untouched.
+
+Trusted internal `claim` rechecks the observation again and can change only a
+reserved allocation to leased. One worker receives a private UUID token after
+commit; only its hash is persisted. A lost post-commit ACK cannot retrieve or
+replace that lease. The claim-time deadline subtracts prior known elapsed upper
+bound from the unchanged original wall allowance. Renewal is bounded to that
+fixed deadline, never a fresh budget; the stored deadline must still match the
+original observation even if a caller presents a matching corrupted handle.
+Worker/token/owner/source identity, clock rollback, expiry, cancellation and
+inactive-owner checks refuse renewal with fixed non-content diagnostics.
+
+Request locks use owner/session, original job/run, then execution order. SQLite
+uses BEGIN IMMEDIATE; PostgreSQL uses existing transaction-local statement/
+lock timeouts. These are per-operation limits, not a hard network/pool/total-I/O
+deadline. Claims never change the original job lease. Trusted expiry maintenance
+may mark an expired lease review_required even after owner disablement; it does
+not requeue, finalize, claim the worker was stopped or refund unknown usage.
+Authenticated cancellation marks an unclaimed allocation cancelled, but a
+leased allocation cancel_requested, preserving its lease/deadline evidence.
+
+This is an internal allocation/lease fence, NOT a queued default worker job,
+publication context, bearer API permission or model-admission grant. Consent
+dispatch_enabled remains false. No RESEARCH_EXECUTION_STARTED event is emitted
+by claim, and the existing accounting reader therefore still observes only the
+original actually recorded attempts. An allocated/expired lease must not be
+treated as zero-cost provider execution or silently omitted when later adding
+real model entry/accounting. Sequential multi-continuation consumption is not
+implemented by relabeling the original job attempt; future linked stop/events/
+checkpoint provenance must be established first. No successful result or stop
+ACK path is invented here. Default worker/API/CLI remain unchanged.
+
+Next wire the lease to synchronous parent-only linked checkpoint/event/report
+publication, retained accounting and explicit terminal-original-context loading,
+then prove actual original native graph/spawn equivalence and all stop/cancel/
+expiry/ACK boundaries before API/UI or paid activation. Existing terminal
+context rejection remains; do not remove errors, reset limits or change native
+thread/fingerprint to get past it. Dated receipts distinguish executed SQLite/
+PostgreSQL lease fixtures from these still-open integrations.
+
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,
 versions_seen, control channels, metadata and pending-write order/task identity.

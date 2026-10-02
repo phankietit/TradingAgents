@@ -8,6 +8,7 @@ from uuid import UUID
 
 from sqlalchemy import (
     JSON,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Index,
@@ -155,6 +156,34 @@ class ResearchContinuationRow(Base):
     observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchExecutionRow(Base):
+    """Separately fenced allocation; not a new run or default worker job."""
+
+    __tablename__ = "research_executions"
+    __table_args__ = (
+        UniqueConstraint("source_run_id", "attempt", name="uq_research_executions_run_attempt"),
+        CheckConstraint("attempt >= 2 AND attempt <= 1000000", name="attempt"),
+        CheckConstraint("status IN ('reserved', 'leased', 'cancel_requested', 'cancelled', 'review_required')",
+                        name="status"),
+        Index("ix_research_executions_owner_run", "owner_id", "source_run_id"),
+    )
+
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_continuations.execution_id"), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    source_job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt: Mapped[int] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    worker_id: Mapped[str | None] = mapped_column(String(128))
+    lease_token_hash: Mapped[str | None] = mapped_column(String(64))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class DecisionRow(Base):

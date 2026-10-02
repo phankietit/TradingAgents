@@ -51,3 +51,13 @@ backup/restore and explicit owner rollout
 before changing a private database; never downgrade/delete its checkpoint or
 consent history as an automatic recovery action. See
 [the recovery contract](research-recovery-contract.md) for activation gates.
+
+Additive `0013_research_executions` stores separately leased internal allocations
+linked by primary/foreign key to the immutable consent execution identity. The
+original analysis_jobs unique run ID remains unchanged. A unique source-run/
+attempt pair and state/attempt checks prevent duplicate allocation/invalid
+states; only the new row's lease/cancellation/review fields may change.
+No historical research state is cleared, no successful-result state is defined,
+and the existing worker does not claim these rows. These test-only lease
+mechanics do not authorize migration of a private database, model dispatch,
+publication or repeated continuations without linked accounting integration.
