@@ -60,7 +60,12 @@ def test_reopened_attempts_use_latest_cumulative_not_sum_every_receipt(tmp_path)
             assert result.reported_input_tokens == 20 and result.reported_total_tokens == 30
             assert result.high_water_sequence == 7 and result.exact_elapsed_known is False
             assert result.elapsed_lower_bound == 0
-            assert str(owner) not in repr(result) and "15" not in repr(result)
+            # Default object repr contains an arbitrary hex address, which may
+            # contain digits matching token counts. Verify field suppression,
+            # not accidental substrings of that unrelated address.
+            assert repr(result) == object.__repr__(result)
+            assert str(owner) not in repr(result) and str(run.run_id) not in repr(result)
+            assert run.config_hash not in repr(result)
             assert len(session.scalars(select(RunEventRow)).all()) == 7
     finally:
         database.dispose()
