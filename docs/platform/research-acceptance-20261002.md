@@ -122,3 +122,35 @@ Explicit 3600-second fixture selection is local proof, not approval to spend on
 a live 60-minute BTC run. That separate permission remains pending. All graph
 roles, source/risk/approval gates and CLI defaults are preserved. Goal remains
 active and Draft PR #7 is not eligible for release/merge approval.
+
+## R08 web allowance selection and consent
+
+Source `a2a0b6f6db38bc08102af853da889f874515a2a6`, branch
+`fix/TA-R01-research-quality`. The new form offers 1800/3600 seconds with the
+unchanged 128-call cap. A changed selection invalidates paid-call consent and
+changes request identity. Processing displays recorded limits; legacy records
+without them are explicitly labeled, not silently assigned values. EN/VI copy
+discloses cooperative checking, possible in-flight overrun and no cost cap.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Web regression/type/lint/build | PASS | 137 tests/23 files, 4.98 s; `npm run typecheck && npm run lint && npm test && npm run build`; Node 26.8.1/npm 11.19.0 |
+| Consent/request identity | PASS | Mocked failure/retry proves 1800 default, 3600 selection, renewed consent and distinct keys; unchanged-payload retry tests retained |
+| Recorded/legacy display | PASS | Analysis tests assert saved 60 minutes and explicit missing-limit copy for old runs |
+| Built browser | PASS | Playwright at `http://127.0.0.1:5192/#/analysis?instrument=aapl`, 1280×900 and 390×900; exact title, meaningful first viewport, no framework overlay, zero console errors/warnings/page errors and horizontal overflow |
+| Interaction | PASS | Select synthetic source → authorize → change to 60 minutes → consent cleared/submission disabled → switch VI/EN → reauthorize → one intercepted run POST per viewport → saved allowance shown. Source unchanged, wall_seconds=3600, model_calls=128 |
+| Diff/templates | PASS | `git diff --check`; Ruby YAML load of issue templates |
+| Full Python refresh | NOT_IN_SCOPE | Frontend/docs-only source; no Python behavior changed. Earlier 648fa183 receipt remains checkout-specific, not a fresh full-suite run |
+| Live report/request deadline/resume | UNVERIFIED | No actual worker/provider/model called. SDK timeout/retry unchanged, no hard interrupt or graph resume implemented |
+
+Browser plugin not available; bundled Playwright used without installing
+dependencies. Private QA script/screenshots are outside Git at
+`/Volumes/Data/TradingAgents-runtime/qa-allowance-2RpR1B/`. Both initial and
+selected-allowance desktop/mobile screenshots were visually inspected. The
+first harness attempt failed on an incorrect disclosure-text locator; corrected
+to the actual UI label and rerun successfully on the clean source SHA. This was
+not waived or labeled a product/provider pass.
+
+No paid retry, new provider, derivative execution, risk-limit change, history
+rewrite, CI or public deployment. NQ=F remains owner-BLOCKED. Existing live
+financial/translation failures remain unresolved; goal and Draft PR #7 stay open.

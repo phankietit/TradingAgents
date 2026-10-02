@@ -2,6 +2,16 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Checkpoint UI allowance 2026-10-02:** source
+`a2a0b6f6db38bc08102af853da889f874515a2a6` thêm chọn 30/60 phút trước consent,
+đổi lựa chọn phải xác nhận lại và dùng request identity mới. Processing hiển thị
+allowance đã lưu, không gán mặc định cho lịch sử thiếu trường. Web **137 tests**,
+typecheck/lint/build PASS; built-app synthetic 1280×900/390×900 PASS, mỗi viewport
+một POST giả lập, không gọi worker/provider, không lỗi console/page hay overflow.
+Đây không phải hard deadline, cost cap hay graph resume; chưa paid live mới.
+Skill React giữ state trong form và không thêm fetch/provider từ component.
+Receipt 2026-10-02 ghi exact source và scope; goal/PR vẫn mở.
+
 **Checkpoint allowance mới 2026-10-02:** source
 `648fa183ee90eed1e353b3e06cbcc2c249aebb82` đã bind allowance rõ ràng cho API
 snapshot run → manifest/config hash/job → worker observer. Mặc định 1800s/128
