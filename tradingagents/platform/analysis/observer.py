@@ -92,6 +92,19 @@ class ResearchObserver(BaseCallbackHandler):
             if self.started_calls >= self.max_calls:
                 raise ResearchBudgetExceeded("research model-call budget exhausted")
             self.started_calls += 1
+            payload = self._usage_payload()
+        # Fenced worker emit commits this reservation before callback return /
+        # provider admission. A crash after this boundary has unknown usage,
+        # never an assumed zero-cost or fresh allowance. Failed emit stops call.
+        self.emit("model.usage", payload)
+        # Persistence can consume time or lose the lease. Its ACK cannot grant
+        # provider admission after the original boundary has expired.
+        self._check()
+
+    def _usage_payload(self):
+        return {"usage": self.receipt()["usage"],
+                "elapsed_seconds": max(0.0, self.clock() - self.started),
+                "execution_limits": {"wall_seconds": self.max_seconds, "model_calls": self.max_calls}}
 
     def on_llm_end(self, response, *, run_id, **kwargs):
         with self.lock:
@@ -106,10 +119,10 @@ class ResearchObserver(BaseCallbackHandler):
                 for key in ("input_tokens", "output_tokens", "total_tokens"):
                     self.usage[key] += usage[key]
                 self.usage["calls_with_usage"] += 1
-            receipt = self.receipt()["usage"]
+            payload = self._usage_payload()
         # Save the cumulative per-attempt receipt after every model completion,
         # not just successful publication. Failed attempts still consumed quota.
-        self.emit("model.usage", {"usage": receipt})
+        self.emit("model.usage", payload)
 
     def on_llm_error(self, error, *, run_id, **kwargs):
         with self.lock:
@@ -118,9 +131,9 @@ class ResearchObserver(BaseCallbackHandler):
             self.seen_model_runs.add(run_id)
             self.usage["model_calls"] += 1
             self.usage["failed_calls"] += 1
-            receipt = self.receipt()["usage"]
+            payload = self._usage_payload()
         # Providers may charge failed calls without returning usage. No zero-cost claim.
-        self.emit("model.usage", {"usage": receipt})
+        self.emit("model.usage", payload)
 
     def receipt(self):
         return {"completed_stages": list(self.completed),
@@ -130,5 +143,6 @@ class ResearchObserver(BaseCallbackHandler):
             "started_model_calls": self.started_calls,
             "model_call_scope": "logical_langchain_invocations",
             "provider_request_attempts": None,
-            "status": "reported" if self.usage["model_calls"] and self.usage["model_calls"] == self.usage["calls_with_usage"] else "incomplete",
+            "status": "reported" if (self.usage["model_calls"]
+                and self.started_calls == self.usage["model_calls"] == self.usage["calls_with_usage"]) else "incomplete",
             "cost": None, "cost_status": "not_reported_by_provider"}}

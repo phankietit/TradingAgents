@@ -569,6 +569,17 @@ configuration disclosure describes the default worker, not proof that a running
 worker was upgraded. Stopping local processing does not stop or refund remote
 provider work. Process startup/cleanup and scheduler latency are not zero.
 
+Model observers now emit cumulative `model.usage` counters before a logical call
+as well as after completion/error. The worker's existing lease-fenced event
+transaction commits the reservation before provider admission; failed emission
+or deadline/cancellation during that commit stops admission. New events include
+original execution limits and observed monotonic elapsed seconds. An unfinished
+reservation remains `incomplete`, even if earlier calls supplied usage. No
+prompts, raw errors, provider reasoning or keys are included. Elapsed observations
+are lower bounds at event time, not exact crash duration or provider billing.
+This does not enable recovery, recreate missing history or reset any allowance;
+cross-attempt accounting/consent and live financial acceptance remain unfinished.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See

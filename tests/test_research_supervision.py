@@ -168,7 +168,9 @@ def test_spawn_retains_events_usage_and_reader_text_but_not_raw_messages(tmp_pat
     assert observer.completed == ["Market Analyst"]
     assert observer.receipt()["usage"]["total_tokens"] == 5
     assert observer.receipt()["supervision_mode"] == "spawned_process"
-    assert [event[0] for event in events] == ["stage.started", "model.usage", "stage.completed"]
+    assert [event[0] for event in events] == ["stage.started", "model.usage", "model.usage", "stage.completed"]
+    assert events[1][1]["usage"]["model_calls"] == 0
+    assert events[1][1]["usage"]["started_model_calls"] == 1
     assert_child_stopped(marker)
 
 

@@ -37,6 +37,7 @@ def test_known_scope_overreach_requires_review(text):
 def test_provider_usage_is_reported_without_prompts_or_fabricated_cost():
     observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *_: None)
     run_id = uuid4()
+    observer.on_chat_model_start({}, [], run_id=run_id)
     response = SimpleNamespace(generations=[[SimpleNamespace(message=SimpleNamespace(
         usage_metadata={"input_tokens": 123, "output_tokens": 45, "total_tokens": 168}))]])
     observer.on_llm_end(response, run_id=run_id)

@@ -51,6 +51,27 @@ These observations validate local callback plumbing, not vendor usage truth,
 hidden SDK request attempts, costs or a durable cross-attempt accounting ledger.
 Synthetic `reported` counters must not be presented as live-provider evidence.
 
+### Pre-admission usage reservations
+
+The observer now emits the existing cumulative `model.usage` event after atomic
+reservation and before returning model-start admission, then rechecks the same
+clock/cancellation/lease boundary. The web worker's existing fenced append-only
+event transaction commits before that return; no new table/event type is needed.
+Failed emit or expired boundary cannot grant admission. Completion/error events
+also include observed elapsed seconds and original limits. No prompt, model
+reasoning, credential or raw error crosses the event payload.
+
+`reported` now requires admitted, completed and usage-reported logical call
+counts to match; a new outstanding reservation makes status `incomplete` even
+when earlier calls were reported. SQLite reopen fixtures retain owner/run/
+attempt-bound reservations and original limits before completion, including
+native-spawn callback admission/completion events. This is not a cross-attempt
+ledger or restore permission. Elapsed is a lower-bound observation, not an exact
+crash duration; unknown hidden SDK attempts and provider cost remain unknown.
+Existing general event transactions do not establish a hard end-to-end database
+deadline. Durable aggregation/unknown-duration policy, explicit consent and
+new-child restore remain required before enabling recovery.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

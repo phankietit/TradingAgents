@@ -16,6 +16,7 @@ from tests.test_durable_jobs import _database, _enqueue
 from tests.test_risk_engine import NOW
 from tests.test_snapshot_analysis import context
 from tests.test_supervised_native_graph import NativeFixtureEngine
+from tradingagents.contracts import RunEventType
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
@@ -35,6 +36,7 @@ from tradingagents.platform.analysis.supervision import (
     SupervisedAnalysisEngine,
     _child as original_child,
 )
+from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.jobs import DurableJobQueue
 from tradingagents.platform.jobs.worker import JobExecutionContext
 from tradingagents.platform.persistence import PlatformRepository
@@ -126,8 +128,14 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
         job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
         events = []
+        def emit(kind, payload):
+            with job_context.publication_session() as session:
+                RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                    event_type=RunEventType(kind), occurred_at=NOW, payload={**payload, "attempt": job.attempt})
+            events.append((kind, payload))
+
         observer = ResearchObserver(check_cancelled=job_context.raise_if_cancelled,
-            emit=lambda *args: events.append(args), max_calls=1 if exhausted else 128)
+            emit=emit, max_calls=1 if exhausted else 128)
         started = observer.started
         request = AnalysisRequest(instrument=instrument, analysis_date=NOW.date(), selected_analysts=analysts,
             snapshot_context=sources, execution_observer=observer)
@@ -159,7 +167,7 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             assert observer.started_calls == usage["model_calls"] == usage["calls_with_usage"] == 1
             assert usage["input_tokens"] == 10 and usage["output_tokens"] == 5 and usage["total_tokens"] == 15
             assert usage["failed_calls"] == 0 and usage["cost"] is None
-            assert [data["usage"]["total_tokens"] for kind, data in events if kind == "model.usage"] == [15]
+            assert [data["usage"]["total_tokens"] for kind, data in events if kind == "model.usage"] == [0, 15]
             assert observer.completed == ["Market Analyst"]
             assert commit_pids and set(commit_pids) == {os.getpid()}
             with database.session() as session:
@@ -167,6 +175,14 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert rows and all(row.owner_id == owner and row.run_id == run.run_id for row in rows)
                 for row in rows:
                     codec.decode(row.payload)
+                usage_events = [event for event in RunEventStore(session).list_after(owner, run.run_id, limit=500)
+                                if event.event_type is RunEventType.MODEL_USAGE]
+                assert len(usage_events) == 2
+                assert usage_events[0].payload["usage"]["started_model_calls"] == 1
+                assert usage_events[0].payload["usage"]["model_calls"] == 0
+                assert usage_events[0].payload["usage"]["status"] == "incomplete"
+                assert usage_events[1].payload["usage"] == usage
+                assert all(event.payload["attempt"] == job.attempt for event in usage_events)
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
             return
         result = supervised.analyze(request)
@@ -228,6 +244,14 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             for row in rows:
                 assert codec.decode(row.payload).checkpoint["channel_values"].get("messages", []) == []
             assert store.load_latest(session=session, owner_id=owner, run_id=run.run_id) is not None
+            if callbacks:
+                usage_events = [event for event in RunEventStore(session).list_after(owner, run.run_id, limit=500)
+                                if event.event_type is RunEventType.MODEL_USAGE]
+                assert len(usage_events) == 2 * calls
+                assert usage_events[-1].payload["usage"] == usage
+                assert all(event.payload["execution_limits"] == {"wall_seconds": 1800, "model_calls": 128}
+                           and event.payload["elapsed_seconds"] >= 0
+                           and event.payload["attempt"] == job.attempt for event in usage_events)
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
         assert list((tmp_path / "results").iterdir()) == []
     finally:
