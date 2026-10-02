@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Original allowance arithmetic 2026-10-03:** source
+`eb799a08adf79863c1e3f6f846a3698fb32c776f` reader load authoritative accounting,
+trừ mọi logical starts và local elapsed upper bound khỏi cap gốc. Không nhận
+caller-provided cap/time/consent; thiếu accounting/time vẫn unknown, known
+exhaustion BLOCKED dù thiếu stop; nhiều attempts không reset cap. Frozen private
+observation giữ identity/high-water/unknown provider usage, PASS chỉ arithmetic.
+62 focused PASS, 31,87 s; full **2.283 + 88 subtests PASS**, 20 skips,
+156 warnings, 218,78 s tại source sạch; Ruff/diff/templates PASS. Initial fixture
+FAIL do allowance thiếu snapshot binding; sửa fixture đúng contract, không nới
+validator. Native spawn completion/exhaustion receipts kiểm chứng debit 128-calls
+và zero remaining cap; không live/cost/financial proof. Consent transaction,
+supervisor retained-budget enforcement/restore/transport, ingestion/UX/live còn
+UNVERIFIED; NQ=F BLOCKED. Không recorder/resume activation, AI/vendor/CI/private
+DB migration/restart/history rewrite/provider/risk change/merge/deploy; goal/PR mở.
+
 **Supervised stop elapsed boundary 2026-10-03:** source
 `af087670821882c161b56b275736438013148baa` parent đóng observer và append
 model.usage execution_stopped=True chỉ sau child reap và reader shutdown.

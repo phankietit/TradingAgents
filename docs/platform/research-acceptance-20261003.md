@@ -553,3 +553,29 @@ provider/risk change, merge or deployment.
 Old private rows remain unchanged. Abrupt parent crash or lease/cancellation
 refusal cannot be inferred into a stop marker. Full R01–R14 goal and Draft PR #7
 remain open; explicit human approval and no-blind-replay are mandatory.
+
+## Original allowance arithmetic observation follow-up
+
+Source `eb799a08adf79863c1e3f6f846a3698fb32c776f`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Internal read-only
+observation, no new endpoint/table/dependency or default activation. No paid/vendor
+call, private DB migration/restart/history rewrite, CI, provider/risk change,
+merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original cap debit | PASS | Loads authoritative owner/run accounting with no caller allowance/time input. All logical starts across attempts, including unfinished reservations, debit original cap; known stop upper bound debits original wall time |
+| Uncertainty/exhaustion | PASS | Empty/legacy accounting withholds remaining values. Missing stop yields unknown remaining seconds, not fresh budget; exhausted call cap or elapsed lower bound blocks even without a stop marker. Overrun cannot become negative or enlarge limits |
+| Private immutable observation | PASS | Frozen repr-suppressed result retains complete accounting/identity/high-water and unknown started usage. Wrong owner rejects; disposable fixture ordered event payloads and original run remain unchanged |
+| Native receipt arithmetic | PASS | Existing actual production-child/engine/recorder native fixtures read completion/exhaustion receipts: remaining calls equals 128 minus actual logical trace calls, and exhausted one-call fixture remains BLOCKED with zero remaining calls. No new admission performed |
+| Initial fixture gate | FAIL | Optional allowance on legacy unsnapshotted fixture rejected by RunManifest validation (1 failed, 1.18 s). Fixture repaired with valid snapshot binding; production validator unchanged. Subsequent 60-pass gate preceded two additional exhausted-history cases |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_remaining_allowance.py tests/test_accounting_evidence.py tests/test_usage_reservation.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 62 passed, 48 warnings, 31.87 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,283 passed + 88 subtests, 20 skipped, 156 warnings, 218.78 s, exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Consent/supervisor/restore acceptance | UNVERIFIED | PASS means bounded arithmetic, not financial acceptance, consent token or admission. Transactional recheck/owner consent, linked execution, retained budget enforcement and trusted new-child restore/transport remain required before enablement |
+| Live/operational/PostgreSQL | UNVERIFIED | No new live finance/translation/billing or runtime/browser proof. Remaining ingestion/UX and 18 PostgreSQL plus optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+No allowance reset, refund or inferred provider cost follows from positive
+arithmetic. Full R01–R14 goal and Draft PR #7 stay open; default recorder/resume
+remains disabled and existing private history remains immutable.
