@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Original context → supervised recorder 2026-10-03:** source
+`7172e3c79b309772b994cd71125eb3673dbd04eb` thêm internal JSON context gốc,
+revalidate ở parent/child và nối exact AnalysisEngine → SnapshotRecorder với
+bridge commit. DB/lease/callback vẫn parent-only; context không chứa callable/
+SDK/credential fields, không browser consent hay restore. Chặn sai owner/source/
+book/policy, duplicate/nonfinite/oversized JSON và unknown fields; request sai
+chặn trước spawn. 73 focused PASS, 31,96 s; full Python **2.219 + 88 subtests
+PASS**, 20 skips, 108 warnings, 180,37 s tại source sạch; Ruff/diff/templates
+PASS. Initial collection FAIL do fixture thiếu codec nodes, đã sửa trước gate;
+không nới production contract. Child wiring là unit probe, chưa actual-engine
+native-spawn proof. Default worker chưa bật recorder/resume; tiếp theo native
+spawn, trusted client/accounting/consent và new-child restore. Không AI/vendor/
+CI/deploy, restart/migrate DB riêng tư. Ingestion/UX/live finance/MT vẫn chưa
+đạt; NQ=F BLOCKED theo owner. Goal và Draft PR #7 vẫn mở.
+
 **Parent recorder allowance RPC 2026-10-03:** source
 `98446bef42ce010b2a1733d9e91f198215e3ff78` nối kiểm tra allowance của recorder
 qua exact private checkpoint-enabled bridge. Parent kiểm tra limits/fingerprint/

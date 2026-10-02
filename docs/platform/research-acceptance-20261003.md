@@ -346,3 +346,32 @@ This RPC never resets allowance or bypasses execution_started. Parent remains
 the existing budget/admission/lease authority. Per-operation DB wait limitations
 and provider-billing uncertainty are not cured by an allowance ACK. Full R01–R14,
 remaining ingestion/UX/live requirements and Draft PR remain open.
+
+## Original context to supervised recorder follow-up
+
+Source `7172e3c79b309772b994cd71125eb3673dbd04eb`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`, clean throughout
+the full regression. Python 3.14.7, Darwin 25.5.0. No AI/vendor call, private DB
+migration, runtime restart, CI, new provider, risk change, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original private context transfer | PASS | JSON-only owner/run/book/policy/risk envelope, 4 MB maximum, independent decoded copies; private fields excluded from repr. No SDK/DB/callable field. Actual initialized graph fingerprint still required before invocation |
+| Context failure semantics | PASS | Wrong owner/book/policy owner, unknown/credential fields, policy object/nonfinite numbers, duplicate JSON keys, missing inputs, raw error/completed runs and malformed/oversized wire rejected with fixed messages. Tests cover applicable synthetic inputs; no claim of universal secret detection in source prose |
+| Parent original setup | PASS | Complete codec/thread/commit required; exact original AnalysisEngine with context only. Its global fixture capability remains absent; arbitrary factory/context, missing callback and mismatched thread/fingerprint rejected |
+| Pre-spawn request fence | PASS | Changed date/roles/source payload/freshness and missing snapshot reject before get_context, with zero admitted model calls |
+| Child recorder construction | PASS | Explicit unit probe receives exact SnapshotRecorder, original run/owner and exact bridge-bound commit. This test replaces the child engine symbol with a probe and does not prove original native engine execution in spawn |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_recording_context.py tests/test_recording_allowance_bridge.py tests/test_checkpoint_bridge.py tests/test_analysis_recording.py --disable-warnings -x`: 73 passed, 38 warnings, 31.96 s |
+| Initial collection gate | FAIL | Test fixture constructed codec without required nodes; fixed fixture before final gates, no production contract weakened. Earlier 65-pass focused run preceded extra policy/JSON cases and is not final-source proof |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,219 passed + 88 subtests, 20 skipped, 108 warnings, 180.37 s, clean exact source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML load of issue templates |
+| Actual native-spawn recorder / recovery | UNVERIFIED | Needs actual original engine/client/native graph through spawn with parent persistence. No checkpoint restore, retained-accounting/consent API/UI, authenticated loading or complete SDK transport attestation enabled |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No new live report; 18 PostgreSQL skips, missing optional Bedrock dependency and absent live DeepSeek key remain. Prior failed financial/editorial evidence unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll-data hold unchanged |
+
+This is an internal opt-in integration, not default worker activation or a new
+owner continuation permission. It preserves the original parent allowance,
+execution_started, immutable private history and human approval. Next: actual
+native-spawn recorder acceptance, trusted-client and accounting/consent gates,
+new-child restoration; remaining R01–R14 ingestion/UX/live work is still required.
