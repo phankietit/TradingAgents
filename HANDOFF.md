@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Supervised stop elapsed boundary 2026-10-03:** source
+`af087670821882c161b56b275736438013148baa` parent đóng observer và append
+model.usage execution_stopped=True chỉ sau child reap và reader shutdown.
+Reader chỉ cho local elapsed upper bound khi mọi observed attempt có stop;
+thiếu marker/crash/fence refusal giữ unknown, cost/unreported usage vẫn unknown.
+Chặn duplicate/false stop và usage sau stop; không callback/admission tiếp bằng
+observer đã đóng. Refusal không che lỗi/result gốc, không giả ACK. 66 focused
+PASS, 60,92 s; full **2.272 + 88 subtests PASS**, 20 skips, 156 warnings,
+211,36 s tại source sạch; Ruff/diff/templates PASS. Initial import-only Ruff
+đã sửa, không behavioral FAIL; gates 57/64 PASS trước final tests không thay
+proof final. Đây là local supervised duration, không remote provider/billing
+duration, exact elapsed hay consent/remaining-budget grant. Không bật recorder/
+resume; transaction consent/restore/transport, ingestion/UX/live còn mở.
+NQ=F BLOCKED theo owner; không AI/vendor/CI/private DB migration/restart/history
+rewrite/provider/risk change/merge/deploy. Goal và Draft PR #7 vẫn mở.
+
 **Accounting identity/recheck 2026-10-03:** tested source
 `6ad3bba87f7a0a66cd3facbbfe6170d1eaa0117e` (implementation `e7ec914`) bind
 observation với owner/run/config hash và scalar allowance gốc. Internal recheck

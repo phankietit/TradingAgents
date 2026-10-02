@@ -527,3 +527,29 @@ rewrite, CI, provider/risk change, merge or deployment.
 No model invocation or history mutation is caused by either reader or recheck.
 Full R01–R14 objective, explicit human approval and no-blind-replay remain intact;
 goal and Draft PR #7 stay open, default recorder/resume stays disabled.
+
+## Local supervised stop elapsed boundary follow-up
+
+Source `af087670821882c161b56b275736438013148baa`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Additive existing
+model.usage event payload, no new table/event type or default recorder/resume.
+No paid/vendor call, private DB migration/restart/history rewrite, CI,
+provider/risk change, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Stop-after-cleanup boundary | PASS | Parent records execution_stopped=True only after process termination/join/close and reader shutdown; original observer clock/limits retained. Actual spawned fixture asserts child PID is already absent inside the stop emit callback |
+| Closed observer | PASS | Later admission, completion/error callback and duplicate close reject; no usage/token/cost fabrication for unfinished calls. Failed stop persistence leaves no durable stop marker and cannot reopen the observer |
+| Durable aggregation | PASS | Reader requires exact True, rejects duplicate stop or usage after stop, and derives elapsed_upper_bound only if every observed attempt has stop evidence. Partial history remains unknown; existing owner/config/high-water identity and strict cumulative counters retained |
+| Native integration | PASS | Actual production child/engine/recorder/native fixtures retain original language/results/stage traces and private checkpoints. Completion/exhaustion rows reopen with synthetic token totals unchanged plus one stop event; exact_elapsed_known remains False |
+| Publication refusal | PASS | Separate-process success/failure fixtures reject stop append; preserve original result/error without raw diagnostic exposure and assert child stopped. Missing append is never treated as durable accounting proof |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_accounting_evidence.py tests/test_usage_reservation.py tests/test_research_supervision.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 66 passed, 48 warnings, 60.92 s. Earlier 57/64-pass gates preceded final fixtures; initial Ruff import formatting fixed, no behavioral failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,272 passed + 88 subtests, 20 skipped, 156 warnings, 211.36 s at exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Recovery/billing/production acceptance | UNVERIFIED | Upper bound concerns local supervised execution including cleanup, not remote provider processing/billing or exact elapsed. Unknown interrupted usage/cost retained. No remaining-budget grant, authenticated transactional consent, trusted loading/transport, new-child restore or default recovery activation |
+| Live/operational/PostgreSQL | UNVERIFIED | No new live finance/translation report or runtime/browser upgrade proof; remaining ingestion/UX and 18 PostgreSQL plus optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Old private rows remain unchanged. Abrupt parent crash or lease/cancellation
+refusal cannot be inferred into a stop marker. Full R01–R14 goal and Draft PR #7
+remain open; explicit human approval and no-blind-replay are mandatory.
