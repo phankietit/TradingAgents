@@ -5,6 +5,31 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
+### Internal original-context transfer (2026-10-03)
+
+`SnapshotRecordingInputs` is an explicit private JSON envelope for trusted
+original run/owner/book/policy/risk context. It has no callable, SDK, database,
+lease, or credential field and does not accept browser consent. Its bounded
+4 MB payload is revalidated in the parent and child; unknown/duplicate fields,
+nonfinite JSON, wrong owner/source/book identity and policy credential keys or
+non-JSON objects fail with fixed diagnostics. It transfers no completed/error
+run and does not load checkpoint history. Private context is not logged/repr;
+source prose remains data, not universally secret-scanned content.
+
+An explicitly configured supervisor can now select the exact original
+AnalysisEngine only with this context and a complete matching codec/thread/
+parent commit bridge. The child constructs SnapshotRecorder with the original
+context and bridge commit; actual graph/client fingerprint and original parent
+allowance must still pass before invocation. Default worker/CLI configuration
+and factory capability are unchanged. Request/source validation happens before
+spawn; database and commit authority stay in the parent. Internal context is
+not authenticated DB loading, full transport attestation or owner permission.
+
+Local context and child-construction unit tests do not establish actual-engine
+native-spawn acceptance. That gate, new-child restore, retained accounting,
+explicit consent/API/UI, and live financial/editorial acceptance remain
+UNVERIFIED. No production recorder/resume is enabled by this integration.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

@@ -20,6 +20,7 @@ from .checkpoint_codec import SnapshotCheckpointCodec
 from .checkpoint_store import CheckpointCommit, CheckpointDatabaseError
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
 from .observer import STAGES, ResearchExecutionFailed
+from .recording_context import SnapshotRecordingInputs
 from .stage_records import STAGE_PATHS, stage_sections
 
 # Exactly the fields used by the web report publisher, not raw graph messages.
@@ -85,7 +86,8 @@ class _Bridge(BaseCallbackHandler):
         self.rpc("model_error", run_id)
 
 
-def _child(connection, base_config, request_data, engine_factory, checkpoint_options=None):
+def _child(connection, base_config, request_data, engine_factory, checkpoint_options=None,
+           recording_data=None):
     stopped = Event()
 
     def guard_parent():
@@ -101,7 +103,21 @@ def _child(connection, base_config, request_data, engine_factory, checkpoint_opt
     try:
         request = AnalysisRequest.model_validate(request_data).model_copy(
             update={"execution_observer": _Bridge(connection, checkpoint_options)})
-        result = engine_factory(base_config=base_config).analyze(request)
+        options = {}
+        if recording_data is not None:
+            from .recording import SnapshotRecorder
+
+            if engine_factory is not AnalysisEngine or checkpoint_options is None:
+                raise ValueError()
+            inputs = SnapshotRecordingInputs(recording_data).validate_request(request)
+            if (inputs.expected_fingerprint != checkpoint_options["fingerprint"]
+                    or str(inputs.run.run_id) != checkpoint_options["thread_id"]):
+                raise ValueError()
+            options["snapshot_recorder"] = SnapshotRecorder(
+                owner_id=inputs.owner_id, expected_fingerprint=inputs.expected_fingerprint,
+                run=inputs.run, portfolio_snapshot=inputs.portfolio_snapshot, policy=inputs.policy,
+                risk_snapshots=inputs.risk_snapshots, commit=request.execution_observer.commit_checkpoint)
+        result = engine_factory(base_config=base_config, **options).analyze(request)
         result = result.model_copy(update={"final_state": {
             key: value for key, value in result.final_state.items() if key in RESULT_FIELDS}})
         for key in ("investment_debate_state", "risk_debate_state"):
@@ -133,24 +149,34 @@ class SupervisedAnalysisEngine:
     """Default web-worker engine; CLI and explicitly injected engines are unchanged."""
 
     def __init__(self, *, base_config=None, engine_factory=AnalysisEngine,
-                 checkpoint_codec=None, checkpoint_thread_id=None, checkpoint_commit=None):
+                 checkpoint_codec=None, checkpoint_thread_id=None, checkpoint_commit=None,
+                 recording_inputs=None):
         self.base_config = base_config
         self.engine_factory = engine_factory
         supplied = (checkpoint_codec, checkpoint_thread_id, checkpoint_commit)
         self.checkpoint_options = None
         self.checkpoint_codec = checkpoint_codec
         self.checkpoint_commit = checkpoint_commit
-        if any(value is not None for value in supplied):
+        self.recording_inputs = recording_inputs
+        if recording_inputs is not None or any(value is not None for value in supplied):
             try:
+                original = None
+                if recording_inputs is not None:
+                    if type(recording_inputs) is not SnapshotRecordingInputs or engine_factory is not AnalysisEngine:
+                        raise ValueError()
+                    original = recording_inputs.read()
                 if (type(checkpoint_codec) is not SnapshotCheckpointCodec
                         or not callable(checkpoint_commit)
-                        or getattr(engine_factory, "supports_checkpoint_bridge", False) is not True
+                        or (original is None and getattr(engine_factory, "supports_checkpoint_bridge", False) is not True)
                         or str(UUID(checkpoint_thread_id)) != checkpoint_thread_id):
+                    raise ValueError()
+                if original is not None and (original.expected_fingerprint != checkpoint_codec.fingerprint
+                        or str(original.run.run_id) != checkpoint_thread_id):
                     raise ValueError()
             except (ValueError, TypeError, AttributeError):
                 raise ValueError("invalid checkpoint bridge configuration") from None
-            # Only non-secret identity is passed to child; DB/lease/callback
-            # remain in the parent. Default worker never supplies these options.
+            # Explicit private context is separate; DB/lease/callback remain
+            # parent-only. Default worker never supplies these options.
             self.checkpoint_options = {"fingerprint": checkpoint_codec.fingerprint,
                                        "thread_id": checkpoint_thread_id}
 
@@ -164,10 +190,18 @@ class SupervisedAnalysisEngine:
         if observer is None:
             raise ValueError("snapshot supervision requires a research observer")
         observer.remaining_seconds()
+        recording_data = None
+        if self.recording_inputs is not None:
+            inputs = self.recording_inputs.validate_request(request)
+            if (inputs.expected_fingerprint != self.checkpoint_options["fingerprint"]
+                    or str(inputs.run.run_id) != self.checkpoint_options["thread_id"]):
+                raise ValueError("invalid checkpoint bridge configuration")
+            recording_data = self.recording_inputs.raw
         context = get_context("spawn")  # Never fork a worker's live DB/lease thread.
         parent, child = context.Pipe()
         process = context.Process(target=_child, args=(child, self.base_config,
-            request.model_dump(mode="python"), self.engine_factory, self.checkpoint_options), daemon=True)
+            request.model_dump(mode="python"), self.engine_factory, self.checkpoint_options,
+            recording_data), daemon=True)
         pending_models = set()
         checkpoint_commits = 0
         received = Queue(maxsize=1)
