@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Native committed saver 2026-10-03:** source
+`18c7d6975004863d08787d884bb359249c76a167` thêm internal native saver gửi
+restricted JSON sau put/put_writes và kiểm tra ACK đúng bytes; lỗi/ACK mơ hồ
+poison saver, không implicit retry. Phải dùng native durability="sync"; default
+async không là fence. Invocation-only configurable helpers không persist, codec
+state/metadata allowlist giữ nguyên. 350 focused tests PASS, 74,23 s: gồm 136
+case đọc bytes đã commit thật trong SQLite tại 17 boundary × 4 language/invalid
+VI × latest/pending, đủ 4 analyst và 2 rounds, prompt/call/stage trace và kết quả
+ngoài messages khớp uninterrupted. Full Python **2.097 + 88 subtests PASS**,
+20 skips, 22 warnings, 155,31 s; Ruff/diff/templates PASS. Chưa production
+worker/supervisor hook hay separate-process crash recovery, không migrate DB
+riêng tư/restart/vendor/AI call. Tiếp theo nối saver qua child bridge → parent
+private commit/ACK, test crash/lease/cancel tại write/ACK, trusted construction
+và explicit consent/accounting; không bỏ execution_started hoặc reset allowance.
+Goal R01–R14/PR #7 mở, NQ=F giữ BLOCKED, live finance/MT còn chưa đạt.
+
 **Private checkpoint persistence 2026-10-03:** source
 `77b32d81a84f6abb4e5705fdd6a8e3e63e6c8852` thêm bảng riêng qua migration
 `0011_research_checkpoints` và internal store append-only. JSON codec kiểm tra

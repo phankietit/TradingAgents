@@ -113,3 +113,38 @@ arguments are not authenticated browser inputs. DB commit/rollback tests are
 not native process crash or provider-billing proof. The next integration must
 preserve execution_started and no-blind-replay, refuse uncertain checkpoints,
 and not increase/reset the original allowance. R01–R14 remains open.
+
+## Native committed saver follow-up
+
+Source `18c7d6975004863d08787d884bb359249c76a167`, same branch/worktree,
+clean source throughout full gate. Internal CommittedSnapshotSaver uses native
+ephemeral InMemorySaver while committing only restricted codec bytes. It is not
+instantiated by production worker/API/CLI; no private DB migration, restart,
+provider/prompt/risk change, AI/vendor call, CI or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Checkpoint/pending JSON commit | PASS | Both put/put_writes commit addressed native tuple; raw message/reasoning markers absent, JSON codec revalidates every captured version |
+| Commit ACK refusal | PASS | Missing/wrong hash/nonpositive sequence/exception ACK rejects; fixed diagnostic/no callback payload echo; poisoned saver refuses future reads/list |
+| Native sync scheduling fence | PASS | Event-controlled actual StateGraph fixture holds ACK, next node and completion cannot occur until release, using durability="sync" |
+| Original graph / real DB restoration | PASS | 136 added cases: 17 boundaries × EN/VI/bilingual/invalid VI × latest/pending restoration, all 4 analysts, 2 debate/risk rounds. Restore exact bytes read from a new SQLite DB session into a fresh saver, verify owner/run/hash row match; identical model-call/prompt/stage traces and non-message AnalysisResult |
+| Financial/translation gates preserved | PASS | Synthetic invalid VI still rejected after one repair; no valid decision_payload. This is gate behavior, not live editorial accuracy |
+| Focused native/saver gate | PASS | `.venv/bin/python -m pytest -q tests/test_committed_checkpoint_saver.py tests/test_supervised_native_graph.py --disable-warnings -x`: 350 passed, 74.23 s; final test version includes DB read-back before restore |
+| Initial fixture failure | FAIL | Put_writes invocation-only configurable fields reached tuple address and strict codec rejected. Corrected native address to thread/ns/checkpoint IDs, without changing state/control/metadata schema; subsequent 6 saver tests passed and final native matrix passed |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,097 passed + 88 subtests, 20 skipped, 22 warnings, 155.31 s; Python 3.14.7/macOS, clean 18c7d69 source |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, Bedrock dependency and live DeepSeek-key skips; new saver/store not characterized under PostgreSQL/concurrent workloads |
+| Parent bridge / crash recovery | UNVERIFIED | New matrix is same-process native integration. Separate-process write/ACK crash, cancellation/lease loss, ambiguous provider billing and orphan/publication fences remain required before enablement |
+| Owner continuation authority | UNVERIFIED | Trusted client/runtime/source construction, original allowance/usage accounting, explicit consent/idempotency and operational UI remain open |
+| Production activation | NOT_IN_SCOPE | No saver hook in engine/supervisor/CLI/API or runtime restart; original workflow/runtime remains unchanged |
+| Live finance/MT | UNVERIFIED | No new paid report; older manual failures remain unchanged |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+Blocking a saver callback alone is not sufficient under default async durability;
+the eventual snapshot worker hook must require native sync durability. Raw
+native objects remain ephemeral and are not serialized into DB JSON. A private
+checkpoint/valid receipt is still not consent, budget reset, human approval or
+a release/financial-quality claim. Next: supervised child bridge to parent
+private commit/ACK and separate-process crash/lease/cancel tests, without
+weakening execution_started/no-blind-replay or replaying any historical failure.
+The full R01–R14 goal remains open.
