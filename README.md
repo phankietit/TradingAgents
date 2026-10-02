@@ -472,6 +472,10 @@ binds the selection to each new snapshot run. Processing displays recorded
 limits without inventing them for legacy runs. Actual request-deadline
 enforcement and safe graph resume remain unfinished; accepting a larger
 allowance does not shorten or skip graph roles or cap provider charges.
+The model-call cap counts logical LangChain invocations, not SDK-internal
+retries. Receipts explicitly leave provider attempt counts unknown; returned
+usage is preserved even after the allowance expires. Concurrent model starts
+share atomic admission, but in-flight calls are not yet interrupted.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

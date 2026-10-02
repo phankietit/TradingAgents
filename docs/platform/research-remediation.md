@@ -95,6 +95,18 @@ interaction checks cover this behavior, not paid/provider acceptance.
 Transport/request deadline work remains open; a configured run allowance is not
 a hard interrupt, provider-cost cap or proof that a whole live report fits.
 
+Runtime budget groundwork: concurrent logical model starts now reserve the
+shared cap atomically. A monotonic remaining-allowance method preserves the
+original run start and cancellation precedence. Receipts distinguish logical
+invocations from unknown SDK-internal attempts; late returned usage remains
+accounted for without authorizing new calls. This is not request interruption.
+R08 total-deadline implementation must supervise actual blocking requests,
+including SDK retries/backoff and slow response reads, without a detached
+background call that could continue charging or publish after cancellation.
+Per-read HTTP timeout alone is insufficient. Verify hung and slow-trickle
+responses locally before authorizing any fresh paid acceptance; retain returned
+notes, usage uncertainty, all graph roles, and owner/lease publication fencing.
+
 ### Renewed acceptance scope
 
 - Validate canonical financial content before a separate, bounded localization

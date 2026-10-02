@@ -179,6 +179,16 @@ boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted
 analyst/research/trader/debate sections, not raw messages or hidden reasoning.
 
+Budget admission reserves logical model starts atomically across concurrent
+callbacks. `remaining_seconds()` uses the observer's original monotonic clock
+and checks cancellation/lease loss before budget exhaustion; this is a shared
+deadline primitive, not an implemented request interrupt. Usage receipts label
+`model_call_scope=logical_langchain_invocations` and retain
+`provider_request_attempts=null`: SDK-internal attempts are not observable at
+this callback boundary. Returned usage after the wall allowance is still
+retained without authorizing another call or claiming a completed report.
+The 128-call cap must not be interpreted as a provider-request or dollar cap.
+
 Preparation failures may retry before entering the engine. Uncertain execution
 or expired leases with execution evidence require review rather than blind graph
 restart. An already committed report/decision pair may retry storage-only

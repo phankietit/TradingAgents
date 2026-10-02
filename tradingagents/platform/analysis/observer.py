@@ -49,9 +49,20 @@ class ResearchObserver(BaseCallbackHandler):
         self.started_calls = 0
 
     def _check(self):
+        self.remaining_seconds()
+
+    def remaining_seconds(self):
+        """Return the run's remaining allowance, never a per-read SDK timeout.
+
+        Future request supervision must use this same monotonic clock. Merely
+        passing this number to a transport's idle timeout is not a total deadline.
+        Cancellation/lease loss takes precedence over the budget classification.
+        """
         self.check_cancelled()
-        if self.clock() - self.started >= self.max_seconds:
+        remaining = self.max_seconds - (self.clock() - self.started)
+        if remaining <= 0:
             raise ResearchBudgetExceeded("research wall-time budget exhausted")
+        return remaining
 
     def on_chain_start(self, serialized, inputs, *, run_id, name=None, **kwargs):
         if name not in STAGES:
@@ -73,10 +84,13 @@ class ResearchObserver(BaseCallbackHandler):
                 **({"research_artifact_id": str(artifact_id)} if artifact_id is not None else {})})
 
     def on_chat_model_start(self, serialized, messages, **kwargs):
-        self._check()
-        if self.started_calls >= self.max_calls:
-            raise ResearchBudgetExceeded("research model-call budget exhausted")
-        self.started_calls += 1
+        # Check-and-reserve is atomic even if graph nodes invoke concurrently.
+        # This counts logical LangChain starts, not hidden provider SDK retries.
+        with self.lock:
+            self._check()
+            if self.started_calls >= self.max_calls:
+                raise ResearchBudgetExceeded("research model-call budget exhausted")
+            self.started_calls += 1
 
     def on_llm_end(self, response, *, run_id, **kwargs):
         with self.lock:
@@ -111,5 +125,8 @@ class ResearchObserver(BaseCallbackHandler):
         return {"completed_stages": list(self.completed),
                 "execution_limits": {"wall_seconds": self.max_seconds, "model_calls": self.max_calls}, "usage": {
             **self.usage,
+            "started_model_calls": self.started_calls,
+            "model_call_scope": "logical_langchain_invocations",
+            "provider_request_attempts": None,
             "status": "reported" if self.usage["model_calls"] and self.usage["model_calls"] == self.usage["calls_with_usage"] else "incomplete",
             "cost": None, "cost_status": "not_reported_by_provider"}}
