@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Durable pre-admission reservation 2026-10-03:** source
+`7833efd35664164e48459a4d8733cba310449cb8` observer emit model.usage trước
+call và sau completion/error; worker dùng event transaction lease-fenced sẵn có,
+không migration/event type mới. Ghi counters/limits/elapsed trước admission rồi
+recheck clock/cancellation; emit lỗi/deadline không cấp phép gọi provider. Status
+incomplete khi còn reservation chưa có usage, không dùng reported của call cũ.
+SQLite reopen và native spawn giữ owner/run/attempt, start/end usage và checkpoint;
+không prompt/secret. 40 focused PASS, 69,32 s; full **2.235 + 88 subtests PASS**,
+20 skips, 156 warnings, 275,68 s tại source sạch; Ruff/diff/templates PASS.
+Initial assertion FAIL vì kỳ vọng chỉ một usage event; cập nhật để kiểm tra cả
+reservation, fixture reported dùng đủ start/end lifecycle, không nới gate.
+Elapsed chỉ là lower bound lúc event, không exact crash duration/cost; general
+event DB transactions chưa có end-to-end deadline. Durable aggregation/unknown
+duration, consent/restore/transport và ingestion/UX/live vẫn còn mở. Không chạy
+AI/vendor/CI/deploy, restart/migrate DB riêng tư; NQ=F BLOCKED, goal/PR mở.
+
 **Native callback accounting/admission 2026-10-03:** source
 `c5e6314f6593a86fd5727747928b1deb217e94f3` bổ sung fixture chạy invoke và
 callback lifecycle LangChain thật, chỉ fake generation/schema binding. Không

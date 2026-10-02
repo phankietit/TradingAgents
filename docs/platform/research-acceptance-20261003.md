@@ -428,3 +428,30 @@ Next: durable original allowance and execution accounting/consent, then new-chil
 restore while preserving execution_started/no-blind-replay and immutable history.
 Full R01–R14 ingestion/operational UX/live acceptance remains required; goal and
 Draft PR stay open. No synthetic token count may be published as actual cost.
+
+## Durable pre-admission usage reservation follow-up
+
+Source `7833efd35664164e48459a4d8733cba310449cb8`, same branch/worktree,
+clean throughout full regression; Python 3.14.7, Darwin 25.5.0. New observer
+behavior and documented additive existing-event payload; no event type/table,
+dependency/provider/risk change, private DB migration/restart, paid/vendor call,
+CI, historical rewrite, merge or deployment. Recorder/resume remains disabled.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Reservation before admission | PASS | Atomic logical counter reservation emits existing model.usage before model-start callback returns. Existing worker fenced transaction commits counters/limits/observed elapsed, then same clock/cancellation checked; failed emission or expired commit boundary does not return permission to invoke |
+| Unknown usage semantics | PASS | Admitted/completed/usage-reported counts must match for reported status. A second unfinished call is incomplete despite first reported call; counters/cost remain explicit, no fabricated refund/zero cost |
+| Reopened durable events | PASS | Disposable SQLite fresh session reads unfinished reservation with owner/run/attempt, limits and observed 12 seconds; no completion is invented. Native spawned callback test uses same parent publication_session event pattern: original start/completion counters reopen, final usage matches and exhaustion retains [0,15] token observations plus private checkpoints |
+| Deadline/emit failure | PASS | Synthetic emit exception prevents following provider entry; emit consuming original one-second budget is rejected after persistence, reservation retained and original start unchanged |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_usage_reservation.py tests/test_research_budget_clock.py tests/test_research_validation.py tests/test_research_supervision.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 40 passed, 48 warnings, 69.32 s |
+| Initial focused expectation | FAIL | Old supervision assertion expected only post-call usage; updated to assert both pre-call reservation and post-call completion. Reported-usage fixture now includes real logical start before end; no production guard weakened. Earlier 39-pass run preceded post-commit deadline case and is not final-source proof |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,235 passed + 88 subtests, 20 skipped, 156 warnings, 275.68 s, clean exact source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; initial import-only Ruff formatting fixed before commit |
+| Cross-attempt accounting/recovery | UNVERIFIED | No durable aggregation/unknown crash-duration policy, full transport attestation, owner consent/API/UI or new-child restore enabled. Elapsed is a lower bound at event time, general event transactions are not a hard end-to-end DB deadline; synthetic counters are not vendor billing |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No fresh live report; 18 PostgreSQL, optional Bedrock and live DeepSeek-key skips unchanged. Runtime upgrade/browser behavior not verified; no restart |
+| NQ=F | BLOCKED | Owner's contract/roll-data hold unchanged |
+
+Original execution_started/no-blind-replay, immutable history and human approval
+remain mandatory. No missing historical reservations are backfilled. Next:
+safe durable aggregation/unknown-duration accounting and explicit consent before
+restore; remaining R01–R14 ingestion/operational UX/live acceptance still required.
