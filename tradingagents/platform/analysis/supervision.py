@@ -4,6 +4,7 @@ No database, lease, artifact writer or raw model messages cross into the child.
 Stopping local execution does not guarantee that a provider stops billing.
 """
 
+import hashlib
 from contextlib import suppress
 from multiprocessing import get_context, parent_process
 from os import _exit
@@ -11,9 +12,12 @@ from pickle import loads
 from queue import Empty, Full, Queue
 from threading import Event, Lock, Thread
 from types import SimpleNamespace
+from uuid import UUID
 
 from langchain_core.callbacks import BaseCallbackHandler
 
+from .checkpoint_codec import SnapshotCheckpointCodec
+from .checkpoint_store import CheckpointCommit
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
 from .observer import STAGES, ResearchExecutionFailed
 from .stage_records import STAGE_PATHS, stage_sections
@@ -31,10 +35,16 @@ class _Bridge(BaseCallbackHandler):
     raise_error = True
     run_inline = True
 
-    def __init__(self, connection):
+    def __init__(self, connection, checkpoint_options=None):
         self.connection = connection
         self.active = {}
         self.lock = Lock()
+        self.checkpoint_options = checkpoint_options
+
+    def commit_checkpoint(self, raw):
+        if self.checkpoint_options is None:
+            raise ResearchExecutionFailed("checkpoint bridge is not enabled")
+        return self.rpc("checkpoint_commit", raw)
 
     def rpc(self, method, payload):
         # Concurrent callback threads must not interleave pipe frames or consume
@@ -67,7 +77,7 @@ class _Bridge(BaseCallbackHandler):
         self.rpc("model_error", run_id)
 
 
-def _child(connection, base_config, request_data, engine_factory):
+def _child(connection, base_config, request_data, engine_factory, checkpoint_options=None):
     stopped = Event()
 
     def guard_parent():
@@ -82,7 +92,7 @@ def _child(connection, base_config, request_data, engine_factory):
     guard.start()
     try:
         request = AnalysisRequest.model_validate(request_data).model_copy(
-            update={"execution_observer": _Bridge(connection)})
+            update={"execution_observer": _Bridge(connection, checkpoint_options)})
         result = engine_factory(base_config=base_config).analyze(request)
         result = result.model_copy(update={"final_state": {
             key: value for key, value in result.final_state.items() if key in RESULT_FIELDS}})
@@ -114,13 +124,33 @@ def _outputs(stage, sections):
 class SupervisedAnalysisEngine:
     """Default web-worker engine; CLI and explicitly injected engines are unchanged."""
 
-    def __init__(self, *, base_config=None, engine_factory=AnalysisEngine):
+    def __init__(self, *, base_config=None, engine_factory=AnalysisEngine,
+                 checkpoint_codec=None, checkpoint_thread_id=None, checkpoint_commit=None):
         self.base_config = base_config
         self.engine_factory = engine_factory
+        supplied = (checkpoint_codec, checkpoint_thread_id, checkpoint_commit)
+        self.checkpoint_options = None
+        self.checkpoint_codec = checkpoint_codec
+        self.checkpoint_commit = checkpoint_commit
+        if any(value is not None for value in supplied):
+            try:
+                if (type(checkpoint_codec) is not SnapshotCheckpointCodec
+                        or not callable(checkpoint_commit)
+                        or getattr(engine_factory, "supports_checkpoint_bridge", False) is not True
+                        or str(UUID(checkpoint_thread_id)) != checkpoint_thread_id):
+                    raise ValueError()
+            except (ValueError, TypeError, AttributeError):
+                raise ValueError("invalid checkpoint bridge configuration") from None
+            # Only non-secret identity is passed to child; DB/lease/callback
+            # remain in the parent. Default worker never supplies these options.
+            self.checkpoint_options = {"fingerprint": checkpoint_codec.fingerprint,
+                                       "thread_id": checkpoint_thread_id}
 
     def analyze(self, request):
         # Legacy live-tool jobs retain their existing engine contract.
         if request.snapshot_context is None:
+            if self.checkpoint_options is not None:
+                raise ValueError("checkpoint bridge requires snapshot research")
             return self.engine_factory(base_config=self.base_config).analyze(request)
         observer = request.execution_observer
         if observer is None:
@@ -129,8 +159,9 @@ class SupervisedAnalysisEngine:
         context = get_context("spawn")  # Never fork a worker's live DB/lease thread.
         parent, child = context.Pipe()
         process = context.Process(target=_child, args=(child, self.base_config,
-            request.model_dump(mode="python"), self.engine_factory), daemon=True)
+            request.model_dump(mode="python"), self.engine_factory, self.checkpoint_options), daemon=True)
         pending_models = set()
+        checkpoint_commits = 0
         received = Queue(maxsize=1)
         stopped = Event()
 
@@ -177,6 +208,8 @@ class SupervisedAnalysisEngine:
                     observer.remaining_seconds()
                     if pending_models:
                         raise ResearchExecutionFailed("research returned with unfinished model calls")
+                    if self.checkpoint_options is not None and checkpoint_commits == 0:
+                        raise ResearchExecutionFailed("research returned without committed checkpoints")
                     result = AnalysisResult.model_validate(payload)
                     if (result.instrument != request.instrument
                             or result.analysis_date != request.analysis_date):
@@ -186,7 +219,29 @@ class SupervisedAnalysisEngine:
                 if method == "failure":
                     raise ResearchExecutionFailed("isolated research execution requires review")
                 reply = None
-                if method == "stage_start":
+                if method == "checkpoint_commit":
+                    observer.remaining_seconds()
+                    try:
+                        if self.checkpoint_options is None:
+                            raise ValueError()
+                        value = self.checkpoint_codec.decode(payload)
+                        if value.config["configurable"]["thread_id"] != self.checkpoint_options["thread_id"]:
+                            raise ValueError()
+                        reply = self.checkpoint_commit(payload)
+                        if (type(reply) is not CheckpointCommit or type(reply.sequence) is not int
+                                or reply.sequence < 1 or type(reply.record_id) is not UUID
+                                or reply.content_hash != hashlib.sha256(payload).hexdigest()):
+                            raise ValueError()
+                    except Exception:
+                        # Recheck cancellation/lease before sanitizing a failed
+                        # callback; never echo DB/checkpoint exception payloads.
+                        observer.check_cancelled()
+                        raise ResearchExecutionFailed("checkpoint commit requires review") from None
+                    # Cancellation/deadline at commit/ACK never grants advance.
+                    observer.check_cancelled()
+                    observer.remaining_seconds()
+                    checkpoint_commits += 1
+                elif method == "stage_start":
                     run_id, stage = payload
                     observer.on_chain_start({}, {}, run_id=run_id, name=stage)
                 elif method == "stage_end":

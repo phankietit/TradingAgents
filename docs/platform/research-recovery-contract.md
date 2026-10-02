@@ -140,6 +140,34 @@ consent/retained accounting, PostgreSQL/concurrency and live tests remain open.
 No existing owner history is backfilled or migrated and no allowance reset is
 authorized by a readable checkpoint.
 
+### Opt-in supervised checkpoint RPC
+
+The supervisor now accepts an internal complete tuple of reviewed codec,
+canonical run-thread ID, parent-only commit callback and explicitly capable
+engine factory. Missing/partial or unsupported setup is rejected before spawn.
+Only fingerprint/thread identity is passed to child: no DB, job lease or
+callback object crosses. The child committed saver calls the serialized bridge;
+parent revalidates restricted JSON/thread, commits and validates exact receipt
+type/UUID/positive integer sequence/hash, then rechecks cancellation/deadline
+before ACK. A result with no checkpoint commits is rejected when opted in.
+Raw DB/callback diagnostics do not cross as public errors.
+
+Fixture-only native engine wiring exercises all 14 original stages with this
+RPC and parent SQLite commits in EN/VI/bilingual/invalid VI. Separate-process
+fixtures kill the parent before commit and after durable commit but before ACK:
+waiting child stops executing through the existing parent guard; zero/one row
+respectively remains, without automatic replay. A terminal zombie is not
+described as reaped. Callback exception, malformed bytes, invalid ACK and
+post-commit cancellation/lease/deadline prevent any subsequent model admission.
+
+Default AnalysisEngine is intentionally not declared capable and default worker
+does not select the opt-in path. Production graph hook/trusted client identity,
+restore in a new supervised child, linked immutable accounting/consent/API/UI,
+PostgreSQL/concurrency and bounded parent DB-lock timeout remain open. These
+tests do not prove a hard deadline while a synchronous parent DB callback is
+itself blocked, or provider billing determinism. No private DB migration,
+automatic resume, execution_started bypass or allowance reset is enabled.
+
 Full package/dependency invalidation is conservative: a new machine must restore
 the compatible runtime, not silently waive mismatches. Missing versus flat book
 remains distinct; an exhausted run's limits cannot be changed by hashing a new

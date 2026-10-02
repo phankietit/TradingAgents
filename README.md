@@ -490,6 +490,14 @@ bytes into a fresh saver across all 17 interruption boundaries without changing
 downstream prompts, model-call traces or validated results. This is not a
 separate-process crash test or enabled worker resume; bridge integration,
 trusted construction, consent/accounting and live acceptance remain open.
+The supervisor now has an internal opt-in checkpoint RPC: only non-secret
+identity reaches the child; codec validation, private commit callback and lease
+remain parent-owned, with cancellation/deadline checked before ACK. Incomplete
+setup or an engine without an explicit recording capability is rejected.
+The default AnalysisEngine/worker does not enable recording or resume. Native
+fixture graphs exercise this RPC, including parent crashes before/after commit
+while the child waits; production construction, restore/accounting/consent and
+bounded DB-lock behavior still require acceptance.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

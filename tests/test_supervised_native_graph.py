@@ -31,6 +31,7 @@ from tradingagents.platform.persistence.models import ResearchCheckpointRow
 
 
 class NativeFixtureEngine:
+    supports_checkpoint_bridge = True  # Fixture-only explicit recording hook.
     def __init__(self, *, base_config=None):
         self.config = base_config
         self.model_trace = []
@@ -128,6 +129,22 @@ class NativeFixtureEngine:
                 result[0]["vi"] += " 25%"
             return {"blocks": result}
 
+        def committed_without_resume(graph, *args, **kwargs):
+            bridge = request.execution_observer
+            codec = SnapshotCheckpointCodec(fingerprint=bridge.checkpoint_options["fingerprint"],
+                                            nodes=graph.workflow.nodes)
+            saver = CommittedSnapshotSaver(codec=codec, commit=bridge.commit_checkpoint)
+            graph.graph = graph.workflow.compile(checkpointer=saver)
+            invoke = graph.graph.invoke
+
+            def committed_invoke(state, **graph_args):
+                graph_args["config"]["configurable"] = {
+                    "thread_id": bridge.checkpoint_options["thread_id"]}
+                return invoke(state, **graph_args, durability="sync")
+
+            with patch.object(graph.graph, "invoke", committed_invoke):
+                return original_propagate(graph, *args, **kwargs)
+
         class Model:
             def invoke(self, prompt):
                 trace("plain", prompt)
@@ -176,6 +193,9 @@ class NativeFixtureEngine:
             if interrupted_node:
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
                     "propagate_snapshots", resume_without_messages))
+            elif getattr(request.execution_observer, "checkpoint_options", None) is not None:
+                patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
+                    "propagate_snapshots", committed_without_resume))
             patches.enter_context(patch.object(trading_graph, "create_llm_client", client))
             patches.enter_context(patch.object(trading_graph, "TradingMemoryLog", forbidden))
             for name in ("_create_tool_nodes", "resolve_instrument_context", "_resolve_pending_entries",
@@ -189,7 +209,8 @@ class NativeFixtureEngine:
 
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
-def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_path, language, invalid):
+@pytest.mark.parametrize("committed_bridge", [False, True])
+def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_path, language, invalid, committed_bridge):
     instrument = _instrument()
     inputs = context(instrument)
     analysts = ("market", "social", "news", "fundamentals")
@@ -206,7 +227,24 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
         "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 1,
         "max_risk_discuss_rounds": 1, "output_language": language,
         "_fixture_invalid_translation": invalid}
-    result = SupervisedAnalysisEngine(base_config=config, engine_factory=NativeFixtureEngine).analyze(
+    database = None
+    bridge_options = {}
+    if committed_bridge:
+        from datetime import timedelta
+
+        database, owner, run = _database(tmp_path / "parent-checkpoints")
+        _enqueue(database, owner, run)
+        with database.session() as session:
+            job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
+        job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
+        nodes = STAGES | {"Msg Clear Market", "Msg Clear Sentiment", "Msg Clear News", "Msg Clear Fundamentals"}
+        codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=nodes)
+        store = PrivateCheckpointStore(codec=codec)
+        bridge_options = {"checkpoint_codec": codec, "checkpoint_thread_id": str(run.run_id),
+                          "checkpoint_commit": lambda raw: store.commit(context=job_context,
+                              owner_id=owner, run_id=run.run_id, raw=raw)}
+    result = SupervisedAnalysisEngine(base_config=config, engine_factory=NativeFixtureEngine,
+                                     **bridge_options).analyze(
         AnalysisRequest(instrument=instrument, analysis_date=NOW.date(), selected_analysts=analysts,
                         snapshot_context=inputs, execution_observer=observer))
     expected = ["Market Analyst", "Sentiment Analyst", "News Analyst", "Fundamentals Analyst",
@@ -237,6 +275,13 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     assert "messages" not in result.final_state
     assert all("messages" not in outputs for _, outputs in captures)
     assert list((tmp_path / "reports").iterdir()) == []
+    if database is not None:
+        with database.session() as session:
+            rows = session.scalars(select(ResearchCheckpointRow)).all()
+            assert len(rows) > 17
+            assert all(row.owner_id == owner and row.run_id == run.run_id for row in rows)
+            assert store.load_latest(session=session, owner_id=owner, run_id=run.run_id) is not None
+        database.dispose()
 
 
 @pytest.mark.parametrize("json_checkpoint,pending_checkpoint,committed", [
