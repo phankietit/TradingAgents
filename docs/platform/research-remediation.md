@@ -26,7 +26,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle/immutable notes/synthetic reader, no-blind-paid-replay, API/UI allowance, process supervision, native 14-stage English fixture and parent-crash guard on macOS; latest live full-flow FAIL at wall budget; supervised bilingual/live operational acceptance and actual resume UNVERIFIED |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle/immutable notes/synthetic reader, no-blind-paid-replay, API/UI allowance, process supervision, native 14-stage EN/VI/bilingual fixtures and parent-crash guard on macOS; latest live full-flow FAIL at wall budget; live operational acceptance and actual resume UNVERIFIED |
 | R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS UI and real processing flow; valid final report FAIL |
@@ -94,7 +94,7 @@ persisted allowances without inferring legacy values. Desktop/mobile synthetic
 interaction checks cover this behavior, not paid/provider acceptance.
 Default-worker snapshot supervision now stops local child execution on budget,
 cancellation or lease failure, including blocked SDK reads/retries. Native
-supervised bilingual/live acceptance remains open; this does not stop remote
+supervised live acceptance remains open; this does not stop remote
 provider work, cap provider charges or prove that a whole live report fits.
 
 Runtime budget groundwork: concurrent logical model starts now reserve the
@@ -116,7 +116,10 @@ Pipe reads use a bounded private reader thread, not the budget authority thread;
 oversized/disconnected frames fail closed, and this thread cannot call providers
 or publish. Child termination/join precedes handler exit. Native 14-stage English
 graph through spawn and worker-crash/orphan local tests now pass on macOS.
-Supervised bilingual graph, other OSes, live provider
+The same native graph now passes English/Vietnamese/bilingual fixtures through
+spawn, preserving canonical data and presentation reader text. Invalid added
+numeric content fails translation after one repair and leaves decision payload
+unavailable. These are fixtures, not semantic/MT quality proof. Other OSes, live provider
 quality and fingerprinted checkpoint resume still need evidence.
 
 ### Renewed acceptance scope
