@@ -9,7 +9,11 @@ import pytest
 from tests.test_durable_jobs import _database, _enqueue
 from tests.test_risk_engine import NOW
 from tradingagents.contracts import RunEventType
-from tradingagents.platform.analysis.observer import ResearchBudgetExceeded, ResearchObserver
+from tradingagents.platform.analysis.observer import (
+    ResearchBudgetExceeded,
+    ResearchExecutionFailed,
+    ResearchObserver,
+)
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.jobs import DurableJobQueue
 from tradingagents.platform.jobs.worker import JobExecutionContext
@@ -89,3 +93,37 @@ def test_commit_after_original_deadline_does_not_grant_provider_admission():
     assert not entered
     assert len(events) == 1 and events[0][1]["usage"]["status"] == "incomplete"
     assert observer.started == 0 and observer.started_calls == 1
+
+
+@pytest.mark.parametrize("persist", [True, False])
+def test_supervised_stop_keeps_unknown_usage_and_prevents_later_callbacks(persist):
+    events, clock = [], [100]
+
+    def emit(kind, payload):
+        if payload.get("execution_stopped") and not persist:
+            raise RuntimeError("synthetic fence refusal")
+        events.append((kind, payload))
+
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=emit, clock=lambda: clock[0])
+    model_id = uuid4()
+    observer.on_chat_model_start({}, [], run_id=model_id)
+    clock[0] = 112
+    if persist:
+        observer._record_supervised_stop()
+        assert events[-1][1]["execution_stopped"] is True
+        assert events[-1][1]["elapsed_seconds"] == 12
+    else:
+        with pytest.raises(RuntimeError, match="synthetic fence refusal"):
+            observer._record_supervised_stop()
+        assert len(events) == 1 and "execution_stopped" not in events[0][1]
+    assert observer.receipt()["usage"]["status"] == "incomplete"
+    assert observer.receipt()["usage"]["cost"] is None
+    assert observer.started == 100 and observer.started_calls == 1
+    for action in (
+        lambda: observer.on_chat_model_start({}, [], run_id=uuid4()),
+        lambda: observer.on_llm_end(SimpleNamespace(generations=[]), run_id=model_id),
+        lambda: observer.on_llm_error(RuntimeError(), run_id=model_id),
+        observer._record_supervised_stop,
+    ):
+        with pytest.raises(ResearchExecutionFailed, match="already stopped"):
+            action()

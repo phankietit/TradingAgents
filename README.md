@@ -593,6 +593,11 @@ admission and cannot authorize resume or infer actual provider cost.
 Observations now retain original owner/run/config/allowance identity. An internal
 recheck compares the full observation against freshly loaded evidence and rejects
 changes; it is not a database lock, consent token or check-then-dispatch fence.
+The supervised parent can append a final usage observation only after child
+reaping and reader shutdown. When every observed attempt has that boundary, the
+reader retains an upper bound on local supervised elapsed time. Missing stop
+evidence remains unknown, not inferred from run status. This does not bound
+remote provider duration/billing or authorize continuation; old rows are untouched.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

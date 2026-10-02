@@ -172,7 +172,7 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             assert observer.started_calls == usage["model_calls"] == usage["calls_with_usage"] == 1
             assert usage["input_tokens"] == 10 and usage["output_tokens"] == 5 and usage["total_tokens"] == 15
             assert usage["failed_calls"] == 0 and usage["cost"] is None
-            assert [data["usage"]["total_tokens"] for kind, data in events if kind == "model.usage"] == [0, 15]
+            assert [data["usage"]["total_tokens"] for kind, data in events if kind == "model.usage"] == [0, 15, 15]
             assert observer.completed == ["Market Analyst"]
             assert commit_pids and set(commit_pids) == {os.getpid()}
             with database.session() as session:
@@ -182,7 +182,8 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                     codec.decode(row.payload)
                 usage_events = [event for event in RunEventStore(session).list_after(owner, run.run_id, limit=500)
                                 if event.event_type is RunEventType.MODEL_USAGE]
-                assert len(usage_events) == 2
+                assert len(usage_events) == 3
+                assert usage_events[-1].payload["execution_stopped"] is True
                 assert usage_events[0].payload["usage"]["started_model_calls"] == 1
                 assert usage_events[0].payload["usage"]["model_calls"] == 0
                 assert usage_events[0].payload["usage"]["status"] == "incomplete"
@@ -191,6 +192,7 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
                 assert evidence.evidence_status == "PASS" and evidence.started_calls == 1
                 assert evidence.reported_total_tokens == 15 and evidence.exact_elapsed_known is False
+                assert evidence.elapsed_upper_bound is not None
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
             return
         result = supervised.analyze(request)
@@ -255,7 +257,8 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             if callbacks:
                 usage_events = [event for event in RunEventStore(session).list_after(owner, run.run_id, limit=500)
                                 if event.event_type is RunEventType.MODEL_USAGE]
-                assert len(usage_events) == 2 * calls
+                assert len(usage_events) == 2 * calls + 1
+                assert usage_events[-1].payload["execution_stopped"] is True
                 assert usage_events[-1].payload["usage"] == usage
                 assert all(event.payload["execution_limits"] == {"wall_seconds": 1800, "model_calls": 128}
                            and event.payload["elapsed_seconds"] >= 0
@@ -264,6 +267,7 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert evidence.evidence_status == "PASS" and evidence.started_calls == calls
                 assert evidence.reported_total_tokens == 15 * calls and evidence.unreported_started_calls == 0
                 assert evidence.exact_elapsed_known is False
+                assert evidence.elapsed_upper_bound is not None
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
         assert list((tmp_path / "results").iterdir()) == []
     finally:

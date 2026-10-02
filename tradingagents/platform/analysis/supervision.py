@@ -331,6 +331,7 @@ class SupervisedAnalysisEngine:
                 parent.send(reply)
         finally:
             # Do not leave a detached SDK call or child capable of local work.
+            child_stopped = False
             if process.pid is not None:
                 if process.is_alive():
                     process.terminate()
@@ -339,6 +340,7 @@ class SupervisedAnalysisEngine:
                     process.kill()
                     process.join()
                 process.close()
+                child_stopped = True
             stopped.set()
             parent.close()
             child.close()
@@ -349,3 +351,9 @@ class SupervisedAnalysisEngine:
             for run_id in pending_models:
                 with suppress(Exception):
                     observer.on_llm_error(RuntimeError("local execution stopped"), run_id=run_id)
+            if child_stopped:
+                # Only after child reaping AND reader shutdown. Lease/cancel
+                # fences may refuse this append; preserve the original outcome
+                # and leave missing durable stop evidence unknown, not inferred.
+                with suppress(Exception):
+                    observer._record_supervised_stop()

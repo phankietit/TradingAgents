@@ -47,6 +47,7 @@ class ResearchObserver(BaseCallbackHandler):
         self.max_seconds = max_seconds
         self.max_calls = max_calls
         self.started_calls = 0
+        self._execution_stopped = False
         self.supervision_mode = "cooperative_boundaries"
 
     def _check(self):
@@ -60,6 +61,8 @@ class ResearchObserver(BaseCallbackHandler):
         Cancellation/lease loss takes precedence over the budget classification.
         """
         self.check_cancelled()
+        if self._execution_stopped:
+            raise ResearchExecutionFailed("research execution already stopped")
         remaining = self.max_seconds - (self.clock() - self.started)
         if remaining <= 0:
             raise ResearchBudgetExceeded("research wall-time budget exhausted")
@@ -106,8 +109,23 @@ class ResearchObserver(BaseCallbackHandler):
                 "elapsed_seconds": max(0.0, self.clock() - self.started),
                 "execution_limits": {"wall_seconds": self.max_seconds, "model_calls": self.max_calls}}
 
+    def _record_supervised_stop(self):
+        """Trusted supervisor only, after child reaping and pipe-reader shutdown.
+
+        This bounds local supervised execution time, not remote provider work or
+        billing. Failed persistence leaves durable elapsed uncertainty intact.
+        """
+        with self.lock:
+            if self._execution_stopped:
+                raise ResearchExecutionFailed("research execution already stopped")
+            self._execution_stopped = True
+            payload = {**self._usage_payload(), "execution_stopped": True}
+        self.emit("model.usage", payload)
+
     def on_llm_end(self, response, *, run_id, **kwargs):
         with self.lock:
+            if self._execution_stopped:
+                raise ResearchExecutionFailed("research execution already stopped")
             if run_id in self.seen_model_runs:
                 return
             self.seen_model_runs.add(run_id)
@@ -126,6 +144,8 @@ class ResearchObserver(BaseCallbackHandler):
 
     def on_llm_error(self, error, *, run_id, **kwargs):
         with self.lock:
+            if self._execution_stopped:
+                raise ResearchExecutionFailed("research execution already stopped")
             if run_id in self.seen_model_runs:
                 return
             self.seen_model_runs.add(run_id)

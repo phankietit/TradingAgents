@@ -39,12 +39,17 @@ class AccountingEvidence:
     reported_output_tokens: int | None = None
     reported_total_tokens: int | None = None
     elapsed_lower_bound: float | None = None
+    # Local supervised stop bound, never remote SDK/billing duration.
+    elapsed_upper_bound: float | None = None
     # No remaining allowance or consent can be derived from lower-bound time.
     exact_elapsed_known: bool = False
 
 
 def _usage(payload, limits):
-    if set(payload) != {"usage", "attempt", "elapsed_seconds", "execution_limits"}:
+    required = {"usage", "attempt", "elapsed_seconds", "execution_limits"}
+    if set(payload) not in (required, required | {"execution_stopped"}):
+        raise ValueError()
+    if "execution_stopped" in payload and payload["execution_stopped"] is not True:
         raise ValueError()
     value = payload["usage"]
     if type(value) is not dict or set(value) != set(COUNTERS) | {
@@ -69,7 +74,7 @@ def _usage(payload, limits):
                 and value["started_model_calls"] == value["model_calls"] == value["calls_with_usage"])
     if value["status"] != ("reported" if reported else "incomplete"):
         raise ValueError()
-    return value, elapsed
+    return value, elapsed, payload.get("execution_stopped", False)
 
 
 def load_accounting_evidence(*, session, owner_id, run_id):
@@ -94,6 +99,7 @@ def load_accounting_evidence(*, session, owner_id, run_id):
         store = RunEventStore(session)
         position, current_attempt = 0, 0
         latest, seen_attempts = {}, set()
+        stopped_attempts = set()
         legacy = False
         while position < high:
             batch = store.list_after(owner_id, run_id, after_sequence=position, limit=min(500, high - position))
@@ -116,12 +122,14 @@ def load_accounting_evidence(*, session, owner_id, run_id):
                     continue
                 if attempt != current_attempt:
                     raise ValueError()
+                if attempt in stopped_attempts:
+                    raise ValueError()
                 # Old events have no pre-admission/elapsed identity. Withhold
                 # all totals rather than dropping that attempt from an aggregate.
                 if "elapsed_seconds" not in event.payload or "execution_limits" not in event.payload:
                     legacy = True
                     continue
-                value, elapsed = _usage(event.payload, limits)
+                value, elapsed, stopped = _usage(event.payload, limits)
                 previous = latest.get(attempt)
                 if previous and (elapsed < previous[1] or any(value[key] < previous[0][key] for key in COUNTERS)):
                     raise ValueError()
@@ -129,6 +137,8 @@ def load_accounting_evidence(*, session, owner_id, run_id):
                         value[key] != previous[0][key] for key in ("input_tokens", "output_tokens", "total_tokens")):
                     raise ValueError()
                 latest[attempt] = (value, elapsed)
+                if stopped:
+                    stopped_attempts.add(attempt)
         attempts = tuple(sorted(seen_attempts))
         if legacy or not attempts or set(latest) != seen_attempts:
             return AccountingEvidence(**identity, evidence_status="UNVERIFIED", high_water_sequence=high,
@@ -141,7 +151,8 @@ def load_accounting_evidence(*, session, owner_id, run_id):
             attempts=attempts, started_calls=totals["started_model_calls"], completed_calls=totals["model_calls"],
             unreported_started_calls=totals["started_model_calls"] - totals["calls_with_usage"],
             reported_input_tokens=totals["input_tokens"], reported_output_tokens=totals["output_tokens"],
-            reported_total_tokens=totals["total_tokens"], elapsed_lower_bound=elapsed_total)
+            reported_total_tokens=totals["total_tokens"], elapsed_lower_bound=elapsed_total,
+            elapsed_upper_bound=elapsed_total if stopped_attempts == seen_attempts else None)
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError, SQLAlchemyError):
         raise AccountingEvidenceError("accounting evidence requires review") from None
 

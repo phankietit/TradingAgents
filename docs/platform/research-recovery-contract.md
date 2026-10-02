@@ -110,6 +110,24 @@ The recheck returns no permission/token. It does not lock a writer or authentica
 browser input and cannot replace a transactional consent/lease fence: another
 event may commit after its read. Production dispatch remains disabled.
 
+### Local supervised stop accounting
+
+After the child is confirmed stopped/reaped and the pipe reader is shut down,
+the parent closes the original observer and emits one existing model.usage
+observation with execution_stopped=True. It includes unchanged counters/limits
+and elapsed on the same original monotonic clock, including local cleanup.
+No later model callback/admission can use that observer. Stop publication is
+subject to the existing lease/cancellation event fence; refusal is suppressed
+only to preserve the original result/error, never treated as durable success.
+An abrupt parent crash or missing stop append keeps elapsed upper bound unknown.
+
+The strict reader rejects false/non-boolean stop claims, duplicate stop or usage
+after stop in the same attempt. Only a bounded prefix containing stop evidence
+for every observed attempt yields elapsed_upper_bound; exact_elapsed_known stays
+False. This bound is local supervised execution, not the remote provider's
+processing/billing duration; unreported usage and cost remain unknown. Legacy
+history is not repaired, and this is not a consent or remaining-budget grant.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

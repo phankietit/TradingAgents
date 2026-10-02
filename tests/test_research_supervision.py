@@ -158,8 +158,14 @@ def test_killed_parent_does_not_leave_an_executing_orphan_child(tmp_path):
 def test_spawn_retains_events_usage_and_reader_text_but_not_raw_messages(tmp_path):
     marker = tmp_path / "child"
     saved, events = [], []
+
+    def emit(kind, payload):
+        if payload.get("execution_stopped"):
+            assert_child_stopped(marker)
+        events.append((kind, payload))
+
     observer = ResearchObserver(check_cancelled=lambda: None,
-        emit=lambda *args: events.append(args), max_seconds=30,
+        emit=emit, max_seconds=30,
         save_stage=lambda stage, outputs: saved.append((stage, outputs)))
     engine = SupervisedAnalysisEngine(base_config={"marker": str(marker)}, engine_factory=SpawnFixtureEngine)
     result = engine.analyze(request_with(observer))
@@ -168,9 +174,38 @@ def test_spawn_retains_events_usage_and_reader_text_but_not_raw_messages(tmp_pat
     assert observer.completed == ["Market Analyst"]
     assert observer.receipt()["usage"]["total_tokens"] == 5
     assert observer.receipt()["supervision_mode"] == "spawned_process"
-    assert [event[0] for event in events] == ["stage.started", "model.usage", "model.usage", "stage.completed"]
+    assert [event[0] for event in events] == ["stage.started", "model.usage", "model.usage", "stage.completed", "model.usage"]
+    assert events[-1][1]["execution_stopped"] is True
     assert events[1][1]["usage"]["model_calls"] == 0
     assert events[1][1]["usage"]["started_model_calls"] == 1
+    assert_child_stopped(marker)
+
+
+@pytest.mark.parametrize("mode", ["success", "failure"])
+def test_stop_append_refusal_does_not_replace_original_outcome(tmp_path, mode):
+    marker = tmp_path / "child-stop-refusal"
+    events, attempted = [], []
+
+    def emit(kind, payload):
+        if payload.get("execution_stopped"):
+            assert_child_stopped(marker)
+            attempted.append(True)
+            raise RuntimeError("PRIVATE_STOP_APPEND_ERROR")
+        events.append((kind, payload))
+
+    observer = ResearchObserver(check_cancelled=lambda: None, emit=emit, max_seconds=30)
+    engine = SupervisedAnalysisEngine(base_config={"marker": str(marker), "mode": mode},
+                                     engine_factory=SpawnFixtureEngine)
+    if mode == "failure":
+        with pytest.raises(ResearchExecutionFailed, match="isolated research execution requires review") as raised:
+            engine.analyze(request_with(observer))
+        assert "PRIVATE_STOP_APPEND_ERROR" not in str(raised.value)
+    else:
+        result = engine.analyze(request_with(observer))
+        assert result.narrative_signal == "REVIEW"
+    assert attempted == [True]
+    assert all("execution_stopped" not in payload for _, payload in events)
+    assert observer.receipt()["usage"]["cost"] is None
     assert_child_stopped(marker)
 
 

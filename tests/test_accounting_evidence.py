@@ -213,3 +213,36 @@ def test_impossible_accounting_totals_reject_without_mutation(tmp_path, kind):
             assert before == after
     finally:
         database.dispose()
+
+
+@pytest.mark.parametrize("kind", ["all_stopped", "partial", "after_stop", "duplicate_stop", "false_stop"])
+def test_local_elapsed_bound_requires_every_attempt_stop(tmp_path, kind):
+    database, owner, run = _database(tmp_path)
+    try:
+        first = receipt()
+        stop = {**deepcopy(first[-1]), "elapsed_seconds": 12, "execution_stopped": True}
+        first.append(stop)
+        if kind == "after_stop":
+            first.append({**deepcopy(first[-1]), "execution_stopped": True, "elapsed_seconds": 13})
+            first[-1].pop("execution_stopped")
+        elif kind == "duplicate_stop":
+            first.append(deepcopy(stop))
+        elif kind == "false_stop":
+            first[-1]["execution_stopped"] = False
+        second = receipt(finish=False)
+        if kind == "all_stopped":
+            second.append({**deepcopy(second[-1]), "elapsed_seconds": 13, "execution_stopped": True})
+        with database.session() as session:
+            append(session, owner, run, 1, first)
+            append(session, owner, run, 2, second)
+        with database.session() as session:
+            if kind in {"after_stop", "duplicate_stop", "false_stop"}:
+                with pytest.raises(AccountingEvidenceError):
+                    load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+            else:
+                evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert evidence.evidence_status == "PASS" and evidence.exact_elapsed_known is False
+                assert evidence.elapsed_upper_bound == (25 if kind == "all_stopped" else None)
+                assert evidence.reported_total_tokens == 15 and evidence.unreported_started_calls == 1
+    finally:
+        database.dispose()
