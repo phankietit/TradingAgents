@@ -16,6 +16,7 @@ from uuid import UUID
 
 from langchain_core.callbacks import BaseCallbackHandler
 
+from .allowance import validate_retained_observer
 from .checkpoint_codec import SnapshotCheckpointCodec
 from .checkpoint_store import CheckpointCommit, CheckpointDatabaseError
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
@@ -200,7 +201,8 @@ class SupervisedAnalysisEngine:
         observer = request.execution_observer
         if observer is None:
             raise ValueError("snapshot supervision requires a research observer")
-        observer.remaining_seconds()
+        if self.restore_checkpoint is None:
+            observer.remaining_seconds()
         recording_data = None
         if self.recording_inputs is not None:
             inputs = self.recording_inputs.validate_request(request)
@@ -217,8 +219,10 @@ class SupervisedAnalysisEngine:
                 restored = self.checkpoint_codec.decode(self.restore_checkpoint)
                 if restored.config["configurable"]["thread_id"] != self.checkpoint_options["thread_id"]:
                     raise ValueError()
+                validate_retained_observer(observer=observer, run=inputs.run)
             except (ValueError, TypeError, AttributeError):
                 raise ValueError("invalid checkpoint bridge configuration") from None
+            observer.remaining_seconds()
         context = get_context("spawn")  # Never fork a worker's live DB/lease thread.
         parent, child = context.Pipe()
         process = context.Process(target=_child, args=(child, self.base_config,

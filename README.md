@@ -641,6 +641,13 @@ An internal retained-observer builder reloads and compares original accounting,
 refuses stale/unknown/exhausted observations, and debits prior time/calls at
 admission while emitting only current-attempt usage. It is not wired to worker
 or browser continuation and does not authenticate consent or restore a graph.
+The opt-in supervised restore path now requires that builder's original
+owner/run/config-bound, unused observer. Fresh/copied observers, reset prior
+debits, changed caps/clock/callbacks and already-used attempts are rejected
+before spawning. Its original clock still governs the remaining deadline.
+This local construction binding is not an authenticated consent token, a DB
+writer fence or authority to continue a terminal historical run; default
+worker/API recovery remains disabled.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

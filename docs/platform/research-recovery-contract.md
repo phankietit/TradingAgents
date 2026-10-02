@@ -172,6 +172,21 @@ its new attempt clock, counters and event elapsed remain attempt-local. This
 avoids both fresh-budget replay and double-counting prior accounting on reload.
 The existing supervisor uses the same observer for deadline/cancellation checks.
 
+The opt-in supervised restore boundary requires the exact builder-created
+observer with a private frozen construction binding. It matches original
+owner/run/config and scalar limits to the transferred original run, preserves
+prior elapsed/starts and original clock/start/callback identities, and rejects
+a fresh/copied/reset/already-used/stopped attempt before process creation. A
+valid unused binding still checks the original remaining deadline before spawn;
+ordinary non-restore supervision is unchanged. No binding enters the child,
+event payload or public representation.
+
+This prevents an internal caller accidentally restoring a valid tuple with a
+fresh budget. It is not a cryptographic attestation against arbitrary trusted
+Python mutation, authenticated owner consent, transactional high-water recheck,
+linked execution identity or later-writer fence. The binding does not reload DB
+state at dispatch. These remain required before default recovery enablement.
+
 This internal builder is not authenticated transactional consent, an execution
 identity or checkpoint restoration. Its read comparison cannot fence later
 writers; a future caller must supply the reviewed consent/lease transaction and
