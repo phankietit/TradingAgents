@@ -454,6 +454,16 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+The internal supervisor can optionally transfer restricted checkpoint bytes to
+a new spawned original engine/recorder after parent thread/fingerprint/context
+validation and revalidation before spawn. The child independently checks its
+initialized original graph fingerprint before restore; database/lease/commit
+remain parent-only. Synthetic new-child fixtures compare continuation traces
+and outputs while debiting all first-attempt usage with the retained observer.
+These mechanism tests are not authenticated consent, transactional execution
+identity or permission to replay historical runs; default worker/API recovery
+and live acceptance remain disabled/unverified.
+
 The internal original-context recorder can now import restricted checkpoint
 bytes after checking the initialized graph fingerprint and original observer
 allowance. The paired snapshot graph hook invokes the original scheduler with

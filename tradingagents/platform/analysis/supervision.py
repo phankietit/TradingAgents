@@ -87,7 +87,7 @@ class _Bridge(BaseCallbackHandler):
 
 
 def _child(connection, base_config, request_data, engine_factory, checkpoint_options=None,
-           recording_data=None):
+           recording_data=None, restore_checkpoint=None):
     stopped = Event()
 
     def guard_parent():
@@ -104,6 +104,8 @@ def _child(connection, base_config, request_data, engine_factory, checkpoint_opt
         request = AnalysisRequest.model_validate(request_data).model_copy(
             update={"execution_observer": _Bridge(connection, checkpoint_options)})
         options = {}
+        if restore_checkpoint is not None and recording_data is None:
+            raise ValueError()
         if recording_data is not None:
             from .recording import SnapshotRecorder
 
@@ -116,7 +118,8 @@ def _child(connection, base_config, request_data, engine_factory, checkpoint_opt
             options["snapshot_recorder"] = SnapshotRecorder(
                 owner_id=inputs.owner_id, expected_fingerprint=inputs.expected_fingerprint,
                 run=inputs.run, portfolio_snapshot=inputs.portfolio_snapshot, policy=inputs.policy,
-                risk_snapshots=inputs.risk_snapshots, commit=request.execution_observer.commit_checkpoint)
+                risk_snapshots=inputs.risk_snapshots, commit=request.execution_observer.commit_checkpoint,
+                restore_checkpoint=restore_checkpoint)
         result = engine_factory(base_config=base_config, **options).analyze(request)
         result = result.model_copy(update={"final_state": {
             key: value for key, value in result.final_state.items() if key in RESULT_FIELDS}})
@@ -150,7 +153,7 @@ class SupervisedAnalysisEngine:
 
     def __init__(self, *, base_config=None, engine_factory=AnalysisEngine,
                  checkpoint_codec=None, checkpoint_thread_id=None, checkpoint_commit=None,
-                 recording_inputs=None):
+                 recording_inputs=None, restore_checkpoint=None):
         self.base_config = base_config
         self.engine_factory = engine_factory
         supplied = (checkpoint_codec, checkpoint_thread_id, checkpoint_commit)
@@ -158,7 +161,9 @@ class SupervisedAnalysisEngine:
         self.checkpoint_codec = checkpoint_codec
         self.checkpoint_commit = checkpoint_commit
         self.recording_inputs = recording_inputs
-        if recording_inputs is not None or any(value is not None for value in supplied):
+        self.restore_checkpoint = restore_checkpoint
+        if (restore_checkpoint is not None or recording_inputs is not None
+                or any(value is not None for value in supplied)):
             try:
                 original = None
                 if recording_inputs is not None:
@@ -173,6 +178,12 @@ class SupervisedAnalysisEngine:
                 if original is not None and (original.expected_fingerprint != checkpoint_codec.fingerprint
                         or str(original.run.run_id) != checkpoint_thread_id):
                     raise ValueError()
+                if restore_checkpoint is not None:
+                    if original is None:
+                        raise ValueError()
+                    restored = checkpoint_codec.decode(restore_checkpoint)
+                    if restored.config["configurable"]["thread_id"] != checkpoint_thread_id:
+                        raise ValueError()
             except (ValueError, TypeError, AttributeError):
                 raise ValueError("invalid checkpoint bridge configuration") from None
             # Explicit private context is separate; DB/lease/callback remain
@@ -197,11 +208,23 @@ class SupervisedAnalysisEngine:
                     or str(inputs.run.run_id) != self.checkpoint_options["thread_id"]):
                 raise ValueError("invalid checkpoint bridge configuration")
             recording_data = self.recording_inputs.raw
+        if self.restore_checkpoint is not None:
+            # Revalidate mutable engine setup before spawning. Bytes only, not
+            # a saver/DB handle, and no fresh parent observer is created here.
+            try:
+                if recording_data is None:
+                    raise ValueError()
+                restored = self.checkpoint_codec.decode(self.restore_checkpoint)
+                if restored.config["configurable"]["thread_id"] != self.checkpoint_options["thread_id"]:
+                    raise ValueError()
+            except (ValueError, TypeError, AttributeError):
+                raise ValueError("invalid checkpoint bridge configuration") from None
         context = get_context("spawn")  # Never fork a worker's live DB/lease thread.
         parent, child = context.Pipe()
         process = context.Process(target=_child, args=(child, self.base_config,
             request.model_dump(mode="python"), self.engine_factory, self.checkpoint_options,
-            recording_data), daemon=True)
+            recording_data, *((self.restore_checkpoint,) if self.restore_checkpoint is not None else ())),
+            daemon=True)
         pending_models = set()
         checkpoint_commits = 0
         received = Queue(maxsize=1)

@@ -519,6 +519,19 @@ not select it; no resume, consent/accounting route or paid replay is enabled.
 
 ## Required acceptance before enablement
 
+The supervisor has an internal opt-in restricted-byte restore transfer alongside
+the required exact original recording context/engine. Parent validates codec
+and thread before construction and before spawn, then the original child
+recorder checks the actual initialized graph fingerprint and parent allowance.
+No saver, DB, lease or commit callback crosses to the child. New-child synthetic
+fixtures branch from an intermediate tuple of a completed fixture run and debit
+ALL first-attempt calls/time, including work after the chosen tuple; this is
+deliberately not a consent/retry scenario. Remaining traces and published fields
+match baseline, both children are reaped and old rows retained; event totals
+include both attempts without reset. Authenticated transactional consent/linked
+execution and stopped/crashed-at-boundary recovery acceptance remain open.
+Default worker/API does not supply the restore option.
+
 Original-context `SnapshotRecorder` optionally accepts restricted bytes; after
 actual initialized graph/client fingerprint and original observer allowance
 checks, it restores into a fresh committed saver. The paired graph hook uses

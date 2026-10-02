@@ -7,6 +7,7 @@ import pytest
 
 from tests.test_recovery_fingerprint import inputs
 from tests.test_risk_engine import _policy, _portfolio
+from tests.test_snapshot_checkpoint_codec import checkpoint
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisResult
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.observer import ResearchObserver
@@ -32,6 +33,49 @@ def supervisor(args, value, **updates):
         "checkpoint_thread_id": str(args["run"].run_id), "checkpoint_commit": lambda raw: None}
     options.update(updates)
     return SupervisedAnalysisEngine(**options)
+
+
+def restore_bytes(args, *, fingerprint="a" * 64, thread=None):
+    value = checkpoint()
+    thread = thread or str(args["run"].run_id)
+    value.config["configurable"]["thread_id"] = thread
+    value.metadata["thread_id"] = thread
+    value.checkpoint["versions_seen"] = {"market": {"messages": 1}}
+    return SnapshotCheckpointCodec(fingerprint=fingerprint, nodes={"market"}).encode(value)
+
+
+@pytest.mark.parametrize("failure", ["malformed", "type", "thread", "fingerprint", "context"])
+def test_restore_transport_setup_rejects_before_spawn(failure):
+    args = inputs()
+    raw = restore_bytes(args)
+    if failure == "malformed":
+        raw = b"PRIVATE_NEVER_ECHO"
+    elif failure == "type":
+        raw = bytearray(raw)
+    elif failure == "thread":
+        raw = restore_bytes(args, thread=str(uuid4()))
+    elif failure == "fingerprint":
+        raw = restore_bytes(args, fingerprint="b" * 64)
+    with pytest.raises(ValueError) as raised:
+        supervisor(args, None if failure == "context" else envelope(args), restore_checkpoint=raw)
+    assert str(raised.value) == "invalid checkpoint bridge configuration"
+    assert raised.value.__cause__ is None
+
+
+def test_restore_transport_revalidated_before_new_process(monkeypatch):
+    args = inputs()
+    engine = supervisor(args, envelope(args), restore_checkpoint=restore_bytes(args))
+    engine.restore_checkpoint = b"PRIVATE_MUTATED_BYTES"
+    request = args["request"].model_copy(update={"execution_observer": ResearchObserver(
+        check_cancelled=lambda: None, emit=lambda *args: None)})
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("invalid restore spawned a child")
+
+    monkeypatch.setattr("tradingagents.platform.analysis.supervision.get_context", forbidden)
+    with pytest.raises(ValueError, match="^invalid checkpoint bridge configuration$"):
+        engine.analyze(request)
+    assert request.execution_observer.started_calls == 0
 
 
 def test_json_only_roundtrip_and_nonprivate_repr():

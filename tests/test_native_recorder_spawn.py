@@ -21,7 +21,10 @@ from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
 from tradingagents.platform.analysis.accounting import load_accounting_evidence
-from tradingagents.platform.analysis.allowance import load_remaining_allowance
+from tradingagents.platform.analysis.allowance import (
+    build_retained_observer,
+    load_remaining_allowance,
+)
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
@@ -46,7 +49,7 @@ from tradingagents.platform.persistence.models import ResearchCheckpointRow
 
 
 def fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
-                  *, invalid=False, callbacks=False):
+                  *, invalid=False, callbacks=False, restore_checkpoint=None):
     """Only install synthetic SDK responses; do not replace engine or graph hooks."""
     assert engine_factory is AnalysisEngine
     os.environ["OPENAI_API_KEY"] = "synthetic-NEVER_ECHO"
@@ -64,7 +67,7 @@ def fixture_child(connection, base_config, request_data, engine_factory, checkpo
 
     with patch.object(httpx.Client, "send", forbidden), patch.object(httpx.AsyncClient, "send", forbidden):
         fixture.analyze(request, fixture_execution=lambda config: original_child(
-            connection, config, request_data, engine_factory, checkpoint_options, recording_data))
+            connection, config, request_data, engine_factory, checkpoint_options, recording_data, restore_checkpoint))
     assert len(fixture.initialized_clients) == 2
     assert all(llm.root_client.is_closed() and llm.root_async_client.is_closed()
                for llm in fixture.initialized_clients)
@@ -85,6 +88,13 @@ def callback_fixture_child(connection, base_config, request_data, engine_factory
 def invalid_callback_fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data):
     fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
                   callbacks=True, invalid=True)
+
+
+def restored_callback_fixture_child(connection, base_config, request_data, engine_factory,
+                                    checkpoint_options, recording_data, restore_checkpoint):
+    fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
+                  callbacks=True, restore_checkpoint=restore_checkpoint,
+                  invalid=base_config["_fixture_restore_invalid"])
 
 
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
@@ -130,10 +140,11 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
         job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
         events = []
+        event_attempt = job.attempt
         def emit(kind, payload):
             with job_context.publication_session() as session:
                 RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
-                    event_type=RunEventType(kind), occurred_at=NOW, payload={**payload, "attempt": job.attempt})
+                    event_type=RunEventType(kind), occurred_at=NOW, payload={**payload, "attempt": event_attempt})
             events.append((kind, payload))
 
         observer = ResearchObserver(check_cancelled=job_context.raise_if_cancelled,
@@ -275,6 +286,47 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert allowance.assessment_status == "PASS" and allowance.remaining_model_calls == 128 - calls
                 assert 0 < allowance.remaining_wall_seconds <= 1800
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
+        if callbacks is True:
+            # Synthetic mechanism proof: branch from an intermediate completed
+            # run tuple into an actual new child, retaining ALL first-attempt
+            # costs (even work after the chosen tuple). Not recovery consent.
+            raw = [row.payload for row in rows if (
+                codec.decode(row.payload).checkpoint["channel_values"].get("market_report")
+                and not codec.decode(row.payload).checkpoint["channel_values"].get("news_report"))][-1]
+            prior_rows = [(row.record_id, row.content_hash, row.payload) for row in rows]
+            with database.session() as session:
+                retained = build_retained_observer(session=session, owner_id=owner, run_id=run.run_id,
+                    expected_accounting=evidence, check_cancelled=job_context.raise_if_cancelled, emit=emit)
+            event_attempt = 2
+            with job_context.publication_session() as session:
+                RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                    event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW, payload={"attempt": 2})
+            monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", restored_callback_fixture_child)
+            restored_supervisor = SupervisedAnalysisEngine(base_config={**config, "_fixture_restore_invalid": invalid},
+                recording_inputs=recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
+                checkpoint_commit=commit, restore_checkpoint=raw)
+            # Fixture-only option is removed by fixture bootstrap before the
+            # original production child fingerprint guard initializes clients.
+            restored_result = restored_supervisor.analyze(request.model_copy(update={"execution_observer": retained}))
+            restored_trace = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
+            assert restored_trace["pid"] != trace["pid"] and restored_trace["pid"] != os.getpid()
+            with pytest.raises(ProcessLookupError):
+                os.kill(restored_trace["pid"], 0)
+            assert restored_trace["closed_clients"] == 2
+            assert 0 < len(restored_trace["trace"]) < len(trace["trace"])
+            assert restored_trace["trace"] == trace["trace"][-len(restored_trace["trace"]):]
+            assert restored_result.model_dump() == actual_data
+            assert retained.max_calls == 128 and retained._retained_started_calls == calls
+            assert retained._retained_elapsed_seconds == evidence.elapsed_upper_bound
+            with database.session() as session:
+                after = session.scalars(select(ResearchCheckpointRow).order_by(ResearchCheckpointRow.sequence)).all()
+                assert [(row.record_id, row.content_hash, row.payload) for row in after[:len(rows)]] == prior_rows
+                aggregate = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert aggregate.attempts == (1, 2)
+                assert aggregate.started_calls == calls + len(restored_trace["trace"])
+                assert aggregate.reported_total_tokens == aggregate.started_calls * 15
+                assert aggregate.elapsed_upper_bound is not None
+                assert aggregate.elapsed_upper_bound >= evidence.elapsed_upper_bound
         assert list((tmp_path / "results").iterdir()) == []
     finally:
         if graph is not None:
