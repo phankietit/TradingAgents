@@ -51,7 +51,8 @@ def test_every_message_location_removed_without_mutating_input(codec):
 @pytest.mark.parametrize("location", ["top", "state", "initial", "pending", "metadata", "decision",
     "version", "node", "authority", "memory", "messages", "initial_messages", "pending_messages",
     "fingerprint", "schema", "native_version", "nonfinite", "parent_owner", "missing_authority",
-    "diagnostic", "diagnostic_input", "routing", "timezone", "id", "typed_object"])
+    "diagnostic", "diagnostic_input", "routing", "timezone", "id", "typed_object",
+    "duplicate_write", "unversioned_seen"])
 def test_mutated_untrusted_bytes_rejected_without_echo(codec, location):
     envelope = json.loads(codec.encode(checkpoint()))
     cp = envelope["checkpoint"]
@@ -108,6 +109,10 @@ def test_mutated_untrusted_bytes_rejected_without_echo(codec, location):
         cp["id"] = "NEVER_ECHO"
     elif location == "typed_object":
         state["market_report"] = {"__type__": "python", "constructor": "NEVER_ECHO"}
+    elif location == "duplicate_write":
+        envelope["pending_writes"].append(envelope["pending_writes"][0])
+    elif location == "unversioned_seen":
+        cp["versions_seen"]["Market Analyst"]["sender"] = 1
     with pytest.raises(CheckpointCodecError) as raised:
         codec.decode(json.dumps(envelope).encode())
     assert str(raised.value) == "snapshot checkpoint is invalid or incompatible"

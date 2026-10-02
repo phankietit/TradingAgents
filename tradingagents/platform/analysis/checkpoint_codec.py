@@ -232,6 +232,8 @@ class SnapshotCheckpointCodec:
         if not isinstance(seen, dict) or not seen.keys() <= self.nodes | {"__input__", "__interrupt__", "__start__"}:
             _reject()
         seen = {key: self._versions(item) for key, item in seen.items()}
+        if any(not item.keys() <= versions.keys() for item in seen.values()):
+            _reject()
         updated = cp["updated_channels"]
         if updated is not None:
             if type(updated) is not list:
@@ -252,11 +254,15 @@ class SnapshotCheckpointCodec:
         if type(writes) not in (list, tuple) or len(writes) > 4096:
             _reject()
         clean_writes = []
+        write_keys = set()
         for row in writes:
             if type(row) not in (list, tuple) or len(row) != 3:
                 _reject()
             task, channel, value = row
             UUID(task)
+            if (task, channel) in write_keys:
+                _reject()
+            write_keys.add((task, channel))
             clean_writes.append([task, channel, self._values({channel: value}, encoding=encoding)[channel]])
         return {**envelope, "config": config, "parent_config": parent,
             "checkpoint": {**cp, "channel_values": values, "channel_versions": versions, "versions_seen": seen},
