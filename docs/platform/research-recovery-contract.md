@@ -72,6 +72,32 @@ Existing general event transactions do not establish a hard end-to-end database
 deadline. Durable aggregation/unknown-duration policy, explicit consent and
 new-child restore remain required before enabling recovery.
 
+### Read-only durable accounting aggregation
+
+`accounting.py` reads existing owner/run-scoped append-only events through a
+fixed high-water prefix, paging 500 rows at a time and rejecting a prefix over
+10,000 events rather than truncating. It requires contiguous ordering, original
+execution markers/attempt identity, exact immutable limits, strict logical
+counter/status/token semantics and monotonic cumulative counters/elapsed within
+each attempt. Latest counters per attempt are summed, never every receipt.
+Malformed evidence produces fixed errors without raw event/DB content; missing
+or legacy evidence withholds all totals instead of inventing zero cost.
+
+The result identifies its high-water sequence, observed attempts, logical starts/
+completions, unreported started calls, reported token counters and elapsed lower
+bound. PASS describes parsed accounting evidence, not financial/production
+acceptance or unused allowance. Exact elapsed is always unknown; cumulative
+starts across attempts may already exceed the original cap and no fresh cap is
+granted. No cost, remaining seconds, consent or publication authority is derived.
+
+SQLite reopen, multi-attempt/multi-call, pagination and actual native-spawn
+callback/exhaustion fixtures exercise this reader. Authentication of the caller,
+transactional consent/high-water recheck, linked continuation identity, exact or
+conservatively bounded crash-duration accounting and restoration remain required.
+The component does not mutate old rows, reset budget, expose a browser endpoint
+or activate worker recovery. General DB read transactions are not hard network/
+pool/disk deadlines; PostgreSQL live and concurrent consent remain unverified.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker

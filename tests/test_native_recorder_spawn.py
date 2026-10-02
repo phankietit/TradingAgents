@@ -20,6 +20,7 @@ from tradingagents.contracts import RunEventType
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
+from tradingagents.platform.analysis.accounting import load_accounting_evidence
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
@@ -156,6 +157,10 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             return store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=raw)
 
         recording = SnapshotRecordingInputs.create(owner_id=owner, run=run, expected_fingerprint=fingerprint)
+        with job_context.publication_session() as session:
+            RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW,
+                payload={"attempt": job.attempt})
         supervised = SupervisedAnalysisEngine(base_config=config, recording_inputs=recording,
             checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
             checkpoint_commit=commit)
@@ -183,6 +188,9 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert usage_events[0].payload["usage"]["status"] == "incomplete"
                 assert usage_events[1].payload["usage"] == usage
                 assert all(event.payload["attempt"] == job.attempt for event in usage_events)
+                evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert evidence.evidence_status == "PASS" and evidence.started_calls == 1
+                assert evidence.reported_total_tokens == 15 and evidence.exact_elapsed_known is False
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
             return
         result = supervised.analyze(request)
@@ -252,6 +260,10 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert all(event.payload["execution_limits"] == {"wall_seconds": 1800, "model_calls": 128}
                            and event.payload["elapsed_seconds"] >= 0
                            and event.payload["attempt"] == job.attempt for event in usage_events)
+                evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                assert evidence.evidence_status == "PASS" and evidence.started_calls == calls
+                assert evidence.reported_total_tokens == 15 * calls and evidence.unreported_started_calls == 0
+                assert evidence.exact_elapsed_known is False
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
         assert list((tmp_path / "results").iterdir()) == []
     finally:

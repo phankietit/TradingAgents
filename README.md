@@ -580,6 +580,15 @@ are lower bounds at event time, not exact crash duration or provider billing.
 This does not enable recovery, recreate missing history or reset any allowance;
 cross-attempt accounting/consent and live financial acceptance remain unfinished.
 
+An internal read-only accounting reader now validates an owner-scoped bounded
+event prefix, takes the latest cumulative counters per attempt, and aggregates
+reported tokens/reservations without double-counting earlier receipts. Missing
+or legacy attempt evidence yields unavailable totals, not zero usage. Invalid
+limits, counters, sequence gaps and unknown fields fail closed. Its high-water
+sequence is an observation, not a transaction fence; elapsed stays a lower bound.
+The reader is not wired to browser consent, worker continuation or budget
+admission and cannot authorize resume or infer actual provider cost.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See
