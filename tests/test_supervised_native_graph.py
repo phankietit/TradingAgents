@@ -16,6 +16,7 @@ from tests.test_snapshot_analysis import context
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph import trading_graph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
+from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.observer import STAGES, ResearchObserver
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot
 from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
@@ -26,6 +27,7 @@ class NativeFixtureEngine:
         self.config = base_config
         self.model_trace = []
         self.resume_evidence = None
+        self.encoded_checkpoints = []
 
     def analyze(self, request):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
@@ -58,12 +60,33 @@ class NativeFixtureEngine:
             before = graph.graph.get_state(graph_args["config"])
             assert before.next, "fixture must interrupt before graph completion"
             calls_before = len(self.model_trace)
-            graph.graph.update_state(graph_args["config"], {
-                "messages": [RemoveMessage(id=item.id) for item in before.values["messages"]]},
-                as_node=interrupted_node)
+            if self.config.get("_fixture_json_checkpoint"):
+                codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=graph.workflow.nodes)
+                # Every version is reviewed, including initial/pending writes;
+                # never serialize the entire InMemorySaver object.
+                self.encoded_checkpoints = [codec.encode(item) for item in saver.list(graph_args["config"])]
+                pending = self.config.get("_fixture_pending_checkpoint", False)
+                restored = codec.decode(self.encoded_checkpoints[1 if pending else 0])
+                if pending:
+                    assert restored.pending_writes, "fixture must restore completed pending writes"
+                saver = InMemorySaver()
+                saved_config = saver.put(restored.parent_config or {"configurable": {
+                    "thread_id": "synthetic-resume", "checkpoint_ns": ""}}, restored.checkpoint,
+                    restored.metadata, restored.checkpoint["channel_versions"])
+                grouped = {}
+                for task, channel, value in restored.pending_writes:
+                    grouped.setdefault(task, []).append((channel, value))
+                for task, writes in grouped.items():
+                    saver.put_writes(saved_config, writes, task)
+                graph.graph = graph.workflow.compile(checkpointer=saver)
+            else:
+                graph.graph.update_state(graph_args["config"], {
+                    "messages": [RemoveMessage(id=item.id) for item in before.values["messages"]]},
+                    as_node=interrupted_node)
             clean = graph.graph.get_state(graph_args["config"])
             assert clean.values["messages"] == []
-            assert clean.next == before.next
+            if not self.config.get("_fixture_pending_checkpoint"):
+                assert clean.next == before.next
             # Recompile the original workflow with the same saver and no interrupt.
             graph.graph = graph.workflow.compile(checkpointer=saver)
             with graph.config_scope():
@@ -195,12 +218,15 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     assert list((tmp_path / "reports").iterdir()) == []
 
 
+@pytest.mark.parametrize("json_checkpoint,pending_checkpoint", [(False, False), (True, False), (True, True)])
+@pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
+    ("English and Vietnamese", False), ("English and Vietnamese", True)])
 @pytest.mark.parametrize("boundary", ["Market Analyst", "Msg Clear Market", "Sentiment Analyst",
     "Msg Clear Sentiment", "News Analyst", "Msg Clear News", "Fundamentals Analyst",
     "Msg Clear Fundamentals", "Bull Researcher", "Bear Researcher",
     "Research Manager", "Trader", "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst",
     "Portfolio Manager", "Financial validation"])
-def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, boundary):
+def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, boundary, json_checkpoint, pending_checkpoint, language, invalid):
     """Characterization only; not a production checkpoint or authorized paid replay."""
     instrument = _instrument()
     inputs = context(instrument)
@@ -213,14 +239,19 @@ def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, b
                                       "source_max_age_seconds": dict.fromkeys(analysts, 0)})
     config = {**DEFAULT_CONFIG, "data_cache_dir": str(tmp_path / "cache"),
         "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 2,
-        "max_risk_discuss_rounds": 2, "output_language": "English and Vietnamese"}
+        "max_risk_discuss_rounds": 2, "output_language": language,
+        "_fixture_invalid_translation": invalid}
     results, traces, completions = [], [], []
     for interruption in (None, boundary):
         observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *args: None,
                                     max_seconds=60)
-        engine = NativeFixtureEngine(base_config={**config, "_fixture_interrupt_after": interruption})
+        engine = NativeFixtureEngine(base_config={**config, "_fixture_interrupt_after": interruption,
+            "_fixture_json_checkpoint": json_checkpoint, "_fixture_pending_checkpoint": pending_checkpoint})
         result = engine.analyze(AnalysisRequest(instrument=instrument, analysis_date=NOW.date(),
             selected_analysts=analysts, snapshot_context=inputs, execution_observer=observer))
+        assert (result.decision_payload is None) == invalid
+        if invalid:
+            assert "report_translation_unavailable" in result.validation_issues
         public_result = result.model_dump(mode="json")
         public_result["final_state"].pop("messages", None)
         results.append(public_result)
@@ -228,6 +259,23 @@ def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, b
         completions.append(observer.completed)
         if interruption:
             assert engine.resume_evidence[1] > 0
+            if json_checkpoint:
+                assert engine.encoded_checkpoints
+                for raw in engine.encoded_checkpoints:
+                    envelope = json.loads(raw)
+                    assert codec_messages_empty(envelope["checkpoint"]["channel_values"])
+                    for _, channel, value in envelope["pending_writes"]:
+                        assert channel != "messages" or value == []
+                        assert codec_messages_empty(value)
     assert results[0] == results[1]
     assert traces[0] == traces[1]  # No repeated model call; no changed prompt after restoration.
     assert completions[0] == completions[1]  # Includes repeated rounds, validation and presentation.
+
+
+def codec_messages_empty(value):
+    if isinstance(value, dict):
+        return all((key != "messages" or item == []) and codec_messages_empty(item)
+                   for key, item in value.items())
+    if isinstance(value, list):
+        return all(codec_messages_empty(item) for item in value)
+    return True

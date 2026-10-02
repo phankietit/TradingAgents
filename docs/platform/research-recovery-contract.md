@@ -5,6 +5,38 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
+## Implemented codec prerequisite
+
+`tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
+JSON envelope component. It preserves native checkpoint-v4 channel versions,
+versions_seen, control channels, metadata and pending-write order/task identity.
+Only reviewed snapshot fields are accepted; raw messages are removed from
+current/start/pending values before encoding and rejected on decoding. Unknown
+fields, CLI memory, non-research authority, arbitrary typed objects, nonfinite
+versions, duplicate JSON keys, incompatible formats and oversized data fail
+closed with a fixed non-content diagnostic. Limits are 16 MiB per envelope and
+one million characters per text field; nothing is truncated.
+
+The caller must supply a digest and original graph-node allowlist. Digest
+equality is checked, but this component does not construct a full fingerprint,
+authenticate an owner, cryptographically attest content or validate source
+freshness. It is not an ArtifactService reader, persistent saver or auto-retry
+path. Production worker/CLI behavior remains unchanged.
+
+Native fixture acceptance now includes JSON restoration into a fresh saver for
+all 17 boundaries, four source roles, two debate/risk rounds, EN/VI/bilingual and
+invalid translation. Both the latest checkpoint and a preceding checkpoint with
+completed pending writes preserve full prompt/call/stage trace and all non-message
+AnalysisResult fields. All source checkpoint versions are encoded and inspected;
+no raw message/reasoning objects enter the resulting JSON. Invalid VI remains
+unavailable rather than becoming a decision. These are synthetic in-process
+mechanics, not separate-process/crash/live financial acceptance or durable storage.
+
+The fixture loader groups writes by task before installing them; installing
+one channel per put_writes call can reuse write indices and lose completed
+outputs. Original debate nodes may omit judge_decision until the manager runs;
+the codec preserves that absence without inventing a default or changing nodes.
+
 ## Verified prerequisite
 
 Source `60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a` characterizes the native graph

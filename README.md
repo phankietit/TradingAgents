@@ -454,6 +454,15 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+The draft recovery work includes a restricted JSON checkpoint codec, not an
+enabled web resume feature. It removes messages from state/start/pending writes,
+preserves native channel versions/routing and rejects unknown fields, incompatible
+formats or oversized input without truncation. Local synthetic tests restore
+into a fresh saver, including completed pending writes, without repeating model
+calls. Full fingerprint construction, owner/lease-fenced durable storage and
+explicit continuation consent remain unfinished; a caller-supplied digest alone
+is not recovery authorization. See the recovery implementation contract.
+
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
 expired leases with execution evidence require review, even if attempts remain.
