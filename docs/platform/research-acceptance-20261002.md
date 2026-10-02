@@ -186,3 +186,44 @@ and backoff, plus cancellation/lease loss with no detached request continuing
 locally or publishing after termination. Provider-side billing uncertainty must
 remain explicit even if a local request is stopped. This checkpoint is progress
 toward R08, not R08 completion or approval to replay paid research.
+
+## R08 default-worker process supervision
+
+Source `be2149864ec0ffb91b7f8c3d79d88bd06087992c`, branch
+`fix/TA-R01-research-quality`. Default worker snapshot jobs now spawn the
+existing analysis engine in an isolated process; no live parent database,
+lease thread or artifact writer is forked/copied to it. The parent remains the
+budget/cancellation/lease authority, acknowledges logical model starts, saves
+allowlisted stage notes and usage, and fences final publication as before.
+It monitors while SDK requests block, terminates/joins (kills if necessary)
+the child before handler exit, and preserves billing uncertainty. A private
+bounded pipe-reader thread avoids blocking that authority on frame reads.
+Oversized/disconnected messages fail closed rather than truncate research.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,634 tests + 88 subtests, 20 skips, 22 warnings, 114.07 s; Python 3.14.7/macOS |
+| Spawn supervision cases | PASS | Full-suite `tests/test_research_supervision.py`: normal completion, sanitized failure, deadline, cancellation, authority-required input, real elapsed 10s deadline, child PID no longer alive, retained counters/reader text and stripped raw messages |
+| Actual SDK / synthetic HTTP | PASS | Installed OpenAI 3.19.2 SDK/httpx2 2.13.1, synthetic explicit key, local 127.0.0.1 server: blocked response body, slow-trickle reads, 503 Retry-After/backoff; supervisor stops child and no detached local retry is observed. This is not MiniMax/vendor acceptance |
+| Durable handler / private persistence | PASS | Real SQLite queue/context/handler with spawned fixture engine: parent saves immutable nonapprovable stage and report on success; failed child yields terminal attempt 1 despite max_attempts=3, no report/decision, no raw error leakage |
+| Authenticated mode disclosure | PASS | Existing authenticated/no-store/no-key/no-provider-probe configuration gate adds default_worker_supervision=spawned_process; worker status remains UNVERIFIED. Actual receipt records supervision_mode |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby issue-template YAML load |
+| Web regression/type/lint/build | PASS | 137 tests/23 files, 5.80 s; Node 26.8.1/npm 11.19.0. No rendered frontend source changed in this slice |
+| Native supervised graph / crash orphan / other OSes | UNVERIFIED | Original native graph regression still passes directly; not promoted to proof of all roles through spawn. Parent-liveness watchdog implemented but no crash/orphan integration acceptance yet; macOS local evidence only |
+| PostgreSQL/optional providers | UNVERIFIED | 18 PostgreSQL, missing Bedrock dependency and live DeepSeek key skips remain |
+| Resume / live finance and EN-VI | UNVERIFIED | No checkpoint resume, no new paid/vendor call, no runtime restart. Earlier manual failures remain unresolved |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold remains; no substitute provider/index |
+
+The original graph, selected roles, SDK timeout/retry settings, provider/model,
+source/risk/human-approval gates and CLI contract remain unchanged. Legacy
+live-tool runs and explicitly injected engines are not silently converted.
+Spawn startup consumes the original allowance; process cleanup, scheduler and
+parent DB latency prevent a millisecond deadline guarantee. Stopping local
+execution does not stop/refund provider-side work. No child can publish a
+decision independently of the parent.
+
+Private-platform candidate only; Draft PR #7 and goal stay open. Next: native
+full-graph-through-spawn and worker-crash/orphan acceptance, then fingerprinted
+checkpoint recovery and owner-authorized live financial/translation checks.
+This checkpoint does not authorize release, merge, public deployment or a
+fresh paid BTC replay.

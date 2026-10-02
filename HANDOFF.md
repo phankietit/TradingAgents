@@ -1,6 +1,21 @@
-# TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-01
+# TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-02
 
 ## Cập nhật đang triển khai · 2026-10-01
+
+**Checkpoint process supervision 2026-10-02:** source
+`be2149864ec0ffb91b7f8c3d79d88bd06087992c`. Default worker snapshot jobs chạy
+graph trong process spawn, cha giữ observer/DB/lease/publication. Deadline,
+cancellation và lease failure dừng/join process con, gồm SDK bị block, slow-read
+hay retry/backoff; pipe reader riêng không chặn luồng kiểm tra allowance.
+Usage/reader text được chuyển qua bridge, không gửi raw messages/reasoning;
+nháp vẫn unvalidated, failure không tạo decision hay blind paid replay.
+Full Python **1.634 + 88 subtests PASS**, 20 skips, 114,07 s; Ruff PASS; Web 137,
+type/lint/build PASS. SDK tests dùng localhost/synthetic key, không vendor thật.
+CLI/legacy live-tool và explicit injected engines giữ contract cũ. API chỉ công
+bố default worker mode, không xác nhận worker đang chạy đã được nâng cấp.
+Receipt 2026-10-02 ghi scope: native full graph qua spawn, crash/orphan và các OS
+khác chưa nghiệm thu; graph resume/live quality còn mở. Chưa restart worker hay
+chạy thêm AI trả phí. Tiếp theo nghiệm thu các gate này trước paid live mới.
 
 **Checkpoint budget accounting 2026-10-02:** source
 `fc6a8812cc4cde979c8aa72432b98966abf2ae50` reserve model starts atomically,
