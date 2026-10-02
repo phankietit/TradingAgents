@@ -2,6 +2,16 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Checkpoint budget accounting 2026-10-02:** source
+`fc6a8812cc4cde979c8aa72432b98966abf2ae50` reserve model starts atomically,
+thêm remaining allowance dùng cùng monotonic clock và cancellation precedence.
+Usage phân biệt logical LangChain calls với số request SDK không quan sát được
+(`provider_request_attempts=null`); giữ usage trả muộn, không cho bắt đầu call mới.
+Full Python **1.623 + 88 subtests PASS**, 20 skips, 46,66 s; Ruff PASS; Web 137,
+type/lint/build PASS. Chưa hard-interrupt request, chưa resume hay paid live mới.
+Tiếp theo phải supervise blocking request gồm retries/backoff/slow reads,
+không dùng thread timeout rồi để request chạy ngầm, không cắt graph.
+
 **Checkpoint UI allowance 2026-10-02:** source
 `a2a0b6f6db38bc08102af853da889f874515a2a6` thêm chọn 30/60 phút trước consent,
 đổi lựa chọn phải xác nhận lại và dùng request identity mới. Processing hiển thị

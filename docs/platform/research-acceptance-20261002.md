@@ -154,3 +154,35 @@ not waived or labeled a product/provider pass.
 No paid retry, new provider, derivative execution, risk-limit change, history
 rewrite, CI or public deployment. NQ=F remains owner-BLOCKED. Existing live
 financial/translation failures remain unresolved; goal and Draft PR #7 stay open.
+
+## R08 atomic logical-call admission and shared budget clock
+
+Source `fc6a8812cc4cde979c8aa72432b98966abf2ae50`, same branch. Check-and-reserve
+for model starts is locked across concurrent callbacks. Remaining allowance
+uses the original monotonic start; cancellation/lease checks precede deadline
+classification. Usage retains late returned tokens and now labels the count as
+logical LangChain invocations, including starts separately from returned/failed
+calls. SDK provider attempts remain unknown, not zero or a claimed quota cap.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Focused budget/retention/handler | PASS | 52 tests, 4.34 s; clock expiry, cancellation precedence, 100 concurrent starts admit only 7, late usage retention; existing retention/fenced-handler regression |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,623 tests + 88 subtests, 20 skips, 22 warnings, 46.66 s; Python 3.14.7 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby template YAML load |
+| Web regression/type/lint/build | PASS | 137 tests/23 files, 5.65 s; Node 26.8.1/npm 11.19.0; no rendered UI source changed in this slice |
+| PostgreSQL/optional providers | UNVERIFIED | 18 PostgreSQL skips, missing Bedrock dependency and live DeepSeek key; not implied passes |
+| Hard request deadline / graph resume / live report | UNVERIFIED | No request supervision or graph resume implemented; no provider/model call, full financial/translation acceptance still outstanding |
+
+Root-cause evidence: local `trading_graph.py` snapshot mode supplies SDK timeout
+600 and retry 1 unless explicitly configured. Installed OpenAI SDK
+`_base_client.py` sleeps for retry/backoff internally; `_constants.py` uses an
+HTTPX-style timeout, whose config splits connect/read/write/pool. Therefore
+logical callbacks cannot count hidden HTTP attempts, and a scalar transport
+timeout cannot be advertised as total elapsed request supervision. No SDK
+default, provider/model, graph role or policy was changed in this slice.
+
+The next total-deadline gate must cover blocked/slow-trickle responses, retries
+and backoff, plus cancellation/lease loss with no detached request continuing
+locally or publishing after termination. Provider-side billing uncertainty must
+remain explicit even if a local request is stopped. This checkpoint is progress
+toward R08, not R08 completion or approval to replay paid research.
