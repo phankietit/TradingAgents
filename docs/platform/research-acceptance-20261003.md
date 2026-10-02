@@ -739,3 +739,48 @@ the checkpoint to get past these guards. An append-only authenticated execution
 link and transactionally bound consent/checkpoint/accounting are still required;
 this source supplies no production continuation identity. R01–R14 goal and
 Draft PR #7 remain open, not complete or release-approved.
+
+## Authenticated continuation consent reservation and PostgreSQL DDL repair
+
+Initial source `f2f42354134bf5d53775e0019187a6421628de5e`; final source
+`fdd0b717059f5067788c8af0dce4ea7064eb0fb4`, same branch/worktree.
+Both full regressions ran without source/test edits. Python 3.14.7/Darwin 25.5.0.
+No default resume route, model dispatch, provider/risk change, private runtime
+migration/restart/history rewrite, paid AI/market-data call, CI, merge or deploy.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Authenticated reservation | PASS | Own bounded-lock transaction derives current active owner from session, checks CSRF/expiry/revocation and literal confirmation, then reloads stopped failed/cancelled original job/run, latest restricted checkpoint and complete accounting/high-water. UUID idempotency key and canonical payload preserve bool/int distinctions; constructor and mutated timeout reject None/zero/NaN |
+| Durable immutable link | PASS | New 0012 table binds original digests, checkpoint ID/hash/fingerprint, all accounting and fixed original-budget/unknown-cost/unvalidated-research disclosures. Commit-before-ACK, same-key reopen, stale/foreign/corrupt/latest-row/input cases and commit rollback tested; original run/job/event/checkpoint history unchanged. No job/model call or fresh budget |
+| Initial fixture failure | FAIL | 1 failed, 31 passed, 8.66 s before source commit: ORM JSON assignment with bool/int-equal values did not actually write the intended corrupt row. Fault injection changed to explicit SQL UPDATE; production digest comparison not weakened. Earlier Ruff fixture-name/import errors repaired before committed gates |
+| Initial focused SQLite | PASS | 72 passed, 2 PostgreSQL skips, 15.44 s at final f2f4235 test content: continuation consent, owner auth, private checkpoint and platform persistence. Two actual threads exercise same/different keys, busy-writer bound, rollback and no original-history changes |
+| Initial full normal Python | PASS | f2f4235, handle 12736: 2,386 passed +88 subtests, 20 skipped, 192 warnings, 343.82 s; terminal exit 0. Eighteen missing-URL PostgreSQL cases and two optional provider gates were not passes |
+| Initial full disposable PostgreSQL | FAIL | f2f4235, handle 17994: 12 failed, 6 errors, 2,386 passed +88 subtests, 2 skipped, 192 warnings, 313.14 s; terminal exit 1. Root DDL error at 0011: both checkpoint UNIQUE constraints named uq_research_checkpoints_run_id, generating colliding PostgreSQL indexes. SQLite had accepted identical names. Task-owned container removed after exit |
+| Draft DDL repair | PASS | fdd0b71 gives explicit distinct constraint names in model and 0011 migration. Offline PostgreSQL migration DDL checks all emitted unique names are distinct and checkpoint model names match. Does not change global naming convention, uniqueness semantics or private existing rows; no drop/recreate of an already migrated owner database |
+| Final focused regression | PASS | Final source content: 66 passed, 5 missing-URL PostgreSQL skips, 18.05 s, tests/test_platform_persistence.py, tests/test_continuation_consent.py and tests/test_private_checkpoint_store.py. This gate alone did not prove PostgreSQL |
+| PostgreSQL consent / concurrency | PASS | Four new actual disposable PostgreSQL cases in final full gate: failed/cancelled durable authenticated reservation and reopen; two concurrent requests with same key return one identity, different keys allow one reservation only. Original rows unchanged. These are service tests, not HTTP/browser consent, all races or dispatch evidence |
+| Final full Python + PostgreSQL | PASS | Clean fdd0b71, handle 83844, TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh: 2,409 passed +88 subtests, 2 skipped, 192 warnings, 343.62 s; terminal exit 0. Ruff, pip check and git diff --check passed. PostgreSQL 16-alpine task-only loopback/ephemeral-port database; container ownership checked and only task-owned container removed |
+| Optional providers / runtime matrix | UNVERIFIED | Missing langchain_aws and explicitly unset live DeepSeek key remain two skips. Other supported Python/runtime versions were not run; no optional provider was replaced or invoked |
+| Clean package install prerequisite | PASS | Exact f2f4235 tracked source export, fresh noneditable isolated .[platform] installation, pip check and imports from site-packages outside export CWD: tradingagents, cli.main, API/jobs, new consent service and packaged 0012 migration. Fresh owned SQLite upgrades to 0012 and contains new table. Managed external run retained: /Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261002T224230Z-56814. No private .env/database/artifacts exported |
+| Final-SHA clean package install | PASS | Exact fdd0b71 tracked source export, new isolated noneditable .[platform] install (handle 38189, terminal exit 0), fresh pip check, installed imports from site-packages rather than source CWD, packaged PostgreSQL offline DDL with distinct constraints and fresh owned SQLite upgrade/table/head checks (handle 3922, terminal exit 0). Managed external run completed and retained: /Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261002T231012Z-69916. No private env/runtime files exported |
+| Fresh dependency full suite | UNVERIFIED | Clean-install import/migration proof is not the full regression suite on newly resolved dependencies. The full PostgreSQL gate used the unchanged project venv; no dependency lock/configuration was altered |
+| Product continuation / private rollout | UNVERIFIED | Persisted dispatch_enabled remains false. No API/UI disclosure endpoint, consumption state, linked leased job, linked attempt accounting/publication, terminal-original-context reader or model entry enabled. An execution ID is not bearer authority. Existing private SQLite installations can retain old constraint names; additive migration/backup/rollout must be reviewed instead of dropping their history |
+| Remaining goal acceptance | UNVERIFIED | Broader stopped/ACK boundaries and abrupt parent crashes, transport/client attestation, asset-appropriate ingestion/coverage, financial semantic/VI editorial checks, operational UI/report flow and fresh live BTC/AAPL acceptance remain open; no prior live failure reclassified |
+| NQ=F | BLOCKED | Owner's active-contract/roll-source hold unchanged; no substitute/provider added |
+
+Fresh install resolved tradingagents 0.5.0, langgraph 1.2.12, langchain-core
+1.6.6, langchain-openai 1.6.7, pydantic 2.13.5, SQLAlchemy 2.1.2 and Alembic
+1.20.0 under Python 3.14.7 at f2f4235. The subsequent fdd0b71 fresh install resolved
+the same versions except SQLAlchemy 2.1.3; the project environment stayed unchanged.
+These dependency observations are not a lockfile or
+compatibility guarantee; runtime/source fingerprints remain conservative.
+
+Next integrate transactional link consumption and separately leased execution,
+retaining original native thread/source/client identity and all prior allowance.
+The current terminal-context rejection and JobRow unique(run_id) stay unchanged.
+Do not erase errors/completed_at, reset caps, relabel checkpoints or silently
+create a fresh paid run. Request authentication and consent must share one
+transaction, not nested connections contending on an outer last_seen/session
+write lock; cookie/header consistency, Origin and CSRF checks remain mandatory.
+No paid continuation is authorized by these tests. Full R01–R14 goal and Draft
+PR #7 remain open; CI remains disabled_manually as verified via GitHub this turn.

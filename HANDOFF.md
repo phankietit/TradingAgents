@@ -2,6 +2,35 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Authenticated consent / PostgreSQL checkpoint fix 2026-10-03:** final source
+`fdd0b717059f5067788c8af0dce4ea7064eb0fb4`, sau prerequisite
+`f2f42354134bf5d53775e0019187a6421628de5e`. Internal consent store xác thực
+owner/session/CSRF, reload original failed/cancelled job/run, latest checkpoint
+và toàn bộ accounting high-water dưới writer locks, rồi append riêng một link.
+Canonical JSON giữ khác biệt bool/int; ACK chỉ sau commit. Không tạo job/model
+call, không sửa history, không reset budget; default API/worker/CLI chưa bật.
+Lặp cùng key trả cùng identity; khác key không reserve cùng observation hai lần.
+Full PostgreSQL đầu tại f2f4235 **FAIL: 12 failed, 6 errors, 2.386 +88 subtests
+passed**, 2 skips, 192 warnings, 313,14 s: migration 0011 đặt hai unique constraint
+trùng tên do naming convention theo first column. Sửa explicit names ở migration
+draft/model, thêm offline DDL regression và 4 disposable PostgreSQL consent/
+two-writer cases; không nới integrity/auth gates hay migrate private DB.
+Final full tại source sạch fdd0b71 qua `TA_ALLOW_TEST_DB_RESET=1 bash
+scripts/verify-postgres-local.sh`: **2.409 +88 subtests PASS**, 2 skips (optional
+Bedrock/live DeepSeek), 192 warnings, 343,62 s, terminal exit 0, Python 3.14.7/
+Darwin 25.5.0; Ruff/pip-check/diff PASS. Task-only PostgreSQL container đã dọn.
+Clean noneditable `.[platform]` install/import, packaged PostgreSQL DDL và fresh
+SQLite migration PASS tại fdd0b71 trong managed external run; chưa full-test fresh
+dependency set (SQLAlchemy mới resolve 2.1.3). Xem receipt 20261003 cho exact
+path/version/initial failures. Không paid AI/market-data call, CI,
+runtime restart, provider/risk change, private env/history upload, merge/deploy.
+Goal/PR #7 vẫn mở. Next: consume link transactionally, separately leased execution
+và linked accounting/publication; reload immutable terminal context mà không xóa
+error/completed_at hoặc đổi original thread/fingerprint. API auth phải cùng consent
+transaction, không nest dưới outer session-write lock; vẫn giữ Origin/cookie/CSRF.
+Broader crash/transport, ingestion, operational UX và live finance/MT còn chưa đạt.
+NQ=F vẫn BLOCKED theo owner; không tự mở paid BTC retry.
+
 **Restore observer binding 2026-10-03:** source
 `6cd566f7e27a45ce247357bd2ee2b405c3d7c980` chặn opt-in restore dùng observer
 mới/copied, debit bị reset, caps/clock/callbacks thay đổi, attempt đã dùng/dừng,
