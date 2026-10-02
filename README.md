@@ -454,6 +454,13 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+An internal committed saver restore method now imports a reviewed tuple only
+into an empty saver, bound to the expected thread and codec fingerprint. It
+preserves native versions, routing and completed pending writes without
+republishing old history; malformed/mismatched/repeated or partial imports
+poison the saver. Native graph fixtures exercise this method, but new-child
+restore, consent and default worker/API recovery remain unverified and disabled.
+
 The draft recovery work includes a restricted JSON checkpoint codec, not an
 enabled web resume feature. It removes messages from state/start/pending writes,
 preserves native channel versions/routing and rejects unknown fields, incompatible

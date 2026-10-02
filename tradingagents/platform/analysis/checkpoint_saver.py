@@ -31,6 +31,39 @@ class CommittedSnapshotSaver(InMemorySaver):
         if self._failed:
             raise CheckpointCommitError("snapshot checkpoint commit requires review")
 
+    def restore(self, raw, *, expected_thread_id):
+        """Seed one reviewed tuple into a fresh saver without republishing history.
+
+        Internal mechanism only: caller must establish owner/lease/consent and
+        construct the codec from the initialized original graph fingerprint.
+        Native scheduler versions and completed pending writes are retained;
+        this does not choose a next node or grant a fresh research allowance.
+        Any failed import poisons the saver, including partial native writes.
+        """
+        with self._commit_lock:
+            self._check()
+            try:
+                if (type(expected_thread_id) is not str or not expected_thread_id
+                        or next(super().list(None), None) is not None):
+                    raise ValueError("invalid restore target")
+                value = self.codec.decode(raw)
+                if value.config["configurable"]["thread_id"] != expected_thread_id:
+                    raise ValueError("invalid restore identity")
+                saved = super().put(value.parent_config or {"configurable": {
+                    "thread_id": expected_thread_id, "checkpoint_ns": ""}},
+                    value.checkpoint, value.metadata, value.checkpoint["channel_versions"])
+                grouped = {}
+                for task, channel, item in value.pending_writes:
+                    grouped.setdefault(task, []).append((channel, item))
+                for task, writes in grouped.items():
+                    super().put_writes(saved, writes, task)
+                if self.codec.decode(self.codec.encode(super().get_tuple(saved))) != value:
+                    raise ValueError("native restore changed checkpoint")
+                return saved
+            except Exception:
+                self._failed = True
+                raise CheckpointCommitError("snapshot checkpoint commit requires review") from None
+
     def _persist(self, config):
         try:
             # Native put_writes receives invocation-only configurable fields

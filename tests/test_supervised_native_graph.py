@@ -98,14 +98,17 @@ class NativeFixtureEngine:
                 if pending:
                     assert restored.pending_writes, "fixture must restore completed pending writes"
                 saver = new_saver()
-                saved_config = saver.put(restored.parent_config or {"configurable": {
-                    "thread_id": thread_id, "checkpoint_ns": ""}}, restored.checkpoint,
-                    restored.metadata, restored.checkpoint["channel_versions"])
-                grouped = {}
-                for task, channel, value in restored.pending_writes:
-                    grouped.setdefault(task, []).append((channel, value))
-                for task, writes in grouped.items():
-                    saver.put_writes(saved_config, writes, task)
+                if isinstance(saver, CommittedSnapshotSaver):
+                    saver.restore(raw, expected_thread_id=thread_id)
+                else:
+                    saved_config = saver.put(restored.parent_config or {"configurable": {
+                        "thread_id": thread_id, "checkpoint_ns": ""}}, restored.checkpoint,
+                        restored.metadata, restored.checkpoint["channel_versions"])
+                    grouped = {}
+                    for task, channel, value in restored.pending_writes:
+                        grouped.setdefault(task, []).append((channel, value))
+                    for task, writes in grouped.items():
+                        saver.put_writes(saved_config, writes, task)
                 graph.graph = graph.workflow.compile(checkpointer=saver)
             else:
                 graph.graph.update_state(graph_args["config"], {

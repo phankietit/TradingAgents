@@ -519,6 +519,16 @@ not select it; no resume, consent/accounting route or paid replay is enabled.
 
 ## Required acceptance before enablement
 
+The committed saver has an internal `restore` mechanism for one restricted
+codec tuple in a fresh saver. It checks expected thread identity and codec
+fingerprint, seeds native checkpoint versions and grouped pending writes through
+the native saver, then checks decoded tuple equality (JSON key order is not
+scheduler state). It does not republish old checkpoint rows. Failed imports,
+occupied targets and repeat imports poison the saver. Original graph fixtures
+use this mechanism rather than a bespoke importer for committed checkpoints.
+This is not an owner/consent grant, a new-child transport or worker activation;
+those requirements below remain open.
+
 - Native uninterrupted versus restored equivalence with real serializer and
   separate process, all four roles, repeated rounds, EN/VI/bilingual paths,
   invalid structured outputs and invalid translation; identical model-call
