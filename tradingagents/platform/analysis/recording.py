@@ -46,12 +46,19 @@ class SnapshotRecorder:
     def prepare(self, *, request, graph, base_config):
         limits = self.run.execution_limits or ResearchExecutionLimits()
         observer = request.execution_observer
-        if (type(observer) is not ResearchObserver or observer.max_seconds != limits.wall_seconds
-                or observer.max_calls != limits.model_calls):
-            raise RecoveryFingerprintError("snapshot recorder allowance requires review")
-        # Use the existing observer/start, not a fresh observer or reset clock.
-        # Cancellation and exhausted allowance retain their original errors.
-        observer.remaining_seconds()
+        if type(observer) is ResearchObserver:
+            if (observer.max_seconds != limits.wall_seconds or observer.max_calls != limits.model_calls):
+                raise RecoveryFingerprintError("snapshot recorder allowance requires review")
+            # Existing start/clock, never a fresh observer or budget reset.
+            observer.remaining_seconds()
+        else:
+            from .supervision import _Bridge
+
+            if type(observer) is not _Bridge:
+                raise RecoveryFingerprintError("snapshot recorder allowance requires review")
+            observer.validate_recording_allowance(wall_seconds=limits.wall_seconds,
+                model_calls=limits.model_calls, fingerprint=self.expected_fingerprint,
+                thread_id=str(self.run.run_id))
         actual = build_initialized_graph_fingerprint(graph=graph, owner_id=self.owner_id,
             run=self.run, request=request, base_config=base_config,
             portfolio_snapshot=self.portfolio_snapshot, policy=self.policy,

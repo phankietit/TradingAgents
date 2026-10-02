@@ -153,6 +153,32 @@ incomplete and does not prove admission counts or billing. Remaining parent
 construction/observer transfer, retained accounting/consent and recovery gates
 are not replaced by these tests.
 
+### Parent-owned recorder allowance proof
+
+SnapshotRecorder.prepare now supports either the existing exact ResearchObserver
+or the exact private checkpoint-enabled child bridge. The latter sends a
+recording_allowance RPC with only original wall/call limits, expected fingerprint
+and run-thread. Parent rejects unknown fields, non-int limits (including bool),
+non-string identity or any mismatch with its selected checkpoint identity and
+original observer limits. It checks remaining_seconds on its original clock,
+retaining cancellation/lease/deadline checks, before sending the exact True ACK.
+Child refuses any other ACK and never starts a new local budget/observer clock.
+Disabled bridge cannot send this request. RPC serializes through the existing
+send/ACK lock; model admission still uses original parent observer.
+
+Spawn fixtures cover success, larger limits, boolean limit, changed fingerprint/
+thread, extra private marker and expired original budget. Invalid requests admit
+zero models/commits and spawned children are confirmed stopped; success preserves
+start and original limits and accounts for one synthetic model callback. Direct
+recorder unit cases exercise bridge selection/True-only ACK without claiming a
+live parent proof from their fake pipe.
+
+No original run/book/source context is transferred by this RPC and it is not
+owner consent, an allowance grant or complete client/transport attestation.
+Default engine/worker remain unable to select supervised recorder capability;
+trusted context transfer, native recorder through spawn, new-child restore,
+retained accounting and API/UI continuation remain open. No history is mutated.
+
 ### Private persistence prerequisite
 
 `checkpoint_store.py` and migration `0011_research_checkpoints` provide a

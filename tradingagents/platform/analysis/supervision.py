@@ -46,6 +46,14 @@ class _Bridge(BaseCallbackHandler):
             raise ResearchExecutionFailed("checkpoint bridge is not enabled")
         return self.rpc("checkpoint_commit", raw)
 
+    def validate_recording_allowance(self, *, wall_seconds, model_calls, fingerprint, thread_id):
+        if self.checkpoint_options is None:
+            raise ResearchExecutionFailed("recording allowance requires review")
+        reply = self.rpc("recording_allowance", {"wall_seconds": wall_seconds,
+            "model_calls": model_calls, "fingerprint": fingerprint, "thread_id": thread_id})
+        if reply is not True:
+            raise ResearchExecutionFailed("recording allowance requires review")
+
     def rpc(self, method, payload):
         # Concurrent callback threads must not interleave pipe frames or consume
         # another call's acknowledgement. The parent still owns admission.
@@ -245,6 +253,22 @@ class SupervisedAnalysisEngine:
                     observer.check_cancelled()
                     observer.remaining_seconds()
                     checkpoint_commits += 1
+                elif method == "recording_allowance":
+                    if (self.checkpoint_options is None or type(payload) is not dict
+                            or set(payload) != {"wall_seconds", "model_calls", "fingerprint", "thread_id"}
+                            or type(payload["wall_seconds"]) is not int
+                            or type(payload["model_calls"]) is not int
+                            or type(payload["fingerprint"]) is not str
+                            or type(payload["thread_id"]) is not str
+                            or payload["wall_seconds"] != observer.max_seconds
+                            or payload["model_calls"] != observer.max_calls
+                            or payload["fingerprint"] != self.checkpoint_options["fingerprint"]
+                            or payload["thread_id"] != self.checkpoint_options["thread_id"]):
+                        raise ResearchExecutionFailed("recording allowance requires review")
+                    # Parent alone checks its original clock/lease/cancellation.
+                    # This ACK is not a new budget, checkpoint or consent.
+                    observer.remaining_seconds()
+                    reply = True
                 elif method == "stage_start":
                     run_id, stage = payload
                     observer.on_chain_start({}, {}, run_id=run_id, name=stage)

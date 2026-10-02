@@ -9,9 +9,14 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine
 from tradingagents.platform.analysis.checkpoint_saver import CommittedSnapshotSaver
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
-from tradingagents.platform.analysis.observer import ResearchBudgetExceeded, ResearchObserver
+from tradingagents.platform.analysis.observer import (
+    ResearchBudgetExceeded,
+    ResearchExecutionFailed,
+    ResearchObserver,
+)
 from tradingagents.platform.analysis.recording import SnapshotRecorder
 from tradingagents.platform.analysis.recovery_fingerprint import RecoveryFingerprintError
+from tradingagents.platform.analysis.supervision import _Bridge
 
 initialized = bindings.initialized
 
@@ -123,3 +128,30 @@ def test_original_allowance_is_required_and_never_reset(initialized, mutation):
     with pytest.raises(expected):
         configured.prepare(request=args["request"], graph=graph, base_config=args["base_config"])
     assert observer.started == started and observer.started_calls == 0
+
+
+@pytest.mark.parametrize("ack", [True, False, None, 1])
+def test_recorder_uses_parent_allowance_proof_without_child_clock_reset(initialized, ack):
+    args, graph = initialized
+    configured = recorder(args, graph)
+    sent = []
+
+    class Pipe:
+        def send(self, message):
+            sent.append(message)
+
+        def recv(self):
+            return ack
+
+    bridge = _Bridge(Pipe(), checkpoint_options={"fingerprint": configured.expected_fingerprint,
+        "thread_id": str(configured.run.run_id)})
+    request = args["request"].model_copy(update={"execution_observer": bridge})
+    if ack is True:
+        options = configured.prepare(request=request, graph=graph, base_config=args["base_config"])
+        assert type(options["checkpoint_saver"]) is CommittedSnapshotSaver
+    else:
+        with pytest.raises(ResearchExecutionFailed, match="recording allowance requires review"):
+            configured.prepare(request=request, graph=graph, base_config=args["base_config"])
+    assert sent == [("recording_allowance", {"wall_seconds": 1800, "model_calls": 128,
+        "fingerprint": configured.expected_fingerprint, "thread_id": str(configured.run.run_id)})]
+    assert not hasattr(bridge, "started")

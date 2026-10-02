@@ -532,6 +532,11 @@ EN/VI/bilingual and invalid VI preserve baseline prompt/call/stage traces and
 non-message results. Private SQLite bytes reopen with original owner/run/hash
 and no raw messages/reasoning. Synthetic methods do not prove SDK callback usage,
 billing, live financial quality or supervised worker recording/recovery.
+Recorder allowance validation can now use the exact internal checkpoint-enabled
+child bridge: parent matches original limits/fingerprint/thread and checks its
+existing clock/cancellation/lease before ACK. Child creates no new allowance or
+clock. Wrong setup or non-True ACK fails closed. This is internal RPC groundwork,
+not original-context transfer, worker activation, continuation consent or resume.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
