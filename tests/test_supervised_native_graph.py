@@ -204,10 +204,36 @@ class NativeFixtureEngine:
                     message.additional_kwargs["reasoning_content"] = "PRIVATE_NATIVE_REASONING"
                     return message
 
-                patches.enter_context(patch.object(NormalizedChatOpenAI, "invoke",
-                    initialized_response))
-                patches.enter_context(patch.object(NormalizedChatOpenAI, "with_structured_output",
-                    lambda llm, schema, **kwargs: Model().with_structured_output(schema)))
+                if self.config.get("_fixture_callbacks", False):
+                    from langchain_core.outputs import ChatGeneration, ChatResult
+                    from langchain_core.runnables import RunnableLambda
+
+                    def generated(llm, messages, stop=None, run_manager=None, **kwargs):
+                        # Real LangChain invoke/start/end lifecycle; only the
+                        # provider-facing generation is synthetic. No manual
+                        # callback injection into observer/bridge.
+                        prompt = messages[0].content if len(messages) == 1 else messages
+                        schema = kwargs.get("_fixture_schema")
+                        if schema is None:
+                            message = initialized_response(llm, prompt)
+                        else:
+                            value = Model().with_structured_output(schema).invoke(prompt)
+                            message = AIMessage(content=value.model_dump_json())
+                        message.usage_metadata = {"input_tokens": 10, "output_tokens": 5, "total_tokens": 15}
+                        return ChatResult(generations=[ChatGeneration(message=message)])
+
+                    def structured_binding(llm, schema, **kwargs):
+                        return llm.bind(_fixture_schema=schema) | RunnableLambda(
+                            lambda message: schema.model_validate_json(message.content))
+
+                    patches.enter_context(patch.object(NormalizedChatOpenAI, "_generate", generated))
+                    patches.enter_context(patch.object(NormalizedChatOpenAI, "with_structured_output",
+                        structured_binding))
+                else:
+                    patches.enter_context(patch.object(NormalizedChatOpenAI, "invoke",
+                        initialized_response))
+                    patches.enter_context(patch.object(NormalizedChatOpenAI, "with_structured_output",
+                        lambda llm, schema, **kwargs: Model().with_structured_output(schema)))
             if interrupted_node:
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
                     "propagate_snapshots", resume_without_messages))

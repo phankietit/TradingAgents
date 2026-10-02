@@ -22,7 +22,11 @@ from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
 from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
-from tradingagents.platform.analysis.observer import STAGES, ResearchObserver
+from tradingagents.platform.analysis.observer import (
+    STAGES,
+    ResearchBudgetExceeded,
+    ResearchObserver,
+)
 from tradingagents.platform.analysis.recording import SnapshotRecorder
 from tradingagents.platform.analysis.recording_context import SnapshotRecordingInputs
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot
@@ -38,13 +42,14 @@ from tradingagents.platform.persistence.models import ResearchCheckpointRow
 
 
 def fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
-                  *, invalid=False):
+                  *, invalid=False, callbacks=False):
     """Only install synthetic SDK responses; do not replace engine or graph hooks."""
     assert engine_factory is AnalysisEngine
     os.environ["OPENAI_API_KEY"] = "synthetic-NEVER_ECHO"
     inputs = SnapshotRecordingInputs(recording_data).read()
     request = AnalysisRequest.model_validate(request_data)
-    fixture = NativeFixtureEngine(base_config={**base_config, "_fixture_invalid_translation": invalid})
+    fixture = NativeFixtureEngine(base_config={**base_config, "_fixture_invalid_translation": invalid,
+                                              "_fixture_callbacks": callbacks})
     # Enable reviewed actual SDK construction in the reusable fixture. This
     # sentinel is never used by production child, which builds its own recorder.
     fixture.snapshot_recorder = SnapshotRecorder(owner_id=inputs.owner_id, run=inputs.run,
@@ -68,17 +73,30 @@ def invalid_fixture_child(connection, base_config, request_data, engine_factory,
                   invalid=True)
 
 
+def callback_fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data):
+    fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
+                  callbacks=True)
+
+
+def invalid_callback_fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data):
+    fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
+                  callbacks=True, invalid=True)
+
+
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
-def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid):
+@pytest.mark.parametrize("callbacks", [False, True, "exhausted"])
+def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks):
     def forbidden(*args, **kwargs):
         raise AssertionError("parent fixture attempted provider/network invocation")
 
     monkeypatch.setenv("OPENAI_API_KEY", "synthetic-NEVER_ECHO")
     monkeypatch.setattr(httpx.Client, "send", forbidden)
     monkeypatch.setattr(httpx.AsyncClient, "send", forbidden)
-    monkeypatch.setattr("tradingagents.platform.analysis.supervision._child",
-                        invalid_fixture_child if invalid else fixture_child)
+    exhausted = callbacks == "exhausted"
+    child = ({False: fixture_child, True: invalid_fixture_child} if not callbacks else
+             {False: callback_fixture_child, True: invalid_callback_fixture_child})[invalid and not exhausted]
+    monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", child)
     database, owner, original = _database(tmp_path / "db")
     graph = None
     try:
@@ -98,13 +116,18 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             "decision_inputs": {"snapshots_by_analyst": {role: tuple(source.manifest.snapshot_id for source in group)
                 for role, group in sources.by_analyst.items()}, "source_max_age_seconds": dict.fromkeys(analysts, 0)}})
         run = type(original).model_validate(run.model_dump())
+        if exhausted:
+            run = type(original).model_validate(run.model_copy(update={
+                "execution_limits": {"wall_seconds": 1800, "model_calls": 1}}).model_dump())
         with database.session() as session:
             PlatformRepository(session).save_run(run)
         _enqueue(database, owner, run)
         with database.session() as session:
             job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
         job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
-        observer = ResearchObserver(check_cancelled=job_context.raise_if_cancelled, emit=lambda *args: None)
+        events = []
+        observer = ResearchObserver(check_cancelled=job_context.raise_if_cancelled,
+            emit=lambda *args: events.append(args), max_calls=1 if exhausted else 128)
         started = observer.started
         request = AnalysisRequest(instrument=instrument, analysis_date=NOW.date(), selected_analysts=analysts,
             snapshot_context=sources, execution_observer=observer)
@@ -125,17 +148,45 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
             return store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=raw)
 
         recording = SnapshotRecordingInputs.create(owner_id=owner, run=run, expected_fingerprint=fingerprint)
-        result = SupervisedAnalysisEngine(base_config=config, recording_inputs=recording,
+        supervised = SupervisedAnalysisEngine(base_config=config, recording_inputs=recording,
             checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
-            checkpoint_commit=commit).analyze(request)
+            checkpoint_commit=commit)
+        if exhausted:
+            with pytest.raises(ResearchBudgetExceeded, match="research model-call budget exhausted"):
+                supervised.analyze(request)
+            usage = observer.receipt()["usage"]
+            assert observer.started == started and observer.max_calls == 1
+            assert observer.started_calls == usage["model_calls"] == usage["calls_with_usage"] == 1
+            assert usage["input_tokens"] == 10 and usage["output_tokens"] == 5 and usage["total_tokens"] == 15
+            assert usage["failed_calls"] == 0 and usage["cost"] is None
+            assert [data["usage"]["total_tokens"] for kind, data in events if kind == "model.usage"] == [15]
+            assert observer.completed == ["Market Analyst"]
+            assert commit_pids and set(commit_pids) == {os.getpid()}
+            with database.session() as session:
+                rows = session.scalars(select(ResearchCheckpointRow)).all()
+                assert rows and all(row.owner_id == owner and row.run_id == run.run_id for row in rows)
+                for row in rows:
+                    codec.decode(row.payload)
+                assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
+            return
+        result = supervised.analyze(request)
         trace = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
         assert trace["pid"] != os.getpid() and trace["closed_clients"] == 2
         with pytest.raises(ProcessLookupError):
             os.kill(trace["pid"], 0)  # Parent supervision reaped the completed child.
         assert commit_pids and set(commit_pids) == {os.getpid()}
-        baseline = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid})
+        baseline = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid,
+                                                   "_fixture_callbacks": callbacks})
         baseline_observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *args: None)
-        expected = baseline.analyze(request.model_copy(update={"execution_observer": baseline_observer}))
+        baseline_request = request.model_copy(update={"execution_observer": baseline_observer})
+        if callbacks:
+            # Construct actual SDKs but run baseline without a saver/recorder.
+            baseline.snapshot_recorder = SnapshotRecorder(owner_id=owner, run=run,
+                expected_fingerprint=fingerprint, commit=lambda raw: None)
+            expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
+                AnalysisEngine(base_config=options).analyze(baseline_request))
+        else:
+            expected = baseline.analyze(baseline_request)
         assert trace["trace"] == json.loads(json.dumps(baseline.model_trace))
         actual_data, expected_data = result.model_dump(), expected.model_dump()
         expected_data["final_state"] = {key: value for key, value in expected_data["final_state"].items()
@@ -151,7 +202,18 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
         assert observer.started == started
         assert observer.max_seconds == 1800 and observer.max_calls == 128
         assert observer.receipt()["supervision_mode"] == "spawned_process"
-        assert observer.receipt()["usage"]["status"] == "incomplete"  # Synthetic SDK callbacks bypass usage.
+        usage = observer.receipt()["usage"]
+        if callbacks:
+            calls = len(trace["trace"])
+            assert calls > 14
+            assert observer.started_calls == calls == baseline_observer.started_calls
+            assert usage == baseline_observer.receipt()["usage"]
+            assert usage["model_calls"] == usage["calls_with_usage"] == calls
+            assert usage["input_tokens"] == 10 * calls and usage["output_tokens"] == 5 * calls
+            assert usage["total_tokens"] == 15 * calls and usage["status"] == "reported"
+            assert usage["cost"] is None and usage["provider_request_attempts"] is None
+        else:
+            assert usage["status"] == "incomplete"  # Synthetic invoke bypasses callbacks.
         if invalid:
             assert result.decision_payload is None
             assert "report_translation_unavailable" in result.validation_issues

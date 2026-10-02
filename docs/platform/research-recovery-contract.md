@@ -40,6 +40,17 @@ New-child restore, retained accounting, explicit consent/API/UI and live
 financial/editorial acceptance remain UNVERIFIED. Default worker recorder/
 resume remains disabled; this fixture grants no paid retry or owner consent.
 
+The subsequent callback-enabled mode keeps the real NormalizedChatOpenAI
+`invoke`/LangChain start/end lifecycle, replacing only provider generation and
+schema binding with synthetic responses. No callbacks are manually injected.
+Parent logical starts/completions and synthetic token counters match an actual-
+SDK uninterrupted baseline across the same four language/translation cases.
+A one-call fixture allowance stops the next admission and retains the first
+usage event/checkpoints; it does not raise any product risk or run limit.
+These observations validate local callback plumbing, not vendor usage truth,
+hidden SDK request attempts, costs or a durable cross-attempt accounting ledger.
+Synthetic `reported` counters must not be presented as live-provider evidence.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
