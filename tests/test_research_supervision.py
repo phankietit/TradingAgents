@@ -2,6 +2,7 @@
 
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager, suppress
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -32,7 +33,7 @@ from tradingagents.platform.analysis.observer import (
     ResearchObserver,
 )
 from tradingagents.platform.analysis.snapshots import SnapshotAnalysisContext
-from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
+from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine, _Bridge
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.jobs import DurableJobQueue, JobWorker
 from tradingagents.platform.jobs.analysis import AnalysisJobHandler
@@ -72,6 +73,21 @@ class SpawnFixtureEngine:
             final_state={"market_report": "Synthetic returned note",
                 "final_trade_decision": "REVIEW", "messages": ["private reasoning"]},
             narrative_signal="REVIEW")
+
+
+def test_bridge_serializes_concurrent_frames_and_acknowledgements():
+    class EchoConnection:
+        def send(self, value):
+            self.value = value
+            sleep(0.005)
+
+        def recv(self):
+            return self.value
+
+    bridge = _Bridge(EchoConnection())
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        answers = list(pool.map(lambda value: bridge.rpc("echo", value), range(20)))
+    assert answers == [("echo", value) for value in range(20)]
 
 
 def request_with(observer):

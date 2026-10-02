@@ -9,7 +9,7 @@ from multiprocessing import get_context, parent_process
 from os import _exit
 from pickle import loads
 from queue import Empty, Full, Queue
-from threading import Event, Thread
+from threading import Event, Lock, Thread
 from types import SimpleNamespace
 
 from langchain_core.callbacks import BaseCallbackHandler
@@ -34,10 +34,14 @@ class _Bridge(BaseCallbackHandler):
     def __init__(self, connection):
         self.connection = connection
         self.active = {}
+        self.lock = Lock()
 
     def rpc(self, method, payload):
-        self.connection.send((method, payload))
-        return self.connection.recv()
+        # Concurrent callback threads must not interleave pipe frames or consume
+        # another call's acknowledgement. The parent still owns admission.
+        with self.lock:
+            self.connection.send((method, payload))
+            return self.connection.recv()
 
     def on_chain_start(self, serialized, inputs, *, run_id, name=None, **kwargs):
         if name in STAGES:
