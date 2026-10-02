@@ -14,6 +14,14 @@ incremental evidence/limitations; later mechanism tests do not grant consent,
 attest all transport or establish live financial acceptance. See the exact
 2026-10-03 acceptance receipt for current gates.
 
+The subsequent `d87ee62` fixture adds actual supervisor termination after the
+first returned market report's durable pending writes lose ACK, then new-child
+continuation with retained accounting. This covers one stopped/lost-ACK boundary
+in all four language/translation cases; abrupt parent crash, all-stage recovery
+and authenticated linked continuation remain unverified. Source receipts retain
+the completed-fixture branch as earlier narrower evidence, not current complete
+recovery acceptance.
+
 ### Internal original-context transfer (2026-10-03)
 
 `SnapshotRecordingInputs` is an explicit private JSON envelope for trusted

@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Stopped native attempt / lost-ACK recovery fixture 2026-10-03:** source
+`d87ee6261a41d26df6d1639ef937eee08e433a53` actual supervisor dừng/reap child
+sau durable nonempty market-report pending writes nhưng ACK bị mất. Child mới
+restore latest validated tuple, debit prior calls/time; prefix + suffix trace
+và published fields khớp uninterrupted EN/VI/song ngữ/invalid VI. Completed model
+call không lặp; old rows/original fixture run không đổi, usage cộng đúng một lần.
+Killed SDK cleanup giữ unknown; không giả closed. Test-only synthetic prefix
+sink không thêm production prompt logging. Initial gate FAIL vì fixture bắt
+market_report rỗng ở initial writes (1 failed, 9,38 s); sửa threshold nonempty,
+không nới gate. 4 stopped cases PASS (23,28 s); final 45 focused PASS (68 warnings,
+80,42 s); full **2.320 + 88 subtests PASS**, 20 skips, 192 warnings, 267,81 s,
+terminal exit 0 tại source sạch, Python 3.14.7/Darwin 25.5.0; Ruff/diff/templates
+PASS. Chỉ một pending-write/ACK boundary; abrupt parent crash/all-boundary/
+concurrent writers/consent-linked execution/transport còn UNVERIFIED. Fixture
+vẫn dùng original lease context, không tạo production consent hay job identity.
+Default resume chưa bật; ingestion/UX/live còn mở, NQ=F BLOCKED theo owner.
+Không AI/vendor/CI/private DB migration/restart/history rewrite/provider/risk
+change/merge/deploy; goal và Draft PR #7 mở.
+
 **Restricted new-child restore transfer 2026-10-03:** source
 `60e9200a1d47ac596c79c4135ef0bebb6628fcf8` supervisor opt-in bytes cùng exact
 original context/engine; parent validate/revalidate thread/fingerprint trước

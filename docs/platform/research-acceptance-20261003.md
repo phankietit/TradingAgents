@@ -677,3 +677,31 @@ Next safe acceptance slice is original native recovery after an actual stopped
 fixture attempt, with retained accounting and immutable checkpoint selection.
 Consent and linked execution must still be established before product activation;
 historical failures without checkpoints are not backfilled or replayed.
+
+## Stopped native attempt with durable pending writes and lost ACK
+
+Source `d87ee6261a41d26df6d1639ef937eee08e433a53`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Test/fixture and
+capability documentation only; production flow is unchanged. No paid/vendor
+call, default resume activation, private DB migration/restart/history rewrite,
+provider/risk change, CI, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Actual stopped attempt | PASS | Parent commits the first returned nonempty market report's native pending writes in fenced disposable SQLite, then deliberately loses ACK. Actual supervisor raises fixed review error, terminates/reaps the first child and retains its original-clock stop accounting; no first-attempt final result is returned |
+| Original native continuation | PASS | New original child uses latest tuple after private store owner/hash/fingerprint checks. Completed pending writes skip the completed model invocation; test-only captured prefix plus continuation prompt/model trace equals uninterrupted baseline across EN/VI/bilingual/invalid VI, and all published result fields match baseline |
+| Retained budget/history | PASS | First-attempt one logical call/15 synthetic tokens and bounded stop duration debit the retained observer with original 1,800 seconds/128 calls. Reader sums attempts 1/2 to baseline call/token totals once; prior rows and original fixture run unchanged, parent-only commits, both child PIDs absent |
+| Cleanup uncertainty/privacy | PASS | Killed child SDK cleanup is None/unknown, not claimed closed; resumed child's two SDKs are confirmed closed. Synthetic prompt-prefix capture is a fixture-only sink to disposable files outside Git; no production logging or checkpoint raw-message filter changed |
+| Initial fixture gate | FAIL | 1 failed, 12 deselected, 3 warnings, 9.38 s: stop condition matched empty market_report in initial pending writes before any model trace existed. Corrected to require returned nonempty report; no product gate weakened |
+| Focused gates | PASS | Stopped subset: 4 passed, 12 deselected, 20 warnings, 23.28 s. Final `.venv/bin/python -m pytest -q tests/test_native_recorder_spawn.py tests/test_retained_observer.py tests/test_committed_checkpoint_saver.py --disable-warnings -x`: 45 passed, 68 warnings, 80.42 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,320 passed +88 subtests, 20 skipped, 192 warnings, 267.81 s, terminal exit 0 on exact clean source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; import ordering fixed before source commit |
+| Product recovery/consent | UNVERIFIED | One completed-pending-write/lost-ACK boundary, not all stages or abrupt parent crash. Original fixture lease context reused; no production continuation consent or linked job identity created. Concurrent/stale writer exclusion, full transport attestation and API/UI activation remain open |
+| Live/operational/PostgreSQL | UNVERIFIED | Ingestion/UX and fresh live financial/translation/billing acceptance remain open; 18 PostgreSQL and optional Bedrock/live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Full R01–R14 goal and Draft PR #7 stay open. Next integration must create and
+validate owner-authorized linked continuation identity/checkpoint/accounting
+transactionally before any product dispatch; readable bytes are not consent.
+Broader stopped/ACK boundaries and abrupt-crash uncertainty remain separate
+acceptance work, not waived by this fixture.
