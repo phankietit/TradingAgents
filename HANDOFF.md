@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Original recorder/graph restore hook 2026-10-03:** source
+`7c36a2609c33ec3352295fbcb694a6d42539b4fe` recorder optional restricted bytes
+sau initialized fingerprint/original observer allowance checks; native graph
+dùng invoke(None), config_scope/callbacks/sync gốc, không dựng next-stage flow.
+Default worker/API/CLI không bật restore. Fixture SQLite intermediate checkpoint
+cho EN/VI/song ngữ/invalid translation: remaining trace và full non-message
+result khớp baseline, observer start và prior rows không đổi; không paid proof.
+52 focused PASS, 122 warnings, 33,90 s; full **2.310 + 88 subtests PASS**,
+20 skips, 172 warnings, 380,16 s, terminal exit 0 tại source sạch; Ruff/diff/
+templates PASS, không behavioral FAIL. New-child trusted transport/retained
+accounting/consent transaction còn UNVERIFIED; ingestion/UX/live còn mở,
+NQ=F BLOCKED theo owner. Không AI/vendor/CI/private DB migration/restart/history
+rewrite/provider/risk change/merge/deploy; goal và Draft PR #7 mở.
+
 **Native saver restore mechanism 2026-10-03:** source
 `4e5b9aaf3015dd44970efe81b6a7c561931bfabb` nạp restricted tuple vào saver
 trống, kiểm thread/fingerprint và decoded tuple equality; giữ native versions/

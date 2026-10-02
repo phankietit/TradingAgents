@@ -629,3 +629,25 @@ DB migration/restart/history rewrite, CI, provider/risk change, merge or deploy.
 Next safe slice is trusted original-graph restoration into a new supervised
 child with retained original allowance, before consent/API/UI activation.
 Historical failures without checkpoints are not backfilled or replayed.
+
+## Original recorder and snapshot graph restore hook
+
+Source `7c36a2609c33ec3352295fbcb694a6d42539b4fe`, same branch/worktree;
+clean throughout full regression, Python 3.14.7/Darwin 25.5.0. Internal hook only:
+no default worker/API/CLI enablement, paid/vendor call, private DB migration,
+runtime restart, history rewrite, provider/risk change, CI, merge or deploy.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original native invocation | PASS | Recorder checks initialized original fingerprint and existing original-cap observer, restores restricted bytes, passes paired saver/thread/resume option. Snapshot graph invokes None under original config scope, recursion limit/callbacks and sync durability. No inferred next-stage list or replacement of instance graph |
+| Fail-closed hook | PASS | Invalid resume types, missing/wrong saver and malformed recorder bytes reject before graph compile/invocation; invalid recorder bytes type/empty value rejected. Fixed diagnostics omit raw input; default initial-state invocation unchanged |
+| Native recorder/engine equivalence | PASS | Four language/invalid-translation fixtures reopen intermediate immutable SQLite bytes through actual recorder/engine/native graph hook. Remaining synthetic model/prompt trace equals baseline suffix and complete non-message result matches baseline; no prior row mutated or observer start reset; initialized clients closed |
+| Focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_native_analysis_recording.py tests/test_analysis_recording.py tests/test_snapshot_checkpoint_hook.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 52 passed, 122 warnings, 33.90 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,310 passed +88 subtests, 20 skipped, 172 warnings, 380.16 s on exact clean source, process terminal exit 0 (not inferred from 100% output) |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load; import ordering fixed before source commit, no behavioral gate failure |
+| Supervised recovery/consent | UNVERIFIED | New restore path exercised in same process; existing spawn recording fixtures remain passing, not new-child restore proof. Trusted checkpoint transfer/retained accounting, linked execution and transactional owner consent remain required before API/worker activation |
+| Live/operational/PostgreSQL | UNVERIFIED | No fresh live financial/translation/billing or browser acceptance. Ingestion/UX requirements and 18 PostgreSQL plus optional Bedrock/live DeepSeek-key skips remain open |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Full R01–R14 goal and Draft PR #7 remain open. Next gate is actual separate-child
+restoration under the parent retained allowance, not a new paid replay or budget.
