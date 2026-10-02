@@ -227,3 +227,23 @@ full-graph-through-spawn and worker-crash/orphan acceptance, then fingerprinted
 checkpoint recovery and owner-authorized live financial/translation checks.
 This checkpoint does not authorize release, merge, public deployment or a
 fresh paid BTC replay.
+
+### Bridge callback concurrency follow-up
+
+Runtime source `e1af4c35957918ae72debef3417ef24d2a1a767f` serializes each private
+pipe send/ack pair with a child-side lock. Parent-side atomic admission remains
+authoritative; concurrent callbacks cannot interleave frames or consume another
+callback's reply. No graph/provider/SDK/policy/UI changes accompany this fix.
+
+- PASS `.venv/bin/ruff check .`, `git diff --check`.
+- PASS `.venv/bin/python -m pytest -q --disable-warnings`: 1,634 regression
+  tests + 88 subtests, 20 skips, 22 warnings, 109.11 s; same classified skips.
+- PASS new focused concurrency test, added after full-suite collection:
+  `.venv/bin/python -m pytest -q tests/test_research_supervision.py -k serializes
+  --disable-warnings`: 1 passed / 11 deselected, 1.21 s. Twenty concurrent
+  RPCs each retain their own echoed acknowledgement. This is supplementary
+  evidence, not a claimed single full-suite run of 1,635 tests.
+
+No new paid/vendor call or runtime restart. Prior web gate remains applicable
+to unchanged frontend files; native supervised graph, crash/orphan, live
+financial/translation and checkpoint-resume acceptance are still UNVERIFIED.

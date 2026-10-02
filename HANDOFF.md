@@ -2,6 +2,13 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Bridge concurrency follow-up:** runtime source hiện tại
+`e1af4c35957918ae72debef3417ef24d2a1a767f` khóa cặp send/ack để callback threads
+không xen frame hay lấy nhầm reply. Regression Python 1.634 + 88 subtests PASS,
+20 skips, 109,11 s; một test concurrency bổ sung riêng PASS (thêm sau collection,
+không gọi tổng thành một full run 1.635). Ruff/diff PASS; không đổi frontend.
+Các gate native supervised graph/crash/resume/live của checkpoint dưới vẫn mở.
+
 **Checkpoint process supervision 2026-10-02:** source
 `be2149864ec0ffb91b7f8c3d79d88bd06087992c`. Default worker snapshot jobs chạy
 graph trong process spawn, cha giữ observer/DB/lease/publication. Deadline,
