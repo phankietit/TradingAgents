@@ -8,6 +8,7 @@ bytes only. A failed/ambiguous commit poisons this saver, never authorizes retry
 
 import hashlib
 from threading import RLock
+from uuid import UUID
 
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -43,7 +44,8 @@ class CommittedSnapshotSaver(InMemorySaver):
             value = super().get_tuple(address)
             raw = self.codec.encode(value)
             receipt = self.commit(raw)
-            if (type(receipt) is not CheckpointCommit or receipt.sequence < 1
+            if (type(receipt) is not CheckpointCommit or type(receipt.sequence) is not int
+                    or receipt.sequence < 1 or type(receipt.record_id) is not UUID
                     or receipt.content_hash != hashlib.sha256(raw).hexdigest()):
                 raise ValueError("invalid acknowledgement")
         except Exception:

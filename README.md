@@ -518,6 +518,14 @@ digest of snapshot readers. Mismatches fail before invocation without printing
 inputs. Real graph/SDK tests use synthetic credentials and forbid network/model
 calls. This is still not complete transport/closure-mutation attestation or an
 enabled worker/owner continuation path.
+AnalysisEngine now accepts an internal opt-in SnapshotRecorder with the original
+run context, expected full fingerprint and trusted fenced commit callback. It
+requires the original ResearchObserver/allowance, recomputes identity from its
+newly initialized actual graph and refuses mismatch before invocation. It then
+passes a restricted committed saver/run thread to the native sync snapshot hook.
+Arbitrary recorder types/graph factories and non-snapshot requests are rejected;
+default engine/worker and CLI behavior is unchanged. This direct engine wiring
+does not enable supervised worker recovery, restore history or grant consent.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

@@ -106,6 +106,32 @@ transport-mutation attestation or authenticated DB loading. Default engine/
 supervisor/worker do not select it or enable recovery. Original owner consent,
 allowance/usage accounting and new-child restore remain mandatory next gates.
 
+### Internal AnalysisEngine recorder selection
+
+`recording.py` supplies a private SnapshotRecorder carrying original run/owner,
+expected full fingerprint, book/policy/risk context and a trusted fenced commit
+callback. Its repr excludes fields. AnalysisEngine accepts only this exact
+internal type with the original graph factory; arbitrary factories/recorders
+and non-snapshot requests fail before graph invocation. After actual graph
+construction it recomputes initialized identity and requires an exact match,
+then constructs restricted codec/committed saver and canonical run-thread for
+the native synchronous snapshot hook. No fallback after mismatch is permitted.
+
+It requires the existing exact ResearchObserver with original stored (or legacy
+default) limits and checks remaining allowance without creating a new observer
+or resetting its start. Cancellation/exhaustion retain original classifications.
+Saver ACK validation now independently requires exact UUID and positive integer
+sequence (not bool/float/string), matching the parent bridge boundary.
+
+This is direct internal engine recording, not supervised child capability or
+worker enablement. Existing worker does not construct SnapshotRecorder and no
+API accepts its fields. Native engine wiring tests use real SDK initialization
+with an explicit invocation spy, not full native/live financial acceptance.
+Trusted parent original-context transfer/attestation and observer adaptation,
+new-child restore, durable retained accounting and explicit owner continuation
+still require implementation and acceptance. Keep execution_started fencing;
+this context cannot authorize a replay, enlarge allowance or mutate history.
+
 ### Private persistence prerequisite
 
 `checkpoint_store.py` and migration `0011_research_checkpoints` provide a

@@ -41,7 +41,8 @@ def test_every_native_put_and_pending_write_commits_only_filtered_json():
     assert codec.decode(commits[-1]).pending_writes[0][2] == "Pending reader output"
 
 
-@pytest.mark.parametrize("ack", ["exception", "none", "wrong_hash", "wrong_sequence"])
+@pytest.mark.parametrize("ack", ["exception", "none", "wrong_hash", "wrong_sequence",
+    "bool_sequence", "float_sequence", "string_sequence", "string_record", "missing_record"])
 def test_ambiguous_ack_poisoned_saver_cannot_be_reused(ack):
     codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes={"Market Analyst"})
 
@@ -51,7 +52,10 @@ def test_ambiguous_ack_poisoned_saver_cannot_be_reused(ack):
         if ack == "none":
             return None
         value = receipt(raw)
-        return CheckpointCommit(value.record_id, 0 if ack == "wrong_sequence" else 1,
+        sequence = {"wrong_sequence": 0, "bool_sequence": True,
+                    "float_sequence": 1.0, "string_sequence": "1"}.get(ack, 1)
+        record = {"string_record": str(value.record_id), "missing_record": None}.get(ack, value.record_id)
+        return CheckpointCommit(record, sequence,
                                 "0" * 64 if ack == "wrong_hash" else value.content_hash)
 
     saver = CommittedSnapshotSaver(codec=codec, commit=commit)
