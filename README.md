@@ -448,8 +448,9 @@ role returns reader text. Notes bind to the run, snapshots and declared config,
 are always **unvalidated**, and cannot authorize portfolio approval. Prompts,
 raw messages, model-reasoning fields and executable portfolio fields are not
 retained in these notes. A cancellation or lost worker lease prevents new writes.
-Notes are available through the existing owner-only artifact APIs; a dedicated
-web reader and graph resume remain unfinished. This does not enable the CLI's
+Notes are available on demand in the web artifact reader with a mandatory
+unvalidated/nonapproval warning; interface language changes preserve original
+stage text without calling AI. Graph resume remains unfinished. This does not enable the CLI's
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 

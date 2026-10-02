@@ -1,5 +1,13 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'No completed report was published for this run.': 'Lượt phân tích này chưa có báo cáo hoàn chỉnh.',
+  'Saved working notes': 'Bản nháp nghiên cứu đã lưu',
+  'Working notes are not completed reports and cannot be approved.': 'Bản nháp không phải báo cáo hoàn chỉnh và không thể phê duyệt.',
+  'research stage': 'Bản nháp nghiên cứu',
+  'Unvalidated working note': 'Bản nháp chưa kiểm chứng',
+  'Step': 'Bước',
+  'This is a saved working note, not a completed report or investment decision. Financial checks and human review are still required. It cannot be approved.': 'Đây là bản nháp đã lưu, không phải báo cáo hoàn chỉnh hay quyết định đầu tư. Nội dung vẫn cần kiểm tra tài chính và được bạn xem xét. Không thể phê duyệt bản nháp này.',
+  'Original stage text is preserved. Changing the interface language does not translate this note or call AI.': 'Nội dung gốc của bước nghiên cứu được giữ nguyên. Đổi ngôn ngữ giao diện không dịch bản nháp này và không gọi AI.',
   'SEC filings · optional': 'Báo cáo SEC · tùy chọn',
   'Executive summary': 'Tóm tắt',
   'Invalidation conditions': 'Điều kiện mất hiệu lực',

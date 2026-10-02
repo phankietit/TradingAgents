@@ -12,6 +12,35 @@ const artifact: Artifact = { artifact_id: 'artifact-fixture', kind: 'analysis_re
 const report = { run_id: 'run-fixture', decision_id: '12345678-1234-1234-1234-123456789abc', profile: 'equity',
   reference_only: false, selected_analysts: ['market'], snapshot_attestation: 'PASS', narrative: '<img src=x onerror=alert(1)>', structured_narrative: { thesis: '<script>not executable</script>' } };
 
+const note = { schema_version: '1.0', run_id: 'run-fixture', stage: 'Market Analyst', attempt: 1,
+  sequence: 1, analysis_as_of: '2026-09-01T00:00:00Z', research_quality: 'unvalidated',
+  approval_eligible: false, sections: {market_report: 'Saved **-22.94%** <img src=x onerror=alert(1)>'} };
+it('reads a stage only on demand, never offers approval and never translates original text', async () => {
+  setLocale('en');
+  const fetch = vi.fn(async () => new Response(JSON.stringify(note))); vi.stubGlobal('fetch', fetch);
+  render(<ArtifactPreview artifact={{...artifact, kind:'research_stage'}} runId="run-fixture" />);
+  expect(fetch).not.toHaveBeenCalled();
+  await userEvent.setup().click(screen.getByRole('button', {name:'Inspect research stage'}));
+  expect(await screen.findByText('Unvalidated working note')).toBeTruthy();
+  expect(screen.getByText('-22.94%')).toBeTruthy();
+  expect(screen.queryByRole('link')).toBeNull(); expect(document.querySelector('img')).toBeNull();
+  act(() => setLocale('vi'));
+  expect(screen.getByText('Bản nháp chưa kiểm chứng')).toBeTruthy();
+  expect(screen.getByText('-22.94%')).toBeTruthy(); expect(fetch).toHaveBeenCalledTimes(1);
+  act(() => setLocale('en'));
+});
+it.each([
+  {approval_eligible:true}, {research_quality:'validated'}, {run_id:'other-run'},
+  {stage:'Unknown role'}, {sequence:0}, {attempt:0}, {analysis_as_of:'invalid'},
+  {sections:{target_weight:'0.5'}}, {sections:{}}, {sections:{market_report:42}},
+])('withholds malformed working-note contents %j', async patch => {
+  setLocale('en');
+  vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({...note,...patch}))));
+  render(<ArtifactPreview artifact={{...artifact,kind:'research_stage'}} runId="run-fixture" defaultOpen />);
+  expect((await screen.findByRole('alert')).textContent).toContain('No report contents are shown');
+  expect(screen.queryByText('-22.94%')).toBeNull(); expect(screen.queryByRole('link')).toBeNull();
+});
+
 it('switches saved bilingual reports without network calls or changing numbers', async () => {
   setLocale('en');
   const fetch = vi.fn(async () => new Response(JSON.stringify({...report, report_language:'en-vi',

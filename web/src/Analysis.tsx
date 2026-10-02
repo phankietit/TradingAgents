@@ -133,12 +133,20 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     {!events.length ? <p className="muted">{t("No events received yet.")}</p> : null}
     </details>
   </>;
+  const stageNotes = artifacts.data?.filter(item => item.kind === 'research_stage') ?? [];
+  const finalArtifacts = artifacts.data?.filter(item => item.kind !== 'research_stage') ?? [];
   const reports = <>
     {!savedReport ? <h3>{t("Reports & evidence")}</h3> : null}
-    {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : artifacts.data?.length ? <ul className="artifact-list">{[...artifacts.data].sort((a, b) => Number(b.kind === 'analysis_report') - Number(a.kind === 'analysis_report')).map(item => <li key={item.artifact_id}>
+    {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : finalArtifacts.length ? <ul className="artifact-list">{[...finalArtifacts].sort((a, b) => Number(b.kind === 'analysis_report') - Number(a.kind === 'analysis_report')).map(item => <li key={item.artifact_id}>
       <ArtifactPreview artifact={item} runId={runId} embedded={item.kind === 'analysis_report'} />
       <details><summary>{t("File details")}</summary><a href={`/api/v1/artifacts/${encodeURIComponent(item.artifact_id)}`} download>{t(item.kind.replaceAll('_', ' '))} {t("· Download")}</a><p className="muted">{item.media_type} · {item.byte_size.toLocaleString('en-US')} {t("bytes ·")} {timestamp(item.created_at)}</p><p className="mono caption">{item.content_hash}</p></details>
-    </li>)}</ul> : <p className="muted">{t("No artifacts have been published for this run.")}</p>}
+    </li>)}</ul> : <p className="muted">{t(stageNotes.length ? 'No completed report was published for this run.' : 'No artifacts have been published for this run.')}</p>}
+    {!artifacts.error && stageNotes.length ? <details className="completed-processing"><summary>{t('Saved working notes')} · {stageNotes.length}</summary>
+      <p className="notice warning">{t('Working notes are not completed reports and cannot be approved.')}</p>
+      <ul className="artifact-list">{stageNotes.map(item => <li key={item.artifact_id}>
+        <p className="muted caption">{timestamp(item.created_at)}</p><ArtifactPreview artifact={item} runId={runId} />
+      </li>)}</ul>
+    </details> : null}
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
   </>;
   return <section className="instrument-detail" aria-label={t("Run details")}>

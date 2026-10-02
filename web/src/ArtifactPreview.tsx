@@ -6,6 +6,7 @@ import { profileLabel, researchLabel } from './researchLabels';
 import ResearchMarkdown from './ResearchMarkdown';
 import ResearchChart, { reportHistories, type ReportHistory } from './ResearchChart';
 import { readerSections } from './readerSections';
+import { researchStage, type ResearchStage } from './researchStage';
 
 export interface Artifact { artifact_id: string; kind: string; media_type: string; content_hash: string; byte_size: number; created_at: string }
 export function artifactList(value: Artifact[]): Artifact[] {
@@ -31,11 +32,13 @@ function list(value: unknown): unknown[] {
 }
 interface Source { id: string; snapshot: string; name: string; hash: string; claim: string; sourceAt: string | null; observedAt: string }
 type Preview = { type: 'report'; decisionId: string; profile: string; referenceOnly: boolean; analysts: string[]; missingAnalysts: string[]; attestation: string; narrative: string; structured: unknown; reportLanguage: string | null; histories: ReportHistory[]; localized: { en: string; vi: string } | null; warning: string; issues: string[]; usage: JsonObject | null; sections: {title:string; body:string}[] }
-  | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] };
+  | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] }
+  | { type: 'stage'; note: ResearchStage };
 
 function parse(value: unknown, artifact: Artifact, runId: string): Preview {
   const data = object(value);
   if (data.run_id !== runId) throw new ApiError(502);
+  if (artifact.kind === 'research_stage') return { type: 'stage', note: researchStage(data, runId) };
   if (artifact.kind === 'analysis_report') {
     const decisionId = text(data.decision_id);
     if (!uuid.test(decisionId) || typeof data.reference_only !== 'boolean') throw new ApiError(502);
@@ -82,7 +85,7 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
 export default function ArtifactPreview({ artifact, runId, defaultOpen = false, embedded = false }: { artifact: Artifact; runId: string; defaultOpen?: boolean; embedded?: boolean }) {
   useLocale();
   const [open, setOpen] = useState(defaultOpen);
-  const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence'].includes(artifact.kind)
+  const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence', 'research_stage'].includes(artifact.kind)
     && Number.isSafeInteger(artifact.byte_size) && artifact.byte_size > 0 && artifact.byte_size <= MAX_PREVIEW_BYTES;
   return <>
     {supported ? !embedded && <button onClick={() => setOpen(value => !value)} aria-expanded={open}>{open ? t("Close") : t("Inspect")} {t(artifact.kind.replaceAll('_', ' '))}</button>
@@ -160,6 +163,11 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
         {data.usage ? <pre className="safe-text">{JSON.stringify(data.usage, null, 2)}</pre> : <p>{t('Token usage was not recorded for this report.')}</p>}
       </details>
       </section> : null}
+    </> : data.type === 'stage' ? <>
+      <header className="report-header"><div><h3>{t(data.note.stage)}</h3><p className="muted caption">{t('As of')} {timestamp(data.note.asOf)} · {t('Attempt')} {data.note.attempt} · {t('Step')} {data.note.sequence}</p></div><span className="warning">{t('Unvalidated working note')}</span></header>
+      <p className="notice warning">{t('This is a saved working note, not a completed report or investment decision. Financial checks and human review are still required. It cannot be approved.')}</p>
+      <p className="muted caption">{t('Original stage text is preserved. Changing the interface language does not translate this note or call AI.')}</p>
+      {Object.entries(data.note.sections).map(([key, body]) => <ResearchMarkdown key={key} text={body} language={key === 'report_vi' ? 'vi' : key === 'report_en' ? 'en' : undefined} />)}
     </> : <>
       <p>{t("Evidence as of")} {timestamp(data.asOf)}</p>
       {!data.claims.length ? <p className="warning">{t("No material claims are linked. This is not evidence of a valid conclusion.")}</p> : data.claims.map(claim => <details key={claim.id}>

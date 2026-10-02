@@ -5,6 +5,30 @@ import Analysis from './Analysis';
 
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
 
+it('separates failed-run working notes from completed reports and fetches only on reader request', async () => {
+  const date = '2026-09-26T00:00:00Z';
+  const run = {run_id:'failed-run',instrument_id:'apple',status:'failed',created_at:date,
+    analysis_as_of:date,selected_analysts:['market'],snapshot_ids:[]};
+  const artifact = {artifact_id:'stage-note',kind:'research_stage',media_type:'application/json',
+    byte_size:500,content_hash:'synthetic',created_at:date};
+  const note = {schema_version:'1.0',run_id:run.run_id,stage:'Market Analyst',attempt:1,
+    sequence:1,analysis_as_of:date,research_quality:'unvalidated',approval_eligible:false,
+    sections:{market_report:'Synthetic saved working note'}};
+  vi.stubGlobal('EventSource',vi.fn(function(){return {addEventListener:vi.fn(),close:vi.fn()};}));
+  const fetch = vi.fn(async(url:string)=>new Response(JSON.stringify(url.includes('/instruments?') ? []
+    : url.includes('/artifacts?') ? [artifact] : url.endsWith('/artifacts/stage-note') ? note
+      : url.includes('/runs?') ? [run] : run)));
+  vi.stubGlobal('fetch',fetch); render(<Analysis />);
+  expect(await screen.findByText('No completed report was published for this run.')).toBeTruthy();
+  const summary = screen.getByText(/Saved working notes/);
+  expect(summary.closest('details')?.open).toBe(false);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/artifacts/stage-note'))).toBe(false);
+  const user=userEvent.setup();await user.click(summary);
+  await user.click(screen.getByRole('button',{name:'Inspect research stage'}));
+  expect(await screen.findByText('Synthetic saved working note')).toBeTruthy();
+  expect(screen.queryByRole('link',{name:'Review linked decision'})).toBeNull();
+});
+
 it('leads completed research with its report and preserves processing in a collapsed disclosure', async () => {
   const run = {run_id:'saved-run',instrument_id:'apple',status:'succeeded',created_at:'2026-09-26T00:00:00Z',
     analysis_as_of:'2026-09-26T00:00:00Z',selected_analysts:['market'],snapshot_ids:['source']};
