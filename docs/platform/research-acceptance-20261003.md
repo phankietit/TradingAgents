@@ -183,3 +183,30 @@ execution_started, original allowance, approval, source and finalization gates
 remain unchanged. Next: bounded parent DB behavior, trusted production graph
 capture and new-child restoration with explicit retained accounting/consent;
 all R01–R14 source/UI/live requirements remain in scope and unfinished.
+
+## Checkpoint database lock-wait follow-up
+
+Source `63d63d2b3aec6bf984080a15978cfea9464aa6bc`, same branch/worktree,
+clean throughout full regression. Explicit checkpoint sessions bound individual
+SQLite busy operations and PostgreSQL lock/statement waits; default checkpoint
+budget is 5 seconds. Normal database sessions and model timeouts are unchanged.
+No private runtime DB migration, restart, AI/vendor call, CI or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Real SQLite writer/COMMIT contention | PASS | Independent connections hold writer or reader locks; checkpoint with 0.05-second budget fails within 1.5 seconds, stores zero rows and returns a fixed diagnostic without cause. After fixture lock release, explicit commit succeeds; pooled timeout restored |
+| Rollback and budget validation | PASS | Body exception rolls back; boolean/nonfinite/out-of-range/string budgets rejected before transaction; checkpoint None budget cannot disable bound |
+| Parent bridge failure fence | PASS | Held SQLite lock causes fixed checkpoint failure, zero model admissions/rows/ACK and child shutdown within 2.5 seconds from lock start; no second unbounded DB observer query |
+| Initial COMMIT-lock test | FAIL | About 5.24 seconds exceeded unchanged 1.5-second threshold. Failed COMMIT left a DBAPI transaction while SQLAlchemy had deactivated its transaction; cleanup restored old timeout then retried. Corrected by explicit DBAPI rollback before restoration, not relaxing test |
+| Final focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_checkpoint_db_timeout.py tests/test_private_checkpoint_store.py tests/test_checkpoint_bridge.py --disable-warnings -x`: 37 passed, 22.57 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,125 passed + 88 subtests, 20 skipped, 22 warnings, 175.20 s; Python 3.14.7/macOS at clean source 63d63d2 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Total transaction/network/disk deadline | UNVERIFIED | Per-operation bound is not a total deadline. Pool checkout, connect/pre-ping, driver/network/disk stalls and summed statements remain outside this proof; integration must cap waits to remaining owner allowance |
+| PostgreSQL/optional providers | UNVERIFIED | No TEST_POSTGRES_URL: 18 integration skips; Bedrock dependency and live DeepSeek key account for remaining two skips. Transaction-local PostgreSQL implementation is not live proof |
+| Production recovery and finance/MT | UNVERIFIED | Default worker still does not enable recorder/resume; trusted context/client construction, new-child restoration, original accounting and explicit consent/API/UI remain required. No new live report; older semantic/editorial FAIL unchanged |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+This closes the characterized local SQLite checkpoint contention failure, not
+all parent I/O/deadline or product acceptance. Preserve execution_started,
+original allowance and no-blind-replay when wiring the production graph. The
+full R01–R14 goal and Draft PR #7 remain open.

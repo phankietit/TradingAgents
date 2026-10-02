@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Checkpoint DB-lock follow-up 2026-10-03:** source
+`63d63d2b3aec6bf984080a15978cfea9464aa6bc` giới hạn từng thao tác chờ khóa
+checkpoint (mặc định 5 giây), không phải deadline toàn transaction/network/disk.
+SQLite rollback cả DBAPI transaction sau COMMIT lỗi trước khi restore timeout;
+PostgreSQL dùng transaction-local timeouts nhưng live còn UNVERIFIED. Lỗi DB
+không ACK, không vào thêm lease query không giới hạn. 37 focused tests PASS,
+22,57 s; full Python **2.125 + 88 subtests PASS**, 20 skips, 22 warnings,
+175,20 s tại source sạch; Ruff/diff/templates PASS. Test COMMIT-lock ban đầu
+FAIL khoảng 5,24 s; sửa cleanup, không nới ngưỡng. Không migrate DB riêng tư,
+restart, gọi AI/vendor, CI hay deploy. Production recorder/resume, trusted
+identity, retained accounting/consent/API/UI và live finance/MT vẫn chưa đạt;
+NQ=F giữ BLOCKED. Đọc receipt 2026-10-03 trước khi nối production graph.
+
 **Opt-in checkpoint bridge 2026-10-03:** source
 `90f009b28745e58dc17d7ad2e1a3eabbfefdc9ce` nối RPC checkpoint con → cha,
 chỉ truyền fingerprint/thread identity; cha giữ codec/callback/DB/lease, kiểm tra
