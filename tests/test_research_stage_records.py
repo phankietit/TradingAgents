@@ -9,7 +9,7 @@ from tests.test_durable_jobs import _database
 from tests.test_risk_engine import NOW
 from tests.test_risk_provenance import setup_risk
 from tradingagents.contracts import ArtifactKind, JobKind, JobStatus
-from tradingagents.contracts.runs import DecisionRunInputs
+from tradingagents.contracts.runs import DecisionRunInputs, ResearchExecutionLimits
 from tradingagents.platform.analysis import AnalysisEngine
 from tradingagents.platform.analysis.observer import (
     STAGES,
@@ -137,7 +137,7 @@ def test_cancelled_stage_cannot_publish_and_duplicate_end_cannot_republish():
     assert len(captures) == 1
 
 
-@pytest.mark.parametrize("case", ["failure", "engine_error", "deadline", "cancel", "cancel_after_stage", "stale_lease", "success"])
+@pytest.mark.parametrize("case", ["failure", "engine_error", "deadline", "cancel", "cancel_after_stage", "stale_lease", "success", "limits"])
 def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(tmp_path, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -150,17 +150,22 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
             policy_id=check.policy_id, policy_version=check.policy_version,
             requested_target_weight=.3, risk_snapshot_ids=seeded.risk_snapshot_ids)
         run = original.model_copy(update={"run_id": uuid4(), "selected_analysts": ("market",),
-            "snapshot_ids": inputs.snapshot_ids(), "decision_inputs": inputs})
+            "snapshot_ids": inputs.snapshot_ids(), "decision_inputs": inputs,
+            "execution_limits": ResearchExecutionLimits(wall_seconds=3600, model_calls=7) if case == "limits" else None})
         repo.save_run(run)
         queued = DurableJobQueue(session).enqueue(owner_id=run.owner_id, run_id=run.run_id,
             idempotency_key=str(run.run_id), max_attempts=3 if case == "engine_error" else 1, now=NOW, payload={
                 "instrument_id": str(run.instrument_id), "analysis_as_of": NOW.isoformat(),
                 "selected_analysts": ["market"], "config_hash": run.config_hash,
-                "decision_inputs": inputs.model_dump(mode="json")})
+                "decision_inputs": inputs.model_dump(mode="json"),
+                **({"execution_limits": run.execution_limits.model_dump(mode="json")}
+                   if run.execution_limits is not None else {})})
 
     class Graph:
         def __init__(self, **kwargs):
             self.observer = kwargs["execution_observer"]
+            assert self.observer.max_seconds == (3600 if case == "limits" else 1800)
+            assert self.observer.max_calls == (7 if case == "limits" else 128)
 
         def propagate_snapshots(self, *args, **kwargs):
             node = uuid4()
@@ -195,7 +200,7 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
     assert job.status is {"failure": JobStatus.FAILED, "engine_error": JobStatus.FAILED, "deadline": JobStatus.FAILED,
                           "stale_lease": JobStatus.FAILED, "cancel": JobStatus.CANCELLED,
                           "cancel_after_stage": JobStatus.CANCELLED,
-                          "success": JobStatus.SUCCEEDED}[case]
+                          "success": JobStatus.SUCCEEDED, "limits": JobStatus.SUCCEEDED}[case]
     if case == "engine_error":
         assert job.attempt == 1 and job.max_attempts == 3
         assert job.error_code == "RESEARCH_EXECUTION_FAILED"
@@ -220,7 +225,10 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
             assert not any(event.event_type.value == "stage.completed" for event in events)
             assert any(event.event_type.value == "artifact.created" for event in events)
         decision = repo.get_decision(uuid5(run.run_id, "decision-v1"), run.owner_id)
-        if case != "success":
+        if case not in {"success", "limits"}:
             assert decision is None and job.output_artifact_ids == ()
         else:
             assert decision is not None and len(job.output_artifact_ids) == 2
+            if case == "limits":
+                _, content = ArtifactService(store, repo).read(uuid5(run.run_id, "analysis-report-v1"), run.owner_id)
+                assert json.loads(content)["execution"]["execution_limits"] == {"wall_seconds": 3600, "model_calls": 7}

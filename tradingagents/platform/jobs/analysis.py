@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from tradingagents._compat import UTC
 from tradingagents.contracts import ArtifactKind, RunEventType
+from tradingagents.contracts.runs import ResearchExecutionLimits
 from tradingagents.platform.analysis import (
     AnalysisEngine,
     AnalysisRequest,
@@ -119,6 +120,8 @@ class AnalysisJobHandler:
                 expected_payload["decision_inputs"] = run.decision_inputs.model_dump(mode="json")
             if run.report_language is not None:
                 expected_payload["report_language"] = run.report_language
+            if run.execution_limits is not None:
+                expected_payload["execution_limits"] = run.execution_limits.model_dump(mode="json")
             if job.payload != expected_payload:
                 raise ValueError("analysis job does not match its immutable run")
             artifacts = ArtifactService(self.artifact_store, repository)
@@ -182,7 +185,9 @@ class AnalysisJobHandler:
                     return manifest.artifact_id
             return None
 
+        limits = run.execution_limits or ResearchExecutionLimits()
         observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit,
+                                    max_seconds=limits.wall_seconds, max_calls=limits.model_calls,
                                     save_stage=save_stage)
         # Persist the uncertainty boundary before any graph/model construction.
         # Recovery must not guess that a crashed provider request cost nothing.

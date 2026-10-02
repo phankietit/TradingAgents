@@ -122,7 +122,8 @@ def _now(settings: ApiSettings) -> datetime:
     return value.astimezone(UTC)
 
 
-def _config_hash(settings: ApiSettings, analysts: tuple[str, ...], report_language: str | None = None) -> str:
+def _config_hash(settings: ApiSettings, analysts: tuple[str, ...], report_language: str | None = None,
+                 execution_limits=None) -> str:
     value = json.dumps(
         {
             "llm_provider": settings.llm_provider,
@@ -131,6 +132,8 @@ def _config_hash(settings: ApiSettings, analysts: tuple[str, ...], report_langua
             "prompt_version": settings.prompt_version,
             "selected_analysts": analysts,
             **({"report_language": report_language} if report_language is not None else {}),
+            **({"execution_limits": execution_limits.model_dump(mode="json")}
+               if execution_limits is not None else {}),
         },
         separators=(",", ":"),
         sort_keys=True,
@@ -965,7 +968,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="instrument not found"
             )
-        config_hash = _config_hash(settings, payload.selected_analysts, payload.report_language)
+        config_hash = _config_hash(settings, payload.selected_analysts, payload.report_language, payload.execution_limits)
         job_payload = {
             "instrument_id": str(instrument.instrument_id),
             "analysis_as_of": payload.analysis_as_of.astimezone(UTC).isoformat(),
@@ -976,6 +979,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
             job_payload["decision_inputs"] = payload.decision_inputs.model_dump(mode="json")
         if payload.report_language is not None:
             job_payload["report_language"] = payload.report_language
+        if payload.execution_limits is not None:
+            job_payload["execution_limits"] = payload.execution_limits.model_dump(mode="json")
         queue = DurableJobQueue(session)
         existing_job = queue.get_by_idempotency(owner.owner_id, idempotency_key)
         if existing_job:
@@ -1006,6 +1011,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             config_hash=config_hash,
             prompt_version=settings.prompt_version,
             report_language=payload.report_language,
+            execution_limits=payload.execution_limits,
             snapshot_ids=payload.decision_inputs.snapshot_ids() if payload.decision_inputs else (),
             decision_inputs=payload.decision_inputs,
         )

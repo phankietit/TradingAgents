@@ -15,6 +15,8 @@ def test_configuration_is_private_and_not_a_provider_probe(api_context, monkeypa
         "provider": "openai", "quick_model": "quick", "deep_model": "deep",
         "worker_status": "UNVERIFIED", "provider_connection": "UNVERIFIED",
         "max_job_attempts": 3,
+        "execution_limits": {"wall_seconds": 1800, "model_calls": 128},
+        "deadline_mode": "cooperative_boundaries",
     }
     assert "no-store" in response.headers["cache-control"]
     assert "synthetic-secret" not in response.text

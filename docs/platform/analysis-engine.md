@@ -162,6 +162,15 @@ usage is explicitly incomplete; subscription dollar cost is not inferred.
 An in-flight provider call can still consume quota after cancellation. Snapshot
 runs check a 1800-second wall-time budget at callback boundaries and cap model
 starts at 128, with a 600-second provider timeout and one SDK retry by default.
+Snapshot-run API requests may explicitly supply `execution_limits` with strict
+integer `wall_seconds` (60–7200) and `model_calls` (1–128). The optional contract
+is immutable, part of the config hash and job payload, and consumed by the
+worker observer. An omitted selection preserves legacy defaults and historical
+hashes. Limits cannot be attached to a legacy live-tool run. The authenticated
+configuration response exposes defaults and `cooperative_boundaries`, not a
+provider health probe or hard mid-request deadline. UI allowance selection and
+transport deadline enforcement remain unfinished; no paid run is automatically
+authorized by changing this contract.
 An in-flight synchronous call may exceed the wall-time budget before the next
 boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted

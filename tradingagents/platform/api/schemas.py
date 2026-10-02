@@ -20,7 +20,7 @@ from tradingagents.contracts import (
     SnapshotManifest,
     TimeSeriesView,
 )
-from tradingagents.contracts.runs import DecisionRunInputs
+from tradingagents.contracts.runs import DecisionRunInputs, ResearchExecutionLimits
 
 
 class ApiModel(BaseModel):
@@ -62,6 +62,8 @@ class AnalysisConfigurationResponse(ApiModel):
     worker_status: Literal["UNVERIFIED"] = "UNVERIFIED"
     provider_connection: Literal["UNVERIFIED"] = "UNVERIFIED"
     max_job_attempts: int
+    execution_limits: ResearchExecutionLimits = Field(default_factory=ResearchExecutionLimits)
+    deadline_mode: Literal["cooperative_boundaries"] = "cooperative_boundaries"
 
 
 class RunJobStateResponse(ApiModel):
@@ -118,9 +120,12 @@ class RunCreateRequest(ApiModel):
     selected_analysts: tuple[str, ...] = Field(min_length=1, max_length=4)
     decision_inputs: DecisionRunInputs | None = None
     report_language: Literal["en", "vi", "en-vi"] | None = None
+    execution_limits: ResearchExecutionLimits | None = None
 
     @model_validator(mode="after")
     def validate_snapshot_roles(self):
+        if self.execution_limits is not None and self.decision_inputs is None:
+            raise ValueError("execution allowance requires snapshot inputs")
         if self.decision_inputs and set(self.decision_inputs.snapshots_by_analyst) != set(self.selected_analysts):
             raise ValueError("snapshot roles must match selected analysts")
         return self

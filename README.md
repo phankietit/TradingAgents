@@ -461,8 +461,14 @@ Provider charges may be unknown. Pre-engine preparation retries and bounded
 SDK/schema repairs are separate and unchanged. Storage-only finalization of an
 already committed report/decision pair may retry without a model call; missing,
 partial or corrupt saved outputs fail closed instead of re-entering the engine.
-This is not automatic resume:
-request timeout/run allowance and safe checkpoint recovery remain unfinished.
+This is not automatic resume. Snapshot-run API callers can explicitly select
+immutable `execution_limits` (`wall_seconds`, `model_calls`); these bind to the
+run/config hash/job and worker observer. Omitted limits preserve the legacy
+30-minute/128-call defaults without rewriting history. `/analysis-configuration`
+discloses those defaults and `cooperative_boundaries`: already-running requests
+can overrun the allowance. SDK timeout/retries are unchanged. Web allowance
+selection, actual request-deadline enforcement and safe graph resume remain
+unfinished; accepting a larger allowance does not shorten or skip graph roles.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
