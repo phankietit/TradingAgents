@@ -247,3 +247,34 @@ callback's reply. No graph/provider/SDK/policy/UI changes accompany this fix.
 No new paid/vendor call or runtime restart. Prior web gate remains applicable
 to unchanged frontend files; native supervised graph, crash/orphan, live
 financial/translation and checkpoint-resume acceptance are still UNVERIFIED.
+
+## R08 native graph-through-spawn and parent-crash local acceptance
+
+Source `c4414a67a1c2d3b28169a0b201211457d635f626`, same branch. Runtime
+supervision production code remains `e1af4c3`; this slice adds acceptance tests
+and corrects stale canonical handoff instructions without rewriting old receipts.
+
+| Gate | Result | Exact evidence |
+| --- | --- | --- |
+| Original native LangGraph through spawn | PASS | `tests/test_supervised_native_graph.py`, focused 1 test / 3.53 s; all four synthetic analyst sources → Bull/Bear → Research Manager → Trader → Aggressive/Conservative/Neutral → Portfolio Manager → Financial validation → Report presentation, all 14 stage completions in original order |
+| Native boundaries | PASS | Real graph with fake models retains structured decision validation, original selected analyst set, 600s timeout/retry 1. CLI memory/live tools/checkpoint/history writes are explicitly forbidden in the fixture; no raw messages in returned state or saved reader fragments |
+| Parent crash guard | PASS | Focused POSIX fixture 1 test / 4.70 s: task-created parent is killed while its task-created child blocks; exact child PID reaches nonexecuting state within 5 seconds. Cleanup is scoped only to these fixture process handles/PID |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,637 tests + 88 subtests, 20 skips, 22 warnings, 107.29 s; Python 3.14.7/macOS |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby template YAML load |
+| Web refresh | NOT_IN_SCOPE | Test/docs-only source; frontend and production API/runtime unchanged. Prior web receipts remain source-specific |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, missing Bedrock and live DeepSeek key skips |
+| Bilingual supervised graph / other OSes | UNVERIFIED | Native fixture is English-only, model calls fake and usage explicitly incomplete. No Windows/Linux crash proof or supervised localization acceptance claimed |
+| Live report quality / graph resume | UNVERIFIED | No MiniMax/Yahoo/SEC/FRED call or worker restart; no checkpoint resume implementation. Prior live semantic/translation failures remain unresolved |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+The native fixture's synthetic sources only test graph mechanics; they do not
+establish financial source coverage, meaning, token billing, risk approval or
+investment suitability. The parent-crash test accepts a missing or terminal
+zombie child as nonexecuting, not as proof of reaping; no unrelated process is
+signaled or cleaned. Child isolation and parent publication authority remain
+separate from provider-side billing uncertainty.
+
+Canonical HANDOFF now points to current receipts and recovery work rather than
+already-completed news/UI tasks. Original dated failures and historical SHA
+evidence remain intact. Goal and Draft PR #7 stay open; no merge, deployment,
+private-history mutation or permission to run a fresh paid BTC analysis.

@@ -196,8 +196,9 @@ While the child blocks, the parent polls cancellation/lease/time allowance at
 up to 0.2-second intervals. On failure, expiry or cancellation, it terminates,
 joins and if needed kills the child before leaving the handler. Returned queued
 notes/usage are retained before the budget boundary; cancellation still wins.
-The child has a parent-liveness guard, but crash/orphan acceptance is separate
-from ordinary deadline/cancellation tests. Provider-side work/billing may
+The child has a parent-liveness guard; a macOS fixture now separately verifies
+that killing the parent leaves no executing orphan. This does not prove OS
+reaping or behavior on other operating systems. Provider-side work/billing may
 continue after a local stop. Startup counts against the original allowance;
 scheduling, parent DB checks and cleanup prevent a millisecond-precise SLA.
 

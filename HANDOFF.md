@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Native/crash acceptance 2026-10-02:** source
+`c4414a67a1c2d3b28169a0b201211457d635f626`. Native LangGraph thật qua spawn với
+model giả lập chạy đủ 14 stage đúng thứ tự, giữ structured gate/600s SDK timeout/
+retry 1 và không chạm CLI tool/memory/checkpoint/writes. Tiếng Anh-only: không
+coi là bilingual/live finance proof. Process cha bị kill trong fixture: guard
+dừng process con, không còn executing orphan trên macOS; zombie terminal không
+được mô tả là process đã reaped. Full Python **1.637 + 88 subtests PASS**, 20 skips,
+107,29 s; Ruff/diff/templates PASS. Không thay runtime production hay frontend,
+không gọi vendor/model thật. Còn mở: bilingual supervised path, OS khác,
+fingerprinted resume và live financial/translation acceptance. Xem receipt mới.
+
 **Bridge concurrency follow-up:** runtime source hiện tại
 `e1af4c35957918ae72debef3417ef24d2a1a767f` khóa cặp send/ack để callback threads
 không xen frame hay lấy nhầm reply. Regression Python 1.634 + 88 subtests PASS,
@@ -167,7 +178,9 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `648fa183ee90eed1e353b3e06cbcc2c249aebb82`.
+- Candidate đã full-test gần nhất: `c4414a67a1c2d3b28169a0b201211457d635f626`.
+  Runtime production của supervisor giữ nguyên từ `e1af4c3`; candidate này bổ
+  sung test và cập nhật chỉ dẫn, không phải một lượt phân tích live mới.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
