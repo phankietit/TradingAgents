@@ -28,6 +28,9 @@ PR remains draft.
 - Immutable owner/source/config-bound stage working notes, published behind
   cancellation/lease fences. They are always unvalidated and ineligible for
   approval; dedicated bounded web reading is implemented, graph resume remains unfinished.
+- Durable execution-entry marker and queue/lease guards prevent blind paid
+  replay after uncertain execution; committed-output, model-free finalization
+  remains idempotent. No SDK timeout/retry or execution allowance change.
 - Social/macro ingestion and other-asset fundamentals remain unfinished.
 - `HANDOFF.md`, `CLAUDE.md`, governance and QA source archives allow continuation
   from another machine without relying on chat history.
@@ -37,6 +40,13 @@ Includes prerequisites from open PRs #5/#6; do not duplicate their changes.
 GitHub Issues are disabled; repository tickets are the backlog.
 
 ## Verification and remaining gates
+
+- PASS on runtime source `93e797576b9179e088f6ff809761bddd34cc3df6`: 1,608
+  Python tests + 88 subtests, 20 classified skips, 50.14 s; Ruff/diff/templates.
+  Focused lifecycle/recovery proof: 55 passed, 2 PostgreSQL skips. The preceding
+  9fdbdb0 regression failed committed-output recovery; this was corrected, not
+  waived. SQLite/fake-model proof is not live or PostgreSQL acceptance.
+  Web refresh: 134 tests/22 files, typecheck/lint/build PASS on the same source.
 
 - PASS on web reader source `1a01f21455fa351017319ad6283bb8307defe0ee`:
   134 Web tests, typecheck/lint/build; actual built app with synthetic API fixtures

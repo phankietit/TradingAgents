@@ -46,3 +46,52 @@ owner/run/source/model/prompt/config-bound, lease-fenced graph recovery. The
 original failed BTC has no notes to reconstruct. Further BTC paid permission
 remains pending; AAPL remains previously approved but not rerun on this source;
 semantic financial/translation and remaining ingestion acceptance are open.
+
+## R08 execution uncertainty and model-free finalization
+
+Candidate: `93e797576b9179e088f6ff809761bddd34cc3df6`, unchanged runtime source
+through final regression. Only follow-up documentation was dirty. This follows `9fdbdb0`, whose full regression found
+one existing recovery regression and is **FAIL**, not an accepted checkpoint.
+
+The handler persists `research.execution_started` before graph construction;
+new event storage is additive on the existing string event column, with no
+historical rewrite or schema migration. Engine/publication exceptions are typed
+without raw provider messages. Queue failure/expired-lease recovery recognizes
+owner/run-bound execution evidence and stops blind full-run replay; legacy
+stage-start/model-usage evidence is also honored. Unknown provider billing is
+not described as zero cost. Cancellation and old-worker fences remain intact.
+
+The earlier implementation blocked an existing legitimate storage-only recovery:
+a report/decision pair had committed, but queue completion failed. This was
+reproduced by the full regression, not waived by changing the expected result.
+The corrected candidate preserves that idempotent retry. The handler reads and
+checks the saved pair before engine entry; incomplete/corrupt outputs cannot
+cause new model work. An additional test simulates outputs becoming unavailable
+after retry was scheduled and proves the engine call count remains one.
+
+Focused command: `.venv/bin/python -m pytest -q tests/test_analysis_job_handler.py
+tests/test_research_stage_records.py tests/test_durable_jobs.py tests/test_run_events.py
+--disable-warnings`: **PASS**, 55 tests, 2 PostgreSQL skips, 5.59 s. Ruff **PASS**.
+This includes max-attempts=3 with an engine error, lease expiration/post-handler
+failure for new/legacy execution events, ordinary pre-engine retry, saved working
+notes, cancellation/lease isolation, and committed-output finalization with no
+second model call. All are local/fake-model/SQLite evidence.
+
+No execution allowance, SDK timeout/retry policy, provider/model, original graph
+role, source input, risk policy or CLI behavior is changed. No new live request,
+private-history deletion or public deployment. Actual request deadline/allowance,
+fingerprinted graph resume, remaining ingestion, finance/VI semantics and live
+BTC/AAPL acceptance remain unfinished. NQ=F remains owner-BLOCKED.
+
+Full Python regression on this candidate: **PASS**, 1,608 tests + 88 subtests,
+20 skips, 22 warnings, 50.14 s, Python 3.14.7. `.venv/bin/ruff check .`,
+`git diff --check`, and Ruby issue-template YAML parsing **PASS**. Skipped gates
+remain **UNVERIFIED**: 18 PostgreSQL cases (`TEST_POSTGRES_URL` absent), optional
+Bedrock (`langchain_aws` absent) and live DeepSeek (key absent). No candidate
+release or qualitative live acceptance is inferred from these checks.
+
+Web refresh on the same runtime source: **PASS**, `npm run typecheck`,
+`npm run lint`, `npm test` (134 tests/22 files, 6.60 s), `npm run build`;
+Node 26.8.1/npm 11.19.0. No rendered UI source changed in this backend slice;
+the earlier 1a01f21 browser proof is retained with its original synthetic scope,
+not relabeled as new live/browser acceptance.

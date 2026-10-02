@@ -2,6 +2,15 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Mới nhất 2026-10-02:** runtime source
+`93e797576b9179e088f6ff809761bddd34cc3df6` ghi dấu mốc trước engine và chặn
+replay toàn-run sau lỗi execution/lease không rõ chi phí. Giữ retry hoàn tất
+report/decision đã commit mà không gọi model; nếu outputs không còn đọc được,
+không quay lại engine. Full Python **1.608 + 88 subtests PASS**, 20 skips,
+50,14 s; Ruff/diff/templates PASS. Không tăng allowance hay đổi SDK retry/timeout.
+Graph checkpoint resume vẫn chưa có; không lấy bản sửa này làm live acceptance.
+Receipt 2026-10-02 ghi cả regression FAIL tại checkpoint trước và bản sửa.
+
 Tiếp nối **2026-10-02**, source `1a01f21455fa351017319ad6283bb8307defe0ee`:
 web đã tách bản nháp khỏi báo cáo hoàn chỉnh, chỉ tải khi mở đọc, cảnh báo
 chưa kiểm chứng/không thể phê duyệt; đổi EN/VI không dịch nội dung gốc hay gọi AI.
@@ -11,7 +20,7 @@ chưa kiểm chứng/không thể phê duyệt; đổi EN/VI không dịch nội
 phải live model/financial acceptance. Allowance/timeout và graph resume vẫn dở;
 goal/PR vẫn mở, không tự chạy paid retry.
 
-**Mới nhất:** code `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0` lưu bản nháp
+**Checkpoint retention trước:** code `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0` lưu bản nháp
 nghiên cứu bất biến sau khi từng vai trò trả kết quả, chỉ giữ reader text đã
 allowlist và ràng buộc owner/run/source/config. Cancellation và lease chặn worker
 cũ xuất thêm nội dung. Bản nháp luôn unvalidated, không đủ điều kiện phê duyệt;
@@ -108,7 +117,7 @@ git rev-parse HEAD
 - Draft PR: https://github.com/phankietit/TradingAgents/pull/7 (base `main`).
 - `origin/main` được kiểm tra tại `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Baseline trước checkpoint: `0696141fddb8b5b7bde7cbde21aa408015716e58`.
-- Code đã full-test gần nhất: `ecbb7d3f25ac0d64defdc9231afabe8dea59edb0`.
+- Code đã full-test gần nhất: `93e797576b9179e088f6ff809761bddd34cc3df6`.
 - PR #7 đã chứa code prerequisite của PR #5 (bilingual) và #6 (data flow).
   Không cherry-pick lại hoặc merge các PR này chỉ để phục hồi checkpoint.
 - Nhánh `chore/governance-bootstrap` lưu nguyên bộ governance từ checkout gốc.
