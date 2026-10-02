@@ -196,6 +196,46 @@ graph recovery or financial/live/provider acceptance. No history is rewritten.
 
 ## Implemented codec prerequisite
 
+### Authenticated consent/link reservation prerequisite
+
+`ContinuationConsentStore.observe` reads a stopped failed/cancelled original
+run and its exact immutable job payload, latest private checkpoint and complete
+accounting/allowance. It rejects in-flight/completed-output/legacy/no-checkpoint/
+unknown-duration/exhausted evidence, owner/thread/attempt/hash/fingerprint
+mismatches and future checkpoint metadata. Its frozen private observation binds
+original run/job digests and the full accounting high-water, not only totals.
+This trusted internal read alone is not an authenticated dispatch grant.
+
+`record` opens its own bounded-lock transaction, authenticates a current
+session with CSRF using owner-then-session locks, derives owner from that session,
+requires literal confirmation and reloads the full expected observation under
+job-then-run locks. SQLite uses BEGIN IMMEDIATE before reads; PostgreSQL uses
+row locks/timeouts, but live PostgreSQL and race acceptance remain unverified.
+Canonical JSON comparisons retain bool/int/float distinctions rather than rely
+on Python equality. Auth failure, stale evidence or failed/uncertain commit
+returns one fixed diagnostic; no reservation ACK precedes commit.
+
+Additive migration `0012_research_continuations` creates an independent private
+consent/link table with UUID idempotency keys and unique source-run/high-water/
+checkpoint reservation. It binds all observation fields, original allowance,
+unknown provider cost disclosure and nonapproval status; raw source/error prose,
+session/CSRF credentials and owner email are not copied. Repeated identical
+requests return the same execution ID; competing different keys cannot reserve
+the same observation twice. Existing research rows and terminal errors remain
+unchanged. Only disposable SQLite migration/up-down tests have applied it.
+
+This records authenticated owner intent, NOT actual browser disclosure proof,
+trusted effective-client/source reconstruction or permission to execute a model.
+No endpoint/default worker is wired; persisted dispatch_enabled stays False.
+Future dispatch must recheck and consume the reservation transactionally, bind
+a separately leased execution and its accounting/publication, support explicit
+cancellation/failed-consumption history, and load terminal original context
+without deleting errors or changing its original native thread/fingerprint.
+Remaining budget must include every linked attempt; never interpret this table
+as a fresh run, reset consent/budget, or replay history without checkpoints.
+An execution ID is not a bearer credential. Broader stopped/crash/transport,
+operational UI and live financial/editorial acceptance remain required.
+
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,
 versions_seen, control channels, metadata and pending-write order/task identity.

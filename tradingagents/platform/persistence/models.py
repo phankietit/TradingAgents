@@ -134,6 +134,29 @@ class ResearchCheckpointRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ResearchContinuationRow(Base):
+    """Immutable owner consent/link only; not a queued research execution."""
+
+    __tablename__ = "research_continuations"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "idempotency_key"),
+        UniqueConstraint("source_run_id", "source_event_sequence", "checkpoint_record_id"),
+        Index("ix_research_continuations_owner_run", "owner_id", "source_run_id"),
+    )
+
+    execution_id: Mapped[UUID] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    source_job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(
+        ForeignKey("research_checkpoints.record_id"), nullable=False)
+    source_event_sequence: Mapped[int] = mapped_column(nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(36), nullable=False)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class DecisionRow(Base):
     __tablename__ = "decisions"
     __table_args__ = (Index("ix_decisions_owner_as_of", "owner_id", "as_of"),)

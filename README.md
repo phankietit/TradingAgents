@@ -649,6 +649,21 @@ This local construction binding is not an authenticated consent token, a DB
 writer fence or authority to continue a terminal historical run; default
 worker/API recovery remains disabled.
 
+An internal continuation consent store now records a separate immutable
+research execution identity after locked owner-session/CSRF authentication,
+explicit confirmation and transactional reloading of the latest checkpoint,
+original terminal job/run and complete accounting prefix. Unknown/exhausted
+allowance, changed evidence, duplicate reservations and corrupt receipts fail
+closed. SQLite tests serialize writers; PostgreSQL locking remains unverified.
+Migration `0012_research_continuations` is additive and has only been applied
+to disposable tests. No old run/job/error/checkpoint is changed, no token/email
+is copied into the consent record and no model is invoked. This is NOT an API
+resume endpoint, queued execution, final source/client attestation or financial
+approval. The separate linked worker/dispatch/consumption and browser journey
+still need implementation and verification; an execution ID is not a bearer
+permission or a fresh budget. Do not apply migrations to private history
+without the documented backup/owner rollout procedure.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See
