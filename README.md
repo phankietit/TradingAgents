@@ -482,6 +482,14 @@ publication lease/cancellation transaction, and returns an ACK only after
 commit. Fixture reopen/rollback/fencing checks do not establish native saver,
 child bridge, crash recovery, explicit consent or live acceptance; none is
 enabled. No existing owner database was migrated during this checkpoint.
+An internal native saver now commits filtered JSON for checkpoint/pending-write
+updates and refuses reuse after a failed or mismatched ACK. It requires native
+LangGraph `durability="sync"` to wait before advancing; default async durability
+is not a publication fence. Local synthetic tests restore committed SQLite
+bytes into a fresh saver across all 17 interruption boundaries without changing
+downstream prompts, model-call traces or validated results. This is not a
+separate-process crash test or enabled worker resume; bridge integration,
+trusted construction, consent/accounting and live acceptance remain open.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

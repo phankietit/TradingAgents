@@ -1,5 +1,6 @@
 """Original native LangGraph through spawn; synthetic models, no provider calls."""
 
+import hashlib
 import json
 from contextlib import ExitStack
 from types import SimpleNamespace
@@ -9,17 +10,24 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage, RemoveMessage
 from langgraph.checkpoint.memory import InMemorySaver
+from sqlalchemy import select
 
 from tests.test_analysis_engine import _instrument
+from tests.test_durable_jobs import _database, _enqueue
 from tests.test_risk_engine import NOW
 from tests.test_snapshot_analysis import context
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph import trading_graph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
 from tradingagents.platform.analysis.checkpoint_codec import SnapshotCheckpointCodec
+from tradingagents.platform.analysis.checkpoint_saver import CommittedSnapshotSaver
+from tradingagents.platform.analysis.checkpoint_store import PrivateCheckpointStore
 from tradingagents.platform.analysis.observer import STAGES, ResearchObserver
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot
 from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
+from tradingagents.platform.jobs import DurableJobQueue
+from tradingagents.platform.jobs.worker import JobExecutionContext
+from tradingagents.platform.persistence.models import ResearchCheckpointRow
 
 
 class NativeFixtureEngine:
@@ -28,6 +36,8 @@ class NativeFixtureEngine:
         self.model_trace = []
         self.resume_evidence = None
         self.encoded_checkpoints = []
+        self.checkpoint_commit = None
+        self.checkpoint_read = None
 
     def analyze(self, request):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
@@ -44,12 +54,21 @@ class NativeFixtureEngine:
             self.model_trace.append((kind, content))
 
         def resume_without_messages(graph, *args, **kwargs):
-            saver = InMemorySaver()  # Fixture only: never persistent or public storage.
+            codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=graph.workflow.nodes)
+
+            def new_saver():
+                return (CommittedSnapshotSaver(codec=codec, commit=self.checkpoint_commit)
+                        if self.checkpoint_commit else InMemorySaver())
+
+            saver = new_saver()
             graph.graph = graph.workflow.compile(checkpointer=saver,
                                                  interrupt_after=[interrupted_node])
             graph_args = graph.propagator.get_graph_args(
                 callbacks=[graph.execution_observer] if graph.execution_observer else None)
-            graph_args["config"]["configurable"] = {"thread_id": "synthetic-resume"}
+            thread_id = self.config.get("_fixture_thread_id", "synthetic-resume")
+            graph_args["config"]["configurable"] = {"thread_id": thread_id}
+            if self.checkpoint_commit:
+                graph_args["durability"] = "sync"
             invoke = graph.graph.invoke
 
             def initial_invoke(state, **unused):
@@ -61,17 +80,19 @@ class NativeFixtureEngine:
             assert before.next, "fixture must interrupt before graph completion"
             calls_before = len(self.model_trace)
             if self.config.get("_fixture_json_checkpoint"):
-                codec = SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=graph.workflow.nodes)
                 # Every version is reviewed, including initial/pending writes;
                 # never serialize the entire InMemorySaver object.
                 self.encoded_checkpoints = [codec.encode(item) for item in saver.list(graph_args["config"])]
                 pending = self.config.get("_fixture_pending_checkpoint", False)
-                restored = codec.decode(self.encoded_checkpoints[1 if pending else 0])
+                raw = self.encoded_checkpoints[1 if pending else 0]
+                if self.checkpoint_read:
+                    raw = self.checkpoint_read(raw)
+                restored = codec.decode(raw)
                 if pending:
                     assert restored.pending_writes, "fixture must restore completed pending writes"
-                saver = InMemorySaver()
+                saver = new_saver()
                 saved_config = saver.put(restored.parent_config or {"configurable": {
-                    "thread_id": "synthetic-resume", "checkpoint_ns": ""}}, restored.checkpoint,
+                    "thread_id": thread_id, "checkpoint_ns": ""}}, restored.checkpoint,
                     restored.metadata, restored.checkpoint["channel_versions"])
                 grouped = {}
                 for task, channel, value in restored.pending_writes:
@@ -218,7 +239,9 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     assert list((tmp_path / "reports").iterdir()) == []
 
 
-@pytest.mark.parametrize("json_checkpoint,pending_checkpoint", [(False, False), (True, False), (True, True)])
+@pytest.mark.parametrize("json_checkpoint,pending_checkpoint,committed", [
+    (False, False, False), (True, False, False), (True, True, False),
+    (True, False, True), (True, True, True)])
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
 @pytest.mark.parametrize("boundary", ["Market Analyst", "Msg Clear Market", "Sentiment Analyst",
@@ -226,7 +249,7 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     "Msg Clear Fundamentals", "Bull Researcher", "Bear Researcher",
     "Research Manager", "Trader", "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst",
     "Portfolio Manager", "Financial validation"])
-def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, boundary, json_checkpoint, pending_checkpoint, language, invalid):
+def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, boundary, json_checkpoint, pending_checkpoint, committed, language, invalid):
     """Characterization only; not a production checkpoint or authorized paid replay."""
     instrument = _instrument()
     inputs = context(instrument)
@@ -241,12 +264,45 @@ def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, b
         "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 2,
         "max_risk_discuss_rounds": 2, "output_language": language,
         "_fixture_invalid_translation": invalid}
+    database = None
+    if committed:
+        from datetime import timedelta
+
+        database, owner, run = _database(tmp_path / "private-checkpoints")
+        _enqueue(database, owner, run)
+        with database.session() as session:
+            job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
+        job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
+        # Reviewed native node set; synthetic fingerprint only, not consent.
+        nodes = {"Market Analyst", "Msg Clear Market", "Sentiment Analyst", "Msg Clear Sentiment",
+            "News Analyst", "Msg Clear News", "Fundamentals Analyst", "Msg Clear Fundamentals",
+            "Bull Researcher", "Bear Researcher", "Research Manager", "Trader", "Aggressive Analyst",
+            "Conservative Analyst", "Neutral Analyst", "Portfolio Manager", "Financial validation",
+            "Report presentation"}
+        store = PrivateCheckpointStore(codec=SnapshotCheckpointCodec(fingerprint="a" * 64, nodes=nodes))
+        config["_fixture_thread_id"] = str(run.run_id)
     results, traces, completions = [], [], []
     for interruption in (None, boundary):
         observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *args: None,
                                     max_seconds=60)
         engine = NativeFixtureEngine(base_config={**config, "_fixture_interrupt_after": interruption,
             "_fixture_json_checkpoint": json_checkpoint, "_fixture_pending_checkpoint": pending_checkpoint})
+        if committed and interruption:
+            engine.checkpoint_commit = lambda raw: store.commit(context=job_context,
+                owner_id=owner, run_id=run.run_id, raw=raw)
+
+            def read_committed(raw):
+                # Reopen a DB session and restore actual committed bytes, not
+                # just the checkpoint held by the old in-memory saver.
+                with database.session() as session:
+                    row = session.scalar(select(ResearchCheckpointRow).where(
+                        ResearchCheckpointRow.owner_id == owner,
+                        ResearchCheckpointRow.run_id == run.run_id,
+                        ResearchCheckpointRow.content_hash == hashlib.sha256(raw).hexdigest()))
+                    assert row is not None and row.payload == raw
+                    return row.payload
+
+            engine.checkpoint_read = read_committed
         result = engine.analyze(AnalysisRequest(instrument=instrument, analysis_date=NOW.date(),
             selected_analysts=analysts, snapshot_context=inputs, execution_observer=observer))
         assert (result.decision_payload is None) == invalid
@@ -269,6 +325,10 @@ def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, b
                         assert codec_messages_empty(value)
     assert results[0] == results[1]
     assert traces[0] == traces[1]  # No repeated model call; no changed prompt after restoration.
+    if database is not None:
+        with database.session() as session:
+            assert store.load_latest(session=session, owner_id=owner, run_id=run.run_id) is not None
+        database.dispose()
     assert completions[0] == completions[1]  # Includes repeated rounds, validation and presentation.
 
 

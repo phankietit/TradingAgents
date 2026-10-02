@@ -112,6 +112,34 @@ internal store is not invoked by production worker/CLI/API and cannot authorize
 recovery. A trusted worker must derive the fingerprint and authentic owner
 context before using it, and preserve execution_started/no-blind-replay fences.
 
+### Native saver / sync durability prerequisite
+
+`checkpoint_saver.py` wraps the original ephemeral InMemorySaver for native
+checkpoint and pending-write fidelity. After each put/put_writes it encodes the
+complete addressed tuple with the restricted codec and synchronously requires
+a commit receipt matching those exact bytes. Failed/ambiguous ACK poisons the
+saver; later reads/list/writes fail closed rather than retry implicitly. Only
+native thread/ns/checkpoint identifiers address persistence: invocation-only
+task helpers do not enter the envelope. Codec state/control/metadata allowlists
+remain unchanged. Raw messages are retained only in ephemeral native memory;
+they do not enter commit bytes.
+
+The caller MUST invoke the compiled native graph with durability="sync".
+Blocking put alone does not fence advancement under default async durability.
+A native scheduler fixture waits on a deliberately delayed ACK before the next
+node can run. Full original-graph fixtures cover all 17 interruption boundaries,
+two debate/risk rounds, all four analyst roles, EN/VI/bilingual and invalid VI,
+current JSON and completed pending-write restoration. Bytes are reopened from
+the actual SQLite store and restored into a fresh native saver; model-call/
+prompt/stage traces and non-message results equal uninterrupted execution.
+
+This remains a same-process synthetic integration, not production or financial
+acceptance. The worker/supervisor does not instantiate it yet. Parent bridge,
+write/ACK crash boundaries in separate processes, trusted client construction,
+consent/retained accounting, PostgreSQL/concurrency and live tests remain open.
+No existing owner history is backfilled or migrated and no allowance reset is
+authorized by a readable checkpoint.
+
 Full package/dependency invalidation is conservative: a new machine must restore
 the compatible runtime, not silently waive mismatches. Missing versus flat book
 remains distinct; an exhausted run's limits cannot be changed by hashing a new
