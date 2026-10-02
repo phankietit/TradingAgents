@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Initialized graph identity guard 2026-10-03:** source
+`c0d3cc7dbf832671b4aa1f58121e76634870e060` dựng fingerprint từ graph snapshot
+thật và sync SDK đã khởi tạo, chặn sai effective config/roles/model/owner/source/
+endpoint trước invoke. Graph giữ hash readers lúc construction, không giữ thêm
+raw sources; nguồn đổi với hash mới hợp lệ vẫn không khớp graph cũ. 76 focused
+PASS, 5,73 s; full Python **2.149 + 88 subtests PASS**, 20 skips, 50 warnings,
+233,64 s tại source sạch; Ruff/diff/templates PASS. Tests dùng graph/SDK thật,
+key giả và chặn model/network invoke. Đây chưa là complete transport/closure
+attestation; engine/worker chưa chọn guard hay bật resume. Tiếp theo trusted
+construction và original run/book context qua supervised boundary, retained
+accounting/consent, restore trong child mới. Không migrate DB riêng tư/restart/
+AI/vendor/CI/deploy; live finance/MT và UX/ingestion còn mở, NQ=F giữ BLOCKED.
+
 **Native snapshot recording hook 2026-10-03:** source
 `8b08628500df74e8641b151669bf8ee82cf9857d` thêm paired saver/canonical run-thread
 hook vào propagate_snapshots thật; compile local và invoke sync, không thay

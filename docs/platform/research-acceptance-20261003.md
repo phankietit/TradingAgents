@@ -235,3 +235,29 @@ This adds the actual graph recording invocation boundary; it is not an enabled
 resume feature or product-completion claim. Preserve execution_started and the
 original allowance when integrating the trusted platform path. R01–R14 remains
 open, including outstanding asset ingestion, financial/translation and UX gates.
+
+## Initialized snapshot graph identity follow-up
+
+Source `c0d3cc7dbf832671b4aa1f58121e76634870e060`, same branch/worktree,
+clean source throughout full regression. New internal guard derives descriptors
+from actual clients on the exact initialized TradingAgentsGraph, not supplied
+client bindings. Graph retains only a construction-time snapshot-reader digest.
+No default engine/worker selection, private DB migration, restart, AI/vendor
+call, CI, provider/risk change or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Actual initialized graph/SDK composition | PASS | Real snapshot graph plus reviewed OpenAI-compatible SDK with synthetic credential; HTTP sync/async send and model invoke forbidden. Derived fingerprint equals existing full original-input builder with actual client bindings; no legacy memory/tools |
+| Pre-invocation mismatch refusal | PASS | Config, roles, quick/deep model, snapshot mode, owner, corrupt source, changed run model, endpoint, graph subclass and non-graph rejected with fixed diagnostic/no cause; zero provider invocations |
+| Readers bound to graph construction | PASS | Valid recalculated source hash still rejected if different from readers used to construct graph; only digest added, no second raw source copy |
+| Effective SDK options | PASS | Actual SDK retry mutation changes fingerprint while declared graph config stays unchanged; not a promise to authorize changed settings |
+| Final focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_initialized_graph_fingerprint.py tests/test_initialized_client_binding.py tests/test_recovery_fingerprint.py --disable-warnings -x`: 76 passed, 28 warnings, 5.73 s. Earlier 75-case gate preceded reader-digest case; not final evidence |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,149 passed + 88 subtests, 20 skipped, 50 warnings, 233.64 s; Python 3.14.7/macOS, clean c0d3cc7 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Complete attestation and worker recovery | UNVERIFIED | Guard is an internal mismatch check, not authenticated DB loading, factory provenance or arbitrary SDK/header/transport/graph-closure mutation attestation. Trusted original context through supervised boundary, new-child restore, linked accounting/consent/API/UI still required; default worker unchanged |
+| PostgreSQL/live finance/MT | UNVERIFIED | Same 18 PostgreSQL, missing optional Bedrock dependency and live DeepSeek-key skips; no new report, earlier semantic/editorial failures unchanged |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+Hash identity cannot grant continuation consent, reset original allowance or
+replace execution_started fencing. The full R01–R14 product goal remains open,
+including remaining ingestion, financial/translation quality and operational UX.
