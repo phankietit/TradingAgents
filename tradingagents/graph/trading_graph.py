@@ -8,8 +8,10 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import yfinance as yf
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import ToolNode
 
 # Import the abstract tool methods from agent_utils
@@ -457,10 +459,25 @@ class TradingAgentsGraph:
             f"portfolio={portfolio.fingerprint() if portfolio is not None else 'none'}",
         ])
 
-    def propagate_snapshots(self, company_name, trade_date, *, asset_type, instrument_context, portfolio=None):
-        """Reuse debates and managers with no live tools, memory, logs or checkpoints."""
+    def propagate_snapshots(self, company_name, trade_date, *, asset_type, instrument_context,
+                            portfolio=None, checkpoint_saver=None, checkpoint_thread_id=None):
+        """Snapshot-only execution; optional internal synchronous recording.
+
+        Saver/thread must be supplied together by a trusted platform caller.
+        This starts a new graph invocation, never resumes or grants authority.
+        Legacy CLI checkpoints, memory and tool paths remain separate.
+        """
         if not self.snapshot_mode:
             raise ValueError("snapshot propagation requires snapshot analyst nodes")
+        if checkpoint_saver is not None or checkpoint_thread_id is not None:
+            try:
+                valid = (isinstance(checkpoint_saver, BaseCheckpointSaver)
+                         and type(checkpoint_thread_id) is str
+                         and str(UUID(checkpoint_thread_id)) == checkpoint_thread_id)
+            except (ValueError, TypeError, AttributeError):
+                valid = False
+            if not valid:
+                raise ValueError("invalid snapshot checkpoint setup")
         trade_date = _validate_trade_date(trade_date)
         with self.config_scope():
             state = self.propagator.create_initial_state(
@@ -472,8 +489,16 @@ class TradingAgentsGraph:
 
             state["instrument_context"] += "\n" + RESEARCH_SCOPE
             state["research_only"] = True
-            final = self.graph.invoke(state, **self.propagator.get_graph_args(
-                callbacks=[self.execution_observer] if self.execution_observer is not None else None))
+            graph_args = self.propagator.get_graph_args(
+                callbacks=[self.execution_observer] if self.execution_observer is not None else None)
+            invocation_graph = self.graph
+            if checkpoint_saver is not None:
+                # Compile locally: never leave the instance/CLI graph bound to
+                # another owner's saver after success or ambiguous failure.
+                invocation_graph = self.workflow.compile(checkpointer=checkpoint_saver)
+                graph_args["config"]["configurable"] = {"thread_id": checkpoint_thread_id}
+                graph_args["durability"] = "sync"
+            final = invocation_graph.invoke(state, **graph_args)
             structured = final.get("structured_decision")
             return final, structured.get("rating", "REVIEW") if structured else "REVIEW"
 

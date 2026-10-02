@@ -134,16 +134,9 @@ class NativeFixtureEngine:
             codec = SnapshotCheckpointCodec(fingerprint=bridge.checkpoint_options["fingerprint"],
                                             nodes=graph.workflow.nodes)
             saver = CommittedSnapshotSaver(codec=codec, commit=bridge.commit_checkpoint)
-            graph.graph = graph.workflow.compile(checkpointer=saver)
-            invoke = graph.graph.invoke
-
-            def committed_invoke(state, **graph_args):
-                graph_args["config"]["configurable"] = {
-                    "thread_id": bridge.checkpoint_options["thread_id"]}
-                return invoke(state, **graph_args, durability="sync")
-
-            with patch.object(graph.graph, "invoke", committed_invoke):
-                return original_propagate(graph, *args, **kwargs)
+            return original_propagate(graph, *args, **kwargs,
+                checkpoint_saver=saver,
+                checkpoint_thread_id=bridge.checkpoint_options["thread_id"])
 
         class Model:
             def invoke(self, prompt):

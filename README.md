@@ -505,6 +505,12 @@ unverified live. Real SQLite writer/commit contention fails without ACK or a
 second unbounded lease query. This is a per-operation lock/statement bound, not
 a hard whole-transaction, pool/connect/network or disk-stall deadline; defaults
 for other database sessions and model timeouts are unchanged.
+The original snapshot graph now exposes an internal paired saver/canonical
+run-thread hook. It compiles a local invocation graph and explicitly uses sync
+durability without replacing the instance/CLI graph, including on failure.
+Native spawn fixtures use this hook rather than replacing graph.invoke. It is
+not selected by default AnalysisEngine/worker, does not restore saved state,
+and does not supply fingerprint trust, consent or retained accounting.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

@@ -224,6 +224,23 @@ scope; persisting state alone is insufficient.
 
 ## Required production boundary
 
+### Snapshot graph recording hook
+
+`TradingAgentsGraph.propagate_snapshots` accepts an internal paired
+`checkpoint_saver`/`checkpoint_thread_id` setup. Saver must implement native
+BaseCheckpointSaver and thread must be a canonical UUID; partial/invalid setup
+is rejected before compile/invoke. It compiles the original workflow locally
+and invokes with `durability="sync"`, retaining callbacks/config_scope, snapshot
+state, rounds and validation/presentation. It never replaces the instance graph
+on success or failure and never accesses the separate CLI checkpoint path.
+Default invocation has no new saver/thread/durability option.
+
+Native supervised recording fixtures now exercise this production graph hook
+instead of patching graph.invoke. The hook is not a trusted-client construction
+mechanism or checkpoint loader: callers remain responsible for authenticated
+original context and isolated saver identity. Default AnalysisEngine/worker do
+not select it; no resume, consent/accounting route or paid replay is enabled.
+
 1. Preserve the original workflow, reducers, routing, rounds, financial
    validation and presentation. Restore native channel versions, versions_seen,
    routing/control channels and pending writes, not a guessed next-stage list.
