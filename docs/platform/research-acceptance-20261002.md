@@ -304,3 +304,36 @@ translation fidelity or qualitative entailment. Earlier live manual failures
 remain unresolved. Next: fingerprinted checkpoint recovery, with original graph
 and owner/run/source/model/prompt/config/lease bindings intact and no blind paid
 replay. Goal and Draft PR #7 stay open; no release/merge/deployment authorization.
+
+## R08 native message-free continuation characterization
+
+Source `60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a`, branch
+`fix/TA-R01-research-quality`. Test/docs only; production runtime remains
+`e1af4c35957918ae72debef3417ef24d2a1a767f`.
+
+| Gate | Result | Exact evidence |
+| --- | --- | --- |
+| Native interruption equivalence | PASS | Seventeen parametrized boundaries across four analysts/message-clear nodes, debate/managers/trader/risk and financial validation. Two debate/risk rounds and bilingual presentation; actual downstream prompt content, full model-call sequence, stage sequence and non-message AnalysisResult equal uninterrupted run |
+| Focused suite | PASS | `.venv/bin/python -m pytest -q tests/test_supervised_native_graph.py --disable-warnings`: 21 tests, 7.66 s (17 continuation cases plus four existing spawn/language cases) |
+| Full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,657 tests + 88 subtests, 20 skips, 22 warnings, 108.25 s; Python 3.14.7/macOS |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby issue-template YAML load |
+| Web refresh | NOT_IN_SCOPE | No frontend, production API, worker or model/prompt change |
+| Durable private recovery | UNVERIFIED | InMemorySaver/manual state update only; earlier in-memory versions retain messages. No serializer, fingerprint, owner gate, process restoration or explicit continuation API implemented by this fixture |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, missing Bedrock dependency and live DeepSeek key skips |
+| Live financial/translation acceptance | UNVERIFIED | No model/vendor call or worker restart; prior live failures remain unchanged |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+Initial focused execution had 10 failures: restored invocation ran outside the
+original config_scope and produced different decision/evidence fields. Re-entry
+into the same scope corrected the cause; the final assertion compares every
+non-message result field, not merely a constant rating. Message-channel contents
+are deliberately excluded from equality because their removal is the behavior
+being tested. Calls/prompts are compared separately to catch repeated work or
+changed downstream inputs. Synthetic cloned sources are graph coverage only.
+
+See `docs/platform/research-recovery-contract.md` for open production requirements:
+safe versioned state/control serialization, complete immutable fingerprint,
+parent-fenced durable commit/ack, explicit owner continuation and accounting.
+Do not use this PASS to bypass the execution_started fence, enable blind replay,
+raise an old allowance or reconstruct checkpoints from historical reader notes.
+The full R01–R14 goal and Draft PR #7 remain open.

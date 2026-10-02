@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Recovery characterization 2026-10-02:** source
+`60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a` thêm fixture native interruption tại
+17 ranh giới, bốn analyst và hai vòng debate/risk, giữ bilingual presentation.
+Bỏ current messages rồi tiếp tục cho prompt/call/stage trace và kết quả ngoài
+messages giống chạy liên tục. Phải khôi phục `config_scope`; fixture ban đầu
+FAIL khi bỏ scope, đã sửa đúng nguyên nhân. Đây chỉ là in-memory test, chưa là
+durable checkpoint/resume cho web; không có paid/vendor call hay restart.
+Đọc [recovery contract](docs/platform/research-recovery-contract.md) trước khi
+implement serializer/fingerprint/parent commit-ack và explicit continuation.
+Không bỏ execution_started fence hoặc tăng allowance cũ. Goal/PR vẫn mở.
+
 **Bilingual supervised gate 2026-10-02:** source
 `97b110d02596e8d57be6b0dd0b21f581c1e1b83b` chạy native graph đủ 14 stage qua
 spawn ở English, Vietnamese và English + Vietnamese bằng fixture model. Giữ
