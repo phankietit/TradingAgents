@@ -261,3 +261,32 @@ call, CI, provider/risk change or deployment.
 Hash identity cannot grant continuation consent, reset original allowance or
 replace execution_started fencing. The full R01–R14 product goal remains open,
 including remaining ingestion, financial/translation quality and operational UX.
+
+## Original AnalysisEngine recorder wiring follow-up
+
+Source `cb4e7061813c395d50e01fa61f6badb8418b016e`, same branch/worktree,
+clean source throughout full regression. Optional exact SnapshotRecorder in the
+original AnalysisEngine binds original context/expected fingerprint to actual
+initialized graph before invoking the native sync recording hook. Default
+engine/worker/CLI unchanged; no private DB migration/restart, AI/vendor call,
+CI, provider/risk change or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original engine wiring | PASS | Real graph/SDK initialization with synthetic credentials; explicit invocation spy receives restricted committed saver and canonical original run-thread only after full fingerprint matches. Mismatch produces no invocation; missing final structured output remains REVIEW/no decision |
+| Setup/factory/legacy refusal | PASS | Owner/fingerprint/commit invalid setup fixed diagnostic; arbitrary recorder types/factories and non-snapshot request rejected. Recorder repr excludes private original context |
+| Original observer/allowance | PASS | Exact existing ResearchObserver with original stored/legacy limits required; missing or enlarged wall/call limit rejected, exhausted allowance retains ResearchBudgetExceeded. Original start and calls not reset |
+| Direct saver ACK parity | PASS | Saver now rejects bool/float/string sequences and string/missing record UUID, poisoning reuse; same strict boundary as parent bridge |
+| Initial local checks | FAIL | Ruff imported-fixture shadowing fixed with explicit module alias. After allowance addition, collection failed because ResearchExecutionLimits is not package-exported; imported from contracts.runs, preserving guard |
+| Final focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_analysis_recording.py tests/test_analysis_engine.py tests/test_initialized_graph_fingerprint.py tests/test_committed_checkpoint_saver.py tests/test_checkpoint_bridge.py --disable-warnings -x`: 57 passed, 58 warnings, 21.55 s |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,167 passed + 88 subtests, 20 skipped, 80 warnings, 209.23 s; Python 3.14.7/macOS, clean cb4e706 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Native/supervised recording enablement | UNVERIFIED | New recorder engine test is a wiring spy, not a native full-flow test. Existing native hook/bridge fixtures remain separate. Default supervisor/worker do not construct this recorder; trusted parent context transfer/attestation and observer adaptation remain required |
+| Continuation authority/live | UNVERIFIED | New-child restore, immutable retained elapsed/calls/usage, consent/idempotency/API/UI, complete SDK/transport attestation and live financial/translation quality still open; no additional paid report |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, Bedrock dependency and live DeepSeek-key skips; local gate cannot establish missing environments |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+An internal recorder is not permission to replay a stopped job. Retain
+execution_started and original allowance/accounting when wiring spawn and owner
+continuation. Full R01–R14 remains open, including asset ingestion and operational
+UX/financial acceptance; Draft PR stays draft.

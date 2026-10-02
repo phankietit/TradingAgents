@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Original-engine recorder wiring 2026-10-03:** source
+`cb4e7061813c395d50e01fa61f6badb8418b016e` nối SnapshotRecorder nội bộ vào
+AnalysisEngine thật: original context/expected fingerprint, observer và allowance
+cũ bắt buộc; graph/client/source identity khớp mới truyền committed saver vào
+snapshot sync hook. Không chấp nhận arbitrary factory/type hay non-snapshot;
+ACK kiểm tra UUID/sequence int ở saver như bridge. 57 focused PASS, 21,55 s;
+full Python **2.167 + 88 subtests PASS**, 20 skips, 80 warnings, 209,23 s tại
+source sạch; Ruff/diff/templates PASS. Có collection FAIL do import limits từ
+package chưa export, đã sửa đúng contracts.runs; không bỏ allowance gate.
+Engine wiring test dùng SDK thật nhưng invocation spy, chưa full native/live
+recording acceptance. Default worker/supervisor chưa chọn recorder; tiếp theo
+trusted context/observer qua spawn, retained accounting/consent và new-child
+restore. Không migrate DB riêng tư/restart/AI/vendor/CI/deploy; goal/PR vẫn mở,
+live finance/MT, ingestion/UX còn chưa đạt và NQ=F giữ BLOCKED.
+
 **Initialized graph identity guard 2026-10-03:** source
 `c0d3cc7dbf832671b4aa1f58121e76634870e060` dựng fingerprint từ graph snapshot
 thật và sync SDK đã khởi tạo, chặn sai effective config/roles/model/owner/source/
