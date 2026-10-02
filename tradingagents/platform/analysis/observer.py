@@ -47,6 +47,10 @@ class ResearchObserver(BaseCallbackHandler):
         self.max_seconds = max_seconds
         self.max_calls = max_calls
         self.started_calls = 0
+        # Internal retained-observer construction loads these from original
+        # durable accounting; ordinary worker/CLI observers remain unchanged.
+        self._retained_elapsed_seconds = 0.0
+        self._retained_started_calls = 0
         self._execution_stopped = False
         self.supervision_mode = "cooperative_boundaries"
 
@@ -63,7 +67,7 @@ class ResearchObserver(BaseCallbackHandler):
         self.check_cancelled()
         if self._execution_stopped:
             raise ResearchExecutionFailed("research execution already stopped")
-        remaining = self.max_seconds - (self.clock() - self.started)
+        remaining = self.max_seconds - self._retained_elapsed_seconds - (self.clock() - self.started)
         if remaining <= 0:
             raise ResearchBudgetExceeded("research wall-time budget exhausted")
         return remaining
@@ -92,7 +96,7 @@ class ResearchObserver(BaseCallbackHandler):
         # This counts logical LangChain starts, not hidden provider SDK retries.
         with self.lock:
             self._check()
-            if self.started_calls >= self.max_calls:
+            if self._retained_started_calls + self.started_calls >= self.max_calls:
                 raise ResearchBudgetExceeded("research model-call budget exhausted")
             self.started_calls += 1
             payload = self._usage_payload()

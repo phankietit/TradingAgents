@@ -602,6 +602,10 @@ A read-only allowance observation subtracts all durable logical starts and the
 local elapsed upper bound from the original run limits. Missing time remains
 unknown; already exhausted limits remain blocked. A positive arithmetic result
 is not consent or admission and cannot reset caps or waive unreported usage.
+An internal retained-observer builder reloads and compares original accounting,
+refuses stale/unknown/exhausted observations, and debits prior time/calls at
+admission while emitting only current-attempt usage. It is not wired to worker
+or browser continuation and does not authenticate consent or restore a graph.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

@@ -145,6 +145,23 @@ cost/refund/consent token. Transactional recheck/owner consent, linked execution
 trusted checkpoint restoration and original-budget enforcement in the supervisor
 remain required before enablement. No reader mutates history or invokes models.
 
+### Internal retained observer enforcement
+
+`build_retained_observer` reloads original owner/run allowance evidence, requires
+an exact full expected accounting observation and refuses unknown/stale/exhausted
+history. Original wall/call limits stay unchanged. The parent observer subtracts
+prior elapsed upper bound and prior logical starts at every boundary/admission;
+its new attempt clock, counters and event elapsed remain attempt-local. This
+avoids both fresh-budget replay and double-counting prior accounting on reload.
+The existing supervisor uses the same observer for deadline/cancellation checks.
+
+This internal builder is not authenticated transactional consent, an execution
+identity or checkpoint restoration. Its read comparison cannot fence later
+writers; a future caller must supply the reviewed consent/lease transaction and
+linked execution before dispatch. Default worker/CLI/API do not call it. Tests
+exercise synthetic callbacks and a simple spawned fixture engine, not original
+graph recovery or financial/live/provider acceptance. No history is rewritten.
+
 ## Implemented codec prerequisite
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
