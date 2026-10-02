@@ -91,6 +91,27 @@ other provider SDKs and trusted construction provenance remain unverified.
 These must be reviewed before enabling recovery; no caller-supplied descriptor
 or hash is sufficient permission to continue a paid run.
 
+### Private persistence prerequisite
+
+`checkpoint_store.py` and migration `0011_research_checkpoints` provide a
+separate private table, not an ArtifactKind or generic reader endpoint. The
+parent commits bounded validated codec bytes with owner/run/thread/job identity,
+checkpoint ID, content hash and monotonic sequence. Identical bytes are
+idempotent; pending-write revisions append without modifying earlier rows.
+The existing publication_session locks/renews the job and rejects cancellation
+or lease loss in the same transaction. A success receipt is returned only after
+that transaction exits; rollback produces no ACK. Latest loading rechecks hash,
+fingerprint, codec and checkpoint ID and never falls back to an older row after
+incompatibility/corruption. Missing history remains missing, not backfilled.
+
+Only disposable SQLite fixtures have exercised upgrade/downgrade and reopen;
+no private runtime DB was migrated. PostgreSQL/concurrent writers, a native
+checkpointer, child bridge/commit-ack, cross-process crash boundaries, retained
+usage accounting and explicit continuation consent remain unverified. This
+internal store is not invoked by production worker/CLI/API and cannot authorize
+recovery. A trusted worker must derive the fingerprint and authentic owner
+context before using it, and preserve execution_started/no-blind-replay fences.
+
 Full package/dependency invalidation is conservative: a new machine must restore
 the compatible runtime, not silently waive mismatches. Missing versus flat book
 remains distinct; an exhausted run's limits cannot be changed by hashing a new

@@ -475,6 +475,13 @@ invoking models or reading SDK authentication headers. It rejects declared custo
 headers/query/transports and unreviewed classes. This is not a complete transport
 attestation: worker-controlled construction, SDK mutation protection, other SDK
 adapters and durable recovery remain unverified and are not enabled.
+Private checkpoint persistence now has an internal append-only database store
+and migration `0011_research_checkpoints`, separate from report artifacts. It
+validates restricted JSON, binds owner/run/job, commits under the existing
+publication lease/cancellation transaction, and returns an ACK only after
+commit. Fixture reopen/rollback/fencing checks do not establish native saver,
+child bridge, crash recovery, explicit consent or live acceptance; none is
+enabled. No existing owner database was migrated during this checkpoint.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

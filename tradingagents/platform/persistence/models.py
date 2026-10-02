@@ -6,7 +6,16 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, MetaData, String, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    DateTime,
+    ForeignKey,
+    Index,
+    LargeBinary,
+    MetaData,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -100,6 +109,29 @@ class RunRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+
+
+class ResearchCheckpointRow(Base):
+    """Private recovery bytes, never a report/artifact or approval candidate."""
+
+    __tablename__ = "research_checkpoints"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence"),
+        UniqueConstraint("run_id", "content_hash"),
+        Index("ix_research_checkpoints_owner_run", "owner_id", "run_id", "sequence"),
+    )
+
+    record_id: Mapped[UUID] = mapped_column(primary_key=True)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False)
+    job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    attempt: Mapped[int] = mapped_column(nullable=False)
+    sequence: Mapped[int] = mapped_column(nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    checkpoint_id: Mapped[UUID] = mapped_column(nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class DecisionRow(Base):
