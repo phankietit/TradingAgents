@@ -41,6 +41,7 @@ class NativeFixtureEngine:
         self.checkpoint_commit = None
         self.checkpoint_read = None
         self.snapshot_recorder = None
+        self.initialized_clients = []
 
     def analyze(self, request):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
@@ -51,6 +52,7 @@ class NativeFixtureEngine:
         original_propagate = trading_graph.TradingAgentsGraph.propagate_snapshots
         original_client = trading_graph.create_llm_client
         actual_clients = []
+        self.initialized_clients = actual_clients
 
         def trace(kind, prompt):
             # Compare actual downstream inputs, not merely a constant fake result.
@@ -183,8 +185,9 @@ class NativeFixtureEngine:
             options.append(kwargs)
             if self.snapshot_recorder is not None:
                 initialized = original_client(**kwargs)
-                actual_clients.append(initialized.get_llm())
-                return initialized
+                llm = initialized.get_llm()
+                actual_clients.append(llm)
+                return SimpleNamespace(get_llm=lambda: llm)
             return SimpleNamespace(get_llm=lambda: Model())
 
         def forbidden(*args, **kwargs):

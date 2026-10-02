@@ -81,6 +81,9 @@ def test_actual_recorder_runs_all_native_stages_and_reopens_private_bytes(tmp_pa
         engine.snapshot_recorder = SnapshotRecorder(owner_id=owner, run=run, expected_fingerprint=fingerprint,
             commit=lambda raw: store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=raw))
         result = engine.analyze(request)
+        assert len(engine.initialized_clients) == 2
+        assert all(llm.root_client.is_closed() and llm.root_async_client.is_closed()
+                   for llm in engine.initialized_clients)
         baseline_observer = ResearchObserver(check_cancelled=job_context.raise_if_cancelled,
             emit=lambda *args: None)
         baseline_engine = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid})

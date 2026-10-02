@@ -143,6 +143,8 @@ sequence and no credential/private reasoning marker or nonempty message values.
 Native channel-version metadata may still name messages; it is required for
 native fidelity and is not message content. A separate original fixture run
 remains unchanged. Original recorder observer/start is preserved.
+Fixture construction uses exactly two initialized SDK instances for the engine;
+both sync/async clients are explicitly closed and asserted closed after use.
 
 This is same-process native integration with synthetic responses, not live
 provider/semantic/MT proof or supervised worker activation/new-child restore.
