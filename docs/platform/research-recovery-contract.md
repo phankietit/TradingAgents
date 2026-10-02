@@ -91,6 +91,21 @@ other provider SDKs and trusted construction provenance remain unverified.
 These must be reviewed before enabling recovery; no caller-supplied descriptor
 or hash is sufficient permission to continue a paid run.
 
+`build_initialized_graph_fingerprint` now composes that adapter with original
+source/run/book validation using the actual exact TradingAgentsGraph instance.
+It requires snapshot mode, exact effective config/selected roles, actual LLM
+model names matching the run, and the digest of snapshot reports supplied at
+graph construction matching revalidated original readers. Even a valid source
+with recalculated hash cannot be substituted after graph construction. It
+derives descriptors internally, not from supplied browser/model bindings.
+Only the reader digest is retained by the graph, not a second raw source copy.
+Errors use a fixed diagnostic; no model/network invocation is performed.
+
+This is a mismatch guard, not full trusted-factory, graph-closure/SDK-header/
+transport-mutation attestation or authenticated DB loading. Default engine/
+supervisor/worker do not select it or enable recovery. Original owner consent,
+allowance/usage accounting and new-child restore remain mandatory next gates.
+
 ### Private persistence prerequisite
 
 `checkpoint_store.py` and migration `0011_research_checkpoints` provide a

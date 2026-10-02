@@ -1,5 +1,6 @@
 # TradingAgents/graph/trading_graph.py
 
+import hashlib
 import json
 import logging
 import os
@@ -121,6 +122,11 @@ class TradingAgentsGraph:
         self.config = deepcopy(config or DEFAULT_CONFIG)
         self.callbacks = callbacks or []
         self.execution_observer = execution_observer
+        # Bind snapshot readers supplied at construction without retaining a
+        # second raw source copy. This is internal identity, not authorization.
+        self._snapshot_reports_digest = (hashlib.sha256(json.dumps(snapshot_reports,
+            sort_keys=True, ensure_ascii=False, allow_nan=False,
+            separators=(",", ":")).encode()).hexdigest() if snapshot_reports is not None else None)
 
         # Create necessary directories
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)

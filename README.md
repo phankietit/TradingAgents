@@ -511,6 +511,13 @@ durability without replacing the instance/CLI graph, including on failure.
 Native spawn fixtures use this hook rather than replacing graph.invoke. It is
 not selected by default AnalysisEngine/worker, does not restore saved state,
 and does not supply fingerprint trust, consent or retained accounting.
+An internal initialized-graph guard now derives the full original recovery
+fingerprint from this graph's actual reviewed sync SDK clients, checking exact
+effective config, selected roles, declared model names and the construction-time
+digest of snapshot readers. Mismatches fail before invocation without printing
+inputs. Real graph/SDK tests use synthetic credentials and forbid network/model
+calls. This is still not complete transport/closure-mutation attestation or an
+enabled worker/owner continuation path.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
