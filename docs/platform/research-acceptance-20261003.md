@@ -455,3 +455,29 @@ Original execution_started/no-blind-replay, immutable history and human approval
 remain mandatory. No missing historical reservations are backfilled. Next:
 safe durable aggregation/unknown-duration accounting and explicit consent before
 restore; remaining R01–R14 ingestion/operational UX/live acceptance still required.
+
+## Read-only durable accounting evidence follow-up
+
+Source `6034b88b6b158f1666828146a27b2f3db31bc861`, same branch/worktree,
+clean throughout full regression; Python 3.14.7, Darwin 25.5.0. Internal reader
+and synthetic fixture coverage only; no runtime activation, paid/vendor call,
+private DB migration/restart, CI, provider/risk change, history rewrite, merge
+or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Bounded owner-scoped evidence | PASS | Authoritative run lookup, contiguous owner/run event prefix at observed high-water, maximum 10,000 events and pages of at most 500; over-bound evidence rejects rather than truncates |
+| Cross-attempt counters | PASS | Latest cumulative receipt per attempt summed once; reopened fixture with two completed calls and a second unfinished attempt retains 30 tokens, three starts and one unreported start. Pagination covers 504 rows without duplication |
+| Unknown and invalid evidence | PASS | Empty, marker-only and legacy usage yield UNVERIFIED with totals None, not zero. Wrong owner/limits, bool counters, regression, inconsistent totals/status, invented cost, extra fields, bad scope/elapsed, missing marker and sequence gaps reject with fixed non-sensitive diagnostics |
+| Actual native integration | PASS | Existing production-child/engine/recorder/native-spawn synthetic callback cases read committed parent event evidence; completion and exhausted cases retain matching synthetic counters and checkpoints. Exact elapsed remains unknown |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_accounting_evidence.py tests/test_usage_reservation.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 34 passed, 48 warnings, 29.77 s. Earlier 23-pass/one-skip run preceded strengthened fixtures and is not final-source proof; import-only Ruff fix, no behavioral failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,253 passed + 88 subtests, 20 skipped, 156 warnings, 258.01 s, clean exact source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Continuation authority | UNVERIFIED | No transactional consent/high-water recheck, remaining-budget grant, authenticated artifact loading, new-child restore or complete transport attestation enabled. PASS means evidence parsed, not permission to continue; elapsed is a lower bound and totals may exceed original allowance |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No fresh live report or billing proof; 18 PostgreSQL, optional Bedrock dependency and live DeepSeek-key skips remain. Financial/editorial acceptance and runtime/browser upgrade remain incomplete |
+| NQ=F | BLOCKED | Owner-selected contract/roll-source hold unchanged |
+
+No private historical events are repaired or backfilled. Next: explicit original
+allowance/unknown-duration policy and transactional consent, then new-child
+restoration; full R01–R14 ingestion, operational UX and live acceptance remain
+required. Default recorder/resume remains disabled; goal and Draft PR stay open.

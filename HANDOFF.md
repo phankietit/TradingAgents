@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Read-only accounting evidence 2026-10-03:** source
+`6034b88b6b158f1666828146a27b2f3db31bc861` thêm reader nội bộ owner/run-scoped,
+prefix giới hạn 10.000 events, paging 500; chỉ cộng receipt cumulative cuối mỗi
+attempt, không cộng trùng. Validate sequence/attempt/limits/counters/status;
+legacy hoặc thiếu usage giữ UNVERIFIED/None, không giả định zero. High-water là
+observation cần recheck transactionally; elapsed chỉ lower bound, exact duration
+và cost vẫn unknown. Không cấp consent/admission hay bật resume/worker/API.
+34 focused PASS, 29,77 s; full **2.253 + 88 subtests PASS**, 20 skips,
+156 warnings, 258,01 s tại source sạch; Ruff/diff/templates PASS. Disposable
+SQLite reopen và actual native spawn synthetic callbacks kiểm chứng aggregation;
+không live billing/financial/MT/PostgreSQL proof. Consent/restore/transport,
+ingestion/operational UX/live còn mở; NQ=F BLOCKED theo owner. Không AI/vendor/CI,
+restart/migrate DB riêng tư, history rewrite, provider/risk change, merge/deploy.
+Goal và Draft PR #7 vẫn mở.
+
 **Durable pre-admission reservation 2026-10-03:** source
 `7833efd35664164e48459a4d8733cba310449cb8` observer emit model.usage trước
 call và sau completion/error; worker dùng event transaction lease-fenced sẵn có,
