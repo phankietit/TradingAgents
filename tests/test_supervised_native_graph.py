@@ -7,7 +7,8 @@ from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, RemoveMessage
+from langgraph.checkpoint.memory import InMemorySaver
 
 from tests.test_analysis_engine import _instrument
 from tests.test_risk_engine import NOW
@@ -23,12 +24,53 @@ from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
 class NativeFixtureEngine:
     def __init__(self, *, base_config=None):
         self.config = base_config
+        self.model_trace = []
+        self.resume_evidence = None
 
     def analyze(self, request):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
         options = []
         repairs = []
         invalid_translation = self.config.get("_fixture_invalid_translation", False)
+        interrupted_node = self.config.get("_fixture_interrupt_after")
+        original_propagate = trading_graph.TradingAgentsGraph.propagate_snapshots
+
+        def trace(kind, prompt):
+            # Compare actual downstream inputs, not merely a constant fake result.
+            content = prompt if isinstance(prompt, str) else [
+                item.content if hasattr(item, "content") else item for item in prompt]
+            self.model_trace.append((kind, content))
+
+        def resume_without_messages(graph, *args, **kwargs):
+            saver = InMemorySaver()  # Fixture only: never persistent or public storage.
+            graph.graph = graph.workflow.compile(checkpointer=saver,
+                                                 interrupt_after=[interrupted_node])
+            graph_args = graph.propagator.get_graph_args(
+                callbacks=[graph.execution_observer] if graph.execution_observer else None)
+            graph_args["config"]["configurable"] = {"thread_id": "synthetic-resume"}
+            invoke = graph.graph.invoke
+
+            def initial_invoke(state, **unused):
+                return invoke(state, **graph_args)
+
+            with patch.object(graph.graph, "invoke", initial_invoke):
+                original_propagate(graph, *args, **kwargs)
+            before = graph.graph.get_state(graph_args["config"])
+            assert before.next, "fixture must interrupt before graph completion"
+            calls_before = len(self.model_trace)
+            graph.graph.update_state(graph_args["config"], {
+                "messages": [RemoveMessage(id=item.id) for item in before.values["messages"]]},
+                as_node=interrupted_node)
+            clean = graph.graph.get_state(graph_args["config"])
+            assert clean.values["messages"] == []
+            assert clean.next == before.next
+            # Recompile the original workflow with the same saver and no interrupt.
+            graph.graph = graph.workflow.compile(checkpointer=saver)
+            with graph.config_scope():
+                final = graph.graph.invoke(None, **graph_args)
+            self.resume_evidence = (before.next, calls_before)
+            structured = final.get("structured_decision")
+            return final, structured.get("rating", "REVIEW") if structured else "REVIEW"
 
         def translate(prompt):
             blocks = json.loads(prompt.split("<translation_blocks>\n", 1)[1]
@@ -44,6 +86,7 @@ class NativeFixtureEngine:
 
         class Model:
             def invoke(self, prompt):
+                trace("plain", prompt)
                 if isinstance(prompt, str) and "FORMAT REPAIR:" in prompt:
                     repairs.append(1)
                     return AIMessage(content=json.dumps(translate(prompt), ensure_ascii=False))
@@ -51,7 +94,10 @@ class NativeFixtureEngine:
 
             def with_structured_output(self, schema):
                 if schema.__name__ == "ReportTranslation":
-                    return SimpleNamespace(invoke=lambda prompt: schema.model_validate(translate(prompt)))
+                    def translated(prompt):
+                        trace(schema.__name__, prompt)
+                        return schema.model_validate(translate(prompt))
+                    return SimpleNamespace(invoke=translated)
                 claims = [{"claim": claim, "snapshot_ids": [source_id]}
                           for claim in ("Snapshot thesis", "Coverage risk", "New information")]
                 values = {
@@ -70,7 +116,10 @@ class NativeFixtureEngine:
                     payload.pop("evidence_claims")
                     payload.update(investment_thesis=[claims[0]], risks=[claims[1]],
                                    invalidation_conditions=[claims[2]])
-                return SimpleNamespace(invoke=lambda prompt: schema.model_validate(values[schema.__name__]))
+                def structured(prompt):
+                    trace(schema.__name__, prompt)
+                    return schema.model_validate(values[schema.__name__])
+                return SimpleNamespace(invoke=structured)
 
         def client(**kwargs):
             options.append(kwargs)
@@ -80,6 +129,9 @@ class NativeFixtureEngine:
             raise AssertionError("native snapshot graph accessed a legacy write/tool/memory path")
 
         with ExitStack() as patches:
+            if interrupted_node:
+                patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
+                    "propagate_snapshots", resume_without_messages))
             patches.enter_context(patch.object(trading_graph, "create_llm_client", client))
             patches.enter_context(patch.object(trading_graph, "TradingMemoryLog", forbidden))
             for name in ("_create_tool_nodes", "resolve_instrument_context", "_resolve_pending_entries",
@@ -141,3 +193,41 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     assert "messages" not in result.final_state
     assert all("messages" not in outputs for _, outputs in captures)
     assert list((tmp_path / "reports").iterdir()) == []
+
+
+@pytest.mark.parametrize("boundary", ["Market Analyst", "Msg Clear Market", "Sentiment Analyst",
+    "Msg Clear Sentiment", "News Analyst", "Msg Clear News", "Fundamentals Analyst",
+    "Msg Clear Fundamentals", "Bull Researcher", "Bear Researcher",
+    "Research Manager", "Trader", "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst",
+    "Portfolio Manager", "Financial validation"])
+def test_native_resume_message_removal_preserves_prompts_and_results(tmp_path, boundary):
+    """Characterization only; not a production checkpoint or authorized paid replay."""
+    instrument = _instrument()
+    inputs = context(instrument)
+    analysts = ("market", "social", "news", "fundamentals")
+    original = inputs.by_analyst["market"][0]
+    extras = {role: (AnalysisSnapshot(manifest=original.manifest.model_copy(update={
+        "snapshot_id": uuid4(), "dataset": role}), payload=original.payload),)
+        for role in analysts if role != "market"}
+    inputs = inputs.model_copy(update={"by_analyst": {**inputs.by_analyst, **extras},
+                                      "source_max_age_seconds": dict.fromkeys(analysts, 0)})
+    config = {**DEFAULT_CONFIG, "data_cache_dir": str(tmp_path / "cache"),
+        "results_dir": str(tmp_path / "reports"), "max_debate_rounds": 2,
+        "max_risk_discuss_rounds": 2, "output_language": "English and Vietnamese"}
+    results, traces, completions = [], [], []
+    for interruption in (None, boundary):
+        observer = ResearchObserver(check_cancelled=lambda: None, emit=lambda *args: None,
+                                    max_seconds=60)
+        engine = NativeFixtureEngine(base_config={**config, "_fixture_interrupt_after": interruption})
+        result = engine.analyze(AnalysisRequest(instrument=instrument, analysis_date=NOW.date(),
+            selected_analysts=analysts, snapshot_context=inputs, execution_observer=observer))
+        public_result = result.model_dump(mode="json")
+        public_result["final_state"].pop("messages", None)
+        results.append(public_result)
+        traces.append(engine.model_trace)
+        completions.append(observer.completed)
+        if interruption:
+            assert engine.resume_evidence[1] > 0
+    assert results[0] == results[1]
+    assert traces[0] == traces[1]  # No repeated model call; no changed prompt after restoration.
+    assert completions[0] == completions[1]  # Includes repeated rounds, validation and presentation.
