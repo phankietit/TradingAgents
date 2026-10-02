@@ -454,6 +454,15 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+The internal original-context recorder can now import restricted checkpoint
+bytes after checking the initialized graph fingerprint and original observer
+allowance. The paired snapshot graph hook invokes the original scheduler with
+`None` under original config scope, sync durability and callbacks. Synthetic
+recorder/engine fixtures compare continuation prompt traces and complete outputs
+with an uninterrupted run, preserving old checkpoint rows. No new observer is
+constructed here. New-child transport, consent, default worker/API recovery and
+live acceptance remain unverified and disabled.
+
 An internal committed saver restore method now imports a reviewed tuple only
 into an empty saver, bound to the expected thread and codec fingerprint. It
 preserves native versions, routing and completed pending writes without

@@ -7,7 +7,7 @@ from uuid import UUID
 from tradingagents.contracts import RunManifest
 from tradingagents.contracts.runs import ResearchExecutionLimits
 
-from .checkpoint_codec import SnapshotCheckpointCodec
+from .checkpoint_codec import MAX_CHECKPOINT_BYTES, SnapshotCheckpointCodec
 from .checkpoint_saver import CommittedSnapshotSaver
 from .client_binding import build_initialized_graph_fingerprint
 from .observer import ResearchObserver
@@ -20,7 +20,8 @@ class SnapshotRecorder:
 
     No field is browser input or consent. Expected fingerprint must match actual
     graph/client/source construction before any invocation; no implicit fallback.
-    This records a new invocation, never loads history or resets an allowance.
+    Optional restricted bytes restore a trusted checkpoint; no field grants
+    consent or resets the caller's existing observer/allowance.
     """
 
     owner_id: UUID
@@ -30,6 +31,7 @@ class SnapshotRecorder:
     portfolio_snapshot: object = None
     policy: object = None
     risk_snapshots: tuple = ()
+    restore_checkpoint: bytes | None = None
 
     def __post_init__(self):
         try:
@@ -37,7 +39,10 @@ class SnapshotRecorder:
             if (type(self.owner_id) is not UUID or run.owner_id != self.owner_id
                     or type(self.expected_fingerprint) is not str
                     or re.fullmatch(r"[0-9a-f]{64}", self.expected_fingerprint) is None
-                    or not callable(self.commit)):
+                    or not callable(self.commit)
+                    or (self.restore_checkpoint is not None and (
+                        type(self.restore_checkpoint) is not bytes
+                        or not 0 < len(self.restore_checkpoint) <= MAX_CHECKPOINT_BYTES))):
                 raise ValueError()
             object.__setattr__(self, "run", run)
         except (ValueError, TypeError, AttributeError):
@@ -66,5 +71,8 @@ class SnapshotRecorder:
         if actual != self.expected_fingerprint:
             raise RecoveryFingerprintError("snapshot recorder identity requires review")
         codec = SnapshotCheckpointCodec(fingerprint=actual, nodes=graph.workflow.nodes)
-        return {"checkpoint_saver": CommittedSnapshotSaver(codec=codec, commit=self.commit),
-                "checkpoint_thread_id": str(self.run.run_id)}
+        saver = CommittedSnapshotSaver(codec=codec, commit=self.commit)
+        if self.restore_checkpoint is not None:
+            saver.restore(self.restore_checkpoint, expected_thread_id=str(self.run.run_id))
+        return {"checkpoint_saver": saver, "checkpoint_thread_id": str(self.run.run_id),
+                **({"checkpoint_resume": True} if self.restore_checkpoint is not None else {})}

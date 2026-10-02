@@ -7,7 +7,10 @@ import pytest
 from tests import test_initialized_graph_fingerprint as bindings
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine
-from tradingagents.platform.analysis.checkpoint_saver import CommittedSnapshotSaver
+from tradingagents.platform.analysis.checkpoint_saver import (
+    CheckpointCommitError,
+    CommittedSnapshotSaver,
+)
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
 from tradingagents.platform.analysis.observer import (
     ResearchBudgetExceeded,
@@ -33,7 +36,8 @@ def recorder(args, graph, **updates):
 
 
 @pytest.mark.parametrize("field,value", [("owner_id", uuid4()), ("expected_fingerprint", "NEVER_ECHO"),
-    ("expected_fingerprint", None), ("commit", None)])
+    ("expected_fingerprint", None), ("commit", None), ("restore_checkpoint", "PRIVATE_RAW"),
+    ("restore_checkpoint", b""), ("restore_checkpoint", bytearray(b"PRIVATE_RAW"))])
 def test_invalid_setup_has_fixed_nonprivate_diagnostic(initialized, field, value):
     args, graph = initialized
     with pytest.raises(RecoveryFingerprintError) as raised:
@@ -108,6 +112,17 @@ def test_context_repr_does_not_echo_private_original_inputs(initialized):
     assert str(args["owner_id"]) not in repr(configured)
     assert str(args["run"].run_id) not in repr(configured)
     assert configured.expected_fingerprint not in repr(configured)
+
+
+def test_malformed_restore_rejected_before_graph_invocation(initialized):
+    args, graph = initialized
+    configured = recorder(args, graph, restore_checkpoint=b"PRIVATE_MALFORMED_JSON")
+    assert "PRIVATE" not in repr(configured)
+    with pytest.raises(CheckpointCommitError) as raised:
+        configured.prepare(request=args["request"], graph=graph, base_config=args["base_config"])
+    assert raised.value.__cause__ is None
+    assert "PRIVATE" not in str(raised.value)
+    assert args["request"].execution_observer.started_calls == 0
 
 
 @pytest.mark.parametrize("mutation", ["missing", "wall", "calls", "exhausted"])

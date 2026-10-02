@@ -119,6 +119,29 @@ def test_actual_recorder_runs_all_native_stages_and_reopens_private_bytes(tmp_pa
                 assert value.checkpoint["channel_values"].get("messages", []) == []
             assert store.load_latest(session=session, owner_id=owner, run_id=run.run_id) is not None
             assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
+            # Restore an intermediate immutable committed tuple through the
+            # actual recorder/engine hook, not an alternative graph importer.
+            candidates = [row.payload for row in rows if (
+                store.codec.decode(row.payload).checkpoint["channel_values"].get("market_report")
+                and not store.codec.decode(row.payload).checkpoint["channel_values"].get("news_report"))]
+            raw = candidates[-1]
+            original_rows = [(row.record_id, row.content_hash, row.payload) for row in rows]
+        restored_engine = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid})
+        restored_engine.snapshot_recorder = SnapshotRecorder(owner_id=owner, run=run,
+            expected_fingerprint=fingerprint, restore_checkpoint=raw,
+            commit=lambda data: store.commit(context=job_context, owner_id=owner, run_id=run.run_id, raw=data))
+        restored = restored_engine.analyze(request)
+        restored_result = restored.model_dump()
+        restored_result["final_state"].pop("messages", None)
+        assert restored_result == baseline_result
+        assert 0 < len(restored_engine.model_trace) < len(engine.model_trace)
+        assert restored_engine.model_trace == engine.model_trace[-len(restored_engine.model_trace):]
+        assert observer.started == started  # Never construct/reset the original observer.
+        assert all(llm.root_client.is_closed() and llm.root_async_client.is_closed()
+                   for llm in restored_engine.initialized_clients)
+        with database.session() as session:
+            after = session.scalars(select(ResearchCheckpointRow).order_by(ResearchCheckpointRow.sequence)).all()
+            assert [(row.record_id, row.content_hash, row.payload) for row in after[:len(rows)]] == original_rows
         assert list((tmp_path / "results").iterdir()) == []
     finally:
         if graph is not None:

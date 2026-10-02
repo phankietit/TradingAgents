@@ -519,6 +519,17 @@ not select it; no resume, consent/accounting route or paid replay is enabled.
 
 ## Required acceptance before enablement
 
+Original-context `SnapshotRecorder` optionally accepts restricted bytes; after
+actual initialized graph/client fingerprint and original observer allowance
+checks, it restores into a fresh committed saver. The paired graph hook uses
+`invoke(None)` with original config scope, callbacks and sync durability, not
+an inferred stage list. Default invocation remains unchanged. Native recorder
+fixtures reopen immutable intermediate rows, compare continuation traces and
+full non-message outputs, and check prior rows are unchanged. These are
+same-process synthetic tests, not trusted new-child transport, retained-budget
+admission, authenticated consent or live financial acceptance. No worker/API
+activation is introduced; caller authority remains a separate requirement.
+
 The committed saver has an internal `restore` mechanism for one restricted
 codec tuple in a fresh saver. It checks expected thread identity and codec
 fingerprint, seeds native checkpoint versions and grouped pending writes through
