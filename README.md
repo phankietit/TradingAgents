@@ -469,13 +469,21 @@ discloses those defaults and `cooperative_boundaries`: already-running requests
 can overrun the allowance. SDK timeout/retries are unchanged. The web form offers
 30 minutes (default) or 60 minutes, resets paid-call consent when changed, and
 binds the selection to each new snapshot run. Processing displays recorded
-limits without inventing them for legacy runs. Actual request-deadline
-enforcement and safe graph resume remain unfinished; accepting a larger
+limits without inventing them for legacy runs. The default web worker now runs
+snapshot research in a spawned process; the parent monitors the same allowance,
+cancellation and lease checks while SDK requests block, then terminates/joins
+the child before returning or publishing. SDK retry/backoff and slow response
+reads cannot leave a detached local call after that termination. Safe graph
+resume remains unfinished; accepting a larger
 allowance does not shorten or skip graph roles or cap provider charges.
 The model-call cap counts logical LangChain invocations, not SDK-internal
 retries. Receipts explicitly leave provider attempt counts unknown; returned
 usage is preserved even after the allowance expires. Concurrent model starts
-share atomic admission, but in-flight calls are not yet interrupted.
+share atomic admission. The CLI, legacy live-tool runs and explicitly injected
+engines retain their existing contracts. Reports record actual supervision mode;
+configuration disclosure describes the default worker, not proof that a running
+worker was upgraded. Stopping local processing does not stop or refund remote
+provider work. Process startup/cleanup and scheduler latency are not zero.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

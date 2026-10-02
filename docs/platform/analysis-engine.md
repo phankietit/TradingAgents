@@ -172,8 +172,7 @@ provider health probe or hard mid-request deadline. The web offers 30-minute
 default and 60-minute allowances with unchanged 128-call cap. Changing the
 selection resets paid-call consent and changes request identity; it does not
 automatically submit a run. Processing shows persisted limits or states that
-legacy limits were not recorded. Transport deadline enforcement remains
-unfinished, and the selected allowance is not a provider-cost cap.
+legacy limits were not recorded. The selected allowance is not a provider-cost cap.
 An in-flight synchronous call may exceed the wall-time budget before the next
 boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted
@@ -188,6 +187,28 @@ deadline primitive, not an implemented request interrupt. Usage receipts label
 this callback boundary. Returned usage after the wall allowance is still
 retained without authorizing another call or claiming a completed report.
 The 128-call cap must not be interpreted as a provider-request or dollar cap.
+
+Default `tradingagents-worker` snapshot jobs use `SupervisedAnalysisEngine`:
+spawn (not fork) isolates the graph and SDK from the parent's database/lease
+thread. Parent-side observer callbacks acknowledge model starts, returned usage
+and allowlisted stage text; only the parent can persist notes or final outputs.
+While the child blocks, the parent polls cancellation/lease/time allowance at
+up to 0.2-second intervals. On failure, expiry or cancellation, it terminates,
+joins and if needed kills the child before leaving the handler. Returned queued
+notes/usage are retained before the budget boundary; cancellation still wins.
+The child has a parent-liveness guard, but crash/orphan acceptance is separate
+from ordinary deadline/cancellation tests. Provider-side work/billing may
+continue after a local stop. Startup counts against the original allowance;
+scheduling, parent DB checks and cleanup prevent a millisecond-precise SLA.
+
+The existing graph, SDK options, prompts and all selected research/debate/risk/
+validation/presentation stages are unchanged. Raw graph messages/reasoning do
+not cross the result bridge. Reports record `supervision_mode=spawned_process`
+for this path; ordinary injected/CLI observers remain `cooperative_boundaries`.
+The private config API discloses `default_worker_supervision=spawned_process`
+with worker liveness still UNVERIFIED. Legacy live-tool jobs are not silently
+converted. This is process supervision, not graph checkpoint resume or proof
+that live finance/translation quality is acceptable.
 
 Preparation failures may retry before entering the engine. Uncertain execution
 or expired leases with execution evidence require review rather than blind graph

@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from tradingagents.contracts import JobKind
 from tradingagents.default_config import DEFAULT_CONFIG
-from tradingagents.platform.analysis import AnalysisEngine
+from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
 from tradingagents.platform.artifacts import LocalArtifactStore
 from tradingagents.platform.observability import configure_platform_logging
 from tradingagents.platform.persistence import Database
@@ -46,7 +46,7 @@ def run_worker(settings, *, once=False, stopped=None, poll_seconds=1.0, worker_i
         store = LocalArtifactStore(settings.artifact_root)
         config = {**DEFAULT_CONFIG, "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
                   "results_dir": str(store.root / "worker-runtime" / "reports")}
-        handler = AnalysisJobHandler(database, store, engine=engine or AnalysisEngine(base_config=config),
+        handler = AnalysisJobHandler(database, store, engine=engine or SupervisedAnalysisEngine(base_config=config),
                                      prompt_version=settings.prompt_version)
         worker = JobWorker(database, worker_id=worker_id or f"worker-{uuid4()}",
                            handlers={JobKind.ANALYSIS_RUN: handler})

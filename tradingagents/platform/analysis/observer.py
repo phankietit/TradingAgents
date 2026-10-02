@@ -47,6 +47,7 @@ class ResearchObserver(BaseCallbackHandler):
         self.max_seconds = max_seconds
         self.max_calls = max_calls
         self.started_calls = 0
+        self.supervision_mode = "cooperative_boundaries"
 
     def _check(self):
         self.remaining_seconds()
@@ -123,6 +124,7 @@ class ResearchObserver(BaseCallbackHandler):
 
     def receipt(self):
         return {"completed_stages": list(self.completed),
+                "supervision_mode": self.supervision_mode,
                 "execution_limits": {"wall_seconds": self.max_seconds, "model_calls": self.max_calls}, "usage": {
             **self.usage,
             "started_model_calls": self.started_calls,

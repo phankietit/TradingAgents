@@ -64,6 +64,7 @@ class AnalysisConfigurationResponse(ApiModel):
     max_job_attempts: int
     execution_limits: ResearchExecutionLimits = Field(default_factory=ResearchExecutionLimits)
     deadline_mode: Literal["cooperative_boundaries"] = "cooperative_boundaries"
+    default_worker_supervision: Literal["spawned_process"] = "spawned_process"
 
 
 class RunJobStateResponse(ApiModel):
