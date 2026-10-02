@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Actual recorder native acceptance 2026-10-03:** source
+`c78908326a85bdeb642d4c0ad63afffdd92dc940` kiểm chứng AnalysisEngine/recorder/
+native graph thật, SDK khởi tạo thật nhưng response giả và network bị chặn.
+Bốn analyst, hai vòng debate/risk, EN/VI/bilingual/invalid VI khớp baseline về
+prompt/call/stage trace và mọi result field ngoài messages. SQLite reopened
+bytes bind owner/run/fingerprint, sequence liên tục, không raw reasoning hay
+message values; bản run fixture cũ giữ nguyên. Đóng đúng hai SDK sync/async
+instance và assert closed. 14 focused PASS, 21,36 s; full Python **2.171 + 88
+subtests PASS**, 20 skips, 100 warnings, 264,81 s tại source sạch; Ruff/diff/
+templates PASS. Gate trước tại 21a5ad1 cũng PASS nhưng không dùng thay proof
+cleanup tại source mới. Test failures về fixture immutable run/messages metadata/
+owner argument đã sửa đúng contract, không nới codec. Đây là same-process
+synthetic native proof; SDK callback usage incomplete, không live financial/MT
+hay supervised recovery acceptance. Default worker chưa bật recorder/resume;
+tiếp theo trusted context/observer qua spawn, accounting/consent, new-child
+restore; ingestion/UX/live vẫn mở, NQ=F giữ BLOCKED. Không AI/vendor/CI/deploy,
+restart hay migrate DB riêng tư; goal và Draft PR #7 vẫn mở.
+
 **Original-engine recorder wiring 2026-10-03:** source
 `cb4e7061813c395d50e01fa61f6badb8418b016e` nối SnapshotRecorder nội bộ vào
 AnalysisEngine thật: original context/expected fingerprint, observer và allowance

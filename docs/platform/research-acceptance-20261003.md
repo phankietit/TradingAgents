@@ -290,3 +290,33 @@ An internal recorder is not permission to replay a stopped job. Retain
 execution_started and original allowance/accounting when wiring spawn and owner
 continuation. Full R01–R14 remains open, including asset ingestion and operational
 UX/financial acceptance; Draft PR stays draft.
+
+## Actual recorder native-flow equivalence follow-up
+
+Final source `c78908326a85bdeb642d4c0ad63afffdd92dc940`, same branch/worktree,
+clean source throughout full gate. Test/helper and documentation changes only;
+no production runtime/prompt/provider/risk change, private DB migration,
+restart, AI/vendor call, CI or deployment. SDK construction uses synthetic key,
+HTTP sync/async send is forbidden, only model-response methods are synthetic.
+Actual AnalysisEngine, recorder prepare, propagate_snapshots and native invoke
+are not replaced by a wiring spy.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Full native recorder / baseline equivalence | PASS | Four cases: EN/VI/bilingual/invalid VI, four analysts and two debate/risk rounds; full actual model-prompt/call trace, stage sequence and every non-message AnalysisResult field match unrecorded synthetic baseline. Invalid VI still has no decision payload |
+| Original observer and private persistence | PASS | Original recorder start preserved. Real lease-fenced SQLite commits reopened in new session, contiguous sequences >17, owner/run/fingerprint binding; strict codec revalidates all rows, empty/absent message values and no synthetic credential/private reasoning marker. Original fixture run remains unchanged |
+| Exact SDK cleanup | PASS | Fixture creates two actual SDK instances used by graph, closes both sync/async clients and asserts closed after execution; no second get_llm allocation discarded from tracking |
+| Initial fixture checks | FAIL | Import order corrected. Updating saved run inputs hit immutable gate: fixture creates a new run, not weakening immutability. Assertion banning messages channel-version metadata was wrong: now checks actual values/strict decode/private marker, preserving native metadata. Original-row check initially omitted required owner argument, corrected |
+| Final focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_native_analysis_recording.py tests/test_analysis_recording.py tests/test_supervised_native_graph.py -k 'actual_recorder or original_engine or all_fourteen' --disable-warnings -x`: 14 passed, 351 deselected, 28 warnings, 21.36 s |
+| Previous full gate | PASS | Clean `21a5ad1d67cba82faf6e85e911a6b8eaa719a87c`: 2,171 passed + 88 subtests, 20 skipped, 100 warnings, 312.28 s. Subsequently found fixture get_llm creates a new object on each call; corrected exact-instance tracking and reran. Earlier gate is not final cleanup evidence |
+| Final full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,171 passed + 88 subtests, 20 skipped, 100 warnings, 264.81 s; Python 3.14.7/macOS, clean c789083 |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Usage/admission/billing / live finance/MT | UNVERIFIED | Synthetic methods bypass SDK callback accounting; observer usage explicitly incomplete. No live provider, source-coverage/semantic entailment/editorial proof or additional paid report; previous live failures remain |
+| Supervised worker continuation | UNVERIFIED | Same-process recorder/native proof only. Trusted context/observer transfer through spawn, complete client/transport attestation, new-child restoration, retained original elapsed/calls/usage and explicit consent/API/UI still required; default worker does not enable recorder/resume |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, optional Bedrock dependency and live DeepSeek-key skips |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+Do not promote native synthetic equivalence to financial acceptance or permission
+to replay a paid job. execution_started, original allowance, immutable history
+and human approval remain mandatory. Full R01–R14, outstanding ingestion and
+operational UX/live gates remain open; PR remains draft.
