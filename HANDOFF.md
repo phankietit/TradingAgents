@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Restricted checkpoint JSON 2026-10-02:** source
+`25cb1d42f0b9372e475601c1cc39a7d9e373208b` thêm codec JSON native-v4, chưa nối
+vào worker/CLI/API. Loại messages ở state/start/pending writes; giữ versions,
+routing, task identity và schema-valid narrative/draft, chặn trường lạ, object
+deserialization, payload quá lớn, authority/memory khác snapshot, writes trùng
+và seen-version không có channel. 244 focused tests PASS; native 17 boundaries
+× EN/VI/bilingual/invalid VI × current/JSON/pending-JSON khớp prompt/call/stage
+trace và kết quả ngoài messages. Full Python **1.880 + 88 subtests PASS**,
+20 skips, 128,73 s; Ruff/diff/templates PASS. Không chạy vendor/AI hay restart.
+Production graph/supervisor vẫn giữ behavior cũ; đây không phải web resume.
+Tiếp theo build fingerprint từ nguồn/config/runtime thật (không dùng riêng
+API config_hash), rồi parent-fenced durable saver/commit-ack và explicit owner
+continuation. Receipt và recovery contract giữ các gate chưa đạt; goal/PR mở.
+
 **Recovery characterization 2026-10-02:** source
 `60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a` thêm fixture native interruption tại
 17 ranh giới, bốn analyst và hai vòng debate/risk, giữ bilingual presentation.

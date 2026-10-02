@@ -37,6 +37,16 @@ one channel per put_writes call can reuse write indices and lose completed
 outputs. Original debate nodes may omit judge_decision until the manager runs;
 the codec preserves that absence without inventing a default or changing nodes.
 
+Next integration must not reuse API `_config_hash` as the complete research
+fingerprint: it presently binds declared models/roles/prompt/language/allowance,
+not verified source contents, backend options or actual graph configuration.
+Keep its existing history/idempotency semantics unchanged. Construct the new
+fingerprint separately from validated run/request/source/portfolio/policy data
+and effective runtime identity/options; never persist or log credentials.
+Native LangGraph durability defaults to async; the future parent commit/ack
+contract must explicitly verify synchronous persistence before node advance,
+including pending writes, rather than assume checkpoint callbacks are synchronous.
+
 ## Verified prerequisite
 
 Source `60ef7e2c4b2ec04d51d9b564dcfeda5f9432d44a` characterizes the native graph

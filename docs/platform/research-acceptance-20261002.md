@@ -337,3 +337,43 @@ parent-fenced durable commit/ack, explicit owner continuation and accounting.
 Do not use this PASS to bypass the execution_started fence, enable blind replay,
 raise an old allowance or reconstruct checkpoints from historical reader notes.
 The full R01–R14 goal and Draft PR #7 remain open.
+
+## R08 restricted native checkpoint JSON prerequisite
+
+Final source `25cb1d42f0b9372e475601c1cc39a7d9e373208b`, same branch; initial
+codec source `3c5ddee84e390284695c46070cc9445a5f09ad45`. New internal component,
+not an enabled worker/API/CLI recovery path. No provider, prompt, SDK, graph,
+supervision, portfolio policy, human approval or frontend change.
+
+| Gate | Result | Evidence |
+| --- | --- | --- |
+| Restricted JSON envelope | PASS | Native-v4 state/start/pending messages removed before encode and rejected on decode; no pickle or arbitrary typed-object hook. Original channel versions/versions_seen/routing/task identity retained. Strict reviewed state/schema/metadata and fixed safe diagnostics |
+| Native fresh-saver restoration | PASS | 17 boundaries × four language/validity cases × three modes (in-memory message removal, JSON latest, JSON preceding checkpoint with completed pending writes) = 204 cases; all four synthetic source roles, two debate/risk rounds. Full actual prompt/call/stage trace and all non-message results equal uninterrupted execution; no repeated model call |
+| Invalid translation | PASS | Added VI percentage still fails after exactly one repair, with report_translation_unavailable and no valid decision payload in restored and uninterrupted runs; not rescued by the codec |
+| Hostile/invalid bytes | PASS | Unknown fields/control nodes/metadata, memory/authority mismatch, typed objects, malformed/nonfinite/duplicate/recursive/oversized JSON, message smuggling, duplicate task/channel writes and unversioned seen channels reject without content echo or truncation |
+| Focused suite | PASS | `.venv/bin/python -m pytest -q tests/test_snapshot_checkpoint_codec.py tests/test_supervised_native_graph.py --disable-warnings -x`: 244 tests, 28.83 s (204 native restoration, four existing spawn cases, 36 codec cases) |
+| Final-source full Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 1,880 tests + 88 subtests, 20 skips, 22 warnings, 128.73 s; clean source 25cb1d4, Python 3.14.7/macOS |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby issue-template YAML load |
+| Web refresh / deployment | NOT_IN_SCOPE | No frontend/API/worker activation, no runtime restart or deployment |
+| PostgreSQL/optional providers | UNVERIFIED | Same 18 PostgreSQL, missing Bedrock dependency and live DeepSeek key skips |
+| Durable private resume / crash | UNVERIFIED | JSON restored to a new saver in the same fixture process. Full fingerprint construction, owner authorization, durable parent lease-fenced commit/ack, accounting/consent API and separate-process checkpoint restoration remain open |
+| Live financial/translation acceptance | UNVERIFIED | Synthetic models and cloned source manifests only; no live vendor/paid call. Earlier manual report failures remain unresolved |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+The first codec fixture incorrectly required judge_decision at every debate
+step; original nodes omit it until the manager. Reviewed optional absence is
+now preserved exactly, with no invented field or node/schema weakening.
+Fresh pending-write installation groups channels by task to preserve native
+write indices. JSON bytes from every source checkpoint version are inspected,
+not only the latest state. The fixture's pre-export saver remains in memory;
+this is not evidence of safe production storage, source coverage or investment
+correctness. The supplied 64-hex fingerprint binds the envelope only; equality
+does not prove its inputs or grant recovery authorization.
+
+An earlier 1,878-test regression was collected before two hardening cases and
+source changed while it ran, so it is not the final exact-SHA gate. The clean
+25cb1d4 full run above supersedes it. Limits (16 MiB envelope, one million text
+characters) reject rather than truncate; no old private history is modified.
+README, recovery contract and HANDOFF distinguish the internal codec from web
+resume. Full R01–R14 acceptance and Draft PR #7 remain open; next build verified
+fingerprint and private parent commit/ack without bypassing no-blind-replay.

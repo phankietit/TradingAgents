@@ -461,7 +461,8 @@ formats or oversized input without truncation. Local synthetic tests restore
 into a fresh saver, including completed pending writes, without repeating model
 calls. Full fingerprint construction, owner/lease-fenced durable storage and
 explicit continuation consent remain unfinished; a caller-supplied digest alone
-is not recovery authorization. See the recovery implementation contract.
+is not recovery authorization. See the
+[recovery implementation contract](docs/platform/research-recovery-contract.md).
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
