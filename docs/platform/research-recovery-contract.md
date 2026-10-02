@@ -26,9 +26,19 @@ spawn; database and commit authority stay in the parent. Internal context is
 not authenticated DB loading, full transport attestation or owner permission.
 
 Local context and child-construction unit tests do not establish actual-engine
-native-spawn acceptance. That gate, new-child restore, retained accounting,
-explicit consent/API/UI, and live financial/editorial acceptance remain
-UNVERIFIED. No production recorder/resume is enabled by this integration.
+native-spawn acceptance. The subsequent `test_native_recorder_spawn.py` fixture
+now runs the exact production child, AnalysisEngine, SnapshotRecorder and native
+graph inside a real spawned process. A test bootstrap installs synthetic SDK
+responses/network refusal; it does not replace engine/graph/propagate/graph.invoke or
+fingerprint/allowance guards. Four roles and two debate/risk rounds in EN, VI,
+bilingual and invalid VI match baseline prompt/model/stage traces and published
+result fields. Parent-only commits reopen restricted bytes in disposable SQLite,
+with child reaping and actual SDK cleanup checked. Synthetic callbacks do not
+prove provider usage/admission accounting, live finance or transport attestation.
+
+New-child restore, retained accounting, explicit consent/API/UI and live
+financial/editorial acceptance remain UNVERIFIED. Default worker recorder/
+resume remains disabled; this fixture grants no paid retry or owner consent.
 
 ## Implemented codec prerequisite
 

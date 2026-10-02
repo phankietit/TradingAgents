@@ -43,7 +43,7 @@ class NativeFixtureEngine:
         self.snapshot_recorder = None
         self.initialized_clients = []
 
-    def analyze(self, request):
+    def analyze(self, request, *, fixture_execution=None):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
         options = []
         repairs = []
@@ -211,7 +211,8 @@ class NativeFixtureEngine:
             if interrupted_node:
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
                     "propagate_snapshots", resume_without_messages))
-            elif getattr(request.execution_observer, "checkpoint_options", None) is not None:
+            elif (self.snapshot_recorder is None
+                    and getattr(request.execution_observer, "checkpoint_options", None) is not None):
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
                     "propagate_snapshots", committed_without_resume))
             patches.enter_context(patch.object(trading_graph, "create_llm_client", client))
@@ -222,7 +223,8 @@ class NativeFixtureEngine:
             config = ({key: value for key, value in self.config.items() if not key.startswith("_fixture_")}
                       if self.snapshot_recorder is not None else self.config)
             try:
-                result = AnalysisEngine(base_config=config, snapshot_recorder=self.snapshot_recorder).analyze(request)
+                result = (fixture_execution(config) if fixture_execution is not None else
+                          AnalysisEngine(base_config=config, snapshot_recorder=self.snapshot_recorder).analyze(request))
             finally:
                 for llm in actual_clients:
                     llm.root_client.close()
