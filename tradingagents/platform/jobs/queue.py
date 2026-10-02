@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from tradingagents._compat import UTC
 from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType
-from tradingagents.platform.persistence.models import JobRow, RunEventRow
+from tradingagents.platform.persistence.models import ArtifactRow, DecisionRow, JobRow, RunEventRow
 
 
 class JobConflict(ValueError):
@@ -348,6 +348,11 @@ class DurableJobQueue:
 
     def _research_execution_entered(self, row: JobRow) -> bool:
         """Called while the job row is locked; uncertainty is not free replay."""
+        # The real analysis handler returns this committed pair before entering
+        # the engine, or fails closed on integrity/context/partial-output errors.
+        # Preserve that storage-only finalization retry; it cannot call a model.
+        if row.kind == JobKind.ANALYSIS_RUN.value and self._has_published_analysis(row):
+            return False
         return row.kind == JobKind.ANALYSIS_RUN.value and self.session.scalar(
             select(RunEventRow.event_id).where(
                 RunEventRow.owner_id == row.owner_id,
@@ -359,6 +364,16 @@ class DurableJobQueue:
                 ]),
             ).limit(1)
         ) is not None
+
+    def _has_published_analysis(self, row: JobRow) -> bool:
+        report = self.session.scalar(select(ArtifactRow.artifact_id).where(
+            ArtifactRow.artifact_id == uuid5(row.run_id, "analysis-report-v1"),
+            ArtifactRow.owner_id == row.owner_id, ArtifactRow.run_id == row.run_id,
+            ArtifactRow.kind == "analysis_report"))
+        decision = self.session.scalar(select(DecisionRow.decision_id).where(
+            DecisionRow.decision_id == uuid5(row.run_id, "decision-v1"),
+            DecisionRow.owner_id == row.owner_id, DecisionRow.run_id == row.run_id))
+        return report is not None and decision is not None
 
     def _leased_row(self, job_id: UUID, worker_id: str, now: datetime) -> JobRow:
         row = self.session.scalar(select(JobRow).where(JobRow.job_id == job_id).with_for_update())

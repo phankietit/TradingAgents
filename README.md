@@ -458,7 +458,10 @@ The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
 expired leases with execution evidence require review, even if attempts remain.
 Provider charges may be unknown. Pre-engine preparation retries and bounded
-SDK/schema repairs are separate and unchanged. This is not automatic resume:
+SDK/schema repairs are separate and unchanged. Storage-only finalization of an
+already committed report/decision pair may retry without a model call; missing,
+partial or corrupt saved outputs fail closed instead of re-entering the engine.
+This is not automatic resume:
 request timeout/run allowance and safe checkpoint recovery remain unfinished.
 
 Install with `pip install ".[platform]"`. After applying the documented

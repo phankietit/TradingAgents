@@ -3,6 +3,8 @@
 import json
 from uuid import uuid5
 
+from sqlalchemy import select
+
 from tradingagents._compat import UTC
 from tradingagents.contracts import ArtifactKind, RunEventType
 from tradingagents.platform.analysis import (
@@ -21,6 +23,7 @@ from tradingagents.platform.analysis.stage_records import ResearchStageService
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.persistence import PlatformRepository
+from tradingagents.platform.persistence.models import RunEventRow
 
 from .decision_pipeline import build_run_decision, load_run_portfolio
 
@@ -134,6 +137,14 @@ class AnalysisJobHandler:
                 return (report_id,)
             if existing is not None or candidate is not None:
                 raise ValueError("incomplete analysis output transaction")
+            if session.scalar(select(RunEventRow.event_id).where(
+                RunEventRow.owner_id == run.owner_id, RunEventRow.run_id == run.run_id,
+                RunEventRow.event_type.in_([RunEventType.RESEARCH_EXECUTION_STARTED.value,
+                    RunEventType.STAGE_STARTED.value, RunEventType.MODEL_USAGE.value]),
+            ).limit(1)) is not None:
+                # Even if previously committed output metadata disappears
+                # after a finalization retry was queued, never re-enter models.
+                raise ResearchExecutionFailed("prior research execution requires review")
             instrument = repository.get_instrument(run.instrument_id)
             if instrument is None:
                 raise ValueError("run instrument unavailable")

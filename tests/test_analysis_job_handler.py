@@ -109,6 +109,24 @@ def test_completion_retry_reuses_committed_result_without_second_model_call(tmp_
     database.dispose()
 
 
+def test_finalization_retry_cannot_reenter_engine_if_saved_output_pair_becomes_unavailable(tmp_path, monkeypatch):
+    database, _, _, _, calls, worker, _ = setup_handler(tmp_path)
+
+    def completion_unavailable(*args, **kwargs):
+        raise RuntimeError("synthetic completion unavailable")
+
+    monkeypatch.setattr(DurableJobQueue, "complete", completion_unavailable)
+    assert worker.run_once().status is JobStatus.RETRY_WAIT
+    # Simulate an unavailable store without deleting any persisted evidence.
+    monkeypatch.setattr(ArtifactService, "read", lambda *args, **kwargs: None)
+    monkeypatch.setattr(PlatformRepository, "get_decision", lambda *args, **kwargs: None)
+    failed = worker.run_once()
+    assert failed.status is JobStatus.FAILED
+    assert failed.error_code == "RESEARCH_EXECUTION_FAILED"
+    assert len(calls) == 1
+    database.dispose()
+
+
 def test_cancellation_during_graph_does_not_publish_output(tmp_path):
     captured = {}
 
