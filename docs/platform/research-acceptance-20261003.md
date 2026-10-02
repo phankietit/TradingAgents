@@ -375,3 +375,31 @@ owner continuation permission. It preserves the original parent allowance,
 execution_started, immutable private history and human approval. Next: actual
 native-spawn recorder acceptance, trusted-client and accounting/consent gates,
 new-child restoration; remaining R01–R14 ingestion/UX/live work is still required.
+
+## Actual original recorder native spawn follow-up
+
+Source `5195f554fc512cabff1752d9dffea07578c7a527`, same branch/worktree,
+clean source throughout full regression; Python 3.14.7, Darwin 25.5.0. Tests and
+contract documentation only; no production activation, new dependency, paid
+model/vendor call, private DB migration, runtime restart, CI, provider/risk
+change, historical rewrite, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Exact engine/recorder/native process | PASS | Real spawn child PID differs from parent. Test bootstrap installs synthetic responses on reviewed real initialized SDKs, then calls exact production child with exact AnalysisEngine. No replacement of engine/graph/propagate/graph.invoke, identity/allowance or saver/store guards |
+| Graph/presentation equivalence | PASS | Four analyst roles and two debate/risk rounds in EN/VI/bilingual/invalid VI; full prompt/model/stage trace matches uninterrupted fixture. All result fields compared after applying existing supervisor publication allowlist and debate-history projection; internal graph state is not claimed as published output |
+| Invalid translation | PASS | Invalid VI remains report_translation_unavailable with no decision_payload; no fallback decision invented |
+| Parent private persistence | PASS | Callback PIDs all parent; reopened disposable SQLite owner/run/fingerprint match, contiguous sequences and strict codec bytes. Messages empty/absent and synthetic credential/private reasoning markers absent. Original fixture run unchanged, no legacy report writes |
+| Original allowance/cleanup | PASS | Original observer start and 1800/128 limits unchanged; actual two child SDK sync/async clients closed, exited child PID no longer exists after supervisor reaping |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_native_recorder_spawn.py tests/test_native_analysis_recording.py tests/test_analysis_recording.py tests/test_supervised_native_graph.py -k 'exact_engine or actual_recorder or original_engine or all_fourteen' --disable-warnings -x`: 18 passed, 355 deselected, 40 warnings, 29.60 s |
+| Initial focused comparison | FAIL | Baseline included internal graph state excluded by supervisor; corrected comparison to existing RESULT_FIELDS and debate projection. Production projection/guards unchanged; initial import-only Ruff issue fixed. Subsequent 25-pass focused run preceded final reap/parent-PID assertions and is not final-source proof |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,223 passed + 88 subtests, 20 skipped, 120 warnings, 223.00 s, clean exact source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| SDK callback accounting / recovery authority | UNVERIFIED | Synthetic methods bypass actual provider callbacks; usage explicitly incomplete. Retained elapsed/call/usage accounting, full transport attestation, owner consent/API/UI and restoration in a new child remain required before enablement |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No new live report or semantic financial/editorial acceptance; 18 PostgreSQL, optional Bedrock and live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll-source hold unchanged |
+
+This closes the synthetic actual-engine/native-spawn recording acceptance,
+not live billing, financial quality, consent or production recovery. Default
+worker recorder/resume remains disabled. Full R01–R14 ingestion, operational
+UX and live requirements remain intact; goal and Draft PR #7 stay open.

@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Actual recorder native spawn 2026-10-03:** source
+`5195f554fc512cabff1752d9dffea07578c7a527` kiểm chứng exact production child,
+AnalysisEngine, SnapshotRecorder và native graph trong process spawn thật.
+Test bootstrap chỉ cài phản hồi SDK giả/network refusal; không thay engine/
+graph/propagate/graph.invoke hay fingerprint/allowance guard. Bốn analyst,
+hai rounds, EN/VI/bilingual/invalid VI khớp baseline prompt/model/stage trace
+và published result fields. Parent-only commit vào SQLite reopen, không raw
+reasoning/messages; hai SDK child đóng, PID child được reap, allowance/start
+giữ nguyên. 18 focused PASS, 29,60 s; full **2.223 + 88 subtests PASS**, 20
+skips, 120 warnings, 223,00 s tại source sạch; Ruff/diff/templates PASS.
+Initial comparison FAIL do baseline còn internal state không được supervisor
+publish; sửa so sánh theo RESULT_FIELDS hiện có, không nới production contract.
+Synthetic SDK methods bypass accounting, usage vẫn incomplete, không là live
+finance/MT proof. Default worker recorder/resume chưa bật; next accounting/
+trusted client/consent và new-child restore, ingestion/UX/live vẫn thuộc goal.
+Không AI/vendor/CI/deploy/restart/migrate DB riêng tư; NQ=F BLOCKED theo owner.
+Goal và Draft PR #7 vẫn mở.
+
 **Original context → supervised recorder 2026-10-03:** source
 `7172e3c79b309772b994cd71125eb3673dbd04eb` thêm internal JSON context gốc,
 revalidate ở parent/child và nối exact AnalysisEngine → SnapshotRecorder với
