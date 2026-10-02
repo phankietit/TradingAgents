@@ -784,3 +784,44 @@ transaction, not nested connections contending on an outer last_seen/session
 write lock; cookie/header consistency, Origin and CSRF checks remain mandatory.
 No paid continuation is authorized by these tests. Full R01–R14 goal and Draft
 PR #7 remain open; CI remains disabled_manually as verified via GitHub this turn.
+
+## Separate linked allocation / lease consumption prerequisite
+
+Source `dbde6ff46ddb5ad99b2e43b229c5460b444ac000`, same feature branch and
+authoritative worktree. Clean source throughout the full gate; Python 3.14.7/
+Darwin 25.5.0. This remains a private-platform draft, not release approval.
+No default worker/API/CLI activation, paid AI/market-data call, private database
+migration/restart/history rewrite, provider/risk change, CI, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Authenticated allocation | PASS | Current owner/session/CSRF and immutable original consent/source/accounting/checkpoint are rechecked before one independent allocation. Same execution UUID is primary/foreign key; unique source-run/attempt prevents duplicate next-attempt identity. Original JobRow unique run ID and historical rows unchanged |
+| Separate private lease | PASS | One trusted worker claims reserved allocation after full observation reload. Token hash only persisted; actual UUID returned after commit, excluded from repr. Durable reopen/renewal and same/different-worker races tested. A lease is not model/publication permission |
+| Fixed remaining deadline | PASS | Claim-time deadline uses unchanged original wall cap minus known prior elapsed upper bound; renewals cannot extend it. Strict integer window, current owner, worker/token/source identity, clock rollback, fixed stored deadline and reset/foreign/bool/float handle cases reject. Matching corrupted deadline in both DB and handle also rejects |
+| Cancellation / uncertain expiry | PASS | Unclaimed cancellation is cancelled; leased cancellation remains cancel_requested and rejects renewal. Expired/lost-ACK committed claim is review_required and cannot auto-reclaim/requeue. Disabled owner cannot renew; trusted expired-lease maintenance can retain review state without claiming child termination or zero cost |
+| Commit / busy-writer boundaries | PASS | Pre-commit allocation/claim failure rolls back and produces no ACK. Deliberate post-commit claim ACK loss retains exactly one leased row, refuses another claim and later marks review. Real SQLite busy writer refuses under .05-second local bound; no raw DB/private marker in errors |
+| Original history / accounting | PASS | Run/job/event/checkpoint columns unchanged across lifecycle tests. No actual new RESEARCH_EXECUTION_STARTED or MODEL_USAGE event emitted: accounting still observes original attempt only. This is not evidence of linked model usage or permission to omit a real leased execution from future accounting |
+| Initial static gate | FAIL | Ruff reported two import-order issues; mechanically fixed before source commit. No pytest behavioral failure or validator weakening |
+| Initial/intermediate focused | PASS | 78 passed, 8 missing-URL PostgreSQL skips, 19.54 s before extra fault cases; then 89 passed, 8 skips, 20.73 s before final deadline-corruption/clock cases |
+| Final focused | PASS | Handle 97463: tests/test_linked_execution.py, test_continuation_consent.py, test_owner_auth.py, test_private_checkpoint_store.py and test_platform_persistence.py: 111 passed, 9 missing-URL PostgreSQL skips, 25.21 s. This gate alone did not establish PostgreSQL |
+| Actual PostgreSQL linked mechanics | PASS | Three new disposable PostgreSQL cases in final full suite: original-history-preserving claim/reopen/renewal, two authenticated simultaneous allocations and two competing worker claims. Cancellation/expiry/fault variants were SQLite evidence, not all PostgreSQL race/crash coverage |
+| Full Python / PostgreSQL | PASS | Exact clean source, handle 35237, TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh: 2,450 passed +88 subtests, 2 skipped, 192 warnings, 291.69 s; terminal exit 0. Ruff/pip check/diff PASS; helper verified ownership and removed only its disposable loopback PostgreSQL container, none remaining afterward |
+| Final-source clean install | PASS | Exact tracked git archive into new externally managed source export, fresh isolated noneditable .[platform] install (handle 65472, terminal exit 0), pip check, imports of package/CLI/API/jobs/new linked service and packaged 0013 module from site-packages outside source CWD. Packaged offline PostgreSQL DDL unique/check constraints and fresh owned SQLite table/head 0013 checks passed (handle 58106, terminal exit 0) |
+| Runtime observations | PASS | Project environment after full gate: langgraph 1.2.12, langchain-core 1.6.5, langchain-openai 1.6.6, pydantic 2.13.5, SQLAlchemy 2.1.1, Alembic 1.20.0. Fresh install: tradingagents 0.5.0, langgraph 1.2.12, langchain-core 1.6.6, langchain-openai 1.6.7, pydantic 2.13.5, SQLAlchemy 2.1.3, Alembic 1.20.0; Python 3.14.7. Observations are not a dependency lock or full matrix guarantee |
+| Install evidence retention | PASS | /Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261002T233539Z-76938 ownership marker verified; run finished completed/exit 0, artifacts retained. No private env/database/reports exported; PyPI dependency installation is not an AI or market-data vendor call |
+| Fresh dependency full suite / optional providers | UNVERIFIED | Full regression was project-environment evidence, not the fresh resolved dependency suite or other Python versions. Missing langchain_aws and explicitly unset live DeepSeek key remain two skips |
+| Dedicated secret / vulnerability tooling | UNVERIFIED | command -v gitleaks and command -v detect-secrets both unavailable; repository scripts contain local/PG verification only. Changed-file inspection and authentication/redaction tests are not comprehensive secret or vulnerability scanning. No dependency manifest, production provider, endpoint or credential was changed |
+| Actual graph / linked output integration | UNVERIFIED | No new execution event/observer/model admission, linked publication context, checkpoint execution provenance, closed-original-context reader, linked report/decision finalization or default worker consumed the lease. No successful state or supervised stop ACK invented; sequential multi-continuation accounting/consent is not implemented by relabeling the root job |
+| Browser / financial / remaining scope | UNVERIFIED | No frontend edit or new browser consent journey tested. Broad stop/crash/transport, asset-appropriate sources, financial evidence semantics, VI editorial quality and fresh live BTC/AAPL acceptance remain open; older manual live failures unchanged |
+| NQ=F | BLOCKED | Owner-selected active-contract/roll source hold unchanged; no provider or asset substituted |
+
+The internal lease does not change persisted consent dispatch_enabled=false and
+is not a default queue job or a bearer permission. Root job/run/history remain
+immutable. Future model entry must bind the lease's deadline and token fence,
+reload immutable original context without clearing terminal errors, preserve
+native thread/fingerprint, record new linked attempt start/usage/known-stop
+evidence and fence synchronous parent-only checkpoint/result commits. Do not
+claim stopped/expired leases were free or settled merely because this prototype
+has not emitted model accounting. Unknown termination must remain review.
+Actual new-child native graph equivalence and all boundary tests must precede
+API/UI or paid activation. Full R01–R14 goal and Draft PR #7 stay open.

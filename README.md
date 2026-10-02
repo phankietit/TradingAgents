@@ -661,8 +661,8 @@ Migration `0012_research_continuations` is additive and has only been applied
 to disposable tests. No old run/job/error/checkpoint is changed, no token/email
 is copied into the consent record and no model is invoked. This is NOT an API
 resume endpoint, queued execution, final source/client attestation or financial
-approval. The separate linked worker/dispatch/consumption and browser journey
-still need implementation and verification; an execution ID is not a bearer
+approval. Model-entry consumption, the separate linked worker/dispatch and
+browser journey still need implementation and verification; an execution ID is not a bearer
 permission or a fresh budget. Do not apply migrations to private history
 without the documented backup/owner rollout procedure.
 

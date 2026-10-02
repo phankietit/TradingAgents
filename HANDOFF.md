@@ -2,6 +2,33 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Separate linked execution lease prerequisite 2026-10-03:** source
+`dbde6ff46ddb5ad99b2e43b229c5460b444ac000`. Internal allocation consume consent
+UUID vào riêng `0013_research_executions`, không tạo lại RunRow/JobRow hoặc bỏ
+unique original run. Auth owner/session/CSRF và original observation được reload
+transactionally trước allocation/claim. Hai requests chỉ có một allocation và
+một worker claim; private nonce chỉ lưu hash, ACK sau commit. Renew không reset
+claim-time deadline đã trừ prior elapsed; corrupted DB/handle cùng sửa deadline
+vẫn bị từ chối. Cancel reserved → cancelled; cancel leased → cancel_requested,
+không giả child đã dừng. Expired/lost-ACK leased → review_required, không requeue
+hay refund. Original run/job/event/checkpoint không đổi; không emitted actual
+execution_started/usage, model call, checkpoint/report/decision mới.
+111 focused PASS, 9 PostgreSQL skips, 25,21 s; initial/intermediate gates và Ruff
+import repairs có receipt. Full sạch qua disposable PostgreSQL helper **2.450
++88 subtests PASS**, 2 optional-provider skips, 192 warnings, 291,69 s, terminal
+exit 0; gồm 3 PostgreSQL linked-lease/reopen/allocation-race/claim-race cases.
+Ruff/pip-check/diff/templates PASS. Fresh noneditable platform install/import,
+packaged PostgreSQL DDL và owned SQLite head 0013 PASS tại exact source trên SSD
+ngoài; fresh resolved dependency full suite chưa chạy. Container task đã dọn;
+managed install run giữ lại, không xóa evidence. Xem receipt 20261003.
+Default worker/API/CLI không consume lease; nonce không phải model/publication
+grant. Next: linked parent-only publication/checkpoint provenance + actual
+execution_started/usage/stop accounting và terminal original-context loading,
+rồi real native-spawn equivalence trước API/UI activation. Multi-continuation,
+full crash/transport, ingestion, UX và live finance/VI vẫn UNVERIFIED. Không
+private DB migration/restart, paid AI/vendor call, provider/risk change, CI,
+history rewrite, merge/deploy. NQ=F vẫn BLOCKED; goal/PR #7 mở.
+
 **Authenticated consent / PostgreSQL checkpoint fix 2026-10-03:** final source
 `fdd0b717059f5067788c8af0dce4ea7064eb0fb4`, sau prerequisite
 `f2f42354134bf5d53775e0019187a6421628de5e`. Internal consent store xác thực
