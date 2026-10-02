@@ -10,7 +10,11 @@ from tradingagents.platform.analysis import (
     AnalysisRequest,
 )
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
-from tradingagents.platform.analysis.observer import ResearchObserver
+from tradingagents.platform.analysis.observer import (
+    ResearchBudgetExceeded,
+    ResearchExecutionFailed,
+    ResearchObserver,
+)
 from tradingagents.platform.analysis.profiles import resolve_analysis_profile
 from tradingagents.platform.analysis.snapshots import load_snapshot_context
 from tradingagents.platform.analysis.stage_records import ResearchStageService
@@ -75,6 +79,24 @@ class AnalysisJobHandler:
         self.prompt_version = prompt_version
 
     def __call__(self, job, context):
+        from .queue import JobLeaseError
+        from .worker import JobCancellationRequested
+
+        entered_engine = [False]
+        try:
+            return self._execute(job, context, entered_engine)
+        except (ResearchBudgetExceeded, JobLeaseError, JobCancellationRequested):
+            # Preserve cancellation, deadline and stale-worker authority.
+            raise
+        except Exception as error:
+            if entered_engine[0]:
+                # Includes provider errors with unknown billing and failures
+                # after model return but before final publication. Never make
+                # a new full paid attempt just because the error is transient.
+                raise ResearchExecutionFailed("analysis attempt requires explicit review") from error
+            raise
+
+    def _execute(self, job, context, entered_engine):
         context.raise_if_cancelled()
         context.heartbeat()
         report_id = uuid5(job.run_id, "analysis-report-v1")
@@ -151,6 +173,10 @@ class AnalysisJobHandler:
 
         observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit,
                                     save_stage=save_stage)
+        # Persist the uncertainty boundary before any graph/model construction.
+        # Recovery must not guess that a crashed provider request cost nothing.
+        emit("research.execution_started", {})
+        entered_engine[0] = True
         result = self.engine.analyze(AnalysisRequest(
             instrument=instrument, analysis_date=run.analysis_as_of.date(),
             selected_analysts=run.selected_analysts,

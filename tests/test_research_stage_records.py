@@ -137,7 +137,7 @@ def test_cancelled_stage_cannot_publish_and_duplicate_end_cannot_republish():
     assert len(captures) == 1
 
 
-@pytest.mark.parametrize("case", ["failure", "deadline", "cancel", "cancel_after_stage", "stale_lease", "success"])
+@pytest.mark.parametrize("case", ["failure", "engine_error", "deadline", "cancel", "cancel_after_stage", "stale_lease", "success"])
 def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(tmp_path, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -153,7 +153,7 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
             "snapshot_ids": inputs.snapshot_ids(), "decision_inputs": inputs})
         repo.save_run(run)
         queued = DurableJobQueue(session).enqueue(owner_id=run.owner_id, run_id=run.run_id,
-            idempotency_key=str(run.run_id), max_attempts=1, now=NOW, payload={
+            idempotency_key=str(run.run_id), max_attempts=3 if case == "engine_error" else 1, now=NOW, payload={
                 "instrument_id": str(run.instrument_id), "analysis_as_of": NOW.isoformat(),
                 "selected_analysts": ["market"], "config_hash": run.config_hash,
                 "decision_inputs": inputs.model_dump(mode="json")})
@@ -181,6 +181,8 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
                 self.observer.on_chat_model_start({}, [], run_id=uuid4())
             if case == "failure":
                 raise ResearchBudgetExceeded("synthetic time budget")
+            if case == "engine_error":
+                raise TimeoutError("synthetic vendor detail must not leak")
             payload = {"rating": "Hold", "executive_summary": "Research", "investment_thesis": "Thesis",
                 "confidence": .5, "risks": ["Risk"], "invalidation_conditions": ["Invalidation"],
                 "evidence_claims": [{"claim": text, "snapshot_ids": [str(source)]}
@@ -190,10 +192,16 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
     handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=Graph))
     job = JobWorker(database, worker_id="qa-stage-worker", clock=lambda: NOW,
         handlers={JobKind.ANALYSIS_RUN: handler}).run_once()
-    assert job.status is {"failure": JobStatus.FAILED, "deadline": JobStatus.FAILED,
+    assert job.status is {"failure": JobStatus.FAILED, "engine_error": JobStatus.FAILED, "deadline": JobStatus.FAILED,
                           "stale_lease": JobStatus.FAILED, "cancel": JobStatus.CANCELLED,
                           "cancel_after_stage": JobStatus.CANCELLED,
                           "success": JobStatus.SUCCEEDED}[case]
+    if case == "engine_error":
+        assert job.attempt == 1 and job.max_attempts == 3
+        assert job.error_code == "RESEARCH_EXECUTION_FAILED"
+        assert job.error_message == "ResearchExecutionFailed"
+        assert JobWorker(database, worker_id="later-worker", clock=lambda: NOW + timedelta(hours=1),
+            handlers={JobKind.ANALYSIS_RUN: handler}).run_once() is None
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)
         stages = [item for item in repo.list_run_artifacts(run.run_id, run.owner_id)

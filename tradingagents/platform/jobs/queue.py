@@ -10,8 +10,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from tradingagents._compat import UTC
-from tradingagents.contracts import JobKind, JobRecord, JobStatus
-from tradingagents.platform.persistence.models import JobRow
+from tradingagents.contracts import JobKind, JobRecord, JobStatus, RunEventType
+from tradingagents.platform.persistence.models import JobRow, RunEventRow
 
 
 class JobConflict(ValueError):
@@ -295,9 +295,10 @@ class DurableJobQueue:
             raise ValueError("retry_after cannot be negative")
         timestamp = _utc(now or datetime.now(UTC))
         row = self._leased_row(job_id, worker_id, timestamp)
+        entered_research = self._research_execution_entered(row)
         if JobStatus(row.status) is JobStatus.CANCEL_REQUESTED:
             self._finish(row, JobStatus.CANCELLED, timestamp)
-        elif retryable and row.attempt < row.max_attempts:
+        elif retryable and row.attempt < row.max_attempts and not entered_research:
             row.status = JobStatus.RETRY_WAIT.value
             row.available_at = timestamp + retry_after
             row.updated_at = timestamp
@@ -306,7 +307,7 @@ class DurableJobQueue:
             row.error_code = error_code[:128]
             row.error_message = error_message[:2048] if error_message else None
         else:
-            row.error_code = error_code[:128]
+            row.error_code = "RESEARCH_EXECUTION_FAILED" if retryable and entered_research else error_code[:128]
             row.error_message = error_message[:2048] if error_message else None
             self._finish(row, JobStatus.FAILED, timestamp, preserve_error=True)
         self.session.flush()
@@ -326,6 +327,10 @@ class DurableJobQueue:
         for row in rows:
             if JobStatus(row.status) is JobStatus.CANCEL_REQUESTED:
                 self._finish(row, JobStatus.CANCELLED, timestamp)
+            elif self._research_execution_entered(row):
+                row.error_code = "RESEARCH_RECOVERY_REVIEW_REQUIRED"
+                row.error_message = None
+                self._finish(row, JobStatus.FAILED, timestamp, preserve_error=True)
             elif row.attempt < row.max_attempts:
                 row.status = JobStatus.RETRY_WAIT.value
                 row.available_at = timestamp
@@ -340,6 +345,20 @@ class DurableJobQueue:
                 self._finish(row, JobStatus.FAILED, timestamp, preserve_error=True)
         self.session.flush()
         return tuple(_record(row) for row in rows)
+
+    def _research_execution_entered(self, row: JobRow) -> bool:
+        """Called while the job row is locked; uncertainty is not free replay."""
+        return row.kind == JobKind.ANALYSIS_RUN.value and self.session.scalar(
+            select(RunEventRow.event_id).where(
+                RunEventRow.owner_id == row.owner_id,
+                RunEventRow.run_id == row.run_id,
+                RunEventRow.event_type.in_([
+                    RunEventType.RESEARCH_EXECUTION_STARTED.value,
+                    # Legacy in-flight runs may predate the new marker.
+                    RunEventType.STAGE_STARTED.value, RunEventType.MODEL_USAGE.value,
+                ]),
+            ).limit(1)
+        ) is not None
 
     def _leased_row(self, job_id: UUID, worker_id: str, now: datetime) -> JobRow:
         row = self.session.scalar(select(JobRow).where(JobRow.job_id == job_id).with_for_update())

@@ -189,7 +189,10 @@ class JobWorker:
             from pathlib import Path
             from traceback import extract_tb
 
-            from tradingagents.platform.analysis.observer import ResearchBudgetExceeded
+            from tradingagents.platform.analysis.observer import (
+                ResearchBudgetExceeded,
+                ResearchExecutionFailed,
+            )
 
             logger.error("job_handler_failed", extra={
                 "job_id": str(job.job_id), "run_id": str(job.run_id),
@@ -205,9 +208,11 @@ class JobWorker:
                     failed = DurableJobQueue(session).fail(
                         job.job_id,
                         self.worker_id,
-                        error_code="RESEARCH_BUDGET_EXHAUSTED" if isinstance(exc, ResearchBudgetExceeded) else "HANDLER_ERROR",
+                        error_code=("RESEARCH_BUDGET_EXHAUSTED" if isinstance(exc, ResearchBudgetExceeded)
+                                    else "RESEARCH_EXECUTION_FAILED" if isinstance(exc, ResearchExecutionFailed)
+                                    else "HANDLER_ERROR"),
                         error_message=type(exc).__name__,
-                        retryable=not isinstance(exc, ResearchBudgetExceeded),
+                        retryable=not isinstance(exc, (ResearchBudgetExceeded, ResearchExecutionFailed)),
                         retry_after=retry_after,
                         now=timestamp,
                     )

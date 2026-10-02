@@ -18,6 +18,14 @@ class ResearchBudgetExceeded(RuntimeError):
     """Stop rather than silently truncate the flow or repeatedly spend on it."""
 
 
+class ResearchExecutionFailed(RuntimeError):
+    """An entered analysis attempt must not be blindly rerun by the queue.
+
+    A provider may have charged without returning usage. This is not a claim
+    that cost was incurred, only that automatic full-run replay is unsafe.
+    """
+
+
 class ResearchObserver(BaseCallbackHandler):
     raise_error = True
     run_inline = True

@@ -454,6 +454,13 @@ stage text without calling AI. Graph resume remains unfinished. This does not en
 checkpoint path for web jobs, increase execution allowances, skip any role or
 recover text that was never saved by an older failed run.
 
+The analysis handler durably marks entry into the research engine. Caught
+engine/publication failures do not automatically replay the whole paid run;
+expired leases with execution evidence require review, even if attempts remain.
+Provider charges may be unknown. Pre-engine preparation retries and bounded
+SDK/schema repairs are separate and unchanged. This is not automatic resume:
+request timeout/run allowance and safe checkpoint recovery remain unfinished.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See
