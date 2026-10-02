@@ -20,6 +20,7 @@ it('separates failed-run working notes from completed reports and fetches only o
       : url.includes('/runs?') ? [run] : run)));
   vi.stubGlobal('fetch',fetch); render(<Analysis />);
   expect(await screen.findByText('No completed report was published for this run.')).toBeTruthy();
+  expect(screen.getByText('Research allowance was not recorded for this run.')).toBeTruthy();
   const summary = screen.getByText(/Saved working notes/);
   expect(summary.closest('details')?.open).toBe(false);
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/artifacts/stage-note'))).toBe(false);
@@ -31,7 +32,8 @@ it('separates failed-run working notes from completed reports and fetches only o
 
 it('leads completed research with its report and preserves processing in a collapsed disclosure', async () => {
   const run = {run_id:'saved-run',instrument_id:'apple',status:'succeeded',created_at:'2026-09-26T00:00:00Z',
-    analysis_as_of:'2026-09-26T00:00:00Z',selected_analysts:['market'],snapshot_ids:['source']};
+    analysis_as_of:'2026-09-26T00:00:00Z',selected_analysts:['market'],snapshot_ids:['source'],
+    execution_limits:{wall_seconds:3600,model_calls:128}};
   const artifacts = ['decision_evidence','analysis_report'].map(kind => ({artifact_id:kind,kind,
     media_type:'application/json',byte_size:500,content_hash:'sha256:fixture',created_at:run.created_at}));
   const report = {run_id:run.run_id,decision_id:'12345678-1234-1234-1234-123456789abc',profile:'equity',
@@ -52,6 +54,7 @@ it('leads completed research with its report and preserves processing in a colla
   await user.click(screen.getByText('Completed analysis · View processing details'));
   expect(processing.open).toBe(true);
   expect(within(processing).getByRole('heading',{name:'Research progress'})).toBeTruthy();
+  expect(within(processing).getByText('Recorded research allowance: 60 minutes')).toBeTruthy();
   expect(fetch.mock.calls.length).toBe(calls);
 });
 

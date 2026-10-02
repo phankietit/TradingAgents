@@ -168,9 +168,12 @@ is immutable, part of the config hash and job payload, and consumed by the
 worker observer. An omitted selection preserves legacy defaults and historical
 hashes. Limits cannot be attached to a legacy live-tool run. The authenticated
 configuration response exposes defaults and `cooperative_boundaries`, not a
-provider health probe or hard mid-request deadline. UI allowance selection and
-transport deadline enforcement remain unfinished; no paid run is automatically
-authorized by changing this contract.
+provider health probe or hard mid-request deadline. The web offers 30-minute
+default and 60-minute allowances with unchanged 128-call cap. Changing the
+selection resets paid-call consent and changes request identity; it does not
+automatically submit a run. Processing shows persisted limits or states that
+legacy limits were not recorded. Transport deadline enforcement remains
+unfinished, and the selected allowance is not a provider-cost cap.
 An in-flight synchronous call may exceed the wall-time budget before the next
 boundary observes it. Exceeding a budget fails the run,
 never shortens the graph and labels it complete. Reports retain allowlisted

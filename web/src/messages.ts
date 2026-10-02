@@ -1,5 +1,13 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'minutes': 'phút',
+  'Research time allowance': 'Thời lượng cho nghiên cứu',
+  '30 minutes · default': '30 phút · mặc định',
+  '60 minutes · more time': '60 phút · thêm thời gian',
+  'All research steps are preserved. More time may help a slow analysis finish, but does not guarantee a report or cap AI charges.': 'Giữ nguyên toàn bộ các bước nghiên cứu. Thêm thời gian có thể giúp phân tích chậm hoàn tất, nhưng không bảo đảm có báo cáo và không phải giới hạn chi phí AI.',
+  'The time limit is checked between steps. A model request already in progress may continue beyond it and may still incur charges. This is not an exact completion timer.': 'Giới hạn được kiểm tra giữa các bước. Yêu cầu AI đang xử lý có thể tiếp tục quá thời lượng này và vẫn phát sinh chi phí. Đây không phải thời gian hoàn tất chính xác.',
+  'Recorded research allowance:': 'Thời lượng nghiên cứu đã lưu:',
+  'Research allowance was not recorded for this run.': 'Lượt phân tích này chưa ghi nhận thời lượng nghiên cứu.',
   'No completed report was published for this run.': 'Lượt phân tích này chưa có báo cáo hoàn chỉnh.',
   'Saved working notes': 'Bản nháp nghiên cứu đã lưu',
   'Working notes are not completed reports and cannot be approved.': 'Bản nháp không phải báo cáo hoàn chỉnh và không thể phê duyệt.',

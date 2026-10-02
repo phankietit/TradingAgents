@@ -120,6 +120,10 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     <h2>{t("Research progress")}</h2>
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
       <p className="muted caption">{t("As of")} {timestamp(run.data.analysis_as_of)}</p>
+      <p className="muted caption">{run.data.execution_limits && Number.isInteger(run.data.execution_limits.wall_seconds)
+        && run.data.execution_limits.wall_seconds >= 60 && run.data.execution_limits.wall_seconds <= 7200
+        ? <>{t('Recorded research allowance:')} {run.data.execution_limits.wall_seconds / 60} {t('minutes')}</>
+        : t('Research allowance was not recorded for this run.')}</p>
       <ResearchWorkflow events={events} status={jobStatus ?? run.data.status} hasSources={run.data.snapshot_ids.length > 0}
         hasReport={artifacts.data?.some(item => item.kind === 'analysis_report') ?? false} />
       <JobProgress runId={runId} version={version + tick} onStatus={setJobStatus} />

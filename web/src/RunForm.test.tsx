@@ -18,6 +18,26 @@ function setup(stale = false) {
   });
   vi.stubGlobal('fetch', fetch); return fetch;
 }
+it('defaults to 30 minutes, resets paid consent and uses a new key for changed allowance', async () => {
+  const fetch=setup();const user=userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  const picker=screen.getByRole('combobox',{name:'Research time allowance'});
+  expect((picker as HTMLSelectElement).value).toBe('1800');
+  await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Queue analysis'}));await screen.findByRole('alert');
+  await user.selectOptions(picker,'3600');
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText(/not an exact completion timer/)).toBeTruthy();
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Queue analysis'}));await screen.findByRole('alert');
+  const posts=(fetch.mock.calls as unknown as [string,RequestInit][]).filter(([url])=>url.endsWith('/runs'));
+  expect(posts).toHaveLength(2);
+  expect(JSON.parse(posts[0][1].body as string).execution_limits).toEqual({wall_seconds:1800,model_calls:128});
+  expect(JSON.parse(posts[1][1].body as string).execution_limits).toEqual({wall_seconds:3600,model_calls:128});
+  expect(posts[0][1].headers).not.toEqual(posts[1][1].headers);
+});
 it('requires evidence and explicit paid-call authorization', async () => {
   setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
   const group = await screen.findByRole('group', { name: 'Price & trend' });

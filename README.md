@@ -466,9 +466,12 @@ immutable `execution_limits` (`wall_seconds`, `model_calls`); these bind to the
 run/config hash/job and worker observer. Omitted limits preserve the legacy
 30-minute/128-call defaults without rewriting history. `/analysis-configuration`
 discloses those defaults and `cooperative_boundaries`: already-running requests
-can overrun the allowance. SDK timeout/retries are unchanged. Web allowance
-selection, actual request-deadline enforcement and safe graph resume remain
-unfinished; accepting a larger allowance does not shorten or skip graph roles.
+can overrun the allowance. SDK timeout/retries are unchanged. The web form offers
+30 minutes (default) or 60 minutes, resets paid-call consent when changed, and
+binds the selection to each new snapshot run. Processing displays recorded
+limits without inventing them for legacy runs. Actual request-deadline
+enforcement and safe graph resume remain unfinished; accepting a larger
+allowance does not shorten or skip graph roles or cap provider charges.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

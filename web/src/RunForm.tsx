@@ -6,6 +6,7 @@ import { timestamp, useResource } from './data';
 import type { Instrument, Snapshot } from './data';
 import type { Policy, PortfolioSnapshot } from './Portfolio';
 import ResearchSetup from './ResearchSetup';
+import ResearchAllowance from './ResearchAllowance';
 import { portfolioSnapshots, policyHistory } from './portfolioData';
 import { datasetLabel, researchLabel } from './researchLabels';
 import { preparePrices } from './preparePrices';
@@ -15,6 +16,7 @@ export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
   selected_analysts: string[]; error_code: string | null; snapshot_ids: string[];
   report_language?: 'en' | 'vi' | 'en-vi' | null;
+  execution_limits?: { wall_seconds: number; model_calls: number } | null;
 }
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
@@ -51,6 +53,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const asset = catalog.find(item => item.instrument_id === instrumentId);
   const policy = policies.data?.find(item => `${item.policy_id}:${item.policy_version}` === policyKey && item.asset_class === asset?.asset_class && Date.parse(item.effective_at) <= Date.parse(asOf));
   const [confirmed, setConfirmed] = useState(false);
+  const [allowanceSeconds, setAllowanceSeconds] = useState(1800);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [preparing, setPreparing] = useState(false);
@@ -178,6 +181,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!ready) return;
     const payload = { instrument_id: instrumentId, analysis_as_of: asOf, selected_analysts: selectedRoles, report_language: reportLanguage,
+      execution_limits: {wall_seconds: allowanceSeconds, model_calls:128},
       decision_inputs: { snapshots_by_analyst: Object.fromEntries(selectedRoles.map(role => [role, sources[role]])),
         source_max_age_seconds: Object.fromEntries(selectedRoles.map(role => [role,
           role === 'fundamentals' ? FUNDAMENTALS_MAX_AGE_SECONDS : Number(maxAge)])),
@@ -278,6 +282,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
     </details>
     <h3>{t('2. Review sources and authorize AI')}</h3>
+    <ResearchAllowance seconds={allowanceSeconds} disabled={pending || preparing || newsPending || fundamentalsPending}
+      onChange={seconds => { setAllowanceSeconds(seconds); setConfirmed(false); }} />
     {!selectedRoles.length ? <p className="warning">{t('To continue, prepare latest prices above or select an eligible saved source. No AI analysis has been submitted.')}</p> : null}
     {selectedRoles.some(role => sources[role].some(id => !eligible.has(id))) ? <p className="warning">{t('A selected source is not eligible for this research time. Prepare current prices or change the selection.')}</p> : null}
     {!riskReady ? <p className="warning">{t('Complete the portfolio, policy and target allocation inputs, or turn off portfolio evaluation.')}</p> : null}

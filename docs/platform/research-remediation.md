@@ -26,7 +26,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle/immutable notes/synthetic reader, no-blind-paid-replay guards and explicit API allowance binding; latest live full-flow FAIL at wall budget; UI allowance, request deadline and actual resume UNVERIFIED |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS local lifecycle/immutable notes/synthetic reader, no-blind-paid-replay guards and explicit API/UI allowance binding; latest live full-flow FAIL at wall budget; request deadline and actual resume UNVERIFIED |
 | R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS UI and real processing flow; valid final report FAIL |
@@ -89,8 +89,11 @@ manifest, config hash and job payload. The worker consumes them for observer
 wall-time/call-count checks. Strict ranges reject coercion and unknown SDK knobs;
 legacy omitted selections preserve historical inputs/hash and existing defaults.
 The private configuration API labels the mode `cooperative_boundaries`. Actual
-UI selection and transport/request deadline work remain open; a configured run
-allowance is not a hard interrupt or proof that a whole live report fits.
+The web now offers 30/60-minute selection, resets consent on changes and displays
+persisted allowances without inferring legacy values. Desktop/mobile synthetic
+interaction checks cover this behavior, not paid/provider acceptance.
+Transport/request deadline work remains open; a configured run allowance is not
+a hard interrupt, provider-cost cap or proof that a whole live report fits.
 
 ### Renewed acceptance scope
 
