@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Parent recorder allowance RPC 2026-10-03:** source
+`98446bef42ce010b2a1733d9e91f198215e3ff78` nối kiểm tra allowance của recorder
+qua exact private checkpoint-enabled bridge. Parent kiểm tra limits/fingerprint/
+thread và clock/cancellation/lease gốc; ACK chỉ True, child không tạo clock hay
+budget mới. Sai setup, boolean limits, identity/extra fields hoặc expired budget
+chặn model/commit; child lỗi được xác nhận dừng. 38 focused PASS, 30,51 s; full
+Python **2.184 + 88 subtests PASS**, 20 skips, 108 warnings, 179,33 s tại source
+sạch; Ruff/diff/templates PASS. Chỉ RPC allowance: chưa chuyển trusted run/book/
+source context, chưa actual recorder-native spawn/new-child restore hay owner
+consent/accounting/API/UI; default worker không bật recorder/resume. Không AI/
+vendor/CI/deploy, restart/migrate DB riêng tư. Goal/PR vẫn mở; ingestion/UX/live
+finance/MT chưa đạt, NQ=F giữ BLOCKED theo owner.
+
 **Actual recorder native acceptance 2026-10-03:** source
 `c78908326a85bdeb642d4c0ad63afffdd92dc940` kiểm chứng AnalysisEngine/recorder/
 native graph thật, SDK khởi tạo thật nhưng response giả và network bị chặn.

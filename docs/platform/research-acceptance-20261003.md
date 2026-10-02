@@ -320,3 +320,29 @@ Do not promote native synthetic equivalence to financial acceptance or permissio
 to replay a paid job. execution_started, original allowance, immutable history
 and human approval remain mandatory. Full R01–R14, outstanding ingestion and
 operational UX/live gates remain open; PR remains draft.
+
+## Parent recorder allowance RPC follow-up
+
+Source `98446bef42ce010b2a1733d9e91f198215e3ff78`, same branch/worktree,
+clean source throughout full regression. Exact private checkpoint-enabled bridge
+can validate original recorder allowance with the parent observer. No original
+context transfer, worker recording/resume activation, private DB migration,
+restart, AI/vendor call, CI, provider/risk change or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original parent allowance proof | PASS | Spawn fixture requests original limits/fingerprint/thread, parent checks exact fields/types/identity and remaining_seconds using original observer. Success keeps start/limits unchanged, one synthetic model callback/commit accounted; no child clock created |
+| Fail-closed setup | PASS | Larger wall/call limits, boolean wall, changed fingerprint/thread, private extra marker and expired budget refuse before model/commit. Spawned failed children verified stopped using PID marker; expired precheck spawns none. No private marker in error |
+| Recorder bridge selection/ACK | PASS | Four real-SDK initialization unit cases use fake pipe: actual recorder prepare selects exact bridge and sends original fields; only True accepted, False/None/int 1 refused. These are unit selection checks, not parent proof or financial acceptance |
+| Disabled bridge | PASS | Without checkpoint identity, no allowance RPC can be sent; fixed refusal |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_recording_allowance_bridge.py tests/test_analysis_recording.py tests/test_checkpoint_bridge.py --disable-warnings -x`: 38 passed, 38 warnings, 30.51 s. Import-only Ruff formatting corrected before source commit; no behavioral gate failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,184 passed + 88 subtests, 20 skipped, 108 warnings, 179.33 s; Python 3.14.7/macOS, clean 98446be |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Complete supervised recorder / authority | UNVERIFIED | Allowance proof alone transfers no original run/book/source and grants no consent. Trusted context/observer construction through spawn, complete transport attestation, actual recorder-native spawn, new-child restoration and retained accounting/API/UI remain required; default worker unchanged |
+| Live finance/MT/PostgreSQL | UNVERIFIED | No fresh paid report or live semantic/translation acceptance; 18 PostgreSQL, optional Bedrock dependency and live DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner contract/roll-source hold unchanged |
+
+This RPC never resets allowance or bypasses execution_started. Parent remains
+the existing budget/admission/lease authority. Per-operation DB wait limitations
+and provider-billing uncertainty are not cured by an allowance ACK. Full R01–R14,
+remaining ingestion/UX/live requirements and Draft PR remain open.
