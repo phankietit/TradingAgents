@@ -481,3 +481,25 @@ No private historical events are repaired or backfilled. Next: explicit original
 allowance/unknown-duration policy and transactional consent, then new-child
 restoration; full R01–R14 ingestion, operational UX and live acceptance remain
 required. Default recorder/resume remains disabled; goal and Draft PR stay open.
+
+## Accounting aggregate invariant follow-up
+
+Source `b831d6ba7ad921918dd10533eeaef5198e05c35d`, same branch/worktree,
+clean throughout full regression; Python 3.14.7, Darwin 25.5.0. No paid/vendor
+call, private DB migration/restart, history rewrite, CI, provider/risk change,
+merge or deployment. Reader remains internal and read-only.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Impossible token evidence | PASS | Reject nonzero token counters with zero usage-bearing completions, and token growth without increasing calls_with_usage; unchanged receipts and genuine native callback completion remain accepted |
+| Aggregate elapsed | PASS | Reject nonfinite sum even when each attempt's elapsed is individually finite; no exact crash-duration or remaining-budget inference introduced |
+| Immutable failure handling | PASS | Three disposable SQLite fixtures reopen, reject with fixed AccountingEvidenceError, and compare all ordered event sequence/payload pairs before/after; no repair or backfill |
+| Focused gate | PASS | `.venv/bin/python -m pytest -q tests/test_accounting_evidence.py tests/test_usage_reservation.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 37 passed, 48 warnings, 54.87 s; no behavioral failure |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,256 passed + 88 subtests, 20 skipped, 156 warnings, 254.09 s at clean exact source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Recovery/live/operational acceptance | UNVERIFIED | Consent/high-water transaction, unknown interrupted-duration policy, trusted loading/transport, new-child restore, remaining ingestion/UX and live finance/translation still required; synthetic evidence is not provider billing or production approval |
+| PostgreSQL/other skips | UNVERIFIED | 18 PostgreSQL skips plus optional Bedrock dependency and live DeepSeek-key skips; no skip promoted to PASS |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+Full R01–R14 goal and Draft PR #7 remain open. No continuation authority or
+default worker recorder/resume activation follows from these local gates.
