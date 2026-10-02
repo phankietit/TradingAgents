@@ -168,6 +168,34 @@ tests do not prove a hard deadline while a synchronous parent DB callback is
 itself blocked, or provider billing determinism. No private DB migration,
 automatic resume, execution_started bypass or allowance reset is enabled.
 
+### Transaction-local lock-wait budget
+
+PrivateCheckpointStore commits now require a positive local lock-wait budget,
+default five seconds; internal callers can supply a shorter value. Generic
+Database/JobExecutionContext publication sessions retain their existing behavior
+when no budget is requested. SQLite checks out a dedicated connection, sets
+busy_timeout, then restores its original value before pool return (invalidates
+the connection if restoration fails). After a failed COMMIT it explicitly
+rolls back this context's DBAPI connection too: SQLAlchemy can have deactivated
+its transaction while SQLite still holds one, and resetting timeout first can
+otherwise retry the failed COMMIT with a longer wait. This rollback affects
+only uncommitted work in the task-owned transaction, not historical records.
+
+PostgreSQL sets transaction-local lock_timeout and statement_timeout through
+parameterized set_config; no engine/global settings change. That path still
+needs actual PostgreSQL evidence. SQLAlchemy DB failures are converted to a
+fixed CheckpointDatabaseError; bridge refuses ACK and does not enter a second
+unbounded DB-backed lease/cancel query after this known DB failure.
+
+Real SQLite writer lock and commit lock fixtures prove bounded refusal, no
+checkpoint row/ACK, restored pool settings and a later successful explicit
+commit after releasing the fixture lock. This is not a total deadline: limits
+apply per busy operation/statement, not pool checkout, connect/pre-ping, driver
+network read, disk stall or the sum of multiple statements. Production integration
+must cap the requested budget to remaining owner allowance, retain post-commit
+checks and prove the outstanding I/O/total-deadline gates before readiness.
+No provider/model timeout, risk limit, owner DB migration or resume changes.
+
 Full package/dependency invalidation is conservative: a new machine must restore
 the compatible runtime, not silently waive mismatches. Missing versus flat book
 remains distinct; an exhausted run's limits cannot be changed by hashing a new

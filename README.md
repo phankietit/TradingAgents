@@ -498,6 +498,13 @@ The default AnalysisEngine/worker does not enable recording or resume. Native
 fixture graphs exercise this RPC, including parent crashes before/after commit
 while the child waits; production construction, restore/accounting/consent and
 bounded DB-lock behavior still require acceptance.
+Checkpoint transactions now use a local lock-wait budget (default five seconds,
+optionally shorter): SQLite busy_timeout is restored before pool reuse;
+PostgreSQL uses transaction-local lock_timeout/statement_timeout but remains
+unverified live. Real SQLite writer/commit contention fails without ACK or a
+second unbounded lease query. This is a per-operation lock/statement bound, not
+a hard whole-transaction, pool/connect/network or disk-stall deadline; defaults
+for other database sessions and model timeouts are unchanged.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;

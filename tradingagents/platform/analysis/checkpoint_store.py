@@ -5,10 +5,12 @@ automatic replay, model invocation or continuation authority is introduced.
 """
 
 import hashlib
+from contextlib import contextmanager
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 
 from tradingagents.platform.persistence.models import JobRow, ResearchCheckpointRow, RunRow
 
@@ -17,6 +19,21 @@ from .checkpoint_codec import CheckpointCodecError, SnapshotCheckpointCodec
 
 class CheckpointStoreError(ValueError):
     """Fixed diagnostic without private state or raw storage errors."""
+
+
+class CheckpointDatabaseError(CheckpointStoreError):
+    """A failed/uncertain DB transaction is not permission to retry or ACK."""
+
+
+@contextmanager
+def _checkpoint_session(context, lock_timeout_seconds):
+    if lock_timeout_seconds is None:
+        raise ValueError("checkpoint lock timeout is required")
+    try:
+        with context.publication_session(lock_timeout_seconds=lock_timeout_seconds) as session:
+            yield session
+    except SQLAlchemyError:
+        raise CheckpointDatabaseError("checkpoint database commit requires review") from None
 
 
 def _reject():
@@ -50,10 +67,11 @@ class PrivateCheckpointStore:
             _reject()
         return value
 
-    def commit(self, *, context, owner_id: UUID, run_id: UUID, raw: bytes) -> CheckpointCommit:
+    def commit(self, *, context, owner_id: UUID, run_id: UUID, raw: bytes,
+               lock_timeout_seconds=5.0) -> CheckpointCommit:
         value = self._decode(raw, run_id)
         digest = hashlib.sha256(raw).hexdigest()
-        with context.publication_session() as session:
+        with _checkpoint_session(context, lock_timeout_seconds) as session:
             # publication_session already locks/renews the job and rejects
             # cancellation/expired or lost lease in this same transaction.
             job = session.get(JobRow, context.job_id)

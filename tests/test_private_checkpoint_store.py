@@ -100,8 +100,8 @@ def test_transaction_failure_after_flush_has_no_ack_and_rolls_back(setup, monkey
     original = context.publication_session
 
     @contextmanager
-    def failed_commit():
-        with original() as session:
+    def failed_commit(**options):
+        with original(**options) as session:
             yield session
             raise RuntimeError("simulated commit failure")
 

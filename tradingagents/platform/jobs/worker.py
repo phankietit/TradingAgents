@@ -67,10 +67,12 @@ class JobExecutionContext:
         self._check_lease()
 
     @contextmanager
-    def publication_session(self):
+    def publication_session(self, *, lock_timeout_seconds=None):
         """Fence publication against cancellation/recovery in the same transaction."""
         self._check_lease()
-        with self.database.session() as session:
+        options = ({"lock_timeout_seconds": lock_timeout_seconds}
+                   if lock_timeout_seconds is not None else {})
+        with self.database.session(**options) as session:
             job = DurableJobQueue(session).heartbeat(
                 self.job_id, self.worker_id, lease_for=self.lease_for, now=self.clock())
             if job.status is JobStatus.CANCEL_REQUESTED:

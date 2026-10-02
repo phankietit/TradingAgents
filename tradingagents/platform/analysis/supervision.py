@@ -17,7 +17,7 @@ from uuid import UUID
 from langchain_core.callbacks import BaseCallbackHandler
 
 from .checkpoint_codec import SnapshotCheckpointCodec
-from .checkpoint_store import CheckpointCommit
+from .checkpoint_store import CheckpointCommit, CheckpointDatabaseError
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
 from .observer import STAGES, ResearchExecutionFailed
 from .stage_records import STAGE_PATHS, stage_sections
@@ -232,6 +232,10 @@ class SupervisedAnalysisEngine:
                                 or reply.sequence < 1 or type(reply.record_id) is not UUID
                                 or reply.content_hash != hashlib.sha256(payload).hexdigest()):
                             raise ValueError()
+                    except CheckpointDatabaseError:
+                        # Do not immediately re-enter an unbounded DB-backed
+                        # lease/cancel query after a bounded DB failure.
+                        raise ResearchExecutionFailed("checkpoint commit requires review") from None
                     except Exception:
                         # Recheck cancellation/lease before sanitizing a failed
                         # callback; never echo DB/checkpoint exception payloads.

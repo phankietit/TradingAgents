@@ -1,6 +1,7 @@
 """Opt-in spawned checkpoint RPC to parent-only SQLite commit; no providers."""
 
 import os
+import sqlite3
 from datetime import timedelta
 from multiprocessing import get_context
 from pathlib import Path
@@ -62,7 +63,7 @@ class CheckpointFixtureEngine:
 
 
 @pytest.mark.parametrize("mode", ["success", "invalid", "exception", "bad_ack", "cancel_after",
-                                  "expired_before", "lease_after", "deadline_after"])
+                                  "expired_before", "lease_after", "deadline_after", "db_lock"])
 def test_spawned_child_waits_for_parent_commit_and_fenced_ack(tmp_path, mode):
     database, owner, run = _database(tmp_path)
     _enqueue(database, owner, run)
@@ -76,6 +77,8 @@ def test_spawned_child_waits_for_parent_commit_and_fenced_ack(tmp_path, mode):
     cancelled = [False]
     parent_pid = os.getpid()
     elapsed = [0.0]
+    held_lock = []
+    lock_started = []
 
     def check():
         if cancelled[0]:
@@ -92,7 +95,15 @@ def test_spawned_child_waits_for_parent_commit_and_fenced_ack(tmp_path, mode):
             raise RuntimeError("PRIVATE_DB_ERROR_NEVER_ECHO")
         if mode == "expired_before":
             clock[0] = NOW + timedelta(minutes=6)
-        result = store.commit(context=context, owner_id=owner, run_id=run.run_id, raw=raw)
+        timeout = 5.0
+        if mode == "db_lock":
+            locker = sqlite3.connect(tmp_path / "jobs.db")
+            locker.execute("BEGIN IMMEDIATE")
+            held_lock.append(locker)
+            lock_started.append(monotonic())
+            timeout = .05
+        result = store.commit(context=context, owner_id=owner, run_id=run.run_id,
+                              raw=raw, lock_timeout_seconds=timeout)
         if mode == "bad_ack":
             return CheckpointCommit(result.record_id, result.sequence, "0" * 64)
         if mode == "cancel_after":
@@ -117,6 +128,10 @@ def test_spawned_child_waits_for_parent_commit_and_fenced_ack(tmp_path, mode):
             with pytest.raises(expected) as raised:
                 engine.analyze(request_with(observer))
             assert "NEVER_ECHO" not in str(raised.value)
+        if mode == "db_lock":
+            # Lock remains held: a second unbounded heartbeat/cancel query
+            # after the DB failure would wait SQLite's normal five seconds.
+            assert monotonic() - lock_started[0] < 2.5
         assert_child_stopped(marker)
         with database.session() as session:
             row = session.scalar(select(ResearchCheckpointRow))
@@ -126,6 +141,9 @@ def test_spawned_child_waits_for_parent_commit_and_fenced_ack(tmp_path, mode):
         assert observer.started_calls == (1 if mode == "success" else 0)
         assert bool(captures) == (mode != "invalid")
     finally:
+        for locker in held_lock:
+            locker.rollback()
+            locker.close()
         database.dispose()
 
 
