@@ -132,6 +132,25 @@ new-child restore, durable retained accounting and explicit owner continuation
 still require implementation and acceptance. Keep execution_started fencing;
 this context cannot authorize a replay, enlarge allowance or mutate history.
 
+Actual engine/recorder native fixtures now supplement the wiring spy. They
+initialize real reviewed SDK clients with synthetic credentials but replace
+only model response methods; propagate_snapshots/invoke and recording prepare
+are not spied or replaced. Four analysts, two debate/risk rounds and EN/VI/
+bilingual/invalid VI match the unrecorded baseline's full prompt/model-call/
+stage sequence and all non-message result fields. Lease-fenced SQLite commits
+are reopened and strict-decoded with matching owner/run/fingerprint, contiguous
+sequence and no credential/private reasoning marker or nonempty message values.
+Native channel-version metadata may still name messages; it is required for
+native fidelity and is not message content. A separate original fixture run
+remains unchanged. Original recorder observer/start is preserved.
+
+This is same-process native integration with synthetic responses, not live
+provider/semantic/MT proof or supervised worker activation/new-child restore.
+Synthetic methods bypass SDK callback accounting, so usage is explicitly
+incomplete and does not prove admission counts or billing. Remaining parent
+construction/observer transfer, retained accounting/consent and recovery gates
+are not replaced by these tests.
+
 ### Private persistence prerequisite
 
 `checkpoint_store.py` and migration `0011_research_checkpoints` provide a

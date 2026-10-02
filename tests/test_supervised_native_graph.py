@@ -1,5 +1,6 @@
 """Original native LangGraph through spawn; synthetic models, no provider calls."""
 
+import asyncio
 import hashlib
 import json
 from contextlib import ExitStack
@@ -39,6 +40,7 @@ class NativeFixtureEngine:
         self.encoded_checkpoints = []
         self.checkpoint_commit = None
         self.checkpoint_read = None
+        self.snapshot_recorder = None
 
     def analyze(self, request):
         source_id = str(request.snapshot_context.by_analyst["market"][0].manifest.snapshot_id)
@@ -47,6 +49,8 @@ class NativeFixtureEngine:
         invalid_translation = self.config.get("_fixture_invalid_translation", False)
         interrupted_node = self.config.get("_fixture_interrupt_after")
         original_propagate = trading_graph.TradingAgentsGraph.propagate_snapshots
+        original_client = trading_graph.create_llm_client
+        actual_clients = []
 
         def trace(kind, prompt):
             # Compare actual downstream inputs, not merely a constant fake result.
@@ -177,12 +181,30 @@ class NativeFixtureEngine:
 
         def client(**kwargs):
             options.append(kwargs)
+            if self.snapshot_recorder is not None:
+                initialized = original_client(**kwargs)
+                actual_clients.append(initialized.get_llm())
+                return initialized
             return SimpleNamespace(get_llm=lambda: Model())
 
         def forbidden(*args, **kwargs):
             raise AssertionError("native snapshot graph accessed a legacy write/tool/memory path")
 
         with ExitStack() as patches:
+            if self.snapshot_recorder is not None:
+                from tradingagents.llm_clients.openai_client import NormalizedChatOpenAI
+
+                # Keep actual initialized SDK identity but synthetic model
+                # responses. No network call or production attestation claim.
+                def initialized_response(llm, prompt, **kwargs):
+                    message = Model().invoke(prompt)
+                    message.additional_kwargs["reasoning_content"] = "PRIVATE_NATIVE_REASONING"
+                    return message
+
+                patches.enter_context(patch.object(NormalizedChatOpenAI, "invoke",
+                    initialized_response))
+                patches.enter_context(patch.object(NormalizedChatOpenAI, "with_structured_output",
+                    lambda llm, schema, **kwargs: Model().with_structured_output(schema)))
             if interrupted_node:
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph,
                     "propagate_snapshots", resume_without_messages))
@@ -194,7 +216,14 @@ class NativeFixtureEngine:
             for name in ("_create_tool_nodes", "resolve_instrument_context", "_resolve_pending_entries",
                          "record_decision", "_log_state", "begin_checkpoint"):
                 patches.enter_context(patch.object(trading_graph.TradingAgentsGraph, name, forbidden))
-            result = AnalysisEngine(base_config=self.config).analyze(request)
+            config = ({key: value for key, value in self.config.items() if not key.startswith("_fixture_")}
+                      if self.snapshot_recorder is not None else self.config)
+            try:
+                result = AnalysisEngine(base_config=config, snapshot_recorder=self.snapshot_recorder).analyze(request)
+            finally:
+                for llm in actual_clients:
+                    llm.root_client.close()
+                    asyncio.run(llm.root_async_client.close())
         assert all(item["timeout"] == 600 and item["max_retries"] == 1 for item in options)
         assert len(repairs) == (1 if invalid_translation else 0)
         return result

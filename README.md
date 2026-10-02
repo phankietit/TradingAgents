@@ -526,6 +526,12 @@ passes a restricted committed saver/run thread to the native sync snapshot hook.
 Arbitrary recorder types/graph factories and non-snapshot requests are rejected;
 default engine/worker and CLI behavior is unchanged. This direct engine wiring
 does not enable supervised worker recovery, restore history or grant consent.
+Native fixtures now exercise this actual engine/recorder path with initialized
+SDK identity and synthetic responses: all four analysts, two debate/risk rounds,
+EN/VI/bilingual and invalid VI preserve baseline prompt/call/stage traces and
+non-message results. Private SQLite bytes reopen with original owner/run/hash
+and no raw messages/reasoning. Synthetic methods do not prove SDK callback usage,
+billing, live financial quality or supervised worker recording/recovery.
 
 The analysis handler durably marks entry into the research engine. Caught
 engine/publication failures do not automatically replay the whole paid run;
