@@ -503,3 +503,27 @@ merge or deployment. Reader remains internal and read-only.
 
 Full R01–R14 goal and Draft PR #7 remain open. No continuation authority or
 default worker recorder/resume activation follows from these local gates.
+
+## Accounting original identity and observation recheck follow-up
+
+Tested source `6ad3bba87f7a0a66cd3facbbfe6170d1eaa0117e`; implementation
+`e7ec914720baea8fdf6c55808e976a665e5df92b`. Same branch/worktree; clean throughout
+final full regression, Python 3.14.7/Darwin 25.5.0. Internal read-only changes,
+no default activation, paid/vendor call, private DB migration/restart/history
+rewrite, CI, provider/risk change, merge or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Original identity | PASS | Both PASS and UNVERIFIED observations bind owner/run/config hash and original scalar wall/call limits, including legacy defaults. Frozen repr suppresses identity/accounting fields |
+| Full observation recheck | PASS | Fresh bounded evidence must equal complete expected observation. Wrong owner, another same-owner run with identical counters, altered totals/limits, wrong object type and newly appended non-accounting event reject with fixed diagnostic; unchanged observation returns None, not permission |
+| Focused final gate | PASS | `.venv/bin/python -m pytest -q tests/test_accounting_evidence.py tests/test_usage_reservation.py tests/test_native_recorder_spawn.py --disable-warnings -x`: 44 passed, 48 warnings, 31.30 s after assertion repair. Earlier 44-pass run at implementation source took 31.56 s |
+| Initial full regression | FAIL | At e7ec914: 1 failed, 2,262 passed + 88 subtests, 20 skipped, 156 warnings, 208.75 s. Privacy test banned substring 15, but default object repr's arbitrary hex address contained 15. Owner/accounting fields were not exposed; repaired assertion checks object.__repr__ field suppression and owner/run/config exclusion, no production validation weakened |
+| Full final local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,263 passed + 88 subtests, 20 skipped, 156 warnings, 207.69 s, exact clean tested source |
+| Ruff/diff/templates | PASS | `.venv/bin/python -m ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| Transactional consent/continuation | UNVERIFIED | Recheck is not writer locking, authenticated browser consent, an allowance grant or dispatch fence; another writer can commit after read. Linked execution, conservative unknown-duration accounting, trusted artifact loading/transport and new-child restore remain required |
+| Live/operational/PostgreSQL | UNVERIFIED | No fresh live financial/translation or billing report, runtime upgrade/browser proof. Remaining ingestion/UX and 18 PostgreSQL plus Bedrock/DeepSeek-key skips unchanged |
+| NQ=F | BLOCKED | Owner-selected contract/roll metadata hold unchanged |
+
+No model invocation or history mutation is caused by either reader or recheck.
+Full R01–R14 objective, explicit human approval and no-blind-replay remain intact;
+goal and Draft PR #7 stay open, default recorder/resume stays disabled.

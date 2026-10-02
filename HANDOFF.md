@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Accounting identity/recheck 2026-10-03:** tested source
+`6ad3bba87f7a0a66cd3facbbfe6170d1eaa0117e` (implementation `e7ec914`) bind
+observation với owner/run/config hash và scalar allowance gốc. Internal recheck
+reload full evidence, chặn sai owner/run, counter/limits substitution và event
+mới; frozen observation không lộ fields qua repr. Không lock writer hay cấp
+consent/token/admission; còn race sau read nên không dùng check-then-dispatch.
+44 focused PASS, 31,30 s; full **2.263 + 88 subtests PASS**, 20 skips,
+156 warnings, 207,69 s tại source sạch; Ruff/diff/templates PASS. Full trước ở
+e7ec914 FAIL (1 failed/2.262 passed): test cấm chuỗi "15" trong object repr,
+nhưng địa chỉ hex có "15"; sửa assert field suppression/owner/run/config privacy,
+không nới production gate. Consent transaction/unknown duration/restore/transport,
+ingestion/UX/live còn UNVERIFIED, NQ=F BLOCKED. Không AI/vendor/CI/private DB
+migration/restart/history rewrite/provider/risk change/merge/deploy; goal/PR mở.
+
 **Accounting aggregate invariants 2026-10-03:** source
 `b831d6ba7ad921918dd10533eeaef5198e05c35d` chặn tokens không có usage-bearing
 completion, token growth khi calls_with_usage không tăng và elapsed aggregate
