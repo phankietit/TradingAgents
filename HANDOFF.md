@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Opt-in checkpoint bridge 2026-10-03:** source
+`90f009b28745e58dc17d7ad2e1a3eabbfefdc9ce` nối RPC checkpoint con → cha,
+chỉ truyền fingerprint/thread identity; cha giữ codec/callback/DB/lease, kiểm tra
+JSON/thread/ACK UUID-sequence-hash và cancellation/deadline trước ACK. Setup
+thiếu hoặc factory không có recorder capability bị từ chối trước spawn; result
+không có checkpoint bị từ chối khi opt-in. Default AnalysisEngine/worker chưa
+bật recorder/resume. 11 bridge/crash tests PASS, 20,28 s; native fixture 4 ngôn
+ngữ/invalid VI chạy đủ 14 stage qua RPC và SQLite parent commit. Kill cha trước
+commit hoặc sau commit/trước ACK: con không còn executing orphan, DB giữ 0/1
+row tương ứng; không gọi đó là reaped nếu zombie. Full Python **2.112 + 88
+subtests PASS**, 20 skips, 22 warnings, 252,17 s; Ruff/diff/templates PASS.
+Không migrate DB riêng tư/restart/AI/vendor/CI/deploy. Còn cần production graph
+hook với trusted client/source identity, bounded parent DB-lock timeout, restore
+ở child mới và consent/retained accounting/API/UI; không bỏ execution_started
+hay reset allowance. Goal/PR mở, live finance/MT chưa đạt, NQ=F giữ BLOCKED.
+
 **Native committed saver 2026-10-03:** source
 `18c7d6975004863d08787d884bb359249c76a167` thêm internal native saver gửi
 restricted JSON sau put/put_writes và kiểm tra ACK đúng bytes; lỗi/ACK mơ hồ

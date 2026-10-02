@@ -148,3 +148,38 @@ a release/financial-quality claim. Next: supervised child bridge to parent
 private commit/ACK and separate-process crash/lease/cancel tests, without
 weakening execution_started/no-blind-replay or replaying any historical failure.
 The full R01–R14 goal remains open.
+
+## Opt-in supervised checkpoint bridge follow-up
+
+Source `90f009b28745e58dc17d7ad2e1a3eabbfefdc9ce`, same branch/worktree,
+clean source throughout full gate. Supervisor gains optional internal codec/
+thread/commit/factory wiring, but default AnalysisEngine does not declare the
+recording capability and default worker does not supply this setup. No API
+request field, continuation route, history backfill, private DB migration,
+restart, provider/prompt/risk-limit change, AI/vendor call, CI or deployment.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Parent-only commit boundary | PASS | Spawn fixture callback asserts parent PID; only fingerprint/thread goes to child. Codec JSON/thread validated before callback, exact receipt UUID/integer sequence/hash before ACK; partial/unsupported setup rejected before spawn |
+| Malformed/failure ACK | PASS | Malformed bytes never reach callback; callback exception/private error text and wrong hash fail closed with no subsequent model admission |
+| Post-commit fences | PASS | Owner cancellation, expired/lost lease and deadline at commit/ACK prevent model start. Committed row can remain but does not imply successful ACK/recovery; no allowance reset |
+| Separate-process parent crash | PASS | POSIX/macOS fixture kills task-owned parent before commit or after commit/before ACK; waiting child stops executing via parent guard. Reopened SQLite retains zero/one row respectively. Terminal zombie is not called reaped; no replay |
+| Native full graph via RPC | PASS | Four added native spawn cases, EN/VI/bilingual/invalid VI; all 14 stages, snapshot gates and 600s/retry1 unchanged; more than 17 owner/run-bound parent checkpoint rows. Invalid VI still has no decision_payload. This is fixture model evidence, not live financial proof |
+| Focused bridge/crash | PASS | `.venv/bin/python -m pytest -q tests/test_checkpoint_bridge.py --disable-warnings -x`: final 11 passed, 20.28 s. Earlier 17-test bridge/native subset passed 41.20 s before adding two crash cases; not summed into a final standalone gate |
+| Initial fixture assertion | FAIL | Used nonexistent observer.model_calls; corrected to actual started_calls to prove admission after ACK. Runtime path was not weakened; final focused/full gates pass |
+| Full local Python | PASS | `.venv/bin/python -m pytest -q --disable-warnings`: 2,112 passed + 88 subtests, 20 skipped, 22 warnings, 252.17 s; Python 3.14.7/macOS, clean 90f009b source |
+| Ruff/diff/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby YAML issue-template load |
+| PostgreSQL/other OS | UNVERIFIED | 18 PostgreSQL, Bedrock dependency and live DeepSeek-key skips; new crash gate proven on this Mac, not complete OS matrix/concurrent PostgreSQL |
+| Bounded parent DB callback | UNVERIFIED | Before/after cancellation/deadline checks do not interrupt a blocked synchronous parent DB callback; reviewed DB-lock/commit timeout remains required |
+| Production recording/recovery | UNVERIFIED | Default worker/AnalysisEngine recorder hook, trusted initialized-client/source fingerprint, restored child execution, linked accounting/explicit consent/API/UI not enabled or proven |
+| Financial/MT/live | UNVERIFIED | No new paid report, earlier semantic/editorial FAIL remains |
+| NQ=F | BLOCKED | Owner's contract/roll-source hold unchanged |
+
+Internal opt-in is not a user consent mechanism or trusted factory attestation
+by itself. A readable checkpoint after lost ACK must not cause blind replay.
+Child received no persistence callback/DB handle/lease and cannot publish rows;
+parent-side private JSON remains separate from report artifacts. Existing
+execution_started, original allowance, approval, source and finalization gates
+remain unchanged. Next: bounded parent DB behavior, trusted production graph
+capture and new-child restoration with explicit retained accounting/consent;
+all R01–R14 source/UI/live requirements remain in scope and unfinished.
