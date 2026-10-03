@@ -5,7 +5,7 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
-Latest internal source `f107b18`: linked original-graph continuation can retain
+Latest tested internal source `bb738a7`: linked original-graph continuation can retain
 stages and atomically publish the ordinary report/evidence/risk candidate after
 clean child exit and stopped accounting, with a separate verified completion
 receipt. Default API/worker/CLI continuation dispatch stays disabled. The existing

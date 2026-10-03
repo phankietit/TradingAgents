@@ -2,6 +2,33 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Verified linked completion → human review/approval 2026-10-03:** tested source
+`bb738a7205aac9e6d10e455959e8c07368bfbe98`. Existing authenticated decision
+transition route accepts only a fully verified linked completion, without
+relabeling the FAILED/CANCELLED root/job or altering immutable candidate payload.
+Actual source bytes/columns/PIT, receipt/checkpoint/report/accounting bindings,
+indexed run/decision/lifecycle parity and original deterministic risk replay are
+checked. Approval before completion, missing/corrupt receipts, wrong owner/policy,
+forged lifecycle/status, modified source/risk policy and blob corruption refuse;
+even idempotent approval ACK revalidates the receipt. Existing human actor,
+CSRF, lifecycle/CAS and ordinary successful-run approval gates remain intact.
+Final focused **110 PASS**, 6 missing-URL PG skips, 131 warnings, 163.63 s.
+Full unchanged clean bb738a7 disposable PostgreSQL gate **2,589 +88 subtests
+PASS**, 2 optional-provider skips, 258 warnings, 730.85 s, terminal exit 0;
+includes actual PG competing/same-event writers and approval, native regression.
+Ruff/pip-check/diff/templates and exact tracked-archive fresh noneditable install,
+site-packages origins, scoped PG DDL `0010:head` and owned SQLite head0016/full
+metadata parity PASS. Managed build completed/exit0 and retained; only the
+current labelled PG container removed. Initial import lint failures corrected
+before source commit, intermediate gates preserved in receipt20261003.
+Local API/seeded risk fixtures are not browser or native portfolio-ready/live
+financial acceptance. Default continuation API/worker/CLI dispatch stays off;
+full stop/cancel/expiry/ACK reconciliation, multi-continuation, native portfolio
+approval and operational API/UI journey remain open. Broader ingestion/finance/
+VI/UI and fresh BTC/AAPL still open. SEC contact remains absent; NQ=F owner hold
+unchanged. No private DB migration/restart/history rewrite, provider/risk change,
+CI, paid AI/vendor call, merge/deploy. Goal and Draft PR #7 remain open.
+
 **Linked stage/report/decision completion 2026-10-03:** final tested source
 `f107b18e3c8f86e45328fce57271b3274289375b` (implementation `02e956e`, schema
 parity fix `e9cc2fa`). Exact bound parent publisher retains allowlisted,

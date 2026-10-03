@@ -1,5 +1,11 @@
 # Research acceptance checkpoint — 2026-10-03
 
+Latest tested source `bb738a7205aac9e6d10e455959e8c07368bfbe98`: see the
+appended **Verified linked-completion human review/approval** section. Earlier
+incremental evidence and failures below retain their original source scope.
+The full private-platform goal remains incomplete; no live-finance or browser
+acceptance follows from the local approval gate.
+
 Branch `fix/TA-R01-research-quality`, source
 `c705cad32c3e6579c94942d8131ea32f0ac34def`. Private platform candidate remains
 incomplete; Draft PR #7 remains draft. No deployment, provider/risk-limit
@@ -969,3 +975,49 @@ change, AI/vendor call, broker/execution, main merge or deployment. Next impleme
 verified completion human-review/approval integration, then remaining stop/ACK
 reconciliation and authenticated API/UI activation before separately authorized
 live acceptance. Full R01–R14 goal stays active; Draft PR7 stays draft.
+
+## Verified linked-completion human review/approval
+
+Source `bb738a7205aac9e6d10e455959e8c07368bfbe98`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`. This slice
+uses the existing authenticated decision transition route; it does not enable
+default continuation dispatch, change ordinary success authority, run a model,
+replace a provider, alter risk limits or migrate the private database.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Completion authority | PASS | Approval resolves receipt by decision first; full owner/root/job/consent/dispatch/original+final checkpoint, report/evidence/accounting hashes and actor links verified before approval or cached identical ACK. Root stays FAILED/CANCELLED; no forged SUCCEEDED column accepted. Missing artifact store/receipt and pre-completion event time refuse |
+| Immutable candidate/current projection | PASS | Candidate payload/hash stays pinned; indexed owner/run/instrument/rating/schema/as-of and status must match immutable payload plus append-only lifecycle. Indexed event columns↔payload/time match, events cannot precede linked completion. Human review→ready→approve and reject retain old root/job/event/checkpoint history |
+| Actual sources/deterministic risk | PASS | Reload all owner-readable analyst/risk artifact bytes and snapshot/artifact columns at original as-of, then replay existing READY candidate risk/source policy checks. Source-column mutation, changed evaluated policy and wrong owner/policy fail; no fresh live fallback or portfolio/risk override |
+| Authenticated API mechanics | PASS | TestClient existing route: unauthenticated401, missingCSRF403, spoofed actor422, foreign/missing decision404, wrong policy409. Two identical authorized transitions produce one event/current approved with immutable ready candidate; changed request conflicts. Synthetic owner/database, not browser/live proof |
+| Actual concurrent PostgreSQL | PASS | Full disposable PG helper supplies TEST_POSTGRES_URL. Same-event two-writer calls acknowledge one committed event; differing event IDs commit only one. Decision row lock/CAS, owner-scoped verified receipt and immutable old history preserved. SQLite concurrent writer may fail closed |
+| Corruption/privacy refusal | PASS | Missing/foreign/corrupt receipt/report/source, failed stop, indexed root/status/event mutation and lifecycle SYSTEM actor rejected. ArtifactIntegrityError sanitized to fixed LinkedExecutionError without synthetic private diagnostic; zero approval event on failure |
+| Initial import formatting | FAIL | New test initially had unused sqlalchemy.select (F401), removed before execution. Later fault-fixture import list failed I001; a grouped shell command nevertheless ran its behavior gate. Formatter applied only after that test terminated and before source commit; final full lint PASS. No package source edited during final focused/full gates |
+| Intermediate focused evidence | PASS | Handles91447:75PASS/4missingURL PG skips/12warnings/32.99s; 28944:82PASS/6skips/19warnings/36.19s; 6773:107PASS/6skips/128warnings/163.94s; 32293:85PASS/6skips/22warnings/42.26s. These predate the final indexed-root guard; not final-source acceptance |
+| Final focused/native regression | PASS | Handle54351 terminal0, 110PASS/6missingURL PG skips/131warnings/163.63s. Seven files listed below; includes actual native recorder/spawn fixtures. Test import formatting repaired after terminal, no package fingerprint change; exact committed full gate follows |
+| Full clean exact-source local/PG | PASS | Handle88995 terminal0: 2,589 tests +88 subtests, 2 optional-provider skips, 258 warnings, 730.85s. Ruff/pip-check/diff PASS within helper; clean unchanged source bb738a7 throughout. Python3.14.7/macOS26.5.2 arm64. Only task-labelled ta-research-qa-1790995520-38830 stopped/removed; earlier exited container untouched |
+| Exact noneditable tracked installation | PASS | Handle31007 terminal0: git archive bb738a7 → owned managed Build, fresh Packages/venv, pip install absolute `Build[platform]` --quiet; per-command TMPDIR/PIP_CACHE_DIR inside managed run, not editable source or private env copy |
+| Packaged imports/schema parity | PASS | Handle27428 terminal0: Results/clean_install_smoke.py from outside source cwd asserts package/CLI/API/worker/report/repository/linked-results/0016 modules are inside fresh venv site-packages. Scoped PG offlineDDL `0010_owner_watchlist:head`, owned fresh SQLite base→head0016 + full ORM metadata and named completion uniqueness parity, pip check PASS. Not full base offlineDDL; known data-reading0007 limitation unchanged |
+| Retained managed evidence | PASS | `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T022602Z-34694` finished completed/exit0 after all handles terminal, valid ownership marker, retained on verified external SSD. No deletion of prior builds/test evidence |
+| Matrix/fresh dependency/scanner scope | UNVERIFIED | Project full env:langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Fresh imports:tradingagents0.5.0/langgraph1.2.12/core1.6.6/openai1.6.7/pydantic2.13.5/SQLAlchemy2.1.3/Alembic1.20.0. Not a dependency lock, full fresh-resolved suite or Python matrix. gitleaks/detect-secrets unavailable; optional Bedrock module and explicitly unset live DeepSeek key remain two skipped gates |
+| Default continuation/reconciliation | UNVERIFIED | API/worker/CLI continuation dispatch remains disabled. Multi-continuation and full late stop/cancel/expiry/transport/crash/ACK reconciliation still open. Real native graph fixtures regress report publication but do not yet prove an actual native portfolio-ready report→human approval path |
+| Product/browser/live finance/VI | UNVERIFIED | No frontend/browser journey, new financial report or paid/vendor call. Ingestion/source entailment, editorial finance/VI and process/layout/decision UX plus fresh BTC/AAPL acceptance remain open. SEC_EDGAR_USER_AGENT presence-only recheck false; real name/email not yet supplied/configured |
+| NQ=F | BLOCKED | Owner hold pending active-contract/roll metadata unchanged; no provider or substitute added |
+
+Final focused command54351:
+`.venv/bin/pytest -q tests/test_linked_approval.py tests/test_linked_results.py tests/test_decision_event_persistence.py tests/test_decision_lifecycle.py tests/test_risk_provenance.py tests/test_decision_api.py tests/test_native_recorder_spawn.py --disable-warnings -x`.
+Final full88995:
+`TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T022602Z-34694/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`.
+Static precommit: `.venv/bin/ruff check .`, `.venv/bin/pip check`,
+`git diff --check`, Ruby YAML load of `.github/ISSUE_TEMPLATE/*.yml` PASS.
+
+README/ProductContract/persistence/recovery docs updated in source commit.
+CI remains disabled_manually. No private DB migration, runtime restart, source
+history rewrite, provider/endpoint/risk-limit change, broker action, AI/vendor
+call, main merge or deployment. Next characterize actual native portfolio-ready
+approval and remaining recovery/reconciliation boundaries before default owner
+API/UI activation, then separately authorized live acceptance. This removes
+the earlier linked-approval root-SUCCEEDED restriction only for fully verified
+completion evidence; it does not remove any financial or human-approval gate.
+Full R01–R14 goal remains active; Draft PR7 remains draft.
