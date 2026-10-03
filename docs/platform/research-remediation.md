@@ -39,6 +39,14 @@ acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
 renewed implementation and live-test authorization for BTC, AAPL and NQ, including
 the operational research journey and final decision-report presentation.
 
+R04 structured FRED acquisition/storage prerequisite is implemented separately:
+explicit series/window, pinned completed-day vintage, full observations and
+owner-scoped immutable provenance. This does not change R04's unfinished macro
+status: source admission/fact replay, bounded whole-acquisition supervision and
+authenticated API/UI ingestion still require implementation and acceptance.
+Existing FRED/CLI defaults, risk limits and graph flow are unchanged; no paid or
+live-provider request follows from local fixture evidence.
+
 ### Current operational finding · 2026-10-01
 
 The authenticated live BTC market+news job at `f73d1a9` ended in

@@ -34,6 +34,50 @@ to their source artifact.
   window cannot reach the requested period, return coverage unavailable.
 - A future date is invalid input.
 
+### Structured FRED prerequisite (draft candidate)
+
+`dataflows/platform_fred.py` reuses the existing FRED request boundary; no CLI
+default, new provider or web/model call path changes. One explicit series and
+requested window use the original 365-day lookback unless explicitly supplied.
+Both metadata and observations pin `realtime_start == realtime_end` to the last
+fully elapsed Chicago day before the analysis cutoff. The next Chicago midnight
+is conservative availability, not an exact release/revision timestamp. A period
+date is never substituted for that availability. FRED's API date semantics:
+[real-time periods](https://fred.stlouisfed.org/docs/api/fred/realtime_period.html),
+[observations](https://fred.stlouisfed.org/docs/api/fred/series_observations.html).
+
+All returned observations survive structured storage, including explicit `.`
+missing values as null; no inference, unit conversion or CLI 40-row display cap.
+Transformed values, wrong vintage/identity, unordered/duplicate/future rows,
+nonfinite values and incomplete pagination are `INVALID`, never truncated into
+valid evidence. Explicit resource ceilings (100,000 rows, 2 MB parsed response,
+100-year maximum request) reject rather than silently shorten the window.
+These are parser limits **after the existing request buffers JSON**, not a
+streaming memory bound or whole-acquisition deadline. Hard supervision and
+bounded transport must be accepted before web activation.
+
+Observation-period freshness limits are daily14, weekly28, biweekly42,
+monthly100, quarterly210, semiannual400, annual800 calendar days. A fresh
+vintage does not make an old observation fresh. These declared ingestion limits
+are not portfolio risk limits, evidence of exhaustive history or a promise of
+an expected publication date. Unsupported frequency is `INVALID`.
+Reachable validated empty metadata is `NO_DATA`; empty requested observation
+window is `COVERAGE_GAP`; actual all-missing rows are `NO_DATA`; old periods are
+`STALE`. Missing key/network/HTTP failures are `UNAVAILABLE` with fixed reasons.
+The legacy boundary's untyped 400 is conservatively `UNAVAILABLE`, not guessed
+as an unknown series by parsing vendor prose. Raw exceptions/credential URLs
+are never stored. Failed collection rows cannot become usable coverage.
+
+`platform/market_data/macro.py` binds full payload hash, series/window/vintage,
+retrieval and instrument identity in immutable owner-readable storage. Retrieval
+sets snapshot `as_of`; no historical backdating or previous snapshot rewrite.
+Load revalidates full collection and complete reconstructed manifest parity,
+owner access, hash, artifact kind/media and cutoff/freshness. Artifact write
+failure rolls back metadata; corrupt bytes refuse. No new DB schema is needed.
+Macro analyst admission remains disabled pending canonical fact/tool replay,
+authenticated preparation API/UI and source-coverage/publication warnings.
+Local SQLite/PostgreSQL fixtures are not live FRED, financial or browser proof.
+
 ## Failure Semantics
 
 Keep these states distinct:

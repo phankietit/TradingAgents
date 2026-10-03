@@ -436,6 +436,18 @@ as numbers. These structural checks do not prove qualitative reasoning or
 translation quality; human review is still required.
 NQ/ES automatic preparation remains unsupported.
 
+An internal structured FRED collector and immutable macro snapshot service are
+now prerequisites in this draft candidate, **not enabled web acquisition**.
+They reuse the existing FRED request boundary/key and original 365-day default,
+accept an explicit series/window, retain every returned observation including
+missing values, and pin metadata/values to the previous fully elapsed Chicago
+vintage day. Native-frequency observation freshness is checked separately from
+vintage/retrieval freshness. This day-level pin is not an exact release time or
+complete macro coverage; retrieval is never backdated. Failure snapshots remain
+auditable but ineligible. Macro is still excluded from analyst source admission.
+Bounded whole-acquisition supervision, fact/tool replay, authenticated API and
+web preparation remain unfinished; see [data integrity](docs/ops/data-integrity.md).
+
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked
 evidence, deterministic portfolio/risk checks, and an audited owner-approval

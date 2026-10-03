@@ -24,6 +24,16 @@ Current candidate acquisition covers Yahoo daily prices and non-exhaustive
 recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
 Social/macro ingestion and other-asset fundamentals remain unfinished. Missing
 coverage stays explicit; analyst readers alone do not prove source acquisition.
+
+Macro ingestion may reuse the existing FRED adapter with explicit series and
+original lookback, pinning metadata and observations to a fully elapsed Chicago
+vintage day. Day-level vintage is not an exact release timestamp. Store full
+structured observations, units/frequency and missing values with immutable
+instrument/retrieval/window provenance, never the CLI's shortened display table.
+Freshness must use the observation period as well as vintage/retrieval time;
+missing, stale, malformed and inaccessible series cannot become valid coverage.
+This prerequisite does not activate web ingestion, historical snapshot backdating,
+new providers, model calls or decision authority; API/tool/UI acceptance is separate.
 NQ=F is the owner-selected reference; live acceptance is BLOCKED until eligible
 active-contract/roll data exists. No substitute source has been approved.
 
