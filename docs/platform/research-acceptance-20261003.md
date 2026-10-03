@@ -825,3 +825,50 @@ claim stopped/expired leases were free or settled merely because this prototype
 has not emitted model accounting. Unknown termination must remain review.
 Actual new-child native graph equivalence and all boundary tests must precede
 API/UI or paid activation. Full R01–R14 goal and Draft PR #7 stay open.
+
+## Linked parent publication / accounting prerequisite
+
+Source `b089fe599a45655fe503119e162683caf5bc4294`, branch
+`fix/TA-R01-research-quality`, authoritative worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`. Clean throughout
+the full source gate; Python 3.14.7, Darwin 25.5.0 (macOS 26.5.2 arm64). This is
+internal private-platform draft evidence, not product/live/release acceptance.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| One-time parent entry | PASS | Exact unused retained observer + full original consent/source/accounting/checkpoint recheck under nonce/owner/job/run/execution locks. Entry marker and initial observer receipt commit together. Deliberate lost post-commit entry ACK retains attempt 2 with unknown stop and refuses another observer/entry |
+| Linked transaction fence | PASS | Same-transaction worker/token/owner/root identity, unchanged source, active owner, entry actor, cancellation and expiry checks. Final check after caller flush rejects a checkpoint that expires mid-transaction. Clock after source-lock acquisition refuses expired heartbeat instead of reviving it. Renew retains original deadline |
+| Append-only provenance | PASS | Additive 0014 creates entry/event/checkpoint side links only; root RunRow/JobRow and all old event/checkpoint columns remain unchanged. New checkpoint has original thread/job, linked attempt 2 and atomically committed actor link. Identical original bytes return original attempt-1 receipt without relabeling. Missing/corrupt latest link, marker, attempt and codec fingerprint/node mismatch refuse without fallback |
+| Cumulative accounting | PASS | Actual parent callbacks reserve before admission, record completion usage and aggregate each attempt's latest cumulative receipt once. Fixture total 1 prior +1 new logical call, 15 +27 reported tokens; bound elapsed includes claim/prepare gap. Prior 1 +127 new starts exhaust original 128 cap. Even a matching tampered observer payload that would aggregate to 129 rolls back before ACK. No cap/provider/risk change |
+| Stop uncertainty | PASS | Bound observer hook with matching private stopped state can persist stopped receipt under valid lease; arbitrary payload True cannot fabricate it. Duplicate stop rejects. Cancelled/expired late hook cannot persist stop and retains unknown elapsed upper bound; no refund/requeue/success. Fixture hook invocation is not actual child reaping or remote termination proof |
+| Commit/concurrency/migration | PASS | Before-commit checkpoint failure rolls back actor and bytes; post-commit ACK loss retains one receipt and idempotent byte ACK does not append twice. Two concurrent writers obtain sequences 2/3 with separate actor links. Disposable empty side-table downgrade to 0013/up preserves original evidence. This does not authorize destructive private downgrades |
+| Initial static failures | FAIL | Ruff flagged import formatting and two blind pytest Exception assertions; fixed with explicit boundary exception classes and mechanical import formatting. Subsequent checkpoint import ordering mechanically fixed. No validator weakened |
+| Initial focused exception expectation | FAIL | Handle 25069: 1 failed, 8 passed, 2 PostgreSQL skips, 4.40 s. Tampered root run is rejected by codec/thread validation before linked context, so fixture's LinkedExecutionError-only expectation was wrong; now accepts the two explicit refusal boundaries, still asserts no persistence |
+| Intermediate new fixtures | PASS | Handle 53686: 23 passed, 2 missing-URL PostgreSQL skips, 15.43 s; before added codec/commit-uncertainty/final lock-expiry cases |
+| Further focused exception expectation | FAIL | Handle 26196: 1 failed, 21 passed, 2 skips, 10.14 s. Linked transaction sanitizes codec-contract ValueError into LinkedExecutionError; corrected explicit fixture expectation, not the refusal itself |
+| Intermediate combined focused | PASS | Handle 32317: 165 passed, 10 missing-URL PostgreSQL skips, 35.40 s, before final source-lock-expiry case |
+| Final combined focused | PASS | Handle 4155: `.venv/bin/python -m pytest -q tests/test_linked_publication.py tests/test_linked_execution.py tests/test_continuation_consent.py tests/test_private_checkpoint_store.py tests/test_accounting_evidence.py tests/test_platform_persistence.py --disable-warnings -x`: 166 passed, 10 PostgreSQL skips, 35.53 s |
+| Actual PostgreSQL linked fixtures | PASS | Two new cases in final full suite: parent entry/cumulative usage/trusted-hook/checkpoint provenance and two concurrent checkpoint writers. These do not establish every fault variant on PostgreSQL or actual child execution |
+| Full exact-source Python/PostgreSQL | PASS | Handle 99764, terminal exit 0: `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`: 2,481 passed +88 subtests, 2 skipped, 192 warnings, 303.69 s. Source remained clean/exact throughout. Ruff, pip check and diff PASS. Only task-owned disposable loopback PostgreSQL container removed by verified-label helper |
+| Clean isolated installation | PASS | Exact tracked `git archive b089fe599a45655fe503119e162683caf5bc4294` export, fresh Python venv, noneditable `Source[platform]` pip install, handle 98138 terminal exit 0; per-command TMPDIR and pip cache below managed external run. Fresh pip check passed; package/CLI/API/jobs/linked context/packaged 0014 imports verified from site-packages outside source CWD |
+| Initial full-chain offline DDL smoke | FAIL | Handle 6774: packaged offline `command.upgrade(config, "head", sql=True)` fails in existing 0007 data-reading migration because offline SELECT returns no rows result. No package/source change made to hide this. Offline generation from base is not claimed supported; actual base-to-head migrations remain covered by fresh owned SQLite and full disposable PostgreSQL suite |
+| Scoped packaged migration smoke | PASS | Handle 61123 terminal exit 0: offline PostgreSQL `command.upgrade(config, "0010_owner_watchlist:head", sql=True)` validates packaged recovery table DDL and distinct checkpoint/attempt unique names. Fresh owned SQLite upgrades from base and verifies tables/head 0014. This is not full-chain offline PostgreSQL DDL evidence |
+| Evidence retention / runtime | PASS | Ownership marker checked; managed run `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T001635Z-91802` finished completed/exit 0, retained. Fresh `Results/clean_install_smoke.py` and owned database stay local/untracked. Project dependencies: langgraph 1.2.12, core 1.6.5, openai 1.6.6, pydantic 2.13.5, SQLAlchemy 2.1.1, Alembic 1.20.0. Fresh: tradingagents 0.5.0, langgraph 1.2.12, core 1.6.6, openai 1.6.7, pydantic 2.13.5, SQLAlchemy 2.1.3, Alembic 1.20.0 |
+| Dedicated secret/vulnerability scanners | UNVERIFIED | gitleaks and detect-secrets unavailable. Changed-file review/auth/redaction/unit tests and pip dependency consistency are not comprehensive secret/vulnerability scanning |
+| Dependency/Python matrix and optional providers | UNVERIFIED | Full suite used project environment, not fresh resolved dependencies or other Python versions. Missing langchain_aws and explicitly unset live DeepSeek key are the two skips |
+| Native child/default activation | UNVERIFIED | New context did not invoke a model or spawn a child. Terminal-original-context reader, linked stage/artifact/report/decision finalization, all transport/crash/late-stop reconciliation and sequential multi-continuation remain unwired. Consent dispatch_enabled=false; API/worker/CLI default behavior is unchanged |
+| Browser / finance / broader R01–R14 | UNVERIFIED | No frontend change or new rendered/browser proof. Ingestion by asset, operational UX, financial source entailment, VI editorial and fresh live BTC/AAPL still open. Old private run failures remain untouched. SEC name/email has not actually been supplied; no fake local contact configured |
+| NQ=F | BLOCKED | Owner-approved active-contract/roll source hold unchanged, no provider or instrument substitution |
+
+No hosted CI, private DB migration/restart/history rewrite, paid AI/market-data
+call, provider/risk change, broker/execution, main merge or deployment. PyPI
+installation and disposable PostgreSQL are separate local build/test evidence.
+Post-gate inventory confirms this task's container
+`ta-research-qa-1790986610-91827` is absent. One older exited QA container belongs
+to another run; it was not deleted or repurposed.
+Next implement terminal original-context loading and linked stage/result
+publication, then actual new-child native graph equivalence and complete stop/
+cancel/expiry/ACK reconciliation before default API/UI activation or paid live
+acceptance. A side actor link or hook call alone does not prove source/client
+attestation, financial correctness or human-approval readiness. Full R01–R14
+goal and Draft PR #7 remain open.

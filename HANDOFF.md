@@ -2,6 +2,35 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Linked parent publication / accounting prerequisite 2026-10-03:** source
+`b089fe599a45655fe503119e162683caf5bc4294`. Internal context build exact retained
+observer rồi recheck full consent high-water dưới owner/job/run/execution locks
+trước một actual parent entry; lost ACK không cho re-enter. Usage/stage events và
+private checkpoint commit cùng actor links của additive `0014`, không rebuild/
+backfill bảng cũ. Root run/job/thread không đổi; checkpoint mới attempt 2, không
+lấy attempt 1 của terminal job. Old identical checkpoint ACK giữ nguyên provenance.
+Nonce/identity/cancel/expiry fence trong transaction và sau flush; expiry trong
+lúc lấy source locks không thể được heartbeat hồi sinh. Full accounting cộng mỗi
+attempt một lần, chặn tổng logical starts vượt original cap; claim/prepare time
+được debit. Stop hook chỉ từ bound observer còn lease; late cancel/expiry stop
+giữ upper bound unknown, không giả stop/refund. Local hook fixture không chứng
+minh actual child reaping. Default worker/API/CLI không bật resume.
+Final focused **166 PASS**, 10 PostgreSQL skips, 35,53 s; full sạch exact source
+qua disposable PostgreSQL helper **2.481 +88 subtests PASS**, 2 optional-provider
+skips, 192 warnings, 303,69 s, terminal exit 0. Gồm 2 actual PostgreSQL linked
+parent accounting/checkpoint và two-writer cases; fault variants chủ yếu SQLite.
+Ruff/pip-check/diff/templates PASS. Clean noneditable install/import, packaged
+PostgreSQL DDL `0010:head`, owned SQLite head 0014 PASS; offline DDL từ base FAIL
+ở data-reading migration 0007, không sửa/che giấu thành toàn-chain DDL PASS.
+Initial fixture exception/lint failures và exact commands có receipt 20261003.
+Container task đã dọn; managed fresh-install evidence giữ lại trên SSD ngoài.
+Next: terminal original-context reader + linked stage/report/decision publication,
+actual native child equivalence và stop/cancel/ACK reconciliation, rồi API/UI
+activation. Multi-continuation, broader ingestion/UX/live finance/VI chưa đạt.
+SEC contact chưa có giá trị; không tự điền. NQ=F giữ BLOCKED, không thêm provider.
+Không private DB migration/restart/history rewrite, paid AI/vendor call, risk/
+provider change, CI, merge/deploy. Full goal và Draft PR #7 vẫn mở.
+
 **Separate linked execution lease prerequisite 2026-10-03:** source
 `dbde6ff46ddb5ad99b2e43b229c5460b444ac000`. Internal allocation consume consent
 UUID vào riêng `0013_research_executions`, không tạo lại RunRow/JobRow hoặc bỏ
