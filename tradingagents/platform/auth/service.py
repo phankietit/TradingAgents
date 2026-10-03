@@ -247,6 +247,32 @@ class OwnerAuth:
             self.session.flush()
         return True
 
+    def lock_authenticated_consent(self, token: str, csrf_token: str, *, now: datetime) -> OwnerPrincipal:
+        """Authenticate under owner-then-session locks; no token is persisted.
+
+        Intended for a caller-owned consent transaction, not an API bypass or
+        paid dispatch. Recheck the locked session after owner disable/password
+        rotation or concurrent logout; keep lock order compatible with rotation.
+        """
+        if (type(token) is not str or not token.startswith(SESSION_PREFIX) or len(token) > 128
+                or type(csrf_token) is not str or not 32 <= len(csrf_token) <= 128):
+            raise InvalidCredentials("invalid session")
+        timestamp = _utc(now)
+        owner_id = self.session.scalar(select(OwnerSessionRow.owner_id).where(
+            OwnerSessionRow.token_hash == _token_hash(token)))
+        if owner_id is None:
+            raise InvalidCredentials("invalid session")
+        owner = self.session.scalar(select(OwnerRow).where(OwnerRow.owner_id == owner_id)
+            .with_for_update().execution_options(populate_existing=True))
+        row = self.session.scalar(select(OwnerSessionRow).where(OwnerSessionRow.token_hash == _token_hash(token))
+            .with_for_update().execution_options(populate_existing=True))
+        if (owner is None or OwnerStatus(owner.status) is not OwnerStatus.ACTIVE
+                or row is None or row.owner_id != owner_id or row.revoked_at is not None
+                or _utc(row.expires_at) <= timestamp
+                or not secrets.compare_digest(row.csrf_token_hash, _token_hash(csrf_token))):
+            raise InvalidCredentials("invalid session")
+        return OwnerPrincipal(owner.owner_id, owner.email)
+
     def validate_csrf(self, token: str, csrf_token: str) -> bool:
         if (
             not isinstance(token, str)

@@ -5,11 +5,14 @@ from typing import Any
 from urllib.parse import urlparse
 
 from langchain_core.messages import AIMessage
+from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel
 
 from .api_key_env import get_api_key_env
 from .base_client import BaseLLMClient, normalize_content
 from .capabilities import get_capabilities
+from .structured_content import parse_structured_content, validated_json_object
 from .validators import validate_model
 
 
@@ -150,6 +153,46 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
     ``NormalizedChatOpenAI.with_structured_output``, not here.
     """
 
+    def with_structured_output(self, schema, *, method=None, **kwargs):
+        resolved = method or get_capabilities(self.model_name).preferred_structured_method
+        if (resolved != "function_calling" or kwargs.get("include_raw")
+                or not isinstance(schema, type) or not issubclass(schema, BaseModel)):
+            return super().with_structured_output(schema, method=method, **kwargs)
+        kwargs.pop("include_raw", None)
+        bound = super().with_structured_output(schema, method=method, include_raw=True, **kwargs)
+
+        def parse(envelope):
+            raw = envelope.get("raw")
+            if not isinstance(raw, AIMessage):
+                raise ValueError("structured response has no assistant message")
+            if (raw.response_metadata.get("finish_reason") in {"length", "content_filter"}
+                    or raw.additional_kwargs.get("refusal")):
+                raise ValueError("structured response is incomplete or refused")
+            if raw.invalid_tool_calls or raw.additional_kwargs.get("_invalid_structured_tool_arguments"):
+                raise ValueError("schema response contains invalid tool calls")
+            if envelope.get("parsed") is not None:
+                expected_name = schema.model_json_schema().get("title", schema.__name__)
+                if len(raw.tool_calls) != 1 or raw.tool_calls[0].get("name") != expected_name:
+                    raise ValueError("schema response must contain exactly one expected tool call")
+                wire_calls = raw.additional_kwargs.get("tool_calls")
+                if wire_calls:
+                    if len(wire_calls) != 1:
+                        raise ValueError("schema response contains extra tool calls")
+                    arguments = wire_calls[0].get("function", {}).get("arguments")
+                    if isinstance(arguments, str):
+                        return parse_structured_content(schema, arguments)
+                return schema.model_validate(envelope["parsed"])
+            # Never hide a failed/unknown tool call behind unrelated content.
+            if raw.tool_calls or raw.invalid_tool_calls or raw.additional_kwargs.get("tool_calls"):
+                raise ValueError("schema tool response was not valid")
+            # MiniMax cannot be forced to select a specific schema tool. An
+            # unsolicited whole JSON response can satisfy the identical schema
+            # without another LLM invocation. No prose fragments or reasoning
+            # fields are inspected, extracted, logged or stored here.
+            return parse_structured_content(schema, raw.content)
+
+        return bound | RunnableLambda(parse)
+
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
         if get_capabilities(self.model_name).requires_reasoning_split:
@@ -159,7 +202,31 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
             # is forwarded into the request body untouched.
             extra_body = payload.setdefault("extra_body", {})
             extra_body.setdefault("reasoning_split", True)
+            for outgoing, message in zip(payload.get("messages", []), _input_to_messages(input_), strict=False):
+                if isinstance(message, AIMessage):
+                    for key in ("reasoning_details", "reasoning_content"):
+                        if key in message.additional_kwargs:
+                            outgoing[key] = message.additional_kwargs[key]
         return payload
+
+    def _create_chat_result(self, response, generation_info=None):
+        result = super()._create_chat_result(response, generation_info)
+        data = response if isinstance(response, dict) else response.model_dump(
+            exclude={"choices": {"__all__": {"message": {"parsed"}}}})
+        for generation, choice in zip(result.generations, data.get("choices", []), strict=False):
+            # LangChain normalizes tool arguments into dicts, which loses any
+            # duplicate fields from the original wire JSON. Retain only a safe
+            # rejection flag, never a second copy of raw arguments.
+            for call in choice.get("message", {}).get("tool_calls") or []:
+                try:
+                    validated_json_object(call.get("function", {}).get("arguments"))
+                except (ValueError, TypeError):
+                    generation.message.additional_kwargs["_invalid_structured_tool_arguments"] = True
+            for key in ("reasoning_details", "reasoning_content"):
+                value = choice.get("message", {}).get(key)
+                if value is not None:
+                    generation.message.additional_kwargs[key] = value
+        return result
 
 
 # Kwargs forwarded from user config to ChatOpenAI
@@ -298,6 +365,14 @@ class OpenAIClient(BaseLLMClient):
                 )
             if base_url:
                 llm_kwargs["base_url"] = base_url
+                # Keep the configured provider/key/endpoint unchanged, but use
+                # the documented wire protocol on official MiniMax endpoints.
+                # Arbitrary compatible servers must not receive vendor flags.
+                parsed_url = urlparse(base_url)
+                if (self.provider == "openai_compatible" and parsed_url.scheme == "https"
+                        and parsed_url.hostname in {"api.minimax.io", "api.minimaxi.com"}
+                        and get_capabilities(self.model).requires_reasoning_split):
+                    chat_cls = MinimaxChatOpenAI
 
             # API key: required unless key_optional; keyless local servers get a
             # placeholder. The env-var name is the single source in api_key_env.

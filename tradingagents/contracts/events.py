@@ -13,8 +13,10 @@ from .base import VersionedContract
 class RunEventType(str, Enum):
     RUN_QUEUED = "run.queued"
     RUN_STARTED = "run.started"
+    RESEARCH_EXECUTION_STARTED = "research.execution_started"
     STAGE_STARTED = "stage.started"
     STAGE_COMPLETED = "stage.completed"
+    MODEL_USAGE = "model.usage"
     ARTIFACT_CREATED = "artifact.created"
     DECISION_READY = "decision.ready"
     RUN_RETRYING = "run.retrying"

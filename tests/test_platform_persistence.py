@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime, timedelta
+from io import StringIO
 from uuid import uuid4
 
 import pytest
+from alembic import command
 from sqlalchemy import create_engine, inspect, text
 
 from tradingagents._compat import UTC
@@ -33,13 +36,33 @@ from tradingagents.platform.persistence import (
     downgrade_database,
     upgrade_database,
 )
-from tradingagents.platform.persistence.models import InstrumentRow
+from tradingagents.platform.persistence.migration import migration_config
+from tradingagents.platform.persistence.models import Base, InstrumentRow
 
 NOW = datetime(2026, 9, 23, 8, 0, tzinfo=UTC)
 
 
 def _url(tmp_path) -> str:
     return f"sqlite:///{tmp_path / 'platform.db'}"
+
+
+@pytest.mark.unit
+def test_checkpoint_unique_constraints_have_distinct_names_in_postgresql_ddl():
+    # Offline migration DDL catches PostgreSQL index-name collisions even
+    # when the developer has no disposable PostgreSQL service available.
+    config = migration_config("postgresql+psycopg://unused/unused")
+    output = StringIO()
+    config.output_buffer = output
+    command.upgrade(config, "0010_owner_watchlist:head", sql=True)
+    names = re.findall(r"CONSTRAINT (\w+) UNIQUE", output.getvalue())
+    assert len(names) == len(set(names))
+    expected = {
+        "uq_research_checkpoints_run_sequence",
+        "uq_research_checkpoints_run_content_hash",
+    }
+    assert expected <= set(names)
+    table = Base.metadata.tables["research_checkpoints"]
+    assert expected <= {constraint.name for constraint in table.constraints}
 
 
 def _instrument():

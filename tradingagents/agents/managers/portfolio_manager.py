@@ -23,8 +23,11 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_portfolio_manager(llm):
-    structured_llm = bind_structured(llm, PortfolioDecision, "Portfolio Manager")
+def create_portfolio_manager(llm, *, research_only=False):
+    from tradingagents.agents.research_schemas import SnapshotReportDraft
+
+    schema = SnapshotReportDraft if research_only else PortfolioDecision
+    structured_llm = bind_structured(llm, schema, "Portfolio Manager")
 
     def portfolio_manager_node(state) -> dict:
         instrument_context = get_instrument_context_from_state(state)
@@ -79,20 +82,70 @@ Write these sections, in this order, starting with the rating on its own line:
 {NO_EXTERNAL_TOOLS}{get_language_instruction()}"""
 
         structured_decision = None
+        diagnostics = list(state.get("structured_diagnostics", []))
+        if research_only:
+            # The legacy bilingual suffix asks for both languages in every
+            # field. Snapshot reports have separate locales; do not contradict
+            # that schema with the legacy instruction.
+            prompt = prompt.replace(get_language_instruction(), "")
+            prompt = prompt.replace("final trading decision", "final research assessment")
+            for old, new in {
+                "Strong conviction to enter or add to position": "Strong positive research outlook",
+                "Favorable outlook, gradually increase exposure": "Moderately positive research outlook",
+                "Maintain current position, no action needed": "Balanced or insufficient research evidence",
+                "Reduce exposure, take partial profits": "Moderately negative research outlook",
+                "Exit position or avoid entry": "Strong negative research outlook",
+                "the call and how to act on it": "outlook, supporting evidence, uncertainty and horizon",
+                "Trader's transaction proposal": "Trader's research scenario",
+            }.items():
+                prompt = prompt.replace(old, new)
+            prompt = prompt.replace("sized by how decisively it wins", "qualified by the evidence strength")
+            prompt += ("\nResearch-only output: include required confidence, at least one risk, "
+                       "and at least one invalidation condition. Each thesis paragraph, risk and "
+                       "invalidation is a claim object with supplied snapshot IDs. Do not duplicate "
+                       "those claims into evidence_claims. Hypothetical conditions must "
+                       "be labelled conditional, not observed. No sizing or execution instructions.")
+            prompt += ("\nUse quantity_bindings to reference every observed numeric claim using "
+                       "the supplied verified fact_catalog IDs and exact units. Preserve the fact_catalog "
+                       "passed by analysts; do not invent IDs. Write canonical structured fields in English "
+                       "only. Set localized_report=null; a separate presentation stage handles translation. "
+                       "Include the strongest opposing case and coverage limitations within investment_thesis. "
+                       "Use concise paragraphs with descriptive headings, not numbered headings. "
+                       "Render monetary/percentage observations through placeholders, "
+                       "setting decimal_places=2; never copy "
+                       "floating-point noise from the catalog. Preserve the sign and units. "
+                       "Do not invent conditional price targets as observed facts.")
+            prompt += ("\nEDITORIAL CONTRACT: Write for a financially literate person, not a software "
+                       "engineer. Keep fact_catalog keys, snapshot IDs, boolean arrays and internal "
+                       "policy names in structured references only, never in reader-facing prose. "
+                       "Use familiar labels such as EMA 10, SMA 50, SMA 200, 90-day return, and "
+                       "observed-period high, preserving the same digits in Vietnamese. Explain "
+                       "uncertainty plainly; do not copy debating agents' metaphors. Vietnamese must "
+                       "be natural financial writing: price action = diễn biến giá, trend structure = "
+                       "cấu trúc xu hướng, pullback = nhịp điều chỉnh, invalidation = điều kiện làm "
+                       "mất hiệu lực luận điểm. Avoid literal translations such as băng giá, ngăn xếp "
+                       "cấu trúc, nạp lại tăng giá, lưỡi dao phòng thủ, điểm ngọt or cầu dao. "
+                       "Summarize the strongest opposing evidence without repeating each agent's "
+                       "entire argument. Do not prescribe sizing, even without a numeric quantity.")
+            from tradingagents.agents.utils.report_compiler import BINDING_INSTRUCTIONS
+
+            prompt += BINDING_INSTRUCTIONS
 
         def capture_decision(value):
             nonlocal structured_decision
             # Revalidate even model instances: model_copy can bypass validators.
-            validated = PortfolioDecision.model_validate(value.model_dump())
+            validated = schema.model_validate(value.model_dump())
             structured_decision = validated.model_dump(mode="json")
 
         final_trade_decision = invoke_structured_or_freetext(
             structured_llm,
             llm,
             prompt,
-            render_pm_decision,
+            (lambda value: value.model_dump_json()) if research_only else render_pm_decision,
             "Portfolio Manager",
             on_structured=capture_decision,
+            repair_schema=schema if research_only else None,
+            diagnostics=diagnostics,
         )
 
         new_risk_debate_state = {
@@ -111,7 +164,9 @@ Write these sections, in this order, starting with the rating on its own line:
         return {
             "risk_debate_state": new_risk_debate_state,
             "final_trade_decision": final_trade_decision,
-            "structured_decision": structured_decision,
+            "structured_decision": None if research_only else structured_decision,
+            **({"structured_draft": structured_decision} if research_only else {}),
+            "structured_diagnostics": diagnostics,
         }
 
     return portfolio_manager_node

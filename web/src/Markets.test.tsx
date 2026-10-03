@@ -29,12 +29,15 @@ function setup(missing = false) {
 
 it('renders backend metrics, stale provenance, chart and accessible table', async () => {
   setup(); const user = userEvent.setup(); render(<Markets />);
-  expect(await screen.findByText('Snapshot quality: STALE')).toBeTruthy();
+  expect(await screen.findByText('Snapshot quality: Outdated data')).toBeTruthy();
   expect(screen.getByText('1.94%')).toBeTruthy();
   expect(screen.getByRole('img').getAttribute('aria-label')).toContain('2 observations');
   await user.click(screen.getByRole('button', { name: 'Show price table' }));
   expect(screen.getByRole('table')).toBeTruthy();
-  expect(screen.getAllByText('Unavailable').length).toBe(2);
+  expect(screen.getByRole('columnheader', {name:'Session date'})).toBeTruthy();
+  expect(screen.getByRole('columnheader', {name:'Candle closed at (UTC)'})).toBeTruthy();
+  // Legacy fixtures have neither explicit session labels nor adjusted closes.
+  expect(screen.getAllByText('Unavailable').length).toBe(4);
   await user.click(screen.getByText('Source & provenance'));
   expect(screen.getByText('TEST FIXTURE / ohlcv.daily')).toBeTruthy();
 });
@@ -59,7 +62,7 @@ it('withholds missing prices and identifies reference-only instruments', async (
 
 it('sends an explicit time window and benchmark to the backend without local recomputation', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<Markets />);
-  await screen.findByText('Snapshot quality: STALE');
+  await screen.findByText('Snapshot quality: Outdated data');
   await user.click(screen.getByText('Time window & benchmark'));
   await user.type(screen.getByLabelText('Snapshot cutoff (ISO timezone)'), '2026-09-23T12:00:00Z');
   await user.type(screen.getByLabelText('Start (ISO timezone)'), '2026-09-20T00:00:00Z');
@@ -73,7 +76,7 @@ it('sends an explicit time window and benchmark to the backend without local rec
 
 it('rejects timestamps without timezone before requesting a different price window', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<Markets />);
-  await screen.findByText('Snapshot quality: STALE');
+  await screen.findByText('Snapshot quality: Outdated data');
   await user.click(screen.getByText('Time window & benchmark'));
   await user.type(screen.getByLabelText('Start (ISO timezone)'), '2026-09-20T00:00:00');
   await user.click(screen.getByRole('button', {name:'Apply saved-data query'}));

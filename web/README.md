@@ -1,5 +1,22 @@
 # Local research Web UI (M4)
 
+## English / Tiếng Việt
+
+Use VI/EN on login or in the workspace header. Only the locale code is stored
+in `tradingagents.ui-language.v1`; storage denial falls back to in-memory
+selection. An unset preference follows a Vietnamese browser locale, otherwise
+English. Switching does not remount forms, submit requests or translate saved
+source text. Currency/percentage displays follow the locale; timestamps stay
+explicitly UTC and numeric input values retain their existing API conventions.
+
+New analysis defaults to **English + Vietnamese**; English and Vietnamese
+alone are also selectable. The language is included in the immutable run,
+configuration hash and job payload. Changing it resets paid-call consent.
+Old reports are shown verbatim with legacy language attribution, not silently
+translated. The bilingual model instruction preserves JSON keys/enums, amounts,
+citations, uncertainty and risks; compliance is not independently certified.
+See [the full language contract](../docs/platform/bilingual.md).
+
 This checkpoint implements the React shell, session boundary and Markets with
 real API instrument discovery, persisted watchlists, saved price chart/table,
 backend metrics and source provenance. Analysis now supports snapshot selection,
@@ -10,12 +27,26 @@ renders original/current state, narrative/evidence/risk checks and explicit
 approve/reject dialogs. Worker-to-approval integration is verified locally with a
 labelled synthetic graph. Finance-first presentation keeps ordinary research,
 portfolio and review flows readable while retaining diagnostics in disclosures.
-Local acceptance now passes at `967aa24`; see the authoritative
+The historical M4 acceptance checkpoint was `967aa24`; see its
 [verification ledger](../docs/platform/milestone-4-verification.md) for exact
 commands, browser receipts and PR/merge status. Historical checkpoints below
 retain their original counts and limitations. Live-provider validation and
 production deployment are not implied. Start with the
 [local startup guide](../docs/platform/local-web-startup.md).
+
+The R01–R14 candidate adds snapshot-bound research tools, strict bilingual report
+validation, saved-history charts, safe Markdown, real graph-stage progress and
+the charcoal/sage workspace redesign. Current status and live limitations are
+tracked in [research remediation](../docs/platform/research-remediation.md);
+historical M4 receipts do not certify this candidate.
+
+The analysis setup now has an independent **Add recent headlines** action
+beside price preparation. It saves owner-scoped Yahoo news only when the
+current-vintage feed passes identity, content and cutoff checks. The action is
+optional, does not start AI, clears prior paid-call consent, and never presents
+the recent feed as exhaustive or historically replayable. Social,
+fundamentals and macro acquisition remain unimplemented; see
+[data preparation](../docs/platform/data-preparation.md).
 
 ## Development
 
@@ -84,6 +115,9 @@ This creates a new ignored database/store and uses labelled synthetic graph
 output; it does not load owner records or call models/vendors. Never point the
 fixture script at an owner database. Stop with Ctrl-C; fixture data is retained
 for inspection. This is not a populated investment product or live-data demo.
+The synthetic app explicitly refuses both price and news vendor acquisition;
+the news button can be used to verify its unavailable state without a Yahoo
+request.
 Add `--all-assets` only for cross-asset QA: it seeds labelled synthetic daily
 series for SPY/QQQ, BTC/ETH and NQ/ES, in addition to AAPL. Values are scaled
 fixtures, not real market returns, calendar-session coverage or futures roll

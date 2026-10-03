@@ -67,10 +67,12 @@ class JobExecutionContext:
         self._check_lease()
 
     @contextmanager
-    def publication_session(self):
+    def publication_session(self, *, lock_timeout_seconds=None):
         """Fence publication against cancellation/recovery in the same transaction."""
         self._check_lease()
-        with self.database.session() as session:
+        options = ({"lock_timeout_seconds": lock_timeout_seconds}
+                   if lock_timeout_seconds is not None else {})
+        with self.database.session(**options) as session:
             job = DurableJobQueue(session).heartbeat(
                 self.job_id, self.worker_id, lease_for=self.lease_for, now=self.clock())
             if job.status is JobStatus.CANCEL_REQUESTED:
@@ -186,6 +188,21 @@ class JobWorker:
                 with self.database.session() as session:
                     return DurableJobQueue(session).get(job.job_id, job.owner_id)
         except Exception as exc:
+            from pathlib import Path
+            from traceback import extract_tb
+
+            from tradingagents.platform.analysis.observer import (
+                ResearchBudgetExceeded,
+                ResearchExecutionFailed,
+            )
+
+            logger.error("job_handler_failed", extra={
+                "job_id": str(job.job_id), "run_id": str(job.run_id),
+                "error_type": type(exc).__name__,
+                "code_locations": [f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}"
+                                   for frame in extract_tb(exc.__traceback__)[-8:]],
+            })
+
             retry_after = self.retry_base * (2 ** max(job.attempt - 1, 0))
             try:
                 with self.database.session() as session:
@@ -193,9 +210,11 @@ class JobWorker:
                     failed = DurableJobQueue(session).fail(
                         job.job_id,
                         self.worker_id,
-                        error_code="HANDLER_ERROR",
+                        error_code=("RESEARCH_BUDGET_EXHAUSTED" if isinstance(exc, ResearchBudgetExceeded)
+                                    else "RESEARCH_EXECUTION_FAILED" if isinstance(exc, ResearchExecutionFailed)
+                                    else "HANDLER_ERROR"),
                         error_message=type(exc).__name__,
-                        retryable=True,
+                        retryable=not isinstance(exc, (ResearchBudgetExceeded, ResearchExecutionFailed)),
                         retry_after=retry_after,
                         now=timestamp,
                     )

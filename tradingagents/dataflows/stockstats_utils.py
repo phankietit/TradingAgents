@@ -10,6 +10,7 @@ from yfinance.exceptions import YFRateLimitError
 
 from .config import get_config
 from .errors import VendorRateLimitError
+from .history_window import OHLCV_HISTORY_YEARS
 from .symbol_utils import NoMarketDataError, normalize_symbol
 from .utils import safe_ticker_component, vendor_reachable
 
@@ -221,7 +222,7 @@ def load_ohlcv(symbol: str, curr_date: str, fill_gaps: bool = True) -> pd.DataFr
 
     # One cache file per symbol, holding the latest 5y-to-today download.
     now = pd.Timestamp.today()
-    start_date = now - pd.DateOffset(years=5)
+    start_date = now - pd.DateOffset(years=OHLCV_HISTORY_YEARS)
     start_str = start_date.strftime("%Y-%m-%d")
     # yfinance ``end`` is EXCLUSIVE; request tomorrow so today's row is included
     # when curr_date is the current day (#986). Look-ahead is still prevented by

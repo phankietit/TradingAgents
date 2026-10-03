@@ -16,6 +16,7 @@ class ArtifactKind(str, Enum):
     DERIVED_FACTOR_SNAPSHOT = "derived_factor_snapshot"
     DATA_HEALTH_REPORT = "data_health_report"
     ANALYSIS_REPORT = "analysis_report"
+    RESEARCH_STAGE = "research_stage"
     RUN_EVENT_LOG = "run_event_log"
     DECISION_EVIDENCE = "decision_evidence"
     HISTORICAL_EVALUATION = "historical_evaluation"
@@ -39,6 +40,8 @@ class ArtifactManifest(VersionedContract):
     def require_context_for_snapshot_payload(self):
         if self.kind is ArtifactKind.SNAPSHOT_PAYLOAD and not self.snapshot_id:
             raise ValueError("snapshot payload artifacts require snapshot_id")
+        if self.kind is ArtifactKind.RESEARCH_STAGE and (self.run_id is None or self.instrument_id is None):
+            raise ValueError("research stage artifacts require run and instrument context")
         digest = self.content_hash.removeprefix("sha256:")
         expected_key = f"sha256/{digest[:2]}/{digest[2:4]}/{digest}"
         if self.storage_key != expected_key:

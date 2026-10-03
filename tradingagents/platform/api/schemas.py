@@ -20,11 +20,30 @@ from tradingagents.contracts import (
     SnapshotManifest,
     TimeSeriesView,
 )
-from tradingagents.contracts.runs import DecisionRunInputs
+from tradingagents.contracts.runs import DecisionRunInputs, ResearchExecutionLimits
 
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class PrepareDataResponse(ApiModel):
+    status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
+                    "rate_limited", "unavailable", "busy", "cooldown"]
+    snapshot: SnapshotManifest | None = None
+    analysis_as_of: AwareDatetime
+    reused: bool = False
+    retry_after_seconds: int = Field(default=0, ge=0, le=120)
+    last_failure: Literal["no_data", "stale", "coverage_gap", "rate_limited", "unavailable"] | None = None
+
+
+class PrepareMacroRequest(ApiModel):
+    series_id: str = Field(pattern=r"^[A-Z0-9_]{1,30}$", strict=True)
+    lookback_days: int = Field(default=365, ge=1, le=36525, strict=True)
+
+
+class PrepareSocialRequest(ApiModel):
+    vendor: Literal["reddit", "stocktwits"]
 
 
 class LoginRequest(ApiModel):
@@ -52,6 +71,9 @@ class AnalysisConfigurationResponse(ApiModel):
     worker_status: Literal["UNVERIFIED"] = "UNVERIFIED"
     provider_connection: Literal["UNVERIFIED"] = "UNVERIFIED"
     max_job_attempts: int
+    execution_limits: ResearchExecutionLimits = Field(default_factory=ResearchExecutionLimits)
+    deadline_mode: Literal["cooperative_boundaries"] = "cooperative_boundaries"
+    default_worker_supervision: Literal["spawned_process"] = "spawned_process"
 
 
 class RunJobStateResponse(ApiModel):
@@ -107,9 +129,13 @@ class RunCreateRequest(ApiModel):
     analysis_as_of: AwareDatetime
     selected_analysts: tuple[str, ...] = Field(min_length=1, max_length=4)
     decision_inputs: DecisionRunInputs | None = None
+    report_language: Literal["en", "vi", "en-vi"] | None = None
+    execution_limits: ResearchExecutionLimits | None = None
 
     @model_validator(mode="after")
     def validate_snapshot_roles(self):
+        if self.execution_limits is not None and self.decision_inputs is None:
+            raise ValueError("execution allowance requires snapshot inputs")
         if self.decision_inputs and set(self.decision_inputs.snapshots_by_analyst) != set(self.selected_analysts):
             raise ValueError("snapshot roles must match selected analysts")
         return self

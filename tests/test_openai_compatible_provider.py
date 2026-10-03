@@ -15,6 +15,22 @@ from tradingagents.llm_clients.validators import validate_model
 # openai_client module, which would otherwise create a second class identity.
 
 
+@pytest.mark.parametrize("url,expected", [
+    ("https://api.minimax.io/v1", "MinimaxChatOpenAI"),
+    ("https://api.minimaxi.com/v1", "MinimaxChatOpenAI"),
+    ("https://api.minimax.io.example/v1", "LocalCompatibleChatOpenAI"),
+    ("http://localhost:8000/v1", "LocalCompatibleChatOpenAI"),
+])
+def test_official_minimax_endpoint_uses_protocol_without_changing_provider(url, expected, monkeypatch):
+    monkeypatch.setenv("OPENAI_COMPATIBLE_API_KEY", "fixture-compatible-key")
+    client = create_llm_client(provider="openai_compatible", model="MiniMax-M3", base_url=url)
+    llm = client.get_llm()
+    assert client.provider == "openai_compatible"
+    assert type(llm).__name__ == expected
+    assert str(llm.openai_api_base) == url
+    assert llm.openai_api_key.get_secret_value() == "fixture-compatible-key"
+
+
 @pytest.mark.unit
 def test_factory_routes_to_openai_client():
     client = create_llm_client(

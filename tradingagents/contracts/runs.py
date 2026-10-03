@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field, model_validator
@@ -49,6 +49,13 @@ class RunStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class ResearchExecutionLimits(StrictContract):
+    """Owner-selected run allowance; not a hard interruption of SDK requests."""
+
+    wall_seconds: int = Field(default=1800, ge=60, le=7200, strict=True)
+    model_calls: int = Field(default=128, ge=1, le=128, strict=True)
+
+
 class RunManifest(VersionedContract):
     run_id: UUID
     owner_id: UUID
@@ -64,6 +71,10 @@ class RunManifest(VersionedContract):
     deep_model: NonEmptyText
     config_hash: ContentHash
     prompt_version: NonEmptyText
+    # None preserves legacy worker-configured output; explicit selections are immutable.
+    report_language: Literal["en", "vi", "en-vi"] | None = None
+    # None preserves legacy inputs; explicit values are immutable and hash-bound.
+    execution_limits: ResearchExecutionLimits | None = None
     snapshot_ids: tuple[UUID, ...] = ()
     decision_inputs: DecisionRunInputs | None = None
     error_code: str | None = None
@@ -71,6 +82,8 @@ class RunManifest(VersionedContract):
 
     @model_validator(mode="after")
     def validate_lifecycle(self):
+        if self.execution_limits is not None and self.decision_inputs is None:
+            raise ValueError("execution allowance requires a snapshot-bound run")
         if self.decision_inputs is not None:
             if set(self.decision_inputs.snapshots_by_analyst) != set(self.selected_analysts):
                 raise ValueError("run snapshot roles must match selected analysts")

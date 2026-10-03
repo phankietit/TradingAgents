@@ -8,7 +8,121 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ## [Unreleased]
 
+### Fixed
+
+- Supply complete selected immutable source records to the existing financial
+  review prompt, alongside fact bindings and the draft. Review instructions now
+  distinguish source facts, sampled opinions and unverified causal/predictive
+  hypotheses. No extra review call, source truncation or CLI change. This fixes
+  an input gap, not a deterministic proof of qualitative entailment; larger
+  context can increase input usage and live editorial acceptance remains open.
+
+- Compact analysis preparation into one instrument/time/language row and a
+  responsive source grid. Choose saved sources opens and focuses the existing
+  evidence inspector without fetching, selecting sources or authorizing AI.
+  Existing coverage warnings, source failures and explicit paid consent remain.
+
+- Keep decision review readiness and approval/rejection controls visible before
+  the saved report, with unchanged matching-run, policy and backend authority.
+  Remove duplicate report headings and self-navigation inside Decisions; retain
+  Analysis's bound decision link. Reduce nested report panels and narrow padding
+  while preserving coverage warnings, saved EN/VI text and verification details.
+
+- Add independent authenticated preparation of the original StockTwits/Reddit
+  public feeds, immutable full-text current snapshots and owner-bound Sentiment
+  input. Preserve publication/edit cutoffs, sample-versus-probability distinctions,
+  separate failed-source audits and EN/VI coverage. Bounded streamed/child transport
+  refuses malformed, ambiguous, unsafe or oversized data; no silent excerpt cap.
+  Web multi-source selection preserves the other feed and resets paid consent.
+  No AI call during preparation, CLI default change, new provider, graph role cut,
+  historical rewrite or approval authority. Local evidence is not live finance.
+
+- Add authenticated current FRED series/window preparation with bounded streamed
+  transport and supervised/reaped acquisition, immutable owner snapshots and
+  distinct failure states. Web economic-context selection preserves independent
+  headlines and other indicators, resets paid consent and never starts AI itself.
+  CLI defaults, historical records, research flow, policy and approval stay unchanged.
+  Synthetic local evidence does not establish live FRED or financial acceptance.
+
+- Add a structured current-vintage Yahoo news collector with publication and
+  retrieval provenance and explicit failure/coverage states. This is adapter
+  groundwork; web collection, persistence and full-source analyst parity are
+  not yet implemented by this change. Legacy CLI behavior is unchanged.
+
+- Validate complete MiniMax JSON text responses against the bound schema before
+  requesting format repair; keep publication gates and retry/usage accounting.
+  Reject prose fragments, failed tool-call recovery, duplicate JSON fields and
+  non-JSON numeric constants. No provider/model or research-flow change.
+- Translate research in identified blocks, preserving source-owned sections,
+  order and per-block quantities. Reject omitted/duplicate blocks and reproduced
+  literal Vietnamese calques within the existing bounded repair budget.
+- Render percentage relationships from verified fact IDs as complete EN/VI
+  statements; reject numeric anchors reattached to arbitrary comparison prose.
+  Preserve research interpretations and historical reports. Live acceptance is
+  not implied by local compiler/presentation regression tests.
+- Use one numeric lexer for protected translation and parity checks, including
+  indicator periods, dates and ranges; preserve strict rejection of changed values.
+- Compile final report quantities from immutable snapshot bindings, with a
+  separate bounded financial validation stage and protected EN/VI presentation.
+  Preserve original research/debate flow and rejected reports for audit.
+- Distinguish unused, missing, duplicate and unresolved report quantity bindings
+  in bounded repair feedback without accepting malformed or unsupported output.
+  Separate input instrument metadata from permitted report fields on initial
+  and repair calls; keep schema rejection fail-closed.
+- Reject reproduced percentage-direction/denominator mismatches before report
+  compilation, and known Vietnamese volatility/volume/liquidity and
+  crossover/divergence substitutions. These bounded checks are not a claim of
+  complete semantic verification; financial human review remains required.
+- Snapshot facts v4 no longer divide dimensionless RSI by the quote-currency
+  close. Raw RSI and valid price-unit ratios remain available; old saved reports
+  and their numerical evidence are not rewritten.
+- Separate analysis setup, actual-event progress and report reading; add
+  summary/history/research/verification sections and a compact mobile run picker.
+  Read-only polling no longer blanks the report, and deep links retain run identity.
+
+- Preserve quantitative references on rejected reports, distinguish reciprocal
+  percentage denominators in snapshot facts, and allow ten minutes for long
+  final model responses without reducing flow.
+- Preserve daily session labels separately from candle close instants in v1.1
+  Yahoo v4 snapshots without rewriting older evidence. Add full-history,
+  snapshot-bound stockstats tools and deterministic calendar return endpoints.
+- Align snapshot-mode structured schemas with the decision consumer, use one
+  bounded JSON format repair, and retain redacted field-level diagnostics.
+  Apply research authority constraints throughout the existing graph.
+- Emit real graph-stage events, report provider token usage when supplied,
+  check cancellation between model calls, and reconcile retry-wait cancellation
+  without rewriting prior artifacts.
+- Introduce a restrained research workspace, safe Markdown, immutable-report
+  price charts, bilingual saved-report views and separate portfolio impact.
+  Candidate validation remains in progress; see the remediation ledger.
+- Allow owner-approved latest-available crypto research with at most one missing
+  trailing daily candle, preserving internal-gap rejection and current retrieval
+  time. Disclose the actual cutoff in source metadata, UI and bilingual reports;
+  never fill missing prices or reuse delayed snapshots as current evidence.
+- Show bounded price-preparation progress and automatic retry countdowns before
+  a final source failure. Separate local cooldown from Yahoo rate limits, retain
+  the source cause, and support cancellation without starting paid analysis.
+- Align web price acquisition to the original engine's five-calendar-year
+  history window via a shared constant; retain old one-year snapshots without
+  reusing them as complete history. This does not claim full CLI/tool parity.
+- Connect the local analysis form to bounded Yahoo daily-price preparation,
+  owner-scoped verified reuse and immutable snapshots. Explain missing data,
+  coverage failures, paid-AI consent and queued-worker state in English/Vietnamese.
+  Current bootstrap stocks/ETFs, cash indices and BTC/ETH are supported; NQ/ES
+  preparation and automatic non-price ingestion remain unavailable.
+- Honor explicit provider, quick-model and deep-model environment settings in
+  the local API so new run manifests retain the operator's model selection.
+  Existing runs and API defaults are unchanged.
+
 ### Added
+
+- Add English/Vietnamese UI localization, persistent VI/EN controls and localized
+  financial display formatting without changing saved amounts, UTC cutoffs or
+  risk/approval states.
+- Add immutable per-run `report_language` selection (English, Vietnamese or
+  English–Vietnamese), worker propagation and schema-preserving bilingual
+  narrative instructions. Existing reports remain unchanged; no translation
+  service or automatic paid calls are introduced.
 
 - Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
   Decisions workspaces, owner sessions, same-origin CSRF and opt-in built-asset

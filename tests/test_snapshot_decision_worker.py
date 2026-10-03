@@ -15,13 +15,22 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
         repo = PlatformRepository(session, artifact_store=store)
         original_run = repo.get_run(seeded.run_id, seeded.owner_id)
         source = seeded.risk_snapshot_ids[0]
+        if case == "bilingual_fixture_graph":
+            from tradingagents.platform.market_data.timeseries import TimeSeriesSnapshotService
+
+            service = TimeSeriesSnapshotService(repo, ArtifactService(store, repo))
+            _, series = service.load(owner_id=seeded.owner_id, instrument_id=seeded.instrument_id,
+                                     dataset="daily_prices", as_of=NOW)
+            source = service.persist(owner_id=seeded.owner_id,
+                series=series.model_copy(update={"dataset": "ohlcv.daily"}),
+                vendor="SYNTHETIC LOCAL QA", retrieved_at=NOW).snapshot_id
         policy_check = seeded.policy_checks[0]
         inputs = DecisionRunInputs(snapshots_by_analyst={"market": (source,)},
             source_max_age_seconds={"market": 86400},
@@ -29,13 +38,15 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             policy_version=policy_check.policy_version, requested_target_weight=.3,
             risk_snapshot_ids=seeded.risk_snapshot_ids)
         run = original_run.model_copy(update={"run_id": uuid4(), "selected_analysts": ("market",),
-            "snapshot_ids": inputs.snapshot_ids(), "decision_inputs": inputs})
+            "snapshot_ids": inputs.snapshot_ids(), "decision_inputs": inputs,
+            **({"report_language": "en-vi"} if case == "bilingual_fixture_graph" else {})})
         repo.save_run(run)
         DurableJobQueue(session).enqueue(owner_id=run.owner_id, run_id=run.run_id,
             idempotency_key=str(run.run_id), now=NOW, payload={
                 "instrument_id": str(run.instrument_id), "analysis_as_of": NOW.isoformat(),
                 "selected_analysts": ["market"], "config_hash": run.config_hash,
                 "decision_inputs": inputs.model_dump(mode="json"),
+                **({"report_language": "en-vi"} if case == "bilingual_fixture_graph" else {}),
             })
 
     class Graph:
@@ -56,11 +67,19 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 "evidence_claims": claims}
             if case == "model_weight":
                 payload["target_weight"] = .99
+            if case == "invalid_number":
+                payload["observed_numbers"] = [{"snapshot_id": str(source), "fact_id": "invented", "value": 999, "decimal_places": 0}]
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Buy"
 
-    if case in {"fixture_graph", "invalid_fixture_graph"}:
-        from scripts.web_fixture import InvalidSyntheticGraph, SyntheticSnapshotGraph
-        graph_factory = InvalidSyntheticGraph if case == "invalid_fixture_graph" else SyntheticSnapshotGraph
+    if case in {"fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph"}:
+        from scripts.web_fixture import (
+            BilingualSyntheticGraph,
+            InvalidSyntheticGraph,
+            SyntheticSnapshotGraph,
+        )
+        graph_factory = {"fixture_graph": SyntheticSnapshotGraph,
+                         "bilingual_fixture_graph": BilingualSyntheticGraph,
+                         "invalid_fixture_graph": InvalidSyntheticGraph}[case]
         assert not hasattr(graph_factory, "propagate")  # No live-tool fallback.
     else:
         graph_factory = Graph
@@ -84,7 +103,7 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             with pytest.raises(ValueError, match="successfully completed"):
                 repo.add_decision_event(_approval(decision))
             assert repo.list_decision_events(decision.decision_id, run.owner_id) == ()
-        elif case in {"valid", "fixture_graph"}:
+        elif case in {"valid", "fixture_graph", "bilingual_fixture_graph"}:
             assert decision.status is DecisionStatus.READY_FOR_APPROVAL
             assert decision.target_weight == .3  # Owner input, not model output.
             assert len(job.output_artifact_ids) == 2
@@ -95,8 +114,28 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 assert "SYNTHETIC LOCAL QA" in decision.thesis
                 assert len(evidence.claims) == 3
             assert all(ref.snapshot_id == source for ref in evidence.evidence)
+            if case == "bilingual_fixture_graph":
+                import json
+
+                _, content = ArtifactService(store, repo).read(job.output_artifact_ids[0], run.owner_id)
+                report = json.loads(content)
+                assert report["validation_issues"] == []
+                assert report["report_language"] == "en-vi"
+                assert "## Tóm tắt" in report["localized_report"]["vi"]
+                assert "## Executive summary" in report["localized_report"]["en"]
+                assert report["quantitative_references"][0]["fact_id"] == "latest.close"
+                assert report["evidence_artifact_id"] == str(job.output_artifact_ids[1])
             repo.add_decision_event(_approval(decision))
         else:
             assert decision.status is DecisionStatus.REVIEW
             assert decision.target_weight is None
+            if case == "invalid_number":
+                import json
+
+                service = ArtifactService(store, repo)
+                _, content = service.read(job.output_artifact_ids[0], run.owner_id)
+                report = json.loads(content)
+                assert report["structured_narrative"] is None
+                assert report["quantitative_references"][0]["fact_id"] == "invented"
+                assert report["validation_issues"] == ["numeric_claim_not_supported"]
     database.dispose()
