@@ -2,6 +2,36 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Original social preparation checkpoint · 2026-10-03:** the candidate containing
+this entry adds structured original StockTwits/Reddit public feeds, bounded fixed
+transport/child acquisition, independent authenticated owner preparation,
+immutable full-text snapshots and original Sentiment/fact admission. Publication,
+Reddit edit cutoff, full identity/hash/manifest and distinct failure states refuse
+invalid data; recent samples/user labels are not historical coverage, market
+probabilities or neutral absence. No CLI/default/provider/role/policy/approval cut.
+Current local focused PG2371 terminal0 covers182 cases, including actual synthetic
+child stdio, threaded shared acquisition lock, full graph EN/VI fixtures and
+SQLite/PG storage. Final focused rerun86289 terminal0:182 PASS,1warning,31.69s
+after test-ID-only shortening to avoid megabyte fixture identifiers; Ruff and
+pip-check PASS, only helper-owned labelled PG removed. Web56263 terminal0:
+148 tests/typecheck/lint/build. Final
+synthetic browser12609 terminal0: real owner HTTP/API on127.0.0.1:8018,
+desktop1440×1000/mobile390×844, both feeds retained, consent reset, no job, EN/VI,
+language pressed-state and console/overlay/overflow checks; four screenshots
+reviewed. QA corrected translated-heading lookup and waited for the CSS language
+transition before capture, not a product/policy bypass. Owned servers99878/34799/
+15944 terminal0; private application/browser/runtime not restarted. Managed
+20261003T083034Z-76016 remains prepared. Whole exact-source baseline, fresh package
+and actual new social acquisition are still UNVERIFIED at this checkpoint.
+Do not promote original HTTP endpoint diagnostic200 into structured live proof.
+The preparation form remains long and text-heavy; passing viewport/interactions
+does not accept broader professional process/report UX. See receipt20261003,
+section **Original public social preparation and retained full-text research**.
+Keep the full R01–R14 objective active: recovery/default-owner journey, financial/
+source-entailment/VI quality, operational/report UX and fresh BTC/AAPL acceptance
+remain open; NQ=F remains owner BLOCKED without approved roll/contract metadata.
+No paid model run, CI, history rewrite, provider/risk change, main merge or deploy.
+
 **Latest exact-source receipt · 2026-10-03 08:21 UTC:** tested source
 `f900afaf64f1eb42705583aa38a7397b1f63c41f`, clean and unchanged throughout full
 regression76717, terminal0: **2,906 tests +88 subtests PASS**,2 optional-provider

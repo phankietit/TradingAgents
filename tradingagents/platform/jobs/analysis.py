@@ -33,6 +33,17 @@ def publication_warning(snapshot_context):
     if snapshot_context is None:
         return ""
     warnings = []
+    social_vendors = {source.manifest.vendor for source in snapshot_context.by_analyst.get("social", ())
+                      if source.manifest.dataset == "social" and source.manifest.vendor in {"reddit", "stocktwits"}}
+    if social_vendors:
+        missing = ", ".join(sorted({"reddit", "stocktwits"} - social_vendors)) or "none / không có"
+        warnings.append(
+            "SOCIAL COVERAGE / PHẠM VI THẢO LUẬN: Recent supplied posts are a non-exhaustive sample, "
+            "not market probabilities or historical coverage. User labels are opinions; unlabeled is "
+            "not Neutral. Missing original feeds / Nguồn gốc chưa có: " + missing + ". / "
+            "Bài đăng gần đây chỉ là mẫu, không phải xác suất thị trường hay lịch sử đầy đủ. "
+            "Nhãn do người đăng chọn là ý kiến; không có nhãn không có nghĩa là trung lập."
+        )
     delayed = {source.manifest.source_end for sources in snapshot_context.by_analyst.values()
                for source in sources if source.manifest.metadata.get("freshness") == "delayed"}
     if delayed:

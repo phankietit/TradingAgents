@@ -10,6 +10,15 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add independent authenticated preparation of the original StockTwits/Reddit
+  public feeds, immutable full-text current snapshots and owner-bound Sentiment
+  input. Preserve publication/edit cutoffs, sample-versus-probability distinctions,
+  separate failed-source audits and EN/VI coverage. Bounded streamed/child transport
+  refuses malformed, ambiguous, unsafe or oversized data; no silent excerpt cap.
+  Web multi-source selection preserves the other feed and resets paid consent.
+  No AI call during preparation, CLI default change, new provider, graph role cut,
+  historical rewrite or approval authority. Local evidence is not live finance.
+
 - Add authenticated current FRED series/window preparation with bounded streamed
   transport and supervised/reaped acquisition, immutable owner snapshots and
   distinct failure states. Web economic-context selection preserves independent

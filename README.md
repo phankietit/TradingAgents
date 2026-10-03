@@ -422,7 +422,7 @@ The analysis form can also **Add recent headlines** from the existing
 Yahoo/yfinance source as an independent, optional, owner-scoped news snapshot.
 The seven-day feed is explicitly non-exhaustive and current-vintage only;
 empty, malformed or unavailable news cannot be selected as evidence. This
-does not add social acquisition, nor does it make a price-only or
+headline action does not fetch discussions or make a price-only or
 market-plus-news report comprehensive. An owner-approved, separate **Add SEC
 fundamentals** action now prepares AAPL US GAAP companyfacts with filing dates
 and immutable provenance using the existing SEC EDGAR adapter. It requires a
@@ -435,6 +435,25 @@ The bilingual presentation protects complete verified fact sentences as well
 as numbers. These structural checks do not prove qualitative reasoning or
 translation quality; human review is still required.
 NQ/ES automatic preparation remains unsupported.
+
+The draft form offers independent **Add StockTwits discussions** and **Add Reddit
+discussions** actions using the repository's original public endpoints and symbol
+aliases. No API key or AI tokens are needed. Each feed retains every eligible
+returned post's full text from the original seven-day window, with publication,
+edit and current retrieval provenance; it is a non-exhaustive sample, not a
+historical archive or market probability. Author/account profiles and inferred
+engagement are not stored. StockTwits user labels are not verified events, and
+unlabeled posts are not neutral sentiment; Reddit does not supply sentiment labels.
+Authenticated preparation appends immutable owner evidence, audits distinct
+failed feeds and never starts AI. Selecting one source preserves the other and
+resets paid consent; oversized selections require review, not silent removal.
+Bounded streamed transport and supervised child lifetime refuse late, malformed,
+ambiguous or oversized results rather than truncating them. Original Sentiment
+research receives full retained text and source-count facts, with missing-feed
+coverage disclosed. CLI sources/defaults and all research/debate, financial,
+translation, risk and human-approval gates remain unchanged. NQ/ES refuse this
+preparation. Local fixtures do not prove live reachability, exhaustive social
+coverage, source entailment or investment quality; dated receipts state the scope.
 
 The draft analysis form now also offers **Add economic context** using the existing
 FRED key/endpoints and immutable macro snapshots. It requires `FRED_API_KEY` on the

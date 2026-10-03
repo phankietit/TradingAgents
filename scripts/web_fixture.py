@@ -166,6 +166,10 @@ def create_app(settings):
     app.state.collect_yahoo_news = unavailable_news
     app.state.collect_sec_facts = unavailable_sec
     app.state.collect_fred_series = unavailable_macro
+    from tradingagents.dataflows.platform_social import SocialPreparationError
+    def unavailable_social(*_args, **_kwargs):
+        raise SocialPreparationError("unavailable")
+    app.state.collect_social = unavailable_social
     return app
 
 

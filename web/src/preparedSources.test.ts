@@ -14,6 +14,11 @@ it('reusing the selected snapshot never duplicates it', () => {
   const source=snapshot('source','macro','DGS10');
   expect(preparedSources(['source'],source,[source])).toEqual(['source']);
 });
+it('replaces only the same social vendor while retaining the other feed', () => {
+  const old={...snapshot('old','social'),vendor:'stocktwits'};
+  const reddit={...snapshot('reddit','social'),vendor:'reddit'};
+  expect(preparedSources(['old','reddit','unknown'],{...old,snapshot_id:'new'},[old,reddit])).toEqual(['reddit','unknown','new']);
+});
 it('requires explicit review at 16 sources instead of silently cutting the list', () => {
   const ids=Array.from({length:16},(_,index)=>String(index));
   expect(preparedSources(ids,snapshot('new','news'),[])).toBeNull();

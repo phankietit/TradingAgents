@@ -22,8 +22,16 @@ release readiness.
 
 Current candidate acquisition covers Yahoo daily prices and non-exhaustive
 recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
-Social ingestion and other-asset fundamentals remain unfinished. Missing
-coverage stays explicit; analyst readers alone do not prove source acquisition.
+Independent authenticated StockTwits/Reddit preparation now uses the original
+public endpoints, seven-day sample and immutable owner snapshots. Full eligible
+returned text and source-bound counts enter the original Sentiment analyst;
+unlabeled/absent feeds are not neutral sentiment or calibrated probabilities.
+Collection is current-only, not historical backdating or exhaustive coverage.
+No author profiles, inferred engagement, new source or AI call during preparation.
+CLI routing and all graph/financial/translation/risk/approval gates are unchanged.
+Live social/source-entailment acceptance and other-asset fundamentals remain
+unfinished. Missing coverage stays explicit; analyst readers alone do not prove
+source acquisition. Failed or malformed feeds cannot authorize research.
 
 Macro ingestion may reuse the existing FRED adapter with explicit series and
 original lookback, pinning metadata and observations to a fully elapsed Chicago

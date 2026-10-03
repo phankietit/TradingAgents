@@ -8,6 +8,61 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['market'] };
 afterEach(() => vi.unstubAllGlobals());
 
+it.each(['stocktwits','reddit'])('prepares original social feeds independently with %s first and resets AI consent',async first=>{
+  const now=new Date().toISOString();
+  const make=(vendor:string,id:string)=>({snapshot:{snapshot_id:id,dataset:'social',vendor,source_end:now,quality_status:'OK',metadata:{posts:3}},metadata_eligible:true,ineligibility_reasons:[],supported_analysts:['social']});
+  const rows=[make('stocktwits','old-stocktwits'),make('reddit','old-reddit')];
+  const fetch=vi.fn(async(url:string,init?:RequestInit)=>{
+    if(url.includes('/analysis-profile'))return json({allowed_analysts:['market','social','news'],investable:true});
+    if(url.includes('/snapshots?'))return json([source,...rows]);
+    if(url.endsWith('/auth/csrf'))return json({csrf_token:'test'});
+    if(url.endsWith('/prepare-social')){
+      const {vendor}=JSON.parse(init!.body as string);expect(['stocktwits','reddit']).toContain(vendor);
+      const row=make(vendor,`new-${vendor}`);rows.push(row);
+      return json({status:'ready',snapshot:row.snapshot,analysis_as_of:now,reused:false});
+    }
+    return json([]);
+  });
+  vi.stubGlobal('fetch',fetch);const user=userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  const group=await screen.findByRole('group',{name:'Market sentiment'});
+  for(const box of within(group).getAllByRole('checkbox'))await user.click(box);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  const names={stocktwits:'Add StockTwits discussions',reddit:'Add Reddit discussions'};
+  await user.click(screen.getByRole('button',{name:names[first as keyof typeof names]}));
+  await screen.findByText(/StockTwits · Discussion posts are ready|Reddit · Discussion posts are ready/);
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await user.click(screen.getByRole('button',{name:names[first==='stocktwits'?'reddit':'stocktwits']}));
+  await waitFor(()=>expect(within(group).getAllByRole('checkbox').filter(item=>(item as HTMLInputElement).checked)).toHaveLength(2));
+  expect(screen.getByText(/Selected discussion feeds:/).textContent).toContain('stocktwits');
+  expect(screen.getByText(/Selected discussion feeds:/).textContent).toContain('reddit');
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  const selected=within(group).getAllByRole('checkbox').filter(item=>(item as HTMLInputElement).checked);
+  expect(selected.every(item=>item.closest('label')?.textContent?.includes('stocktwits')||item.closest('label')?.textContent?.includes('reddit'))).toBe(true);
+});
+
+it('does not turn failed Reddit into neutral sentiment or remove StockTwits, and shows Vietnamese',async()=>{
+  const now=new Date().toISOString();
+  const row={snapshot:{snapshot_id:'social-one',dataset:'social',vendor:'stocktwits',source_end:now,quality_status:'OK',metadata:{posts:3}},metadata_eligible:true,ineligibility_reasons:[],supported_analysts:['social']};
+  vi.stubGlobal('fetch',vi.fn(async(url:string)=>{
+    if(url.includes('/analysis-profile'))return json({allowed_analysts:['social'],investable:true});
+    if(url.includes('/snapshots?'))return json([row]);
+    if(url.endsWith('/auth/csrf'))return json({csrf_token:'test'});
+    if(url.endsWith('/prepare-social'))return json({status:'unavailable',snapshot:null,analysis_as_of:now});
+    return json([]);
+  }));
+  const user=userEvent.setup();render(<><LanguageSwitch/><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/></>);
+  const group=await screen.findByRole('group',{name:'Market sentiment'});
+  await user.click(within(group).getByRole('checkbox'));await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Add Reddit discussions'}));
+  await screen.findByText(/Reddit · This discussion source is unavailable/);
+  expect((within(group).getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await user.click(screen.getByRole('button',{name:/VI/}));
+  expect(await screen.findByText(/Reddit · Chưa kết nối được nguồn thảo luận/)).toBeTruthy();
+  expect((screen.getByRole('button',{name:'Gửi phân tích'}) as HTMLButtonElement).disabled).toBe(true);
+});
+
 it.each(['macro-first', 'headlines-first'])('preserves distinct economic and headline sources through %s preparation and explicit consent', async order => {
   const now=new Date().toISOString();
   const macro={snapshot:{snapshot_id:'macro-new',dataset:'macro',vendor:'fred',source_end:now,quality_status:'OK',

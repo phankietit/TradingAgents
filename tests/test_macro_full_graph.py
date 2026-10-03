@@ -1,19 +1,17 @@
 """Actual graph + owner storage, synthetic SDK/data; not live financial/MT QA."""
 
-import hashlib
 import json
 from datetime import timedelta
 from types import SimpleNamespace
-from uuid import uuid4
 
 import pytest
 from langchain_core.messages import AIMessage
 
 from tests.test_platform_fred import NOW
 from tests.test_platform_sec import collect as collect_sec, document, fact
+from tests.test_platform_social import collect as collect_social
 from tests.test_price_preparation import AAPL, metadata, price_frame
 from tests.test_snapshot_macro_facts import macro_draft, macro_source
-from tradingagents.contracts import ArtifactKind, SnapshotManifest
 from tradingagents.dataflows.platform_news import collect_yahoo_news
 from tradingagents.dataflows.platform_prices import normalize_yahoo
 from tradingagents.default_config import DEFAULT_CONFIG
@@ -28,6 +26,7 @@ from tradingagents.platform.market_data import TimeSeriesSnapshotService
 from tradingagents.platform.market_data.macro import MacroSnapshotService
 from tradingagents.platform.market_data.news import NewsSnapshotService
 from tradingagents.platform.market_data.sec_facts import SecSnapshotService
+from tradingagents.platform.market_data.social import SocialSnapshotService
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 
 
@@ -70,16 +69,10 @@ def test_real_graph_keeps_all_roles_rounds_validation_and_bilingual_macro_semant
         sec = collect_sec(document([fact(100_000_000, "2025-11-01")]), now=NOW)
         source_ids["fundamentals"] = (SecSnapshotService(repository, artifacts).persist(
             owner_id=owner, collection=sec).snapshot_id,)
-        # Explicit synthetic sentiment, not prices disguised as social or a live feed.
-        body = json.dumps({"coverage": "synthetic_social_fixture_not_live",
-            "posts": [{"text": "Synthetic uncertain sentiment", "observed_at": NOW.isoformat()}]}).encode()
-        social = SnapshotManifest(snapshot_id=uuid4(), instrument_id=AAPL.instrument_id,
-            dataset="social", vendor="fixture", as_of=NOW, retrieved_at=NOW, source_end=NOW,
-            quality_status="OK", content_hash="sha256:" + hashlib.sha256(body).hexdigest())
-        repository.add_snapshot(social)
-        artifacts.create(owner_id=owner, kind=ArtifactKind.SNAPSHOT_PAYLOAD, media_type="application/json",
-            content=body, instrument_id=AAPL.instrument_id, snapshot_id=social.snapshot_id, created_at=NOW)
-        source_ids["social"] = (social.snapshot_id,)
+        # Actual structured parsing/storage over explicit synthetic original-feed bytes.
+        source_ids["social"] = tuple(SocialSnapshotService(repository, artifacts).persist(
+            owner_id=owner, collection=collect_social(vendor=vendor)).snapshot_id
+            for vendor in ("stocktwits", "reddit"))
     analysts = ("market", "social", "news", "fundamentals")
     run = SimpleNamespace(owner_id=owner, instrument_id=AAPL.instrument_id,
         snapshot_ids=tuple(sid for ids in source_ids.values() for sid in ids),
@@ -147,6 +140,10 @@ def test_real_graph_keeps_all_roles_rounds_validation_and_bilingual_macro_semant
             "Aggressive Analyst", "Conservative Analyst", "Neutral Analyst", "Portfolio Manager",
             "Financial validation", "Report presentation"]
         assert any("full_history_tool" in str(messages) and "get_snapshot_macro" in str(messages) for messages in calls)
+        sentiment_prompt = str(dict(structured)["SentimentReport"])
+        assert "Synthetic full retail opinion" in sentiment_prompt and "Complete discussion body" in sentiment_prompt
+        assert "sample_count.unlabeled" in sentiment_prompt and "unlabeled is not Neutral" in sentiment_prompt
+        assert all(str(sid) in sentiment_prompt for sid in source_ids["social"])
         if with_headlines:
             assert any("Synthetic headline distinct from FRED" in str(messages)
                 and str(source_ids["news"][0]) in str(messages)

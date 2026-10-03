@@ -88,6 +88,10 @@ class SnapshotAnalysisContext(BaseModel):
                     from .macro_facts import SnapshotMacroFacts
                     SnapshotMacroFacts({"snapshot_id": str(manifest.snapshot_id),
                         "provenance": manifest.model_dump(mode="json"), "data": json.loads(source.payload)})
+                if manifest.dataset == "social" and manifest.vendor in {"reddit", "stocktwits"}:
+                    from .social_facts import SnapshotSocialFacts
+                    SnapshotSocialFacts({"snapshot_id": str(manifest.snapshot_id),
+                        "provenance": manifest.model_dump(mode="json"), "data": json.loads(source.payload)})
             reports[role] = json.dumps([
                 {"snapshot_id": str(s.manifest.snapshot_id),
                  "provenance": s.manifest.model_dump(mode="json"),
@@ -118,6 +122,11 @@ def load_snapshot_context(artifacts, run, by_analyst):
                 MacroSnapshotService(repository, artifacts).load(owner_id=run.owner_id,
                     snapshot_id=snapshot_id, instrument_id=run.instrument_id,
                     as_of=run.analysis_as_of,
+                    max_age_seconds=run.decision_inputs.source_max_age_seconds[role])
+            if manifest.dataset == "social" and manifest.vendor in {"reddit", "stocktwits"}:
+                from tradingagents.platform.market_data.social import SocialSnapshotService
+                SocialSnapshotService(repository, artifacts).load(owner_id=run.owner_id,
+                    snapshot_id=snapshot_id, instrument_id=run.instrument_id, as_of=run.analysis_as_of,
                     max_age_seconds=run.decision_inputs.source_max_age_seconds[role])
             sources.append(AnalysisSnapshot(manifest=manifest, payload=loaded[1].decode("utf-8")))
         result[role] = tuple(sources)

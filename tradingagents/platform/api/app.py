@@ -96,6 +96,7 @@ from .schemas import (
     OwnerResponse,
     PrepareDataResponse,
     PrepareMacroRequest,
+    PrepareSocialRequest,
     RunAcceptedResponse,
     RunCreateRequest,
     RunJobStateResponse,
@@ -254,12 +255,15 @@ def create_app(settings: ApiSettings) -> FastAPI:
     app.state.collect_sec_facts = fetch_current_sec_facts
     from tradingagents.dataflows.platform_fred import fetch_current_fred_series
     app.state.collect_fred_series = fetch_current_fred_series
+    from tradingagents.dataflows.platform_social import fetch_current_social
+    app.state.collect_social = fetch_current_social
     preparation_lock = Lock()
     preparation_attempts: dict[tuple[UUID, UUID], float] = {}
     preparation_failures: dict[tuple[UUID, UUID], str] = {}
     news_attempts: dict[tuple[UUID, UUID], float] = {}
     sec_attempts: dict[tuple[UUID, UUID], float] = {}
     macro_attempts: dict[tuple[UUID, UUID, str, int], float] = {}
+    social_attempts: dict[tuple[UUID, UUID, str], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -905,6 +909,86 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 with database.session() as write_session:
                     write_repository = PlatformRepository(write_session)
                     manifest = MacroSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            return outcome("ready" if collection.quality_status is DataQualityStatus.OK
+                else collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-social",
+        response_model=PrepareDataResponse, tags=["market-data"],
+    )
+    def prepare_social(instrument_id: UUID, body: PrepareSocialRequest,
+                       owner: CsrfOwnerDependency, session: SessionDependency) -> PrepareDataResponse:
+        """One original public feed, independent failure audit, no AI job."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_prices import PricePreparationError
+        from tradingagents.dataflows.platform_social import (
+            SocialCollection,
+            SocialPreparationError,
+            _scope,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.social import SocialSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds)
+
+        try:
+            scope = _scope(instrument, body.vendor)
+        except (PricePreparationError, SocialPreparationError):
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            service = SocialSnapshotService(repository, ArtifactService(artifact_store, repository))
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "social" or snapshot.vendor != body.vendor
+                        or snapshot.retrieved_at < now - timedelta(minutes=15)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=604800)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id, body.vendor)
+            elapsed = time.monotonic() - social_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60-elapsed))
+            social_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_social(instrument, body.vendor, analysis_as_of=now)
+                collection = SocialCollection.model_validate(acquired.model_dump()
+                    if isinstance(acquired, SocialCollection) else acquired)
+            except SocialPreparationError as error:
+                return outcome("invalid" if error.code == "invalid" else "unavailable")
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (any(getattr(collection, name) != value for name, value in scope.items())
+                    or collection.requested_at != now or collection.retrieved_at > _now(settings)):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = SocialSnapshotService(write_repository,
                         ArtifactService(artifact_store, write_repository)).persist(
                             owner_id=owner.owner_id, collection=collection)
             except (ValueError, ArtifactIntegrityError):

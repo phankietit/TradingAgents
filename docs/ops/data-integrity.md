@@ -112,6 +112,54 @@ inspectable. Synthetic fixtures refuse live acquisition by default.
 Local transport/SQLite/PostgreSQL and browser fixtures are not live FRED or
 financial/editorial proof; dated receipts state which gates actually ran.
 
+### Structured original public social feeds (draft candidate)
+
+`dataflows/platform_social.py` uses the original combined Reddit subreddit RSS
+search and StockTwits symbol stream, fixed hosts/user agents and existing crypto
+aliases. No key, OAuth, provider fallback or CLI/default change. The initial
+approved instrument identity is required; NQ/ES refuse. The original seven-day
+window retains all eligible returned full text, not the CLI's 30/280 or 5/240
+display excerpts. This is a current non-exhaustive sample, never historical
+coverage, market probability or evidence that missing discussion is neutral.
+
+Publication and Reddit edit timestamps must be aware and within the request
+cutoff; out-of-window/after-cutoff edits are excluded and counted. Retrieval sets
+snapshot `as_of`, never source publication or a backdated analysis time. Valid
+empty feeds are `NO_DATA`, a reachable sample outside the window is `COVERAGE_GAP`,
+network/HTTP failures are `UNAVAILABLE`, and malformed/ambiguous rows are
+`INVALID` with no partial usable result. Unknown received count remains null,
+not fabricated zero. Full manifest/payload/hash, instrument identity and owner
+access are revalidated on immutable storage/load and before graph construction.
+
+UTF-8/JSON/Atom schema, duplicate IDs/JSON keys, nonfinite constants, source
+aliases and Reddit community/HTTPS attribution are checked. XML entity/doctype
+declarations and alternate encodings refuse before parse. Author/account
+profiles and scores/engagement are not persisted or inferred. StockTwits labels
+are user opinions; unlabeled is not Neutral. Reddit supplies no sentiment labels
+or vote/comment facts. Canonical deterministic source-count facts are sample
+counts, not calibrated sentiment. The original prefetched Sentiment path receives
+every retained post; no graph/debate role or publication/repair/approval cut.
+
+Fixed uncompressed streaming requests disable redirects and reject advertised or
+actual responses above 2 MB; full bodies over post/collection bounds refuse,
+never truncate. Each HTTP request has a 15-second read timeout. The reused native
+bounded pipe supervisor limits the entire child acquisition to 75 seconds,
+including import, Reddit's original one bounded Retry-After/backoff (0–60 seconds),
+parsing and parent validation. Late results refuse; children are killed/reaped
+and pipes joined, without a claim of remote provider termination.
+
+Authenticated owner/CSRF `prepare-social` accepts only the original vendor name,
+no client URL/key/cutoff. Exact eligible owner/vendor reuse is limited to 15
+minutes; a shared process-local acquisition lock and 60-second per-vendor
+cooldown space requests, not multi-process/public deployment protection. Each
+failed valid collection is independently append-only audited, never selected or
+hidden by another feed's success. Preparation creates no AI job. EN/VI controls
+preserve different feeds, replace only the same vendor, explicitly review at the
+16-source limit and reset paid consent. Missing-source disclosures survive the
+report path. Synthetic fixtures refuse live acquisition by default. Local
+transport, full-graph, SQLite/PostgreSQL and browser proof are separate from
+actual live-source reachability and financial/editorial acceptance.
+
 ## Failure Semantics
 
 Keep these states distinct:

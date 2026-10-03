@@ -22,7 +22,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
 | R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
 | R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
-| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED API and macro EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa. Social/other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED/social API and macro/social EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa. Structured social live reachability, other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
@@ -49,7 +49,12 @@ API/UI preparation have native process, API, browser and full regression evidenc
 at `f900afaf64f1eb42705583aa38a7397b1f63c41f`. A separate authenticated live probe
 of that installed candidate acquired AAPL SEC and DGS10/1825-day sources, verified
 owner readback and reuse, and created no model job. Financial/editorial quality,
-complete economic coverage, social and other-asset fundamentals remain unverified.
+complete economic coverage and other-asset fundamentals remain unverified.
+Original StockTwits/Reddit structured preparation now has bounded transport,
+immutable independent owner snapshots, full retained text in the original
+Sentiment path, source-count facts and explicit missing-feed/sample disclosures.
+Local native child/API/threaded lock/SQLite/PostgreSQL/full-graph and EN/VI browser
+evidence remains distinct from actual new structured social/live finance proof.
 Existing FRED/CLI defaults, risk limits and graph flow are unchanged; synthetic
 fixtures alone never authorize a live-provider or paid-model request. Detailed
 scope and actual live-source evidence are in `research-acceptance-20261003.md`.

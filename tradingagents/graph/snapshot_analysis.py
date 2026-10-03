@@ -15,6 +15,7 @@ from tradingagents.agents.utils.structured import bind_structured, invoke_struct
 from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
 from tradingagents.platform.analysis.macro_facts import SnapshotMacroFacts
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+from tradingagents.platform.analysis.social_facts import SnapshotSocialFacts
 
 from .analyst_execution import ANALYST_NODE_SPECS
 
@@ -52,6 +53,8 @@ ROLE_INSTRUCTIONS = {
         "retail messages and Reddit discussions only if actually supplied. Distinguish "
         "a missing feed from neutral sentiment. Cite counts, observed tags, sample "
         "window, divergences and limitations without inventing posts or ratios. "
+        "StockTwits labels are user opinions over the supplied sample, not market probabilities; "
+        "unlabeled is not Neutral. Reddit has no supplied vote/comment counts or sentiment labels. "
         "Conclude with narrative themes, catalysts, risks and an evidence table."
     ),
 }
@@ -80,6 +83,9 @@ def snapshot_analyst_nodes(llm, reports):
                         and source["provenance"]["vendor"] == "sec_edgar"}
         macros = {source["snapshot_id"]: SnapshotMacroFacts(source)
                   for source in sources if source["provenance"]["dataset"] == "macro"}
+        socials = {source["snapshot_id"]: SnapshotSocialFacts(source)
+                   for source in sources if source["provenance"]["dataset"] == "social"
+                   and source["provenance"]["vendor"] in {"reddit", "stocktwits"}}
 
         @tool
         def get_snapshot_candles(snapshot_id: str, offset: int = 0, limit: int = 100) -> dict:
@@ -167,7 +173,9 @@ def snapshot_analyst_nodes(llm, reports):
                     {**source, "data": fundamentals[source["snapshot_id"]].summary()}
                     if source["snapshot_id"] in fundamentals else
                     {**source, "data": macros[source["snapshot_id"]].summary()}
-                    if source["snapshot_id"] in macros else source for source in sources]
+                    if source["snapshot_id"] in macros else
+                    {**source, "data": socials[source["snapshot_id"]].summary()}
+                    if source["snapshot_id"] in socials else source for source in sources]
 
         def analyze(state):
             messages = [

@@ -13,7 +13,8 @@ export interface Snapshot {
   quality_status: string; quality_reasons: string[];
   metadata?: { freshness?: string; missing_trailing_sessions?: number; data_through?: string;
     series_id?: string; units?: string; frequency_short?: string; vintage_date?: string;
-    last_observation_date?: string | null; observation_start?: string; observation_end?: string };
+    last_observation_date?: string | null; observation_start?: string; observation_end?: string;
+    posts?: number; received_posts?: number | null; coverage?: string };
 }
 export interface SeriesResponse {
   snapshot: Snapshot;

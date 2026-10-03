@@ -1449,3 +1449,84 @@ restore the exact original runtime, never rebind history or replenish allowance.
 The entire original R01–R14 objective remains active. Next address real source
 coverage and operational/report/financial acceptance without cutting graph roles,
 publishing partial work as a decision, substituting NQ or silently retrying paid jobs.
+
+## Original public social preparation and retained full-text research
+
+Implementation checkpoint: candidate containing this entry, based on7dbb130;
+`fix/TA-R01-research-quality` in the approved ta-030 worktree. This checkpoint
+is precommit/dirty, not exact-clean-source full-regression or release evidence.
+Managed run20261003T083034Z-76016 remains prepared; previous receipts are retained.
+
+### Implemented contract
+
+Structured current StockTwits/Reddit uses the original fixed public endpoints,
+user agents, crypto aliases and seven-day window; no key/OAuth/new provider.
+Every eligible returned title/body survives storage and original Sentiment input,
+without the CLI's display excerpts. Request/publication/edit/retrieval scope,
+source identity, duplicate IDs/JSON keys, nonfinite constants, UTF-8/Atom entity
+refusal, whole immutable manifest/hash and owner access are checked. External text
+remains untrusted evidence. No account profile, engagement or sentiment inference.
+StockTwits labels are opinions, unlabeled is not Neutral; Reddit supplies no
+sentiment/vote/comment facts. Deterministic counts are sample counts, not odds.
+
+HTTP streaming refuses redirects/compressed/advertised or actual >2 MB results;
+post and whole output limits reject rather than truncate. Fixed supervised child
+shares the already native-tested75-second bounded pipe/lifetime mechanism;
+HTTP read timeout15s and original Reddit one bounded0–60s retry are retained.
+Child parsing/parent validation deadline, termination/reap and pipe joins bound
+local acquisition, not a claim of remote provider termination. No CLI source/
+default change. Unknown received count remains null rather than fabricated zero.
+
+Owner/CSRF prepare-social accepts only original vendor, no client cutoff/URL/key.
+Two feeds have independent failure audits/reuse/cooldown; preparation creates no
+AI job. Exact eligible owner/vendor reuse ≤15minutes, shared acquisition lock and
+per-vendor60s cooldown are process-local, not multi-process/public controls.
+NQ/ES refuse and have no substitute. Snapshot retrieval cannot be backdated.
+The existing graph keeps all original analyst/research/trader/risk/manager roles,
+financial/translation repair and deterministic policy/human-approval gates.
+
+EN/VI controls show actual source preparation, retain the other selected feed,
+reset consent and require explicit review at16 sources. UI/report disclose
+sample/missing-source scope. No auto-paid submission or new flow short circuit.
+
+| Gate | Status | Evidence and limitation |
+| --- | --- | --- |
+| Focused real local transport/storage/API/graph | PASS | Final PG86289 terminal0:182 PASS,1warning,31.69s, Ruff/pip-check PASS, only labelled helper-owned container removed; actual synthetic child main/stdio for both feeds, invalid input refusal, strict original parser/HTTP/privacy/cutoff, threaded macro-versus-social lock/release, NQ/unknown refusal, synthetic fixture default no-live, immutable owner SQLite/PG load/tamper/rollback, original full graph EN/VI/bilingual with full social posts. This is not the full baseline; earlier PG2371 terminal0 has same182 selected cases before test-ID-only shortening |
+| Web local gate | PASS |56263 terminal0:148 tests/typecheck/lint/build; both source preparation orders, retention, explicit failed feed/VI, same-vendor replacement, consent reset |
+| Rendered synthetic browser | PASS |12609 terminal0, bundled Playwright1.62.1 Chromium, Browser plugin unavailable; authenticated real HTTP/API/UI127.0.0.1:8018. First/target desktop1440×1000 and mobile390×844 screenshots inspected. AAPL→StockTwits→consent only→Reddit→both retained/consent reset→VI/mobile; no queued run/vendor/model/private DB. Page identity/nonblank/overlay/console/interaction/language pressed-state/overflow PASS. Expected initial auth/me401 recorded separately |
+| Full exact-source baseline/package | UNVERIFIED | Not yet run for this dirty candidate; prior f900afa results cannot prove these new package bytes |
+| Actual structured social/live finance | UNVERIFIED | Original StockTwits endpoint diagnosticHTTP200 and Reddit ConnectionError do not prove this new collector/snapshot/graph. No actual new structured source/AI report acceptance yet |
+| Broader goal and UI | UNVERIFIED | Professional preparation/process/decision-report UX, recovery/default-owner journey, full source-entailment/financial/VI and fresh BTC/AAPL acceptance remain open. The form still has a long text-heavy layout; functional browser proof is not professional UX acceptance |
+| NQ=F | BLOCKED | Owner-selected reference has no approved active-contract/roll metadata; no provider/substitute added |
+
+### Commands, diagnostics and retained state
+
+From the worktree, with `<managed>` denoting this owned run:
+
+```sh
+TMPDIR=<managed>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_platform_social.py tests/test_social_snapshot_service.py tests/test_social_preparation.py tests/test_macro_full_graph.py tests/test_macro_acquisition.py tests/test_reddit_fallback.py tests/test_stocktwits_resilience.py --tb=short -x
+node <managed>/Results/social_browser_qa.cjs
+```
+
+The first command accidentally supplied a nonexistent guessed FRED/test filename
+in47428 and exited4 before testing, after lint/pip-check. Its helper removed only
+its own labelled disposable PG. Correct final selection2371 terminal0 has182
+collected cases, all dots/no skips; an extra-q suppressed the totals line, so the
+182 count was independently confirmed by collect-only. Fixture IDs were then
+shortened to hashes solely to avoid embedding a2 MB synthetic response in node
+names/logs. Preserve the subsequent final rerun separately, not erase diagnostics.
+
+Browser72523 exited1 because its post-VI locator still used the English heading.
+The script now locates either exact translated heading. A startup-race diagnostic
+exited1 with connection refused before the new server was ready; no source/model
+job occurred. Browser94439 passed; review found screenshot captured the old
+language highlight mid-CSS transition. Final12609 checks VI pressed/EN unpressed
+and the settled active background before capture, then passes. No product gate
+or locale semantics were weakened. The four retained Results PNGs are
+social-desktop-first/en and social-mobile-first/vi; scripts and fresh synthetic
+v1/v2/v3 DB/artifact stores are private managed outputs, not Git content.
+All task-owned browser servers99878/34799/15944 terminal0; user port8000/browser
+and existing runtime were untouched. Failed runs/history/old source receipts
+remain unchanged. No CI, paid AI, new provider/production endpoint/risk limit,
+broker, private history rewrite, main merge or public deploy. Source changes
+invalidate prior research fingerprints; do not rebind history or reset allowance.

@@ -35,6 +35,7 @@ from .research_validation import (
     validate_numeric_claims,
 )
 from .snapshots import SnapshotAnalysisContext
+from .social_facts import SnapshotSocialFacts
 
 
 class AnalysisRequest(BaseModel):
@@ -118,8 +119,12 @@ class AnalysisEngine:
             fact_sources.update({source["snapshot_id"]: SnapshotMacroFacts(source)
                 for source in json.loads(snapshot_options["snapshot_reports"].get("news", "[]"))
                 if source["provenance"]["dataset"] == "macro"})
+            fact_sources.update({source["snapshot_id"]: SnapshotSocialFacts(source)
+                for source in json.loads(snapshot_options["snapshot_reports"].get("social", "[]"))
+                if source["provenance"]["dataset"] == "social"
+                and source["provenance"]["vendor"] in {"reddit", "stocktwits"}})
             for source in fact_sources.values():
-                if isinstance(source, SnapshotMacroFacts):
+                if isinstance(source, (SnapshotMacroFacts, SnapshotSocialFacts)):
                     source.require_instrument(request.instrument)
             fact_catalog = {key: source.fact_catalog() for key, source in fact_sources.items()}
             if request.execution_observer is not None:
