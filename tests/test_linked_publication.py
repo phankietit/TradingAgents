@@ -301,6 +301,15 @@ def test_payload_cannot_fabricate_stop_or_reservation(prepared):
     assert history(database) == before
 
 
+@pytest.mark.parametrize("elapsed", [True, float("inf"), float("nan"), -1, 1])
+def test_elapsed_receipt_cannot_invent_future_or_nonfinite_time(prepared, elapsed):
+    database, _, _, _, context, _ = entered(prepared)
+    before = history(database)
+    with pytest.raises(LinkedExecutionError):
+        context._emit("model.usage", {**context.observer._usage_payload(), "elapsed_seconds": elapsed})
+    assert history(database) == before
+
+
 def test_transaction_guard_rejects_aggregate_over_cap_even_matching_observer_payload(prepared):
     database, _, _, _, context, _ = entered(prepared)
     context.observer.started_calls = 128

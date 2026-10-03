@@ -16,7 +16,7 @@ from tests.test_durable_jobs import _database, _enqueue
 from tests.test_risk_engine import NOW
 from tests.test_snapshot_analysis import context
 from tests.test_supervised_native_graph import NativeFixtureEngine
-from tradingagents.contracts import RunEventType
+from tradingagents.contracts import ArtifactKind, RunEventType
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
@@ -31,6 +31,10 @@ from tradingagents.platform.analysis.checkpoint_store import (
     PrivateCheckpointStore,
 )
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
+from tradingagents.platform.analysis.continuation import ContinuationConsentStore
+from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
+from tradingagents.platform.analysis.linked_publication import LinkedPublicationContext
+from tradingagents.platform.analysis.linked_recording import LinkedOriginalResearch
 from tradingagents.platform.analysis.observer import (
     STAGES,
     ResearchBudgetExceeded,
@@ -38,18 +42,27 @@ from tradingagents.platform.analysis.observer import (
     ResearchObserver,
 )
 from tradingagents.platform.analysis.recording import SnapshotRecorder
-from tradingagents.platform.analysis.recording_context import SnapshotRecordingInputs
+from tradingagents.platform.analysis.recording_context import (
+    SnapshotRecordingInputs,
+    read_child_recording_inputs,
+)
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot
 from tradingagents.platform.analysis.supervision import (
     RESULT_FIELDS,
     SupervisedAnalysisEngine,
     _child as original_child,
 )
+from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
+from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.events import RunEventStore
-from tradingagents.platform.jobs import DurableJobQueue
+from tradingagents.platform.jobs import DurableJobQueue, JobWorker
 from tradingagents.platform.jobs.worker import JobExecutionContext
 from tradingagents.platform.persistence import PlatformRepository
-from tradingagents.platform.persistence.models import ResearchCheckpointRow
+from tradingagents.platform.persistence.models import (
+    ResearchCheckpointExecutionRow,
+    ResearchCheckpointRow,
+    ResearchExecutionDispatchRow,
+)
 
 
 def fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
@@ -57,7 +70,8 @@ def fixture_child(connection, base_config, request_data, engine_factory, checkpo
     """Only install synthetic SDK responses; do not replace engine or graph hooks."""
     assert engine_factory is AnalysisEngine
     os.environ["OPENAI_API_KEY"] = "synthetic-NEVER_ECHO"
-    inputs = SnapshotRecordingInputs(recording_data).read()
+    inputs = read_child_recording_inputs(recording_data, checkpoint_options=checkpoint_options,
+        restore_checkpoint=restore_checkpoint).read()
     request = AnalysisRequest.model_validate(request_data)
     fixture = NativeFixtureEngine(base_config={**base_config, "_fixture_invalid_translation": invalid,
                                               "_fixture_callbacks": callbacks})
@@ -107,7 +121,7 @@ def restored_callback_fixture_child(connection, base_config, request_data, engin
 
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
-@pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped"])
+@pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped", "linked_stopped"])
 def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks):
     def forbidden(*args, **kwargs):
         raise AssertionError("parent fixture attempted provider/network invocation")
@@ -116,7 +130,8 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
     monkeypatch.setattr(httpx.Client, "send", forbidden)
     monkeypatch.setattr(httpx.AsyncClient, "send", forbidden)
     exhausted = callbacks == "exhausted"
-    stopped_attempt = callbacks == "stopped"
+    linked_attempt = callbacks == "linked_stopped"
+    stopped_attempt = callbacks in {"stopped", "linked_stopped"}
     child = ({False: fixture_child, True: invalid_fixture_child} if not callbacks else
              {False: callback_fixture_child, True: invalid_callback_fixture_child})[invalid and not exhausted]
     monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", child)
@@ -144,9 +159,30 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 "execution_limits": {"wall_seconds": 1800, "model_calls": 1}}).model_dump())
         with database.session() as session:
             PlatformRepository(session).save_run(run)
-        _enqueue(database, owner, run)
+        artifact_store = LocalArtifactStore(tmp_path / "owned-blobs")
+        if linked_attempt:
+            with database.session() as session:
+                OwnerAuth(session).bootstrap_owner("native-linked@example.test", "synthetic fixture password",
+                    owner_id=owner, now=NOW)
+                repository = PlatformRepository(session)
+                artifacts = ArtifactService(artifact_store, repository)
+                for group in sources.by_analyst.values():
+                    for source in group:
+                        repository.add_snapshot(source.manifest)
+                        artifacts.create(owner_id=owner, kind=ArtifactKind.SNAPSHOT_PAYLOAD,
+                            media_type="application/json", content=source.payload.encode(),
+                            instrument_id=instrument.instrument_id, snapshot_id=source.manifest.snapshot_id,
+                            created_at=NOW, expected_hash=source.manifest.content_hash)
+            _enqueue(database, owner, run, payload={"instrument_id": str(run.instrument_id),
+                "analysis_as_of": run.analysis_as_of.isoformat(), "selected_analysts": list(analysts),
+                "config_hash": run.config_hash, "decision_inputs": run.decision_inputs.model_dump(mode="json"),
+                "report_language": run.report_language})
+        else:
+            _enqueue(database, owner, run)
         with database.session() as session:
             job = DurableJobQueue(session).claim("fixture", lease_for=timedelta(minutes=5), now=NOW)
+            if linked_attempt:
+                JobWorker(database, worker_id="fixture", handlers={})._record_job_state(session, job, NOW)
         job_context = JobExecutionContext(database, job.job_id, "fixture", timedelta(minutes=5), lambda: NOW)
         events = []
         event_attempt = job.attempt
@@ -211,8 +247,9 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 prior_rows = [(row.record_id, row.content_hash, row.payload) for row in rows]
                 evidence = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
                 assert evidence.started_calls == 1 and evidence.elapsed_upper_bound is not None
-                retained = build_retained_observer(session=session, owner_id=owner, run_id=run.run_id,
-                    expected_accounting=evidence, check_cancelled=job_context.raise_if_cancelled, emit=emit)
+                if not linked_attempt:
+                    retained = build_retained_observer(session=session, owner_id=owner, run_id=run.run_id,
+                        expected_accounting=evidence, check_cancelled=job_context.raise_if_cancelled, emit=emit)
             baseline = NativeFixtureEngine(base_config={**config, "_fixture_invalid_translation": invalid,
                                                        "_fixture_callbacks": True})
             baseline.snapshot_recorder = SnapshotRecorder(owner_id=owner, run=run,
@@ -221,15 +258,48 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 check_cancelled=lambda: None, emit=lambda *args: None)})
             expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
                 AnalysisEngine(base_config=options).analyze(baseline_request))
-            event_attempt = 2
-            with job_context.publication_session() as session:
-                RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
-                    event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW, payload={"attempt": 2})
+            if linked_attempt:
+                from tests.test_continuation_consent import history
+
+                later = NOW + timedelta(seconds=60)
+                with database.session() as session:
+                    terminal = DurableJobQueue(session).fail(job.job_id, "fixture", retryable=False,
+                        error_code="RESEARCH_EXECUTION_FAILED", error_message="ResearchExecutionFailed", now=later)
+                    JobWorker(database, worker_id="fixture", handlers={})._record_job_state(session, terminal, later)
+                    auth = OwnerAuth(session).login("native-linked@example.test", "synthetic fixture password", now=later)
+                before_linked = history(database)
+                consents = ContinuationConsentStore(database, codec=codec, clock=lambda: later)
+                with database.session() as session:
+                    observation = consents.observe(session=session, owner_id=owner, run_id=run.run_id)
+                consent = consents.record(session_token=auth.token, csrf_token=auth.csrf_token,
+                    expected_observation=observation, idempotency_key=uuid4(), confirm_continue=True)
+                executions = LinkedExecutionStore(consents)
+                executions.allocate(execution_id=consent.execution_id, session_token=auth.token, csrf_token=auth.csrf_token)
+                lease = executions.claim(execution_id=consent.execution_id, worker_id="linked-native")
+                linked_context = LinkedPublicationContext.prepare(executions, lease)
+                loaded = LinkedOriginalResearch.load(context=linked_context, artifact_store=artifact_store)
+                terminal_run = loaded.recording_inputs.read().run
+                assert terminal_run.completed_at == later and terminal_run.error_code == "RESEARCH_EXECUTION_FAILED"
+                original_terminal = next(row["payload"] for row in before_linked["analysis_runs"]
+                    if row["run_id"] == run.run_id)
+                assert terminal_run.model_dump(mode="json") == original_terminal
+                retained = linked_context.observer
+                recovered_request = loaded.request
+                recovered_recording = loaded.recording_inputs
+                recovered_commit = linked_context.commit_checkpoint
+            else:
+                event_attempt = 2
+                with job_context.publication_session() as session:
+                    RunEventStore(session).append(owner_id=owner, run_id=run.run_id,
+                        event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW, payload={"attempt": 2})
+                recovered_request = request.model_copy(update={"execution_observer": retained})
+                recovered_recording, recovered_commit = recording, commit
             monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", restored_callback_fixture_child)
             recovery = SupervisedAnalysisEngine(base_config={**config, "_fixture_restore_invalid": invalid},
-                recording_inputs=recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
-                checkpoint_commit=commit, restore_checkpoint=raw)
-            result = recovery.analyze(request.model_copy(update={"execution_observer": retained}))
+                recording_inputs=recovered_recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
+                checkpoint_commit=recovered_commit, restore_checkpoint=raw,
+                **({"linked_context": linked_context} if linked_attempt else {}))
+            result = recovery.analyze(recovered_request)
             suffix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
             assert suffix["pid"] != prefix["pid"] and suffix["closed_clients"] == 2
             with pytest.raises(ProcessLookupError):
@@ -252,6 +322,17 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert aggregate.reported_total_tokens == len(baseline.model_trace) * 15
                 assert aggregate.elapsed_upper_bound >= evidence.elapsed_upper_bound
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
+                if linked_attempt:
+                    assert session.get(ResearchExecutionDispatchRow, linked_context.execution_id) is not None
+                    linked_rows = session.scalars(select(ResearchCheckpointExecutionRow)).all()
+                    assert linked_rows and all(row.execution_id == linked_context.execution_id for row in linked_rows)
+                    assert all(row.attempt == 2 for row in after[len(rows):])
+            if linked_attempt:
+                from tests.test_linked_publication import assert_old_history_unchanged
+
+                assert_old_history_unchanged(database, before_linked)
+                with pytest.raises(ValueError, match="^invalid checkpoint bridge configuration$"):
+                    recovery.analyze(recovered_request)
             assert list((tmp_path / "results").iterdir()) == []
             assert set(commit_pids) == {os.getpid()}
             return

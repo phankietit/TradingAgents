@@ -4,6 +4,7 @@ No model or child is started here. The retained observer and every durable
 write are fenced separately; a private lease is not a report/decision grant.
 """
 
+import math
 from contextlib import contextmanager
 from time import monotonic
 
@@ -150,6 +151,12 @@ class LinkedPublicationContext:
         self._observer()
         self._lease = self._store.heartbeat(self._lease, lease_seconds=lease_seconds)
 
+    def commit_checkpoint(self, raw):
+        from .checkpoint_store import PrivateCheckpointStore
+
+        return PrivateCheckpointStore(codec=self._store.consents.codec).commit(
+            context=self, owner_id=self.owner_id, run_id=self.run_id, raw=raw)
+
     @contextmanager
     def publication_session(self, *, lock_timeout_seconds=5.0):
         self._observer()
@@ -165,12 +172,21 @@ class LinkedPublicationContext:
 
     def _emit(self, event_type, payload):
         observer = self._observer()
+        if type(payload) is not dict:
+            _reject()
         kind = RunEventType(event_type)
         if kind is RunEventType.MODEL_USAGE:
             expected = observer._usage_payload()
             if observer._execution_stopped:
                 expected = {**expected, "execution_stopped": True}
-            if _canonical(payload) != _canonical(expected):
+            elapsed = payload.get("elapsed_seconds")
+            # A captured monotonic receipt necessarily precedes this second
+            # clock read. Counters/flags must match exactly; elapsed must be a
+            # finite already-observed duration, never a future/reset clock.
+            if (type(elapsed) not in (int, float) or not math.isfinite(elapsed)
+                    or not 0 <= elapsed <= expected["elapsed_seconds"]
+                    or _canonical({key: value for key, value in payload.items() if key != "elapsed_seconds"})
+                        != _canonical({key: value for key, value in expected.items() if key != "elapsed_seconds"})):
                 _reject()
         elif kind in {RunEventType.STAGE_STARTED, RunEventType.STAGE_COMPLETED}:
             allowed = {"stage"} if kind is RunEventType.STAGE_STARTED else {"stage", "research_artifact_id"}

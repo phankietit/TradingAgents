@@ -74,3 +74,14 @@ the latest row without fallback. An explicit disposable empty-table downgrade
 tests schema reversal, not permission to delete private checkpoint history.
 Default API/worker remain unwired; no private migration/activation is approved
 by these source changes. Follow the same owner backup/restore/rollout gate.
+
+Additive `0015_linked_dispatch` creates one dispatch-consumption row per linked
+execution, with the pinned original checkpoint ID/hash and consumption time.
+Consumption reloads immutable root evidence, owner-readable source bytes and
+the exact unused retained observer inside the linked publication transaction.
+It commits before child construction; a lost committed ACK is uncertainty,
+not permission to respawn, reset budget or mark success. It introduces no new
+root job, mutable dispatch-success state or default worker claim path.
+SQLite/PostgreSQL single-consumer/race fixtures and disposable schema reversal
+are local evidence only. No private database migration or automatic history
+deletion is authorized; default API/worker activation remains disabled.

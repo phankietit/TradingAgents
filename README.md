@@ -661,8 +661,8 @@ Migration `0012_research_continuations` is additive and has only been applied
 to disposable tests. No old run/job/error/checkpoint is changed, no token/email
 is copied into the consent record and no model is invoked. This is NOT an API
 resume endpoint, queued execution, final source/client attestation or financial
-approval. Model-entry consumption, the separate linked worker/dispatch and
-browser journey still need implementation and verification; an execution ID is not a bearer
+approval. The separate linked worker/default dispatch and browser journey still
+need implementation and verification; an execution ID is not a bearer
 permission or a fresh budget. Do not apply migrations to private history
 without the documented backup/owner rollout procedure.
 
@@ -687,10 +687,22 @@ use the linked attempt, not the terminal job's attempt. Prior and current
 logical starts share the original cap; elapsed includes claim/prepare time and
 unknown provider cost stays unknown. A lost entry ACK cannot re-enter. The
 trusted stop hook is accepted only from that bound observer under a valid lease;
-cancelled/expired late stop remains unknown, never a refund. These are local
-mechanics, not child-reaping or live research evidence. Terminal-original-context
-loading, linked stage/report/decision publication, full multi-continuation
-history and actual supervised graph execution remain required before activation.
+cancelled/expired late stop remains unknown, never a refund.
+
+The internal terminal-original-context loader now preserves the complete failed/
+cancelled manifest, including completion and errors, while the ordinary recording
+context continues to reject terminal manifests. It reloads owner-readable source
+bytes, source-row/manifest integrity, the original portfolio/policy and pinned
+checkpoint under the linked parent fence, again before dispatch. No live source
+fallback, new observer, budget reset or original-thread relabeling is allowed.
+Additive `0015_linked_dispatch` records one consumed dispatch before constructing
+the child; a lost committed ACK cannot respawn it. The private child receives JSON
+and checkpoint bytes, never a DB/lease nonce/session/callback. Synthetic native
+spawn fixtures compare interrupted prefix + restored suffix to the original
+uninterrupted EN/VI/bilingual flow, including invalid-VI handling. These are local
+mechanical proofs, not live provider/cost or financial/editorial acceptance.
+Linked report/decision publication, multi-continuation history, full crash/
+stop/cancel/expiry reconciliation and API/UI activation remain unfinished.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

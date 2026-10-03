@@ -321,13 +321,43 @@ proof. Cancellation/expiry or failed stop persistence retains an unknown upper
 bound; no automatic refund, requeue or success is introduced. Full late-stop
 supervision reconciliation still needs a separately validated path.
 
-Next wire terminal-original-context loading and linked stage/report/decision
-publication, then prove actual original native graph/spawn equivalence and all
-stop/cancel/expiry/ACK boundaries before API/UI or paid activation. Existing
-terminal context rejection remains; do not remove errors, reset limits or change
-native thread/fingerprint to get past it. Multi-continuation observation is not
-enabled by relabeling the root job. Dated receipts distinguish local callback/
-SQLite/PostgreSQL mechanics from actual child/live/browser integrations.
+`LinkedOriginalResearch.load` now reloads the complete immutable terminal root
+manifest, original portfolio/policy/risk/source bytes and pinned checkpoint in
+the linked parent transaction. Snapshot/artifact indexed columns must match
+their manifests; actual source bytes must be integrity-checked and owner-readable
+at both initial load and dispatch consumption. A changed/missing source refuses
+dispatch rather than silently acquiring current data. The separate strict JSON
+context retains original errors/completion; ordinary recording still rejects
+terminal manifests. The JSON is not a consent or bearer token and contains no
+lease nonce, DB/session, CSRF or callable. Original thread/fingerprint remain.
+
+The supervisor requires this exact parent context, its original codec and bound
+checkpoint commit method, exact unused/debited observer and pinned restore bytes.
+Mutable parent/request/options are rechecked before dispatch. Additive
+`0015_linked_dispatch` commits a single-use consumption marker before constructing
+a process. A lost committed ACK cannot respawn; precommit failure starts no child.
+The remaining original deadline is checked again before `Process.start`.
+Child parsing requires an explicit matching linked execution tag plus restore
+bytes; it cannot select terminal mode in the ordinary/default path.
+
+Synthetic native EN/VI/bilingual/invalid-VI fixtures now stop/reap the original
+child after committed nonempty market pending writes with lost ACK, retain the
+original FAILED job/run, authenticate consent, claim a linked lease, load original
+inputs and spawn the restored original graph. Prefix + suffix prompts/calls and
+published result fields must match the uninterrupted baseline; old evidence
+remains unchanged and new checkpoint actor links identify attempt 2. This proves
+one actual local interrupted/restored graph boundary, not remote SDK termination,
+provider cost, live financial quality or all crash/transport boundaries.
+Usage counters/flags remain exact; a captured elapsed receipt may precede the
+second monotonic validation read, but must be finite/nonnegative and no later
+than that read. Aggregate accounting still rejects reset/decreasing usage.
+
+Next implement linked report/decision finalization and stop/cancel/expiry
+reconciliation, then verify all crash/ACK boundaries before API/UI or paid
+activation. Multi-continuation observation is not enabled by relabeling the root
+job. Default worker/API/CLI still do not invoke this internal path. Dated receipts
+distinguish SQLite/PostgreSQL mechanics, actual synthetic child integration and
+live/browser/financial acceptance.
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,

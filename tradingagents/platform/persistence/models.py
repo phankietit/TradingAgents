@@ -210,6 +210,16 @@ class ResearchCheckpointExecutionRow(Base):
     execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
 
 
+class ResearchExecutionDispatchRow(Base):
+    """One durable consumed parent spawn boundary; ACK loss cannot respawn."""
+
+    __tablename__ = "research_execution_dispatches"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), nullable=False)
+    checkpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class DecisionRow(Base):
     __tablename__ = "decisions"
     __table_args__ = (Index("ix_decisions_owner_as_of", "owner_id", "as_of"),)

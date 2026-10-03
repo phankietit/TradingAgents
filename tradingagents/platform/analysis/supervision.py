@@ -21,7 +21,11 @@ from .checkpoint_codec import SnapshotCheckpointCodec
 from .checkpoint_store import CheckpointCommit, CheckpointDatabaseError
 from .engine import AnalysisEngine, AnalysisRequest, AnalysisResult
 from .observer import STAGES, ResearchExecutionFailed
-from .recording_context import SnapshotRecordingInputs
+from .recording_context import (
+    LinkedSnapshotRecordingInputs,
+    SnapshotRecordingInputs,
+    read_child_recording_inputs,
+)
 from .stage_records import STAGE_PATHS, stage_sections
 
 # Exactly the fields used by the web report publisher, not raw graph messages.
@@ -112,7 +116,8 @@ def _child(connection, base_config, request_data, engine_factory, checkpoint_opt
 
             if engine_factory is not AnalysisEngine or checkpoint_options is None:
                 raise ValueError()
-            inputs = SnapshotRecordingInputs(recording_data).validate_request(request)
+            inputs = read_child_recording_inputs(recording_data, checkpoint_options=checkpoint_options,
+                restore_checkpoint=restore_checkpoint).validate_request(request)
             if (inputs.expected_fingerprint != checkpoint_options["fingerprint"]
                     or str(inputs.run.run_id) != checkpoint_options["thread_id"]):
                 raise ValueError()
@@ -154,7 +159,7 @@ class SupervisedAnalysisEngine:
 
     def __init__(self, *, base_config=None, engine_factory=AnalysisEngine,
                  checkpoint_codec=None, checkpoint_thread_id=None, checkpoint_commit=None,
-                 recording_inputs=None, restore_checkpoint=None):
+                 recording_inputs=None, restore_checkpoint=None, linked_context=None):
         self.base_config = base_config
         self.engine_factory = engine_factory
         supplied = (checkpoint_codec, checkpoint_thread_id, checkpoint_commit)
@@ -163,14 +168,28 @@ class SupervisedAnalysisEngine:
         self.checkpoint_commit = checkpoint_commit
         self.recording_inputs = recording_inputs
         self.restore_checkpoint = restore_checkpoint
-        if (restore_checkpoint is not None or recording_inputs is not None
+        self.linked_context = linked_context
+        if (linked_context is not None or restore_checkpoint is not None or recording_inputs is not None
                 or any(value is not None for value in supplied)):
             try:
                 original = None
                 if recording_inputs is not None:
-                    if type(recording_inputs) is not SnapshotRecordingInputs or engine_factory is not AnalysisEngine:
+                    if type(recording_inputs) not in {SnapshotRecordingInputs, LinkedSnapshotRecordingInputs} or engine_factory is not AnalysisEngine:
                         raise ValueError()
                     original = recording_inputs.read()
+                if type(recording_inputs) is LinkedSnapshotRecordingInputs:
+                    from .linked_publication import LinkedPublicationContext
+                    from .linked_recording import validate_linked_recording
+
+                    if (type(linked_context) is not LinkedPublicationContext or restore_checkpoint is None
+                            or checkpoint_codec is not linked_context._store.consents.codec
+                            or getattr(checkpoint_commit, "__self__", None) is not linked_context
+                            or getattr(checkpoint_commit, "__func__", None) is not LinkedPublicationContext.commit_checkpoint):
+                        raise ValueError()
+                    validate_linked_recording(context=linked_context, recording_inputs=recording_inputs,
+                        restore_checkpoint=restore_checkpoint)
+                elif linked_context is not None:
+                    raise ValueError()
                 if (type(checkpoint_codec) is not SnapshotCheckpointCodec
                         or not callable(checkpoint_commit)
                         or (original is None and getattr(engine_factory, "supports_checkpoint_bridge", False) is not True)
@@ -191,6 +210,8 @@ class SupervisedAnalysisEngine:
             # parent-only. Default worker never supplies these options.
             self.checkpoint_options = {"fingerprint": checkpoint_codec.fingerprint,
                                        "thread_id": checkpoint_thread_id}
+            if linked_context is not None:
+                self.checkpoint_options["linked_execution_id"] = str(linked_context.execution_id)
 
     def analyze(self, request):
         # Legacy live-tool jobs retain their existing engine contract.
@@ -201,6 +222,10 @@ class SupervisedAnalysisEngine:
         observer = request.execution_observer
         if observer is None:
             raise ValueError("snapshot supervision requires a research observer")
+        if ((type(self.recording_inputs) is LinkedSnapshotRecordingInputs and (
+                self.linked_context is None or self.restore_checkpoint is None))
+                or self.linked_context is not None and type(self.recording_inputs) is not LinkedSnapshotRecordingInputs):
+            raise ValueError("invalid checkpoint bridge configuration") from None
         if self.restore_checkpoint is None:
             observer.remaining_seconds()
         recording_data = None
@@ -220,9 +245,28 @@ class SupervisedAnalysisEngine:
                 if restored.config["configurable"]["thread_id"] != self.checkpoint_options["thread_id"]:
                     raise ValueError()
                 validate_retained_observer(observer=observer, run=inputs.run)
+                if type(self.recording_inputs) is LinkedSnapshotRecordingInputs:
+                    from .linked_publication import LinkedPublicationContext
+                    from .linked_recording import validate_linked_recording
+
+                    if (type(self.linked_context) is not LinkedPublicationContext or self.engine_factory is not AnalysisEngine
+                            or self.checkpoint_codec is not self.linked_context._store.consents.codec
+                            or self.checkpoint_options.get("linked_execution_id") != str(self.linked_context.execution_id)
+                            or getattr(self.checkpoint_commit, "__self__", None) is not self.linked_context
+                            or getattr(self.checkpoint_commit, "__func__", None) is not LinkedPublicationContext.commit_checkpoint):
+                        raise ValueError()
+                    validate_linked_recording(context=self.linked_context, recording_inputs=self.recording_inputs,
+                        request=request, restore_checkpoint=self.restore_checkpoint)
+                elif self.linked_context is not None or "linked_execution_id" in self.checkpoint_options:
+                    raise ValueError()
             except (ValueError, TypeError, AttributeError):
                 raise ValueError("invalid checkpoint bridge configuration") from None
             observer.remaining_seconds()
+        if self.linked_context is not None:
+            from .linked_recording import consume_linked_dispatch
+
+            consume_linked_dispatch(context=self.linked_context, recording_inputs=self.recording_inputs,
+                request=request, restore_checkpoint=self.restore_checkpoint)
         context = get_context("spawn")  # Never fork a worker's live DB/lease thread.
         parent, child = context.Pipe()
         process = context.Process(target=_child, args=(child, self.base_config,
@@ -253,6 +297,7 @@ class SupervisedAnalysisEngine:
 
         reader = Thread(target=receive, name="research-pipe-reader", daemon=True)
         try:
+            observer.remaining_seconds()  # Construction/dispatch ACK cannot grant a late child start.
             process.start()
             observer.supervision_mode = "spawned_process"
             child.close()
