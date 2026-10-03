@@ -2,6 +2,42 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Latest exact-source receipt · 2026-10-03 08:21 UTC:** tested source
+`f900afaf64f1eb42705583aa38a7397b1f63c41f`, clean and unchanged throughout full
+regression76717, terminal0: **2,906 tests +88 subtests PASS**,2 optional-provider
+skips,442warnings,1234.19s. Ruff/pip-check PASS; helper removed only its labelled
+disposable PostgreSQL container. Fresh noneditable tracked install21115 and
+packaged smoke10514 terminal0, including site-packages imports, native fixed FRED
+child/missing-key refusal, authenticated synthetic API reuse/no job, SQLite
+head0017/ORM parity and scoped offline PostgreSQL DDL. Final browser66203 terminal0
+includes first and target desktop1440×1000/mobile390×844 screenshots, EN/VI and
+multi-source interactions; synthetic sources, no AI job, all task-owned QA servers
+stopped. Previous pending statements below retain their earlier checkpoint scope.
+
+**Existing source credentials / live acquisition now verified:** worktree `.env`
+still lacks SEC contact/FRED key, but presence-only inspection found both in the
+root checkout's ignored `.env`. No name/email resubmission is needed. Probe92365
+loaded only those two existing values into its own process, with a fresh managed
+cache, owner database and artifact store; no env file was copied or changed.
+Actual authenticated AAPL SEC API preparation returned **1,159 eligible facts**,
+zero invalid records, last filing2026-07-31. Actual FRED DGS10/1825-day preparation
+returned **1,304 observations**,56 explicit missing values, native unit Percent,
+completed Chicago vintage2026-10-02. Owner integrity readback, full macro history/
+fact replay, filed-date fact catalog and exact-source API reuse PASS. No AI job or
+model token use; no private runtime/history mutation. This verifies source
+acquisition, not complete fundamentals/macro, economic interpretation, report
+quality, financial/VI acceptance or production readiness. Details and commands:
+`docs/platform/research-acceptance-20261003.md`, section **Bounded FRED web flow
+and actual existing-source acquisition**.
+
+Next retain the entire R01–R14 scope: structured social/other-asset source
+coverage, actual repeated-continuation/all-stage/crash/transport/ACK and default
+owner journey, financial/source-entailment/VI quality, operational/report UX and
+fresh complete BTC/AAPL acceptance. No unapproved paid retry, shortened graph,
+provider/risk change or historical fingerprint rebinding. NQ=F remains owner
+BLOCKED without active-contract/roll metadata or a substitute. Draft PR7 stays
+open/draft; no CI, broker, main merge or public deployment.
+
 **R04 current macro preparation checkpoint 2026-10-03:** candidate containing
 this checkpoint implements the existing FRED series/window transport, supervised
 75-second child acquisition with bounded response/output and kill/reap/pipe joins,

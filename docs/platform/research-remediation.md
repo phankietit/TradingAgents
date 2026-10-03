@@ -22,7 +22,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
 | R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
 | R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
-| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures plus local current-news and AAPL SEC ingestion; social/macro, other-asset fundamentals and non-price live UNVERIFIED |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED API and macro EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa. Social/other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
@@ -39,16 +39,20 @@ acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
 renewed implementation and live-test authorization for BTC, AAPL and NQ, including
 the operational research journey and final decision-report presentation.
 
-R04 structured FRED acquisition/storage prerequisite is implemented separately:
+R04 structured FRED acquisition/storage and current web preparation are implemented:
 explicit series/window, pinned completed-day vintage, full observations and
-owner-scoped immutable provenance. This does not change R04's unfinished macro
-status: stored-source admission and native-unit/period/vintage fact replay now
+owner-scoped immutable provenance. R04 remains incomplete: stored-source
+admission and native-unit/period/vintage fact replay now
 have full original-role/round graph fixtures, including financial validation and
 protected EN/VI statements. Bounded whole-acquisition supervision and authenticated
-API/UI ingestion still require implementation and acceptance; financial/editorial
-quality is not proven by synthetic SDK fixtures.
-Existing FRED/CLI defaults, risk limits and graph flow are unchanged; no paid or
-live-provider request follows from local fixture evidence.
+API/UI preparation have native process, API, browser and full regression evidence
+at `f900afaf64f1eb42705583aa38a7397b1f63c41f`. A separate authenticated live probe
+of that installed candidate acquired AAPL SEC and DGS10/1825-day sources, verified
+owner readback and reuse, and created no model job. Financial/editorial quality,
+complete economic coverage, social and other-asset fundamentals remain unverified.
+Existing FRED/CLI defaults, risk limits and graph flow are unchanged; synthetic
+fixtures alone never authorize a live-provider or paid-model request. Detailed
+scope and actual live-source evidence are in `research-acceptance-20261003.md`.
 
 ### Current operational finding · 2026-10-01
 

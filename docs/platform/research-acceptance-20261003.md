@@ -1,10 +1,11 @@
 # Research acceptance checkpoint — 2026-10-03
 
-Latest tested source `c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9`: see the
-appended **Stored macro admission and protected report flow** section. Earlier
+Latest tested source `f900afaf64f1eb42705583aa38a7397b1f63c41f`: see the
+appended **Bounded FRED web flow and actual existing-source acquisition** section. Earlier
 incremental evidence and failures below retain their original source scope.
-The full private-platform goal remains incomplete; no live-finance or browser
-acceptance follows from the local approval gate.
+The full private-platform goal remains incomplete. Local gates, synthetic browser
+checks and actual source acquisition are separate evidence classes; none proves
+financial/editorial acceptance or readiness of the whole private platform.
 
 Branch `fix/TA-R01-research-quality`, source
 `c705cad32c3e6579c94942d8131ea32f0ac34def`. Private platform candidate remains
@@ -1308,3 +1309,143 @@ BTC/AAPL still need evidence. No CI, paid/vendor call, provider/risk change,
 private DB migration/restart/history rewrite, broker, main merge/deploy.
 Source-byte changes invalidate old checkpoint fingerprints; restore exact
 original runtime, never rebind private history or reset retained allowance.
+
+## Bounded FRED web flow and actual existing-source acquisition
+
+Tested source `f900afaf64f1eb42705583aa38a7397b1f63c41f`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`, clean and
+unchanged throughout the final full gate. Draft PR #7 remains open/draft.
+Runtime macOS26.5.2 arm64/Python3.14.7. This remains an incomplete private
+research candidate, not a production/live-finance release.
+
+### Implemented contract
+
+The separate current FRED wrapper bounds streaming response and child output to
+2 MB, supervises the shared 75-second acquisition/parse deadline, and rejects
+late/oversized/invalid scope rather than truncating it. Fixed child command,
+bounded stdin, stdout reader/writer lifecycle, kill/reap and pipe closure are
+tested using actual processes. Fixed original host/key, no redirects/compressed
+body, native units, completed Chicago vintage and observation freshness remain.
+Legacy FRED/CLI routing/defaults are unchanged.
+
+Owner/CSRF `prepare-macro` accepts one explicit series and 1–36,525-day window
+(default365), uses a server cutoff and appends immutable source artifacts.
+Full collection identity/window/vintage must match before persistence. Exact
+owner/source/window/current-vintage reuse is limited to15 minutes and content
+eligibility; process-local lock/cooldown are not public/multi-process controls.
+NQ/ES refuse. Distinct failed collections cannot become usable input. The EN/VI
+web preserves headlines/other series, replaces only the same dataset/series,
+refuses selection overflow at16 without discarding saved data, and resets paid
+consent. Coverage distinguishes macro/headlines; no model job is created.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Actual native FRED boundary | PASS | Native hang/trickle/early-EOF-still-alive/JSON-then-hang/nonzero/malformed/oversize processes; thread constructor/start failure; actual child reap/pipe closure/no reader or writer thread after return; expired deadline and oversized input refuse before spawn; late bounded parent parse refuses |
+| HTTP/identity/failure privacy | PASS | Fixed endpoints/options, streaming limits, advertised/actual oversize, compressed/invalid JSON body refusal and closed responses; full series/window/vintage/instrument identity; typed INVALID versus UNAVAILABLE; no raw credential-bearing exception retained |
+| Owner API/preparation | PASS | Final API5662 terminal0:26 tests/47.22s, including actual threaded shared acquisition lock, auth/CSRF/strict body, owner snapshot isolation/reuse, failed auditing/cooldown, no job, macro plus independent news pinned/reloaded,100-year window with separate immutable history and NQ refusal. Earlier focused PG85438:284 tests/58.73s precedes the additional lock test; diagnostic, not full baseline |
+| Web local gate | PASS | Web86973 terminal0:144 tests; typecheck/lint/build. Same-series replacement, other-source retention, both preparation orders, explicit overflow/consent/failure behavior and EN/VI coverage |
+| Synthetic desktop/mobile browser | PASS | Final66203 terminal0, bundled Playwright1.62.1 Chromium (Browser plugin unavailable); authenticated127.0.0.1:8017 owner API/UI, desktop1440×1000/mobile390×844, first and target screens. AAPL→DGS10/1825days→independent headlines→UNRATE→three retained selected sources→consent only→VI/mobile. Identity/nonblank/overlay/interactions/screenshots and post-login console/page-error checks PASS; expected initial auth/me401 recorded separately. Main-agent screenshot review: no horizontal overflow/target clipping. Broader operational/report UX not accepted |
+| Full exact-source baseline | PASS | Default local disposable PostgreSQL helper76717 terminal0:2,906 tests +88 subtests,2 optional-provider skips,442warnings,1234.19s. Source/HEAD f900afa remained unchanged through terminal cleanup. Ruff/pip-check PASS; only helper-owned labelled PostgreSQL removed |
+| Fresh package/import/API smoke | PASS | Tracked git archive f900afa→new managed Build/source→fresh noneditable source[platform] install21115 terminal0. Fresh pip-check and outside-source packaged_macro_smoke.py10514 terminal0: site-packages package/CLI/API/schema/worker/FRED/macro facts/GraphSetup origins; actual fixed FRED child with deliberately blank key refuses without HTTP; synthetic owner source load and authenticated reuse/no job; fresh SQLite head0017/full ORM parity; scoped offline PostgreSQL DDL0010:head |
+| Actual existing-source acquisition | PASS | Probe92365 terminal0 on fresh installed f900afa: actual default authenticated AAPL SEC and DGS10 FRED collection, owner immutable payload/hash readback, macro full-history fact replay, SEC filed-date catalog, exact-source API reuse and no model job; see scope below |
+| Complete live report/financial/VI | UNVERIFIED | No new model run, final report, investment interpretation, semantic source-entailment or editorial/MT proof. Earlier live failure receipts remain unchanged |
+| Wider goal/recovery/UX | UNVERIFIED | Structured social/other-asset source coverage, actual repeated-continuation/all-stage/crash/transport/ACK/default owner journey, full operational/report UX and complete fresh BTC/AAPL acceptance remain open |
+| NQ=F | BLOCKED | Owner-selected reference lacks approved active-contract/roll metadata. No new provider or substitute |
+| Optional providers/matrix/scanners | UNVERIFIED | Missing langchain_aws and explicitly unset live DeepSeek key are2 skips, not passes. One OS/Python with fresh packaging smoke is not the full fresh-resolved suite/dependency/Python matrix. Earlier scanner-tool limitations unchanged |
+
+### Actual source acquisition: scope and results
+
+At2026-10-03 08:21 UTC, presence-only checks showed the worktree ignored `.env`
+lacked SEC_EDGAR_USER_AGENT/FRED_API_KEY, while the root checkout's ignored
+`.env` contained both. Earlier worktree-only absence receipts are not evidence
+that the owner never supplied them. The new external probe loaded only those
+two existing values in its own process; it did not display them, copy/update an
+env file, change production configuration, or include them in Git. The SEC
+contact passed the existing format guard. No name/email resubmission is needed.
+
+The fresh installed candidate used default API collectors, not injected
+synthetic source collectors, and a fresh task-owned cache/owner SQLite database/
+artifact store. There was no existing-cache reuse on initial acquisition. Only
+the subsequent exact-source authenticated API request reused the saved snapshot.
+The instrument was approved AAPL equity/USD; no NQ substitute, fallback vendor,
+model client/job or private owner database was used.
+
+| Source | Actual result | Readback/reuse scope |
+| --- | --- | --- |
+| FRED DGS10/1825 days | ready/OK, eligible_complete_vintage;08:21:06.810518–08:21:08.277749 UTC (1.467s);1,304 observations including56 explicit nulls, native unit Percent, completed Chicago vintage2026-10-02 | Whole owner manifest/payload equality/hash checked; every observation paged with250-page size and source fact resolved including missing→None; original instrument identity checked. Second request ready/reused=true with same snapshot |
+| SEC AAPL companyfacts | ready/OK, eligible_filed_facts;08:21:08.387055–08:21:09.758409 UTC (1.371s);1,159 retained facts, zero malformed records; last eligible filing2026-07-31 | Owner manifest/payload equality/hash checked; one catalog entry per retained fact, every filed_at≤request date. Second request ready/reused=true with same snapshot |
+
+`GET /api/v1/runs` remained empty. **Zero AI model calls/tokens**; source HTTP
+requests are not AI analysis. These are current-retrieval sources. Filing dates
+and completed-day FRED vintage do not turn today's retrieval into historical
+snapshot evidence, exhaustive macro/fundamentals or a complete investment report.
+The older failed BTC job and its notes/checkpoints/history were untouched.
+
+### Commands and retained evidence
+
+Managed run:
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T072641Z-47907`.
+From the worktree (`<managed>` denotes that run):
+
+```sh
+TA_ALLOW_TEST_DB_RESET=1 TMPDIR=<managed>/Tmp bash scripts/verify-postgres-local.sh
+git archive f900afaf64f1eb42705583aa38a7397b1f63c41f | tar -x -C <managed>/Build/source
+TMPDIR=<managed>/Tmp .venv/bin/python -m venv <managed>/Packages/venv
+TMPDIR=<managed>/Tmp PIP_CACHE_DIR=<managed>/Packages/pip-cache <managed>/Packages/venv/bin/python -m pip install '<managed>/Build/source[platform]' --quiet
+```
+
+Fresh smoke command from outside the source cwd:
+`<managed>/Packages/venv/bin/python <managed>/Results/packaged_macro_smoke.py`
+preceded by that interpreter's `-m pip check`. Actual source probe command from
+`<managed>/Results`:
+`<managed>/Packages/venv/bin/python <managed>/Results/live_existing_sources.py`.
+To reproduce on another machine, provision those two names privately in an
+ignored local env (never submit values to Git), a new owned managed run and
+fresh noneditable installation of the exact source. The probe procedure is:
+
+1. Load only SEC_EDGAR_USER_AGENT and FRED_API_KEY before package imports;
+   set the per-process TRADINGAGENTS_CACHE_DIR to the new owned run. Assert
+   `_contact_configured()` and installed module origins without printing values.
+2. Refuse an existing probe DB; migrate a new SQLite DB, bootstrap a synthetic
+   local probe owner using OwnerAuth and add the initial catalog's AAPL contract.
+3. Build the real create_app/ApiSettings with that DB/store and localhost test
+   origin. Use FastAPI TestClient, owner login, csrf-token endpoint and Origin/
+   X-CSRF-Token headers. Do not override app.state source collectors.
+4. POST the AAPL `prepare-macro` endpoint with DGS10/lookback_days1825; POST
+   `prepare-fundamentals` without body. Log only fixed statuses, counts, dates and
+   safe instrument metadata. Never log environment, headers or raw exceptions.
+5. For ready sources, owner-load via MacroSnapshotService/SecSnapshotService;
+   compare the full JSON manifest to the API result. SnapshotMacroFacts must
+   validate identity and page/resolve the entire retained history, including
+   missing values. SnapshotFundamentalFacts must retain all fact IDs and filing
+   dates. Repeat each preparation once to prove exact snapshot reuse.
+6. Assert the runs endpoint is empty and close the app/database. Keep probe DB,
+   cache and source blobs private/owned; never push them or mutate private history.
+
+Local retained Results artifacts include four screenshots
+`macro-desktop-first.png`, `macro-mobile-first.png`, `macro-desktop-en.png`,
+`macro-mobile-vi.png`; synthetic browser scripts/fixture DBs and packaged smoke;
+`live_existing_sources.py`, new `live-existing-sources.db`,
+`live-existing-source-artifacts` and `live-source-cache`. They are not Git/cloud
+handoff content. Portable contract fixtures remain in the tracked tests.
+Task-created browser server handles28927/97900/79833 are terminal0; no private
+application server or user browser session was stopped/restarted. All listed
+gates/probes are terminal before marking the managed run completed/exit0; artifacts
+retained without cleanup. The previous unrelated exited QA container remains.
+
+Earlier diagnostic failures remain diagnostics: lazy route/checkbox locator
+timing, synthetic headline publication after collection start, and ambiguous
+macro select accessible name. Fixtures/locators were corrected, and the actual
+select received an explicit accessible label; publication-time and source gates
+were not weakened. Precommit focused19479 had165 tests/19 PG skips and overlapping
+source edits, so is not exact-source/full proof. Final clean gates above supersede
+only those overlapping evidence claims, not earlier immutable historical receipts.
+
+No CI, paid model call, new provider/production endpoint/risk-limit change,
+private DB migration/restart/history rewrite, broker, main merge or deployment.
+Source changes still conservatively invalidate older research fingerprints;
+restore the exact original runtime, never rebind history or replenish allowance.
+The entire original R01–R14 objective remains active. Next address real source
+coverage and operational/report/financial acceptance without cutting graph roles,
+publishing partial work as a decision, substituting NQ or silently retrying paid jobs.
