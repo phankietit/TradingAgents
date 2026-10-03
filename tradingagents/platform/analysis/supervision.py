@@ -154,6 +154,20 @@ def _outputs(stage, sections):
     return outputs
 
 
+def _wait_for_linked_exit(process, observer):
+    """Returned result is not clean process termination or a fresh allowance.
+
+    Cleanup must fit the same retained wall-clock budget and cancellation/lease
+    checks. Poll rather than terminating a normally exiting child after one
+    second. The caller's finally block still terminates/reaps on any failure.
+    """
+    while process.is_alive():
+        process.join(timeout=min(0.2, observer.remaining_seconds()))
+    observer.remaining_seconds()  # Cancellation/deadline wins even at exit.
+    if process.exitcode != 0:
+        raise ResearchExecutionFailed("research child did not exit cleanly") from None
+
+
 class SupervisedAnalysisEngine:
     """Default web-worker engine; CLI and explicitly injected engines are unchanged."""
 
@@ -330,9 +344,11 @@ class SupervisedAnalysisEngine:
                     if (result.instrument != request.instrument
                             or result.analysis_date != request.analysis_date):
                         raise ResearchExecutionFailed("research result context mismatch")
-                    process.join(timeout=1)
                     if self.linked_context is not None:
+                        _wait_for_linked_exit(process, observer)
                         self._linked_return_result = result
+                    else:
+                        process.join(timeout=1)
                     return result
                 if method == "failure":
                     raise ResearchExecutionFailed("isolated research execution requires review")

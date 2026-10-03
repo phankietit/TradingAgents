@@ -5,6 +5,7 @@ import json
 import os
 from datetime import timedelta
 from pathlib import Path
+from time import sleep
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -119,9 +120,16 @@ def restored_callback_fixture_child(connection, base_config, request_data, engin
                   invalid=base_config["_fixture_restore_invalid"])
 
 
+def slow_exit_restored_child(*args):
+    # Real child returns the original graph result, then takes longer than the
+    # old one-second join to finish local process cleanup. No model is added.
+    restored_callback_fixture_child(*args)
+    sleep(1.5)
+
+
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
-@pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped", "linked_stopped"])
+@pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped", "linked_stopped", "linked_slow_exit"])
 def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks):
     def forbidden(*args, **kwargs):
         raise AssertionError("parent fixture attempted provider/network invocation")
@@ -130,8 +138,8 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
     monkeypatch.setattr(httpx.Client, "send", forbidden)
     monkeypatch.setattr(httpx.AsyncClient, "send", forbidden)
     exhausted = callbacks == "exhausted"
-    linked_attempt = callbacks == "linked_stopped"
-    stopped_attempt = callbacks in {"stopped", "linked_stopped"}
+    linked_attempt = callbacks in {"linked_stopped", "linked_slow_exit"}
+    stopped_attempt = callbacks in {"stopped", "linked_stopped", "linked_slow_exit"}
     child = ({False: fixture_child, True: invalid_fixture_child} if not callbacks else
              {False: callback_fixture_child, True: invalid_callback_fixture_child})[invalid and not exhausted]
     monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", child)
@@ -298,12 +306,20 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                         event_type=RunEventType.RESEARCH_EXECUTION_STARTED, occurred_at=NOW, payload={"attempt": 2})
                 recovered_request = request.model_copy(update={"execution_observer": retained})
                 recovered_recording, recovered_commit = recording, commit
-            monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", restored_callback_fixture_child)
+            monkeypatch.setattr("tradingagents.platform.analysis.supervision._child",
+                slow_exit_restored_child if callbacks == "linked_slow_exit" else restored_callback_fixture_child)
             recovery = SupervisedAnalysisEngine(base_config={**config, "_fixture_restore_invalid": invalid},
                 recording_inputs=recovered_recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
                 checkpoint_commit=recovered_commit, restore_checkpoint=raw,
                 **({"linked_context": linked_context} if linked_attempt else {}))
-            result = recovery.analyze(recovered_request)
+            try:
+                result = recovery.analyze(recovered_request)
+            except ResearchExecutionFailed:
+                if callbacks == "linked_slow_exit":
+                    assert recovery._linked_clean_exit is True, "returned child was terminated before clean exit"
+                raise
+            if linked_attempt:
+                assert recovery._linked_clean_exit is True
             suffix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
             assert suffix["pid"] != prefix["pid"] and suffix["closed_clients"] == 2
             with pytest.raises(ProcessLookupError):

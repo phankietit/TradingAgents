@@ -36,7 +36,11 @@ from tradingagents.platform.analysis.observer import (
     ResearchObserver,
 )
 from tradingagents.platform.analysis.snapshots import SnapshotAnalysisContext
-from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine, _Bridge
+from tradingagents.platform.analysis.supervision import (
+    SupervisedAnalysisEngine,
+    _Bridge,
+    _wait_for_linked_exit,
+)
 from tradingagents.platform.artifacts import ArtifactService
 from tradingagents.platform.jobs import DurableJobQueue, JobWorker
 from tradingagents.platform.jobs.analysis import AnalysisJobHandler
@@ -76,6 +80,45 @@ class SpawnFixtureEngine:
             final_state={"market_report": "Synthetic returned note",
                 "final_trade_decision": "REVIEW", "messages": ["private reasoning"]},
             narrative_signal="REVIEW")
+
+
+@pytest.mark.parametrize("mode", ["slow_clean", "unclean", "deadline", "cancel", "late_cancel"])
+def test_linked_exit_wait_preserves_original_budget_and_cancel(mode):
+    clock = [0.0]
+    joins = []
+    finish = 1.5 if mode == "slow_clean" else .5
+    if mode in {"deadline", "cancel"}:
+        finish = 10
+
+    class Process:
+        def is_alive(self):
+            return clock[0] < finish
+
+        def join(self, timeout):
+            joins.append(timeout)
+            clock[0] = min(finish, clock[0] + timeout)
+
+        @property
+        def exitcode(self):
+            return None if self.is_alive() else (1 if mode == "unclean" else 0)
+
+    def check_cancelled():
+        if mode in {"cancel", "late_cancel"} and clock[0] >= .5:
+            raise JobCancellationRequested("synthetic cancellation")
+
+    observer = ResearchObserver(clock=lambda: clock[0], check_cancelled=check_cancelled,
+        emit=lambda *_: None, max_seconds=1 if mode == "deadline" else 3)
+    expected = {"unclean": ResearchExecutionFailed, "deadline": ResearchBudgetExceeded,
+                "cancel": JobCancellationRequested, "late_cancel": JobCancellationRequested}
+    if mode == "slow_clean":
+        _wait_for_linked_exit(Process(), observer)
+        assert clock[0] == finish and observer.started == 0
+    else:
+        with pytest.raises(expected[mode]):
+            _wait_for_linked_exit(Process(), observer)
+    assert all(0 < duration <= .2 for duration in joins)
+    assert clock[0] <= observer.max_seconds
+    assert observer.started_calls == 0 and not observer._execution_stopped
 
 
 def test_bridge_serializes_concurrent_frames_and_acknowledgements():

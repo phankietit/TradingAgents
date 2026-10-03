@@ -706,7 +706,10 @@ artifacts with execution actor links and, only after a returned result, clean
 child exit/reaping and durable local stop accounting, atomically appends the
 ordinary report/evidence/risk candidate plus a separate `0016` completion receipt.
 The ordinary handler and linked publisher share the same report projection and
-decision pipeline; no financial/translation/risk gate is removed. The original
+decision pipeline; no financial/translation/risk gate is removed. The returned
+linked child must exit cleanly within the retained deadline; slow cleanup is
+polled with cancellation/lease checks, not terminated after a fixed one second.
+No new budget or model call is granted. The original
 FAILED/CANCELLED run/job remains immutable. Missing/invalid structured research
 still becomes REVIEW; an existing owner risk input still determines weights.
 An owner-scoped integrity reader can recover a committed receipt after lost ACK

@@ -361,6 +361,12 @@ observer before dispatch, not reconstructed from browser output.
 
 After a validated native child result, the supervisor reaps the process, checks
 a clean exit, stops the pipe reader and persists the original observer's stop.
+For linked results it polls normal process exit within the original retained
+wall-clock allowance and cancellation/lease checks, rather than cutting cleanup
+off after a fixed one-second join. Deadline/cancel/nonzero exit still refuses
+completion and runs the existing terminate/reap cleanup. Waiting grants no
+new allowance and makes no further model call; default nonlinked behavior is
+unchanged.
 Only then can the bound publisher atomically append the existing report,
 EvidenceGraphService/RiskEngine/DecisionCandidateFactory output and a separate
 `0016` completion receipt. The ordinary handler shares the same extracted report
