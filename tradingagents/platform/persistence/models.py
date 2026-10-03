@@ -186,6 +186,30 @@ class ResearchExecutionRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ResearchExecutionEntryRow(Base):
+    """One actual parent entry marker; never re-enter after a lost ACK."""
+
+    __tablename__ = "research_execution_entries"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("run_events.event_id"), nullable=False, unique=True)
+
+
+class ResearchExecutionEventRow(Base):
+    """Append-only actor provenance without modifying historical events."""
+
+    __tablename__ = "research_execution_events"
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("run_events.event_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
+class ResearchCheckpointExecutionRow(Base):
+    """Append-only actor provenance; original checkpoints are not backfilled."""
+
+    __tablename__ = "research_checkpoint_executions"
+    record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
 class DecisionRow(Base):
     __tablename__ = "decisions"
     __table_args__ = (Index("ix_decisions_owner_as_of", "owner_id", "as_of"),)

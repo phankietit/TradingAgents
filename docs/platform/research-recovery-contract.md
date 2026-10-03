@@ -286,13 +286,48 @@ implemented by relabeling the original job attempt; future linked stop/events/
 checkpoint provenance must be established first. No successful result or stop
 ACK path is invented here. Default worker/API/CLI remain unchanged.
 
-Next wire the lease to synchronous parent-only linked checkpoint/event/report
-publication, retained accounting and explicit terminal-original-context loading,
-then prove actual original native graph/spawn equivalence and all stop/cancel/
-expiry/ACK boundaries before API/UI or paid activation. Existing terminal
-context rejection remains; do not remove errors, reset limits or change native
-thread/fingerprint to get past it. Dated receipts distinguish executed SQLite/
-PostgreSQL lease fixtures from these still-open integrations.
+### Linked parent publication / accounting prerequisite
+
+`LinkedPublicationContext.prepare` constructs the original-debit observer on a
+read-only connection, then reloads consent/source/checkpoint/accounting under
+the same owner → original job/run → execution locks as the nonce fence. The
+unused exact observer, prior accounting high-water, original caps and callbacks
+must still match before recording one actual parent entry and its initial
+observer receipt. Initial zero logical starts are an observed unused observer,
+not zero provider cost or a stop. A lost committed entry ACK leaves the new
+attempt active/uncertain and cannot construct a fresh observer or enter again.
+This method does not invoke a model, create a child or enable a default route.
+
+Additive `0014_linked_publication` appends separate entry/event/checkpoint actor
+links atomically with each new piece of evidence. No historical table is
+rebuilt/backfilled. Publication validates the nonce/worker/owner/root identity,
+immutable source, entry actor, cancellation and expiry within the write
+transaction and again after the caller's flush before commit. PostgreSQL/SQLite
+lock settings remain per-operation bounds, not a hard total-I/O deadline.
+New checkpoint attempt comes from the linked execution while original job/run/
+thread stay unchanged. Original codec fingerprint/node set must match. Reusing
+identical original checkpoint bytes only returns their old receipt, never
+relabels/adds an actor link. Missing/corrupt latest linkage fails without fallback.
+
+The context accepts usage only matching its exact bound observer, appends the
+linked attempt and side actor link, reloads the complete cumulative accounting,
+and refuses aggregate logical starts above the unchanged original cap before
+ACK. Claim/prepare time is included in the attempt elapsed bound. Prior tokens/
+calls are counted once from each attempt's latest receipt; provider request
+retries, billing/cost and exact wall time remain unknown. The trusted supervisor
+hook's stop receipt is accepted only when that bound observer is marked stopped
+and the lease remains valid. Local invocation of the hook is not child-reaping
+proof. Cancellation/expiry or failed stop persistence retains an unknown upper
+bound; no automatic refund, requeue or success is introduced. Full late-stop
+supervision reconciliation still needs a separately validated path.
+
+Next wire terminal-original-context loading and linked stage/report/decision
+publication, then prove actual original native graph/spawn equivalence and all
+stop/cancel/expiry/ACK boundaries before API/UI or paid activation. Existing
+terminal context rejection remains; do not remove errors, reset limits or change
+native thread/fingerprint to get past it. Multi-continuation observation is not
+enabled by relabeling the root job. Dated receipts distinguish local callback/
+SQLite/PostgreSQL mechanics from actual child/live/browser integrations.
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,

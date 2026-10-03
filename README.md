@@ -677,9 +677,20 @@ allocation is terminal; cancellation of a leased allocation stays requested
 until supervised termination is actually established. Expiration requires review,
 never automatic requeue or an invented zero-cost stop. No new research event,
 checkpoint, report, decision or model call is produced by these methods.
-Default API/worker/CLI do not consume this table. Linked publication/accounting,
-terminal-original-context loading, full multi-continuation history and actual
-supervised graph execution remain required before activation.
+Default API/worker/CLI do not consume this table. An internal
+`LinkedPublicationContext.prepare` now constructs a retained observer and
+transactionally rechecks consent before recording one parent entry. Linked
+usage/stage events and private checkpoints are lease-fenced in their own
+commit transaction, including a final expiry check. Additive `0014` actor links
+preserve the original job/run and old event/checkpoint bytes; new checkpoints
+use the linked attempt, not the terminal job's attempt. Prior and current
+logical starts share the original cap; elapsed includes claim/prepare time and
+unknown provider cost stays unknown. A lost entry ACK cannot re-enter. The
+trusted stop hook is accepted only from that bound observer under a valid lease;
+cancelled/expired late stop remains unknown, never a refund. These are local
+mechanics, not child-reaping or live research evidence. Terminal-original-context
+loading, linked stage/report/decision publication, full multi-continuation
+history and actual supervised graph execution remain required before activation.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

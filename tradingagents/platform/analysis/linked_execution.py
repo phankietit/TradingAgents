@@ -92,20 +92,26 @@ class LinkedExecutionStore:
             _reject()
         self.consents, self.database = consents, consents.database
 
+    def _now(self):
+        now = self.consents.clock()
+        if type(now) is not datetime or now.tzinfo is None or now.utcoffset() is None:
+            _reject()
+        return now.astimezone(UTC)
+
     @contextmanager
-    def _transaction(self):
+    def _transaction(self, *, lock_timeout_seconds=None):
         try:
             _check_lock_timeout(self.consents.lock_timeout_seconds)
-            now = self.consents.clock()
-            if type(now) is not datetime or now.tzinfo is None or now.utcoffset() is None:
-                _reject()
-            now = now.astimezone(UTC)
-            with self.database.session(lock_timeout_seconds=self.consents.lock_timeout_seconds) as session:
+            timeout = self.consents.lock_timeout_seconds
+            if lock_timeout_seconds is not None:
+                _check_lock_timeout(lock_timeout_seconds)
+                timeout = min(timeout, lock_timeout_seconds)
+            with self.database.session(lock_timeout_seconds=timeout) as session:
                 if session.bind.dialect.name == "sqlite":
                     session.execute(text("BEGIN IMMEDIATE"))
                 elif session.bind.dialect.name != "postgresql":
                     _reject()
-                yield session, now
+                yield session, self._now()
         except (ValueError, TypeError, AttributeError, KeyError, OverflowError, SQLAlchemyError):
             _reject()
 
@@ -219,7 +225,8 @@ class LinkedExecutionStore:
                 now, row.deadline_at, row.lease_expires_at)
         return result  # Lost ACK cannot re-claim or reset this attempt.
 
-    def heartbeat(self, lease, *, lease_seconds=300):
+    def _fence(self, session, lease, now, *, recheck=False):
+        """Validate the private lease inside the caller's publication transaction."""
         if type(lease) is not LinkedExecutionLease or type(lease.reservation) is not ExecutionReservation:
             _reject()
         if (any(type(getattr(lease.reservation, field)) is not UUID for field in (
@@ -229,16 +236,24 @@ class LinkedExecutionStore:
                 or any(type(getattr(lease, field)) is not datetime or getattr(lease, field).utcoffset() is None
                        for field in ("started_at", "deadline_at", "expires_at"))):
             _reject()
+        consent, observation, current = self._source(session, lease.reservation.execution_id, now, recheck=recheck)
+        row = self._execution(session, consent, observation, now)
+        fresh = self._now()  # Acquiring owner/job/run locks can consume the lease.
+        if (row is None or row.status != "leased"
+                or _canonical(asdict(_reservation(row))) != _canonical(asdict(lease.reservation))
+                or row.worker_id != lease.worker_id or not secrets.compare_digest(row.lease_token_hash, _token_hash(lease.token))
+                or _db_utc(row.started_at) != lease.started_at or _db_utc(row.deadline_at) != lease.deadline_at
+                or fresh < now or fresh >= _db_utc(row.lease_expires_at)):
+            _reject()
+        return row, current
+
+    def heartbeat(self, lease, *, lease_seconds=300):
         if type(lease_seconds) is not int or not 1 <= lease_seconds <= 300:
             _reject()
         with self._transaction() as (session, now):
-            consent, observation, _ = self._source(session, lease.reservation.execution_id, now)
-            row = self._execution(session, consent, observation, now)
-            if (row is None or row.status != "leased"
-                    or _canonical(asdict(_reservation(row))) != _canonical(asdict(lease.reservation))
-                    or row.worker_id != lease.worker_id or not secrets.compare_digest(row.lease_token_hash, _token_hash(lease.token))
-                    or _db_utc(row.started_at) != lease.started_at or _db_utc(row.deadline_at) != lease.deadline_at
-                    or now >= _db_utc(row.lease_expires_at)):
+            row, _ = self._fence(session, lease, now)
+            now = self._now()
+            if now >= _db_utc(row.lease_expires_at):
                 _reject()
             row.lease_expires_at = min(now + timedelta(seconds=lease_seconds), _db_utc(row.deadline_at))
             row.updated_at = now

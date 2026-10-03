@@ -61,3 +61,16 @@ No historical research state is cleared, no successful-result state is defined,
 and the existing worker does not claim these rows. These test-only lease
 mechanics do not authorize migration of a private database, model dispatch,
 publication or repeated continuations without linked accounting integration.
+
+Additive `0014_linked_publication` creates only three side tables: one actual
+parent entry event per execution, actor links for linked events, and actor links
+for new checkpoints. It does not rebuild/backfill historical tables or remove
+the original job's unique run ID. Entry/event/checkpoint actor links are committed
+with their evidence, not afterward. New checkpoints retain original run/thread/
+job identity and derive their attempt from the independently fenced execution.
+Idempotently acknowledging identical old checkpoint bytes never relabels them.
+Latest linked provenance is validated on read; missing/corrupt linkage refuses
+the latest row without fallback. An explicit disposable empty-table downgrade
+tests schema reversal, not permission to delete private checkpoint history.
+Default API/worker remain unwired; no private migration/activation is approved
+by these source changes. Follow the same owner backup/restore/rollout gate.
