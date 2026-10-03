@@ -2,6 +2,39 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R04 structured FRED prerequisite 2026-10-03:** tested clean source
+`b4d48170e2b5333b09be8775c72b49523c1030c7`. Existing FRED request/key and CLI
+defaults stay unchanged. One explicit series/window retains full native-unit
+observations (including missing values), pins metadata/values to a fully elapsed
+Chicago vintage day, and checks native-frequency observation freshness separately
+from vintage time. Immutable owner-readable storage verifies whole payload/manifest
+parity, identity/hash/cutoff; SQLite and disposable PostgreSQL fixtures cover
+idempotency, tamper/corrupt bytes, failed storage rollback and owner refusal.
+Macro remains excluded from analyst admission. This is not web acquisition,
+complete macro coverage, live FRED, financial or UI acceptance. Existing request
+buffers JSON before parser limit: bounded whole-acquisition transport/supervision,
+canonical fact/unit/period replay, authenticated API and web flow remain open.
+Final precommit focused43611 **140 PASS**,18.96s; full unchanged b4d4817
+handle76974 **2,762 +88 subtests PASS**,2 optional-provider skips,442warnings,
+1040.04s,terminal0. Ruff/pip-check/diff/templates PASS. Exact tracked archive/fresh
+noneditable install17910 and outside-source packaged smoke14109 terminal0:
+site-packages imports, synthetic macro SQLite roundtrip, head0017/ORM parity,
+scoped packaged PostgreSQL DDL0010:head PASS. Not full fresh-dependency/Python
+matrix. Managed20261003T053342Z-94186 completed/exit0, retained; helper containers
+removed only by their own labels, old exited QA container left alone.
+Detailed commands/initial lint failures and follow-up scope: receipt20261003,
+section **Structured FRED acquisition/storage prerequisite**. New package Python
+bytes conservatively invalidate older checkpoint fingerprints; never rebind old
+private checkpoint history to a different runtime. Exact old runtime is required.
+Presence-only `.env` check in this worktree: SEC_EDGAR_USER_AGENT and FRED_API_KEY
+both absent; no actual contact supplied, no key displayed/copied to Git. No CI,
+paid/live-provider call, private DB migration/restart/history rewrite, provider/
+risk change, broker, merge or deployment. Entire R01–R14 goal/Draft PR7 stay open:
+actual multi-continuation/all-stage/crash/transport/ACK and owner API/UI journey,
+macro/social/other-asset ingestion, finance/source-entailment/VI quality and
+operational/report UX remain unfinished. Fresh BTC/AAPL acceptance remains open;
+NQ=F owner BLOCKED/no provider/substitute unchanged.
+
 **Actual linked local-stop reconciliation 2026-10-03:** tested clean source
 `89c789d25af5b11f4efcde367883aedd500fafb6`. Additive0017 records only an actual
 joined original child with closed pipes/reader, bound context/request/observer,

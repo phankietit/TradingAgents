@@ -1,7 +1,7 @@
 # Research acceptance checkpoint — 2026-10-03
 
-Latest tested source `89c789d25af5b11f4efcde367883aedd500fafb6`: see the
-appended **Actual linked local-stop reconciliation** section. Earlier
+Latest tested source `b4d48170e2b5333b09be8775c72b49523c1030c7`: see the
+appended **Structured FRED acquisition/storage prerequisite** section. Earlier
 incremental evidence and failures below retain their original source scope.
 The full private-platform goal remains incomplete; no live-finance or browser
 acceptance follows from the local approval gate.
@@ -1201,3 +1201,58 @@ Next integrate verified stop reconciliation with conservative retained allowance
 and actual repeated-continuation provenance without resetting limits or enabling
 default dispatch prematurely; complete operational owner API/UI and the remaining
 financial/ingestion/live requirements before any full-goal completion claim.
+
+## Structured FRED acquisition/storage prerequisite
+
+Tested clean source `b4d48170e2b5333b09be8775c72b49523c1030c7`, branch
+`fix/TA-R01-research-quality`, existing managed worktree. Reuses existing FRED
+request/key with no provider/CLI default change. Not enabled in graph, API or web.
+R04 and the full goal remain unfinished; this is an ingestion/storage prerequisite.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Vintage/PIT and complete returned history | PASS | Pinned metadata and observations, five Chicago/DST boundaries, untransformed native units and all 101 fixture rows retained (not CLI40 cap), null missing observations; mismatched/future/duplicate/unordered/nonfinite/incomplete-page responses refuse |
+| Observation freshness and metadata | PASS | D/W/BW/M/Q/SA/A exact freshness boundaries and one-day-stale counterexamples; a fresh vintage cannot hide an old observation period. Copied models cannot bypass quality/reason/metadata/time checks |
+| Failure/privacy semantics | PASS | Fixed unavailable reasons for configuration/network failure at either request; validated empty series NO_DATA, empty window COVERAGE_GAP, all-missing NO_DATA and old observations STALE. No raw exception/credential URL persisted. Legacy untyped HTTP400 remains conservatively UNAVAILABLE, not guessed as empty |
+| Immutable storage/owner/integrity | PASS | All18 storage cases executed on SQLite and disposable PostgreSQL: complete reconstructed manifest parity, instrument/hash/media/owner/cutoff checks, idempotency, corrupt blob refusal, artifact failure metadata rollback. No new migration/table |
+| Final focused diagnostic | PASS | Precommit dirty-patch handle43611, terminal0:140 tests,18.96s; Ruff/pip-check/diff/template load also PASS. Earlier same-scope PG86114:140 PASS,19.23s; SQLite28337:122 PASS/18 explicitly unavailable PG skips,8.69s. These narrow runs do not replace full baseline |
+| Full exact-source baseline | PASS | Default disposable PG helper, handle76974, terminal0:2762 tests +88 subtests,2 optional-provider skips,442warnings,1040.04s. Clean unchanged b4d4817 throughout; Python3.14.7/macOS26.5.2 arm64. Cached postgres16-alpine image sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777 |
+| Fresh tracked noneditable installation | PASS | Exact git archive b4d4817 → managed Build/source; new Packages/venv installs absolute source[platform], handle17910 terminal0. Per-command TMPDIR/PIP_CACHE_DIR below owned external run; no populated environment/private runtime exported |
+| Packaged import/storage smoke | PASS | Outside-source Results/clean_install_smoke.py, handle14109 terminal0: package/CLI/API/worker/FRED/macro imports from fresh site-packages, pip check, scoped packaged PG offlineDDL0010:head, fresh owned SQLite head0017/full ORM parity and synthetic macro roundtrip. Fresh versions:LangGraph1.2.12,langchain-core1.6.6,langchain-openai1.6.7,Pydantic2.13.5,SQLAlchemy2.1.3,Alembic1.20.0. Not full fresh-dependency/Python matrix or full-base offlineDDL proof |
+| Initial implementation gates | FAIL | Initial C408 dictionary/import-order lint findings corrected before source commit; no failed behavior assertion was weakened. Preliminary collector gates50/72 PASS and first storage gate94 PASS retained as earlier narrower evidence, not final counts |
+| Bounded acquisition/activation | UNVERIFIED | Existing request buffers JSON before parser checks; two request timeouts are not a hard whole-acquisition/streaming-memory bound. No supervised preparation route, new worker job or API/UI activation |
+| Macro fact/financial/editorial/live acceptance | UNVERIFIED | Dataset remains excluded from analyst admission; canonical unit/period/source replay, paginated tools, report-owned quantities/VI protection, coverage warnings, authenticated selection and fresh live evidence still needed. No live FRED or MiniMax call |
+| Owner prerequisites | BLOCKED | Worktree .env presence-only check:SEC_EDGAR_USER_AGENT=false,FRED_API_KEY=false; actual SEC name/email not supplied. NQ=F owner contract/roll-source hold unchanged; no new provider or substitute |
+| Existing wider product/UX | UNVERIFIED | Actual repeated continuations, all-stage/crash/transport/ACK boundaries, default owner API/worker/CLI/UI journey, social/other-asset acquisition, finance/source-entailment/VI quality and operational/final-report UX remain open. No browser change/QA in this slice |
+
+Commands run from the existing worktree:
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T053342Z-94186/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_platform_fred.py tests/test_fred.py tests/test_macro_snapshot_service.py tests/test_news_snapshot_service.py --tb=short -x
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T053342Z-94186/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh
+```
+
+Fresh install17910: `git archive b4d48170e2b5333b09be8775c72b49523c1030c7 | tar -x -C <managed>/Build/source`,
+`.venv/bin/python -m venv <managed>/Packages/venv`, then fresh Python
+`-m pip install '<managed>/Build/source[platform]' --quiet` using managed TMPDIR
+and PIP_CACHE_DIR. Smoke14109 runs fresh `-m pip check` and an outside-source
+script verifying listed site-packages imports, `0010_owner_watchlist:head`
+offlineDDL, fresh SQLite/metadata, and synthetic DGS10/owner storage roundtrip.
+Its reproducible source/fixture contracts are in the two new tracked test files;
+local generated script/database/blobs remain owned retained QA artifacts, not
+portable private data or Git content. Managed run20261003T053342Z-94186 completed/
+exit0 and retained; helpers removed only current labelled containers, old exited
+ta-research-qa-1790495819-43615 left untouched.
+
+Package-Python source additions change the conservative recovery fingerprint;
+older private checkpoints require their exact original source/dependencies.
+Do not rebind/relabel/backfill old records to the new runtime. Source updates do
+not create continuation authority or reset any retained time/token allowance.
+
+Next finish R04's bounded acquisition + canonical macro fact/unit/period tooling,
+then authenticated API/UI preparation without replacing selected headline
+sources or claiming complete news/macro coverage. Preserve full original graph,
+quantitative/report/translation/risk/human-approval gates. Broader R01–R14
+acceptance remains open; current live failures are not cured by these fixtures.
+No CI, paid/live-provider call, private database migration/restart/history rewrite,
+production provider/model/endpoint/risk change, broker, main merge or deployment.
