@@ -98,8 +98,12 @@ leave an unreferenced blob, never an apparently completed result or auto-deletio
 Read-only receipt verification works after lease expiry and lost ACK, checking
 original root/job, consent/dispatch/checkpoint/event/artifact actor links, pinned
 hashes and stopped cumulative accounting. It does not authorize execution or
-approval. Default API/worker and linked human-approval integration stay disabled;
-the existing approval rule still rejects a failed/cancelled root. Follow the
+approval. Default continuation API/worker dispatch stays disabled. The existing
+decision transition route can now approve a linked candidate only after full
+completion-receipt/source integrity, original deterministic risk and human-owner
+policy/lifecycle validation; no failed/cancelled root is relabelled. Candidate
+payload/hash is immutable, current indexed status must match append-only events.
+This uses existing tables and needs no additional migration. Follow the
 same backup/owner rollout gates; schema reversal tests use disposable empty tables.
 
 The ORM and packaged `0016` migration explicitly share

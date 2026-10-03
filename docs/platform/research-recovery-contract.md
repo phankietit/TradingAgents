@@ -8,7 +8,10 @@ separate and unchanged.
 Latest internal source `f107b18`: linked original-graph continuation can retain
 stages and atomically publish the ordinary report/evidence/risk candidate after
 clean child exit and stopped accounting, with a separate verified completion
-receipt. Default API/worker/CLI dispatch and linked approval stay disabled.
+receipt. Default API/worker/CLI continuation dispatch stays disabled. The existing
+authenticated decision transition route subsequently recognizes a fully verified
+linked completion for human review/approval; ordinary success and all existing
+owner/source/risk/policy/lifecycle gates remain mandatory.
 Exact-source local PostgreSQL/native/clean-install gates are in the 2026-10-03
 receipt; live financial/editorial, operational UI and full recovery acceptance
 remain open. Root terminal history and original allowance are not reset.
@@ -395,13 +398,22 @@ it refuses corrupt/missing/foreign evidence rather than falling back. Completion
 prevents later linked publication/checkpoint/heartbeat/cancel, and automatic
 expiry does not relabel a committed output marker. This read is not bearer
 authorization, financial validity, remote termination/cost proof or human approval.
-Existing approval still requires the root SUCCEEDED; recognizing verified linked
-completion must be separately integrated/tested without weakening risk or owner
-authorization. Unit writer fixtures fabricate the private stop/clean-exit fields
+The existing approval transition now recognizes a fully verified linked
+completion instead of requiring the immutable failed/cancelled root to become
+SUCCEEDED. Missing receipt/store, wrong owner/identity, pre-completion event time,
+corrupt source/report/evidence/checkpoint/accounting or risk-policy mismatch still
+refuses approval. Ordinary SUCCEEDED approval stays unchanged. Candidate payload
+and receipt hash are never rewritten: the indexed current status must equal
+DecisionLifecycle replay from append-only owner-authorized events, whose indexed
+columns must agree with payloads. Source bytes/rows are revalidated at original
+as-of; READY candidates replay deterministic risk again. Reader works after a
+valid approval without rewriting the original run/job or historical evidence.
+It returns completion proof, not human consent or executable authority.
+Unit writer fixtures fabricate the private stop/clean-exit fields
 explicitly; actual native matrix evidence is recorded separately.
 
-Next integrate verified linked completion with human review/approval and the
-default queue/API/UI journey, reconcile late stop/cancel/expiry and prove all
+Next integrate the default queue/API/UI continuation journey, reconcile late
+stop/cancel/expiry and prove all
 crash/ACK boundaries before paid activation. Multi-continuation observation is
 not enabled by relabeling the root job. Default worker/API/CLI still do not invoke
 this internal path. Dated receipts distinguish SQLite/PostgreSQL mechanics,

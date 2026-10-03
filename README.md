@@ -716,10 +716,16 @@ An owner-scoped integrity reader can recover a committed receipt after lost ACK
 without models or a live lease. Completion blocks later linked publication,
 checkpoint writes, heartbeat or cancellation; automatic expiry maintenance does
 not rewrite a committed output marker. It is not an approval or cost/refund claim.
-Default dispatch stays disabled; current approval still requires a succeeded
-root run. Verified linked-completion integration with human review/approval,
-multi-continuation history, all late-stop/crash/expiry boundaries and API/UI
-activation remain unfinished.
+Default continuation dispatch stays disabled. The existing authenticated owner
+transition route now accepts an integrity-verified linked completion as proof of
+completed research while preserving the original FAILED/CANCELLED run. Approval
+still requires the exact human owner, source bytes/evidence, deterministic risk
+replay, policy version and append-only lifecycle; a receipt alone grants no
+approval. Candidate payload/hash remains immutable, with current status projected
+from lifecycle events. Missing/corrupt receipt or a pre-completion approval time
+is refused. Ordinary successful-run approval is unchanged. Multi-continuation,
+all late-stop/crash/expiry boundaries and the default continuation API/UI journey
+remain unfinished; local API tests are not live/browser acceptance.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

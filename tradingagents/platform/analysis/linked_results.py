@@ -12,14 +12,15 @@ from uuid import UUID, uuid5
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
-from tradingagents.contracts import ArtifactKind, RunEventType
-from tradingagents.platform.artifacts import ArtifactService
+from tradingagents.contracts import ArtifactKind, DecisionStatus, RunEventType
+from tradingagents.platform.artifacts import ArtifactIntegrityError, ArtifactService
 from tradingagents.platform.jobs import DurableJobQueue
 from tradingagents.platform.jobs.decision_pipeline import build_run_decision
 from tradingagents.platform.jobs.report import build_run_report
 from tradingagents.platform.persistence import PlatformRepository
 from tradingagents.platform.persistence.models import (
     ArtifactRow,
+    DecisionLifecycleEventRow,
     DecisionRow,
     ResearchCheckpointExecutionRow,
     ResearchCheckpointRow,
@@ -30,6 +31,7 @@ from tradingagents.platform.persistence.models import (
     ResearchExecutionEventRow,
     ResearchExecutionRow,
     RunEventRow,
+    RunRow,
 )
 
 from .accounting import load_accounting_evidence
@@ -123,7 +125,7 @@ class LinkedResultPublisher:
     def save_stage(self, stage, outputs):
         try:
             return self._save_stage(stage, outputs)
-        except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError):
+        except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError, ArtifactIntegrityError):
             _reject()
 
     def _save_stage(self, stage, outputs):
@@ -154,7 +156,7 @@ class LinkedResultPublisher:
     def publish_completed(self, supervisor, result, request):
         try:
             return self._publish_completed(supervisor, result, request)
-        except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError):
+        except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError, ArtifactIntegrityError):
             _reject()
 
     def _publish_completed(self, supervisor, result, request):
@@ -265,6 +267,13 @@ def read_linked_completion(*, session, artifact_store, owner_id, execution_id):
                 or _digest(run.model_dump(mode="json")) != consent.payload["observation"]["source_run_hash"]
                 or _digest(job.model_dump(mode="json")) != consent.payload["observation"]["source_job_hash"]):
             _reject()
+        indexed_run = session.get(RunRow, run.run_id)
+        if (indexed_run is None or (indexed_run.owner_id, indexed_run.instrument_id,
+                indexed_run.schema_version, indexed_run.status) != (
+                owner_id, run.instrument_id, run.schema_version, run.status.value)
+                or _db_utc(indexed_run.analysis_as_of) != run.analysis_as_of
+                or _db_utc(indexed_run.created_at) != run.created_at):
+            _reject()
         from .checkpoint_store import _provenance
         from .linked_publication import validate_entry
 
@@ -309,9 +318,38 @@ def read_linked_completion(*, session, artifact_store, owner_id, execution_id):
                 or _digest(candidate.model_dump(mode="json")) != receipt.decision_hash):
             _reject()
         decision_row = session.get(DecisionRow, receipt.decision_id)
-        if (decision_row.owner_id, decision_row.run_id, decision_row.instrument_id, decision_row.rating) != (
-                owner_id, run.run_id, run.instrument_id, candidate.rating.value):
+        if (decision_row.owner_id, decision_row.run_id, decision_row.instrument_id, decision_row.rating,
+                decision_row.schema_version) != (owner_id, run.run_id, run.instrument_id,
+                candidate.rating.value, candidate.schema_version) or _db_utc(decision_row.as_of) != candidate.as_of:
             _reject()
+        from tradingagents.platform.decisions import DecisionLifecycle
+
+        history = repository.list_decision_events(candidate.decision_id, owner_id)
+        for event in history:
+            indexed = session.get(DecisionLifecycleEventRow, event.event_id)
+            if (indexed is None or any(getattr(indexed, key) != getattr(event, key)
+                    for key in ("decision_id", "owner_id", "schema_version"))
+                    or indexed.from_status != event.from_status.value or indexed.to_status != event.to_status.value
+                    or _db_utc(indexed.occurred_at) != event.occurred_at
+                    or event.occurred_at < _db_utc(receipt.completed_at)):
+                _reject()
+        if decision_row.status != DecisionLifecycle().apply(candidate, history).value:
+            _reject()
+        # Immutable candidate payload stays pinned; mutable indexed status must
+        # be explained by append-only owner-authorized lifecycle events.
+        _owned_sources(session, execution, artifact_store, run)
+        for identity in run.decision_inputs.risk_snapshot_ids:
+            source = repository.get_snapshot(identity)
+            source_artifact = repository.get_snapshot_artifact(identity, owner_id)
+            if source is None or source_artifact is None:
+                _reject()
+            _snapshot_columns(session, source)
+            _artifact_columns(session, source_artifact)
+            content = artifacts.read(source_artifact.artifact_id, owner_id)
+            if content is None or source.content_hash != source_artifact.content_hash:
+                _reject()
+        if candidate.status is DecisionStatus.READY_FOR_APPROVAL:
+            PlatformRepository(session, artifact_store=artifact_store)._validate_decision_sources(candidate)
         accounting = load_accounting_evidence(session=session, owner_id=owner_id, run_id=run.run_id)
         if (_digest(asdict(accounting)) != receipt.accounting_hash or accounting.elapsed_upper_bound is None
                 or _canonical(asdict(accounting)) != _canonical(binding["accounting"])):
@@ -341,5 +379,5 @@ def read_linked_completion(*, session, artifact_store, owner_id, execution_id):
             _reject()
         return LinkedCompletionReceipt(execution_id, run.run_id, manifest.artifact_id,
             receipt.evidence_artifact_id, candidate.decision_id)
-    except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError):
+    except (ValueError, TypeError, KeyError, AttributeError, OSError, UnicodeError, SQLAlchemyError, ArtifactIntegrityError):
         _reject()

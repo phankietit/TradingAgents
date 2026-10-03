@@ -568,16 +568,14 @@ class PlatformRepository:
         ).with_for_update())
         if row is None:
             raise ValueError("decision not found")
+        decision = DecisionCandidate.model_validate(row.payload)
+        if contract.to_status is DecisionStatus.APPROVED:
+            self._validate_analysis_completion(decision, contract.occurred_at)
         existing = self.session.get(DecisionLifecycleEventRow, contract.event_id)
         if existing:
             if not _same_payload(existing, contract):
                 raise ImmutableRecordConflict("decision event already has different content")
             return contract
-        decision = DecisionCandidate.model_validate(row.payload)
-        if contract.to_status is DecisionStatus.APPROVED:
-            run = self.get_run(decision.run_id, decision.owner_id)
-            if run is None or run.status is not RunStatus.SUCCEEDED:
-                raise InvalidStateTransition("approval requires a successfully completed analysis run")
         history = self.list_decision_events(contract.decision_id, contract.owner_id)
         if history and contract.occurred_at <= max(item.occurred_at for item in history):
             raise InvalidStateTransition("event must follow the previous event timestamp")
@@ -610,6 +608,28 @@ class PlatformRepository:
         )
         self.session.flush()
         return contract
+
+    def _validate_analysis_completion(self, decision, occurred_at) -> None:
+        message = "approval requires a successfully completed analysis run"
+        from tradingagents.platform.analysis.continuation import _db_utc
+        from tradingagents.platform.analysis.linked_results import read_linked_completion
+
+        from .models import ResearchExecutionCompletionRow
+
+        completion = self.session.scalar(select(ResearchExecutionCompletionRow).where(
+            ResearchExecutionCompletionRow.decision_id == decision.decision_id))
+        run = self.get_run(decision.run_id, decision.owner_id)
+        if completion is None:
+            if run is None or run.status is not RunStatus.SUCCEEDED:
+                raise InvalidStateTransition(message)
+            return  # Existing ordinary successful-run authority is unchanged.
+        if (run is None or run.status not in {RunStatus.FAILED, RunStatus.CANCELLED}
+                or self.artifact_store is None or occurred_at < _db_utc(completion.completed_at)):
+            raise InvalidStateTransition(message)
+        verified = read_linked_completion(session=self.session, artifact_store=self.artifact_store,
+            owner_id=decision.owner_id, execution_id=completion.execution_id)
+        if verified is None or verified.run_id != decision.run_id or verified.decision_id != decision.decision_id:
+            raise InvalidStateTransition(message)
 
     def _validate_decision_sources(self, decision: DecisionCandidate) -> None:
         from tradingagents.contracts.decisions import require_decision_readiness

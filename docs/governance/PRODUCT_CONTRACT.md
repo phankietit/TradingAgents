@@ -76,6 +76,15 @@ Deterministic code must own:
 
 Only the human owner may approve an order. An LLM response is never an order.
 
+For the draft candidate, research completion means an ordinary succeeded run or
+a fully integrity-verified linked completion receipt. The latter preserves the
+original failed/cancelled run and its history; it is not a policy exception or
+human approval. Existing authenticated owner transitions still revalidate source
+bytes/evidence, deterministic risk, exact policy and append-only lifecycle before
+approval. A stage note, dispatched child, missing/corrupt receipt or model prose
+cannot provide completion authority. Default continuation dispatch remains off,
+and operational/live acceptance is still incomplete.
+
 ## 4. Asset-Specific Contracts
 
 ### Equities

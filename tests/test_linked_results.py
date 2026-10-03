@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from datetime import timedelta
@@ -328,13 +329,19 @@ def test_expired_lease_does_not_hide_verified_archived_output(published):
             owner_id=context.owner_id, execution_id=context.execution_id) is not None
 
 
-def test_existing_real_portfolio_policy_risk_pipeline_is_not_cut(tmp_path, monkeypatch):
+@pytest.fixture
+def ready_linked(tmp_path, monkeypatch, request):
     from tests.test_continuation_consent import _prepared
     from tests.test_recovery_fingerprint import inputs
     from tests.test_risk_provenance import setup_risk
     from tradingagents.platform.analysis.decisions import StructuredDecisionNarrative
 
-    database, blobs, seeded = setup_risk(tmp_path)
+    mode = getattr(request, "param", False)
+    postgres = mode == "postgres"
+    url = os.getenv("TEST_POSTGRES_URL") if postgres else None
+    if postgres and not url:
+        pytest.skip("TEST_POSTGRES_URL is required for the PostgreSQL integration gate")
+    database, blobs, seeded = setup_risk(tmp_path, database_url=url)
     with database.session() as session:
         repository = PlatformRepository(session)
         instrument = repository.get_instrument(seeded.instrument_id)
@@ -351,7 +358,7 @@ def test_existing_real_portfolio_policy_risk_pipeline_is_not_cut(tmp_path, monke
     monkeypatch.setattr("tests.test_continuation_consent.inputs", lambda: args)
     url = database.engine.url.render_as_string(hide_password=False)
     database.dispose()
-    fixture = _prepared(url, cancelled=False)
+    fixture = _prepared(url, cancelled=mode is True)
     try:
         prepared = next(fixture)
         values = publisher_setup(prepared, tmp_path, store_override=blobs)
@@ -366,17 +373,84 @@ def test_existing_real_portfolio_policy_risk_pipeline_is_not_cut(tmp_path, monke
             read = read_linked_completion(session=session, artifact_store=blobs,
                 owner_id=context.owner_id, execution_id=context.execution_id)
             candidate = PlatformRepository(session, artifact_store=blobs).get_decision(read.decision_id, context.owner_id)
-            assert candidate.status.value == "ready_for_approval" and candidate.target_weight == .3
-            assert candidate.current_weight == .2 and candidate.policy_checks == seeded.policy_checks
-            assert len(candidate.evidence) == 3 and candidate.requires_human_approval is True
-            # Existing root-success authority is deliberately NOT bypassed here.
-            # Integrating verified linked completion with approval is a later gate.
-            from tests.test_decision_lifecycle import _approval
-
-            with pytest.raises(ValueError, match="successfully completed"):
-                PlatformRepository(session, artifact_store=blobs).add_decision_event(_approval(candidate))
+        yield values, seeded, candidate
     finally:
         fixture.close()
+        if postgres:
+            downgrade_database(url)
+
+
+@pytest.mark.parametrize("ready_linked", [False, True,
+    pytest.param("postgres", marks=pytest.mark.integration)], indirect=True)
+def test_existing_real_portfolio_policy_risk_pipeline_is_not_cut(ready_linked):
+    from tests.test_decision_lifecycle import _approval
+    from tradingagents.platform.decisions import DecisionLifecycle
+
+    values, seeded, candidate = ready_linked
+    database, _, _, _, publisher, context, _, _, _ = values
+    assert candidate.status.value == "ready_for_approval" and candidate.target_weight == .3
+    assert candidate.current_weight == .2 and candidate.policy_checks == seeded.policy_checks
+    assert len(candidate.evidence) == 3 and candidate.requires_human_approval is True
+    before = history(database)
+    event = _approval(candidate)
+    with database.session() as session:
+        repository = PlatformRepository(session, artifact_store=publisher.artifact_store)
+        assert repository.add_decision_event(event) == event
+        assert repository.add_decision_event(event) == event
+    with database.session() as session:
+        repository = PlatformRepository(session, artifact_store=publisher.artifact_store)
+        assert repository.get_decision(candidate.decision_id, candidate.owner_id) == candidate
+        events = repository.list_decision_events(candidate.decision_id, candidate.owner_id)
+        assert events == (event,)
+        assert DecisionLifecycle().apply(candidate, events).value == "approved"
+        assert read_linked_completion(session=session, artifact_store=publisher.artifact_store,
+            owner_id=context.owner_id, execution_id=context.execution_id).decision_id == candidate.decision_id
+    assert history(database) == before  # Original run/job/events/checkpoints untouched.
+
+
+@pytest.mark.parametrize("mutation", ["no_store", "no_receipt", "hash", "owner", "wrong_policy",
+    "early_time", "status", "source_column", "policy", "failed_stop", "root_index"])
+def test_linked_approval_requires_complete_integrity_and_same_risk(ready_linked, mutation):
+    from tests.test_decision_lifecycle import _approval
+    from tradingagents.platform.persistence.models import (
+        PolicyRow,
+        RunEventRow,
+        RunRow,
+        SnapshotRow,
+    )
+
+    values, _, candidate = ready_linked
+    database, _, _, _, publisher, context, _, _, _ = values
+    event = _approval(candidate)
+    with database.session() as session:
+        receipt = session.get(ResearchExecutionCompletionRow, context.execution_id)
+        if mutation == "no_receipt":
+            session.delete(receipt)
+        elif mutation == "hash":
+            receipt.report_hash = "sha256:" + "c" * 64
+        elif mutation == "owner":
+            session.get(DecisionRow, candidate.decision_id).owner_id = uuid4()
+        elif mutation == "wrong_policy":
+            event = _approval(candidate, policy_version="unreviewed")
+        elif mutation == "early_time":
+            event = _approval(candidate, occurred_at=context._lease.started_at - timedelta(seconds=1))
+        elif mutation == "status":
+            session.get(DecisionRow, candidate.decision_id).status = "approved"
+        elif mutation == "root_index":
+            session.get(RunRow, candidate.run_id).status = "succeeded"
+        elif mutation == "source_column":
+            session.get(SnapshotRow, candidate.evidence[0].snapshot_id).content_hash = "sha256:" + "c" * 64
+        elif mutation == "policy":
+            check = candidate.policy_checks[0]
+            row = session.get(PolicyRow, (check.policy_id, check.policy_version))
+            row.payload = {**row.payload, "parameters": {**row.payload["parameters"], "max_turnover": .01}}
+        elif mutation == "failed_stop":
+            last = session.scalars(select(RunEventRow).order_by(RunEventRow.sequence.desc())).first()
+            last.payload = {key: value for key, value in last.payload.items() if key != "execution_stopped"}
+    with database.session() as session, pytest.raises(ValueError):
+        PlatformRepository(session, artifact_store=None if mutation == "no_store" else publisher.artifact_store).add_decision_event(event)
+    with database.session() as session:
+        assert PlatformRepository(session).list_decision_events(candidate.decision_id, candidate.owner_id) == ()
 
 
 def test_disposable_empty_completion_migration_preserves_history(published):
