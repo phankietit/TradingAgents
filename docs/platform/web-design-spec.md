@@ -18,6 +18,13 @@ The default reader view presents the financial assessment and saved EN/VI prose;
 agent transcripts, JSON, hashes and token receipts are drilldowns. Material
 validation/coverage limitations remain visible. Decisions reuse the same report
 instead of repeating an English-only thesis above the bilingual reader.
+Review readiness and the existing explicit approve/reject actions appear before
+the long saved report. Missing risk checks and unsuccessful/mismatched research
+remain visible and disable approval; backend authorization is unchanged. Source
+and policy drilldowns stay separate. The embedded report does not link back to
+the same decision, and uses a single report heading. Reader summaries avoid nested
+lead/risk cards and preserve reading width on narrow screens; coverage warnings
+remain above the summary. These are scoped improvements, not overall UX acceptance.
 
 Owner chose direct code design, no Image Gen. This is the implementation brief,
 not by itself evidence of rendered or functional UI. Reference screenshots are captured

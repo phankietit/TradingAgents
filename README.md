@@ -397,6 +397,12 @@ quality or release approval.
 Completed runs lead with their saved report; the processing timeline remains
 available in a collapsed disclosure. Active and failed runs keep their status
 visible. Reports retain missing coverage and validation findings in the main view.
+Decisions show review readiness and the explicit
+approve/reject controls before the report, without opening technical details.
+These controls do not relax eligibility: matching successful research, data
+quality, deterministic policy checks and backend revalidation are still required.
+Reports embedded in Decisions omit navigation back to that same decision;
+the linked decision action remains available when reading Analysis.
 New research offers English, Vietnamese or bilingual English–Vietnamese reports
 (bilingual is the web form default). The language choice is recorded on each
 run; changing the UI language never translates or overwrites saved analysis.

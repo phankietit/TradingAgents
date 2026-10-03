@@ -1619,3 +1619,43 @@ Next implementation priorities grounded in the existing web-design-spec:
 Temporary audit tabs closed; task-owned server63407 terminal0 with joined worker
 and disposed private QA database. All listed current handles are terminal. Managed
 outputs retained; no unrelated container/artifact cleanup or public deployment.
+
+### Scoped report/review UX remediation after the audit
+
+Candidate containing this entry, based on documentation head e476b90. Changes
+are web-only plus matching docs: unchanged canApprove/run identity/policy guards,
+explicit confirmation/reason/idempotency and backend authority. Review controls
+now appear before the saved report rather than inside lower technical details.
+Missing checks/run mismatch remain visible; no automatic transition. Remove one
+duplicate report heading and embedded Decisions self-link only; Analysis retains
+its bound decision navigation. Reduce nested lead/risk cards/padding, retain
+all saved text, coverage warnings and expert Verification/source details.
+
+- Web37463 terminal0: typecheck/lint and **150 tests PASS**,24files,8.96s.
+  Added on-demand/embedded-link test and ordering/no-transition review test;
+  existing REVIEW, invalid-schema, exact identity, refusal, reason/idempotency,
+  conflict and EN/VI/safe-rendering tests remain. No Python change; f7bca47's
+  exact backend baseline above stays scoped to that source, not this new SHA.
+- Build84487 terminal0 to `<managed>/Build/review-web`; external output is
+  intentionally not emptied, no destructive cleanup. UI evidence is from these
+  assets, not the user's running8000 application.
+- In-app localhost8019 viewer reused only the existing synthetic QA DB/report
+  with no worker/vendor/model. Desktop1280×720, narrow390×844: new readiness
+  before report, approval disabled/no risk checks, no Decisions self-link, no
+  duplicate heading, VI saved prose, EN switching with198.02 retained, actual
+  Verification→Summary navigation, no blank/error overlay/console error and
+  narrow document scrollWidth390 PASS. No approve/reject/paid request exercised.
+- Accepted saved/read-back Results JPEGs:13decision-after,14decision-mobile-first,
+  15decision-mobile-review,16summary-after-desktop,17summary-after-mobile (first
+  viewport only),18summary-after-mobile-reading. Screenshot17 is not proof of
+  visible summary: screenshot18 captures the actual reading target.
+- Viewer72893 terminal0; temporary viewport reset/tab closed, private owner8000
+  untouched. Local generated images/DB/scripts/cache remain untracked/private.
+
+Mismatch ledger: before10/11/12 buried owner actions → after13/15 exposed above
+report; before09 summary entirely below fold → after16 heading visible near fold,
+not yet an adequate first-fold overview; before08 narrow nested panels → after18
+open wider reading region. Mobile first viewport still overemphasizes global
+navigation/history/metadata. Setup length, main summary positioning and complete
+professional operating journey remain UNVERIFIED; do not promote this subset
+into R11/R12 completion, WCAG, real finance/editorial or release acceptance.

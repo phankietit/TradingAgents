@@ -28,6 +28,16 @@ it('renders narrative as text and disables approval for REVIEW', async () => {
   expect(document.querySelector('script')).toBeNull();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
 });
+it('keeps review readiness visible ahead of the research without opening technical details', async () => {
+  const fetch = setup(); render(<Decisions />);
+  await screen.findByText(candidate.thesis);
+  const review = screen.getByRole('region', {name:'Owner review'});
+  expect(review.closest('details')).toBeNull();
+  expect(review.compareDocumentPosition(screen.getByText(candidate.thesis)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getAllByRole('button', {name:'Reject decision'})).toHaveLength(1);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/transitions'))).toBe(false);
+});
 it('explains unusable output while preserving original validation detail collapsed', async () => {
   setup(false,{...candidate,thesis:'Structured decision unavailable; manual review is required.',risks:['Schema validation failed: ValidationError'],invalidation_conditions:['Supply a schema-valid decision payload.']});
   render(<Decisions />);

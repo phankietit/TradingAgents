@@ -72,6 +72,17 @@ it('loads only on demand and displays untrusted report text plus a bound decisio
   expect(screen.queryByText(report.narrative)).toBeNull();
 });
 
+it('omits only the self-navigation on a decision page, retaining the saved report and verification', async () => {
+  setLocale('en');
+  const fetch = vi.fn(async () => new Response(JSON.stringify(report)));
+  vi.stubGlobal('fetch', fetch);
+  render(<ArtifactPreview artifact={artifact} runId="run-fixture" embedded showDecisionLink={false} />);
+  expect(await screen.findByText(report.narrative)).toBeTruthy();
+  expect(screen.queryByRole('link', {name:'Review linked decision'})).toBeNull();
+  expect(screen.getByRole('button', {name:'Verification'})).toBeTruthy();
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
 it('presents validated bilingual sections as a readable brief without altering saved text', async () => {
   setLocale('en');
   const en = '## Executive summary\nBalanced outlook.\n\n## Investment thesis\nSaved evidence **-22.94%**.\n\n## Risks\n- Rival case.\n\n## Invalidation conditions\n- If filing changes.';

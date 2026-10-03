@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Report/review UX implementation checkpoint · 2026-10-03:** the candidate
+containing this entry moves review readiness/actions before the saved report,
+keeps missing-risk/run-mismatch refusal visible, removes duplicate report heading
+and Decisions self-link, and reduces nested reader panels/padding. The exact
+canApprove expression, explicit confirmation/reason/idempotency and backend
+authority remain unchanged. Analysis keeps its bound decision link; source
+coverage, saved EN/VI prose and Verification stay available. Web37463 terminal0:
+150 tests/typecheck/lint PASS; build84487 terminal0 to owned review-web output.
+Fresh in-app real API/synthetic saved report at8019: desktop1280×720 and
+mobile390×844, readiness before report/disabled approval/no self-link, saved VI
+→EN/198.02 unchanged and Verification→Summary PASS; no overlay/console error,
+mobile scrollWidth390. Six accepted current screenshots13–18 remain private.
+Owned viewer72893 stopped terminal0, viewport reset and temporary tab closed.
+No model/vendor/transition action, user runtime unchanged. These are scoped UX
+improvements, not professional acceptance or live financial/VI acceptance.
+Next compact the long preparation flow, improve first-fold context/navigation,
+and continue full R01–R14/default-owner/recovery/financial/live gates. NQ=F stays
+owner BLOCKED; no provider/policy/consent/graph cut, CI, merge or public deploy.
+
 **Social exact-source checkpoint · 2026-10-03 15:36 UTC:** clean frozen source
 `f7bca474fa44c9ff053b013bac79fa9a0eadd91c`, full local PostgreSQL gate5479
 terminal0: **3,000 tests +88 subtests PASS**,2 optional-provider skips,

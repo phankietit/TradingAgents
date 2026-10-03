@@ -10,6 +10,12 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Keep decision review readiness and approval/rejection controls visible before
+  the saved report, with unchanged matching-run, policy and backend authority.
+  Remove duplicate report headings and self-navigation inside Decisions; retain
+  Analysis's bound decision link. Reduce nested report panels and narrow padding
+  while preserving coverage warnings, saved EN/VI text and verification details.
+
 - Add independent authenticated preparation of the original StockTwits/Reddit
   public feeds, immutable full-text current snapshots and owner-bound Sentiment
   input. Preserve publication/edit cutoffs, sample-versus-probability distinctions,

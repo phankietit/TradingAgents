@@ -82,7 +82,7 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
   return { type: 'evidence', asOf: text(data.as_of), claims };
 }
 
-export default function ArtifactPreview({ artifact, runId, defaultOpen = false, embedded = false }: { artifact: Artifact; runId: string; defaultOpen?: boolean; embedded?: boolean }) {
+export default function ArtifactPreview({ artifact, runId, defaultOpen = false, embedded = false, showDecisionLink = true }: { artifact: Artifact; runId: string; defaultOpen?: boolean; embedded?: boolean; showDecisionLink?: boolean }) {
   useLocale();
   const [open, setOpen] = useState(defaultOpen);
   const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence', 'research_stage'].includes(artifact.kind)
@@ -90,11 +90,11 @@ export default function ArtifactPreview({ artifact, runId, defaultOpen = false, 
   return <>
     {supported ? !embedded && <button onClick={() => setOpen(value => !value)} aria-expanded={open}>{open ? t("Close") : t("Inspect")} {t(artifact.kind.replaceAll('_', ' '))}</button>
       : <p className="muted caption">{t("Inline preview unavailable for this format or size; use the integrity-checked download.")}</p>}
-    {(open || embedded) && supported ? <PreviewBody key={`${runId}:${artifact.artifact_id}`} artifact={artifact} runId={runId} /> : null}
+    {(open || embedded) && supported ? <PreviewBody key={`${runId}:${artifact.artifact_id}`} artifact={artifact} runId={runId} showDecisionLink={showDecisionLink} /> : null}
   </>;
 }
 
-function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string }) {
+function PreviewBody({ artifact, runId, showDecisionLink }: { artifact: Artifact; runId: string; showDecisionLink: boolean }) {
   const locale = useLocale();
   const [state, setState] = useState<{ data?: Preview; error?: unknown }>({});
   const [section, setSection] = useState('summary');
@@ -147,7 +147,7 @@ function PreviewBody({ artifact, runId }: { artifact: Artifact; runId: string })
         <details className="full-report"><summary>{t('Read the complete saved report')}</summary><ResearchMarkdown text={data.localized![locale]} language={locale} /></details>
       </> : <ResearchMarkdown text={data.localized?.[locale] ?? data.narrative} language={data.localized ? locale : data.reportLanguage === 'vi' ? 'vi' : data.reportLanguage === 'en' ? 'en' : undefined} />}
       <p className="report-footnote">{t('Saved research, not a live market signal. Review the evidence, limitations and your portfolio before deciding.')}</p>
-      <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a>
+      {showDecisionLink ? <a className="action-link" href={`#/decisions?decision=${encodeURIComponent(data.decisionId)}`}>{t("Review linked decision")}</a> : null}
       </section> : null}
       {section === 'research' ? <section aria-label={t('Research detail')}><p className="muted caption">{t('Intermediate research, not the final conclusion. Conflicting arguments are preserved for review.')}</p>
         {data.sections.map(section => <details key={section.title}><summary>{t(section.title)}</summary><ResearchMarkdown text={section.body} /></details>)}
