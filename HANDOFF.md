@@ -3,6 +3,8 @@
 ## Cập nhật đang triển khai · 2026-10-03
 
 **Compact preparation checkpoint:** instrument/time/language share one row;
+Exact clean candidate `7a5a3c56b304fc119e6fa6d48ef044f10a63f547` is on origin;
+post-commit web70101 terminal0: typecheck/lint/152 tests PASS,9.31s.
 optional sources use a responsive grid. Choose saved sources opens and focuses
 the existing inspector without collecting/selecting/authorizing. Web28750
 terminal0: typecheck/lint/152 tests/build PASS (8.45s tests), output setup-web in
