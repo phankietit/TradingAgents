@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Supply complete selected immutable source records to the existing financial
+  review prompt, alongside fact bindings and the draft. Review instructions now
+  distinguish source facts, sampled opinions and unverified causal/predictive
+  hypotheses. No extra review call, source truncation or CLI change. This fixes
+  an input gap, not a deterministic proof of qualitative entailment; larger
+  context can increase input usage and live editorial acceptance remains open.
+
 - Compact analysis preparation into one instrument/time/language row and a
   responsive source grid. Choose saved sources opens and focuses the existing
   evidence inspector without fetching, selecting sources or authorizing AI.

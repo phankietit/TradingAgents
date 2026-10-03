@@ -2,6 +2,18 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Financial-review source context checkpoint:** review previously received the
+draft/instrument fact catalog but not complete selected source records. The
+existing review prompt now includes all original immutable records as explicitly
+untrusted evidence, without truncating history/posts/articles or adding a call.
+Prompt distinguishes facts/opinions/hypotheses and forbids interpreting citation
+existence as entailment. Focused69501 terminal0:35 PASS/3.21s, Ruff/pip-check PASS.
+Test checks exact parsed source equality, complete long article tail, all price
+rows/social text, unchanged one-call draft path. This is input-contract proof,
+not successful live entailment or prompt-injection resistance. Larger review
+context may increase input tokens; model/provider/graph/approval remain unchanged.
+Full exact-source gate must finish before new acceptance or financial claims.
+
 **Compact preparation checkpoint:** instrument/time/language share one row;
 Exact clean candidate `7a5a3c56b304fc119e6fa6d48ef044f10a63f547` is on origin;
 post-commit web70101 terminal0: typecheck/lint/152 tests PASS,9.31s.

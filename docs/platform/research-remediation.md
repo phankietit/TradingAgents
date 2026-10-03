@@ -167,6 +167,13 @@ quality and fingerprinted checkpoint resume still need evidence.
 
 ## Flow parity contract
 
+Financial review receives the complete selected immutable source records,
+not only snapshot IDs and numeric catalogs. Records are untrusted evidence;
+review must distinguish source-owned observations, opinions and conditional
+inferences. No additional review call or source excerpt cap is introduced.
+This closes an input gap, but qualitative entailment and live editorial quality
+remain UNVERIFIED; increased context may increase input usage.
+
 Both paths retain Market / applicable News / Social / Fundamentals analysts,
 Bull, Bear, Research Manager, Trader, Aggressive / Conservative / Neutral Risk,
 and Portfolio Manager. Analyst selection follows the asset profile and explicit

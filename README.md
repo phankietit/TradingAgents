@@ -421,6 +421,11 @@ It verifies five years of completed daily sessions using the original engine's
 shared history window, saves immutable evidence, then
 requires separate paid-AI consent. The price action itself does not ingest
 news/fundamental/macro sources and is not a historical-vintage feed;
+The existing financial-review step receives complete selected immutable source
+records as untrusted evidence, in addition to the draft and numeric facts. This
+does not add a model call but may increase input tokens; it does not prove that
+all qualitative claims are entailed or remove the need for human review.
+
 NQ/ES preparation remains unsupported. The preparation form groups instrument,
 research time and report language together, and offers **Choose saved sources**
 to open and focus the evidence inspector. This shortcut does not collect data,
