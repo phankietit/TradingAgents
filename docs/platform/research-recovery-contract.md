@@ -352,12 +352,46 @@ Usage counters/flags remain exact; a captured elapsed receipt may precede the
 second monotonic validation read, but must be finite/nonnegative and no later
 than that read. Aggregate accounting still rejects reset/decreasing usage.
 
-Next implement linked report/decision finalization and stop/cancel/expiry
-reconciliation, then verify all crash/ACK boundaries before API/UI or paid
-activation. Multi-continuation observation is not enabled by relabeling the root
-job. Default worker/API/CLI still do not invoke this internal path. Dated receipts
-distinguish SQLite/PostgreSQL mechanics, actual synthetic child integration and
-live/browser/financial acceptance.
+The internal exact bound `LinkedResultPublisher` now retains role-owned stage
+reader text using existing ResearchStageService (always unvalidated and not
+approval eligible), with atomic execution/event/artifact actor links. Original
+owner-readable sources are revalidated; no message/reasoning/tool state is added
+to events or stage artifacts. It must be attached to the exact unused original
+observer before dispatch, not reconstructed from browser output.
+
+After a validated native child result, the supervisor reaps the process, checks
+a clean exit, stops the pipe reader and persists the original observer's stop.
+Only then can the bound publisher atomically append the existing report,
+EvidenceGraphService/RiskEngine/DecisionCandidateFactory output and a separate
+`0016` completion receipt. The ordinary handler shares the same extracted report
+projection; financial/MT checks still happen in the original graph/engine and
+policy/readiness checks still use the existing deterministic decision pipeline.
+The failed/cancelled root/job is not edited or copied into a fictitious successful
+run. Missing schema/invalid VI stays REVIEW; no weight comes from model prose.
+Completion refuses missing stop, unclean exit, pending/failed calls, mismatched
+result/request, missing dispatch/latest linked checkpoint, changed source or
+cancelled/expired lease. Final post-flush expiry fence rolls metadata back.
+Blob puts can outlive rollback as unreferenced private blobs; they are not a
+completion signal and are never automatically deleted.
+
+The receipt pins original context, final checkpoint, result, cumulative accounting,
+report/evidence/decision hashes and execution actor links. Its owner-scoped
+read-only reader can resolve lost committed ACK without models or a live lease;
+it refuses corrupt/missing/foreign evidence rather than falling back. Completion
+prevents later linked publication/checkpoint/heartbeat/cancel, and automatic
+expiry does not relabel a committed output marker. This read is not bearer
+authorization, financial validity, remote termination/cost proof or human approval.
+Existing approval still requires the root SUCCEEDED; recognizing verified linked
+completion must be separately integrated/tested without weakening risk or owner
+authorization. Unit writer fixtures fabricate the private stop/clean-exit fields
+explicitly; actual native matrix evidence is recorded separately.
+
+Next integrate verified linked completion with human review/approval and the
+default queue/API/UI journey, reconcile late stop/cancel/expiry and prove all
+crash/ACK boundaries before paid activation. Multi-continuation observation is
+not enabled by relabeling the root job. Default worker/API/CLI still do not invoke
+this internal path. Dated receipts distinguish SQLite/PostgreSQL mechanics,
+actual synthetic child integration and live/browser/financial acceptance.
 
 `tradingagents/platform/analysis/checkpoint_codec.py` provides an unused-by-worker
 JSON envelope component. It preserves native checkpoint-v4 channel versions,

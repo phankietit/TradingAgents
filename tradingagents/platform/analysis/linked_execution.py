@@ -25,6 +25,7 @@ from tradingagents.platform.persistence.models import (
     JobRow,
     OwnerRow,
     ResearchContinuationRow,
+    ResearchExecutionCompletionRow,
     ResearchExecutionRow,
     RunRow,
 )
@@ -252,6 +253,8 @@ class LinkedExecutionStore:
             _reject()
         with self._transaction() as (session, now):
             row, _ = self._fence(session, lease, now)
+            if session.get(ResearchExecutionCompletionRow, row.execution_id) is not None:
+                _reject()
             now = self._now()
             if now >= _db_utc(row.lease_expires_at):
                 _reject()
@@ -266,7 +269,7 @@ class LinkedExecutionStore:
             principal = OwnerAuth(session).lock_authenticated_consent(session_token, csrf_token, now=now)
             consent, observation, _ = self._source(session, execution_id, now, owner_id=principal.owner_id)
             row = self._execution(session, consent, observation, now)
-            if row is None:
+            if row is None or session.get(ResearchExecutionCompletionRow, execution_id) is not None:
                 _reject()
             if row.status == "reserved":
                 row.status = "cancelled"
@@ -280,9 +283,14 @@ class LinkedExecutionStore:
         with self._transaction() as (session, now):
             consent, observation, _ = self._source(session, execution_id, now, active=False)
             row = self._execution(session, consent, observation, now)
-            if (row is None or row.status not in {"leased", "cancel_requested", "review_required"}
-                    or now < _db_utc(row.lease_expires_at)):
-                _reject()
-            row.status, row.updated_at = "review_required", now
-            result = _reservation(row)
+            if row is not None and session.get(ResearchExecutionCompletionRow, execution_id) is not None:
+                # Do not automatically relabel a committed output marker.
+                # The separate owner reader must still verify all its evidence.
+                result = _reservation(row)
+            else:
+                if (row is None or row.status not in {"leased", "cancel_requested", "review_required"}
+                        or now < _db_utc(row.lease_expires_at)):
+                    _reject()
+                row.status, row.updated_at = "review_required", now
+                result = _reservation(row)
         return result

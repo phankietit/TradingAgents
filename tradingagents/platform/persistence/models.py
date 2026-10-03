@@ -220,6 +220,32 @@ class ResearchExecutionDispatchRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ResearchExecutionArtifactRow(Base):
+    """Actor linkage for appended reader artifacts, never historical backfill."""
+
+    __tablename__ = "research_execution_artifacts"
+    artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
+class ResearchExecutionCompletionRow(Base):
+    """Atomic linked output receipt; does not rewrite terminal root lifecycle."""
+
+    __tablename__ = "research_execution_completions"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), nullable=False)
+    checkpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    report_artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), nullable=False, unique=True)
+    evidence_artifact_id: Mapped[UUID | None] = mapped_column(ForeignKey("artifacts.artifact_id"))
+    decision_id: Mapped[UUID] = mapped_column(ForeignKey("decisions.decision_id"), nullable=False, unique=True)
+    result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    accounting_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    report_hash: Mapped[str] = mapped_column(String(71), nullable=False)
+    decision_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_hash: Mapped[str | None] = mapped_column(String(71))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class DecisionRow(Base):
     __tablename__ = "decisions"
     __table_args__ = (Index("ix_decisions_owner_as_of", "owner_id", "as_of"),)

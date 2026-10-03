@@ -12,6 +12,7 @@ from tradingagents.contracts import RunEventType
 from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.persistence import PlatformRepository
 from tradingagents.platform.persistence.models import (
+    ResearchExecutionCompletionRow,
     ResearchExecutionEntryRow,
     ResearchExecutionEventRow,
     RunEventRow,
@@ -146,6 +147,8 @@ class LinkedPublicationContext:
             self._observer()
         with self._store._transaction() as (session, now):
             self._store._fence(session, self._lease, now)
+            if session.get(ResearchExecutionCompletionRow, self.execution_id) is not None:
+                _reject()
 
     def heartbeat(self, *, lease_seconds=300):
         self._observer()
@@ -162,6 +165,8 @@ class LinkedPublicationContext:
         self._observer()
         with self._store._transaction(lock_timeout_seconds=lock_timeout_seconds) as (session, now):
             execution, _ = self._store._fence(session, self._lease, now)
+            if session.get(ResearchExecutionCompletionRow, self.execution_id) is not None:
+                _reject()
             validate_entry(session, execution)
             yield session
             # Lock acquisition / serialization / flush may consume the lease.

@@ -276,8 +276,12 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 executions = LinkedExecutionStore(consents)
                 executions.allocate(execution_id=consent.execution_id, session_token=auth.token, csrf_token=auth.csrf_token)
                 lease = executions.claim(execution_id=consent.execution_id, worker_id="linked-native")
-                linked_context = LinkedPublicationContext.prepare(executions, lease)
+                from tradingagents.platform.analysis.linked_results import LinkedResultPublisher
+
+                publisher = LinkedResultPublisher(artifact_store)
+                linked_context = LinkedPublicationContext.prepare(executions, lease, save_stage=publisher.save_stage)
                 loaded = LinkedOriginalResearch.load(context=linked_context, artifact_store=artifact_store)
+                publisher.bind(linked_context, loaded)
                 terminal_run = loaded.recording_inputs.read().run
                 assert terminal_run.completed_at == later and terminal_run.error_code == "RESEARCH_EXECUTION_FAILED"
                 original_terminal = next(row["payload"] for row in before_linked["analysis_runs"]
@@ -323,6 +327,26 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 assert aggregate.elapsed_upper_bound >= evidence.elapsed_upper_bound
                 assert PlatformRepository(session).get_run(original.run_id, owner).decision_inputs is None
                 if linked_attempt:
+                    from tradingagents.platform.persistence.models import (
+                        ResearchExecutionCompletionRow,
+                    )
+
+                    completion = session.get(ResearchExecutionCompletionRow, linked_context.execution_id)
+                    assert completion is not None and completion.checkpoint_record_id == after[-1].record_id
+                    artifacts = ArtifactService(artifact_store, PlatformRepository(session))
+                    report = json.loads(artifacts.read(completion.report_artifact_id, owner)[1])
+                    assert report["linked_execution"]["original_run_status"] == "failed"
+                    assert report["linked_execution"]["accounting"]["reported_total_tokens"] == aggregate.reported_total_tokens
+                    assert report["validation_issues"] == list(result.validation_issues)
+                    candidate = PlatformRepository(session).get_decision(completion.decision_id, owner)
+                    assert candidate.requires_human_approval is True and candidate.status.value == "review"
+                    assert report["canonical_research"] == result.final_state.get("structured_decision")
+                    from tradingagents.platform.analysis.linked_results import (
+                        read_linked_completion,
+                    )
+
+                    assert read_linked_completion(session=session, artifact_store=artifact_store,
+                        owner_id=owner, execution_id=linked_context.execution_id).decision_id == candidate.decision_id
                     assert session.get(ResearchExecutionDispatchRow, linked_context.execution_id) is not None
                     linked_rows = session.scalars(select(ResearchCheckpointExecutionRow)).all()
                     assert linked_rows and all(row.execution_id == linked_context.execution_id for row in linked_rows)

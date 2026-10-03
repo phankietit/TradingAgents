@@ -85,3 +85,19 @@ root job, mutable dispatch-success state or default worker claim path.
 SQLite/PostgreSQL single-consumer/race fixtures and disposable schema reversal
 are local evidence only. No private database migration or automatic history
 deletion is authorized; default API/worker activation remains disabled.
+
+Additive `0016_linked_results` stores only artifact actor links and one atomic
+completion receipt per execution, linked to the final private checkpoint,
+report/evidence/candidate identities and pinned hashes. It does not rebuild
+analysis_runs/analysis_jobs or change terminal root status. Native result
+return, clean child exit/reaping, exact bound parent publisher and durable
+stopped accounting are required before the shared ordinary report/evidence/
+risk pipeline can append output metadata and the receipt in one fenced commit.
+Blob puts remain content-addressed; a rolled-back metadata transaction may
+leave an unreferenced blob, never an apparently completed result or auto-deletion.
+Read-only receipt verification works after lease expiry and lost ACK, checking
+original root/job, consent/dispatch/checkpoint/event/artifact actor links, pinned
+hashes and stopped cumulative accounting. It does not authorize execution or
+approval. Default API/worker and linked human-approval integration stay disabled;
+the existing approval rule still rejects a failed/cancelled root. Follow the
+same backup/owner rollout gates; schema reversal tests use disposable empty tables.

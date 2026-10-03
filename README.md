@@ -701,8 +701,22 @@ and checkpoint bytes, never a DB/lease nonce/session/callback. Synthetic native
 spawn fixtures compare interrupted prefix + restored suffix to the original
 uninterrupted EN/VI/bilingual flow, including invalid-VI handling. These are local
 mechanical proofs, not live provider/cost or financial/editorial acceptance.
-Linked report/decision publication, multi-continuation history, full crash/
-stop/cancel/expiry reconciliation and API/UI activation remain unfinished.
+An opt-in parent `LinkedResultPublisher` now retains allowlisted stage reader
+artifacts with execution actor links and, only after a returned result, clean
+child exit/reaping and durable local stop accounting, atomically appends the
+ordinary report/evidence/risk candidate plus a separate `0016` completion receipt.
+The ordinary handler and linked publisher share the same report projection and
+decision pipeline; no financial/translation/risk gate is removed. The original
+FAILED/CANCELLED run/job remains immutable. Missing/invalid structured research
+still becomes REVIEW; an existing owner risk input still determines weights.
+An owner-scoped integrity reader can recover a committed receipt after lost ACK
+without models or a live lease. Completion blocks later linked publication,
+checkpoint writes, heartbeat or cancellation; automatic expiry maintenance does
+not rewrite a committed output marker. It is not an approval or cost/refund claim.
+Default dispatch stays disabled; current approval still requires a succeeded
+root run. Verified linked-completion integration with human review/approval,
+multi-continuation history, all late-stop/crash/expiry boundaries and API/UI
+activation remain unfinished.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

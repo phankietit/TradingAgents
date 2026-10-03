@@ -169,6 +169,8 @@ class SupervisedAnalysisEngine:
         self.recording_inputs = recording_inputs
         self.restore_checkpoint = restore_checkpoint
         self.linked_context = linked_context
+        self._linked_return_result = None
+        self._linked_clean_exit = False
         if (linked_context is not None or restore_checkpoint is not None or recording_inputs is not None
                 or any(value is not None for value in supplied)):
             try:
@@ -329,6 +331,8 @@ class SupervisedAnalysisEngine:
                             or result.analysis_date != request.analysis_date):
                         raise ResearchExecutionFailed("research result context mismatch")
                     process.join(timeout=1)
+                    if self.linked_context is not None:
+                        self._linked_return_result = result
                     return result
                 if method == "failure":
                     raise ResearchExecutionFailed("isolated research execution requires review")
@@ -411,6 +415,7 @@ class SupervisedAnalysisEngine:
                 if process.is_alive():
                     process.kill()
                     process.join()
+                self._linked_clean_exit = process.exitcode == 0
                 process.close()
                 child_stopped = True
             stopped.set()
@@ -429,3 +434,14 @@ class SupervisedAnalysisEngine:
                 # and leave missing durable stop evidence unknown, not inferred.
                 with suppress(Exception):
                     observer._record_supervised_stop()
+            publisher = getattr(self.linked_context, "_result_publisher", None)
+            if publisher is not None and self._linked_return_result is not None:
+                from .linked_results import LinkedResultPublisher
+
+                if type(publisher) is not LinkedResultPublisher:
+                    raise ResearchExecutionFailed("linked result publication requires review") from None
+                try:
+                    publisher.publish_completed(self, self._linked_return_result, request)
+                except Exception:
+                    # Result/ACK uncertainty cannot grant another paid attempt.
+                    raise ResearchExecutionFailed("linked result publication requires review") from None
