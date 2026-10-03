@@ -2,6 +2,38 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Actual linked local-stop reconciliation 2026-10-03:** tested clean source
+`89c789d25af5b11f4efcde367883aedd500fafb6`. Additive0017 records only an actual
+joined original child with closed pipes/reader, bound context/request/observer,
+private lease and owner/root/entry/dispatch/checkpoint/accounting provenance.
+Cancellation/expiry permits this separate fact, not normal publication, allowance
+refund, provider billing/termination or continuation/approval authority. Original
+FAILED root/job/history and all graph/risk/approval fences remain intact.
+Recorded immutable accounting prefix keeps the old stop readable after later
+appends; consent/recheck/allowance still use full latest accounting. Native
+SQLite EN/VI/bilingual/invalid-VI cancellation/expiry plus actual PG owner-book
+cancel/expiry cases run. Actual SQLite rollback/lost-ACK and private scope/tamper
+fixtures preserve uncertainty and refuse forged evidence. Later-attempt prefix
+fixture is accounting-only, not actual multi-continuation acceptance.
+Final precommit focused PG handle6691 **258 PASS**,318warnings,720.19s; final
+extra oversized-JSON reader handle32239 **1 PASS**,11deselected,5warnings,12.30s.
+Full clean unchanged89c789d handle47021 **2,648 +88 subtests PASS**,2optional
+skips,442warnings,1380.77s,terminal0. Ruff/pip-check/diff/templates/bash syntax
+PASS. Exact tracked archive/fresh noneditable install4459 and packaged smoke
+26087 terminal0:site-packages imports, scoped PG JSONB/FK DDL0010:head and owned
+fresh SQLite head0017/full metadata parity PASS. Not full fresh-dependency/Python
+matrix or live financial/browser acceptance. Managed20261003T041447Z-66818
+completed/exit0, retained; helpers removed only their own labelled containers,
+older exited QA unchanged. Initial invocation/test-author failures are retained
+in receipt20261003 **Actual linked local-stop reconciliation** section.
+Next: remaining all-stage/crash/transport/ACK and actual multi-continuation,
+then default authenticated owner API/worker/CLI/UI journey. Broader ingestion,
+finance/source-entailment/VI quality, operational/report UX and fresh BTC/AAPL
+remain open. SEC contact presence-only check still false; no contact supplied.
+NQ=F owner BLOCKED/no provider/substitute unchanged. No CI, paid/vendor call,
+private DB migration/restart/history rewrite, provider/risk change, broker,
+merge/deploy. Full goal and Draft PR7 remain open.
+
 **Native PostgreSQL portfolio → approval / focused local QA 2026-10-03:**
 tested clean source `6ae34c94e1e7a32a800cc9a47e1ef5c8bb167417`.
 Eight actual PostgreSQL native-spawn cases reuse every original SQLite graph,

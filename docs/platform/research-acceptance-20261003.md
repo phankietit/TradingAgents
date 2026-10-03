@@ -1,7 +1,7 @@
 # Research acceptance checkpoint — 2026-10-03
 
-Latest tested source `c04b23e3bf88a71b594c57fdb7db3b0e07a132f8`: see the
-appended **Native portfolio approval and linked lifecycle timing** section. Earlier
+Latest tested source `89c789d25af5b11f4efcde367883aedd500fafb6`: see the
+appended **Actual linked local-stop reconciliation** section. Earlier
 incremental evidence and failures below retain their original source scope.
 The full private-platform goal remains incomplete; no live-finance or browser
 acceptance follows from the local approval gate.
@@ -1123,3 +1123,81 @@ Next actual native cancel/expiry/ACK reconciliation must preserve all publicatio
 fences and original unknown provider cost before multi-continuation/default
 owner API/UI activation. Broader ingestion, economic/editorial/localization and
 report/process UX remain required by the full unchanged R01–R14 goal.
+
+## Actual linked local-stop reconciliation
+
+Tested source `89c789d25af5b11f4efcde367883aedd500fafb6`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`.
+Clean unchanged source throughout full regression. Documentation follow-up
+changes only this receipt, HANDOFF and the recovery contract's latest-source
+pointer. Full goal remains ACTIVE/incomplete; private-platform release UNVERIFIED.
+
+Additive0017 creates one hash-bound stop fact per linked execution, no historical
+backfill or root/job/event mutation. Only the actual trusted original supervisor
+with joined parent-owned Process, closed pipes/joined reader and matching bound
+request/context/observer/private lease can record it. Cancellation/expiry allows
+only this separate observation, not normal checkpoint/event/report/decision
+publication, remote billing/termination, allowance refund or model admission.
+An owner-scoped integrity reader resolves committed lost ACK independently of
+a live lease; future public authentication is not provided by a UUID alone.
+
+Recorded accounting prefix is derived from the immutable hash-bound marker,
+not a browser-selected allowance. Later appends do not invalidate an old stop;
+consent/recheck/remaining allowance still use full latest accounting. A stop
+marker does not make unknown normal accounting elapsed finite or constitute
+completion, approval or a third actual continuation. Default dispatch stays off.
+
+| Gate | Status | Exact scope/evidence |
+| --- | --- | --- |
+| Initial import lint | FAIL | Ruff I001 corrected mechanically before test gates; set-e prevented test launch. Not a provider/graph failure |
+| Initial selected mechanism tests | PASS | Handle27366 terminal0:4PASS,8missing-URL PG skips,39deselected,5warnings,13.59s; early dirty-patch diagnostic, not final-source acceptance |
+| Initial corrupt-JSON fixture | FAIL | Handles66412 terminal1:1FAIL/6PASS/31deselected/35warnings/44.58s and91395 terminal1:1FAIL/9deselected/5warnings/10.79s. SQLAlchemy considered false→0 equal and did not persist the corruption; owned SQLite json_type read confirmed stored false. Added flag_modified for mutate AND restore. No production reader/schema gate weakened |
+| Intermediate stop/cancel/expiry gate | PASS | Handle82164 terminal0:19PASS,8missing-URL PG skips,31deselected,80warnings,89.39s; source before prefix/private-guard/PG expansion |
+| Intermediate accounting/prefix gate | PASS | Handle91578 terminal0:52PASS,40warnings,60.06s; source before final private-scope and PG fault matrix |
+| Initial focused command path | FAIL | Handle47748 terminal4:0tests/0.10s, nonexistent test_accounting_allowance.py. Correct file is test_remaining_allowance.py; no product assertion ran, only this task's disposable PG removed. Retried only after confirmed terminal result |
+| Final selected PG/native gate | PASS | Handle6691 terminal0:258PASS,318warnings,720.19s; eight-file command below. Includes all existing native graph/portfolio/API assertions, 8SQLite cancel/expiry language cases and 2actual PG English owner-book cancel/expiry cases. Completed output still passes original human/risk/VI gates; no shortened graph or new provider |
+| Actual stop commit/ACK uncertainty | PASS | Six actual native SQLite cases: completed/cancelled/expired × precommit rollback/committed lost ACK. Rollback has no marker; lost ACK resolves read-only. Real child reaped, reader closed, root/job/history unchanged. These fault injections are not PostgreSQL fault/race coverage |
+| Private scope and integrity | PASS | Actual joined child rejects wrong nonce/attempt type/bound observer, fake Process or alive reader; foreign owner and corrupt marker/hash/time/owner/root/checkpoint/flags/extra fields refuse fixed diagnostic. No report/completion/decision through cancellation path; normal elapsed bound remains unknown/allowance UNVERIFIED |
+| Oversized JSON regression | PASS | Handle32239 terminal0:1PASS/11deselected/5warnings/12.30s, persisted400-digit elapsed value refuses via existing fixed transaction guard. Standalone math.isfinite raised OverflowError but the actual reader did not leak it; no reproduced reader bug or production exception-handler change claimed |
+| Immutable prefix versus latest allowance | PASS | Actual cancelled native stop remains readable after schema-only third-attempt accounting append. Full reader includes attempts1/2/3 and new starts, old expected high-water recheck refuses, allowance stays UNVERIFIED. This is NOT actual third consent/dispatch/recovery acceptance |
+| Full exact-source regression | PASS | Handle47021 terminal0:2,648 tests +88subtests,2optional-provider skips,442warnings,1380.77s. Clean unchanged89c789d, actual disposable PG schema/autogenerate parity and existing concurrency/approval/native regressions. Ruff/pip-check/diff PASS |
+| Static/docs gates | PASS | Whole-repo Ruff, pip check, diff check, Ruby issue-template YAML load and bash syntax before source commit; documentation-only diff/templates verified again afterward |
+| Fresh noneditable installation | PASS | Handle4459 terminal0:exact git archive89c789d → managed Build/source; new Packages/venv installs absolute Build/source[platform], per-command TMPDIR/PIP_CACHE_DIR under managed external run. No populated env/private runtime copy |
+| Packaged import/schema smoke | PASS | Handle26087 terminal0:outside source cwd, all package/CLI/API/worker/report/repository/linked-results/linked-stops/0017 imports are fresh venv site-packages. Scoped PG offline DDL0010:head asserts stop JSONB/FKs; owned fresh SQLite base→head0017 and full ORM metadata parity, pip check PASS. Known data-reading0007 full-base offline DDL limitation unchanged/not claimed |
+| Storage/cleanup | PASS | Managed20261003T041447Z-66818 completed/exit0 after all test/install/smoke handles terminal, retained on verified external SSD. Helpers removed only current labelled containers ta-research-qa-1791002464-78424 and ta-research-qa-1791003272-82215 (plus earlier failed invocation's own container); old exited QA1790495819-43615 untouched. No unrelated container/runtime stopped |
+| Dependency/matrix/scanners | UNVERIFIED | Project Python3.14.7/macOS26.5.2arm64, langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Fresh smoke core1.6.6/openai1.6.7/SQLAlchemy2.1.3, others unchanged/tradingagents0.5.0. Not full fresh-resolved dependency suite/lock/Python matrix. gitleaks/detect-secrets unavailable; pip check/auth tests not comprehensive scanning. Missing langchain_aws and unset DeepSeek live key are the two skips |
+| Remaining recovery/product/UI | UNVERIFIED | All-stage/crash/transport/client-attestation/ACK boundaries, actual repeated continuation and default authenticated API/worker/CLI/UI journey still open. Broader ingestion, finance/source entailment/editorial VI and operational/report/decision UX remain required; no browser or release claim |
+| Fresh BTC/AAPL/live | UNVERIFIED | No paid model/vendor request or new financial report; private history unchanged. Worktree .env SEC_EDGAR_USER_AGENT presence-only recheck false; owner said contact can be supplied but no actual name/email arrived |
+| NQ=F | BLOCKED | Owner's active-contract/roll metadata hold unchanged; no provider/substitute added |
+
+All tests used per-command TMPDIR below
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T041447Z-66818`.
+Final focused6691:
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T041447Z-66818/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_linked_stops.py tests/test_accounting_evidence.py tests/test_native_recorder_spawn.py tests/test_linked_publication.py tests/test_linked_execution.py tests/test_linked_results.py tests/test_linked_approval.py tests/test_remaining_allowance.py --disable-warnings --tb=short -x
+```
+
+Final extra adversarial32239:
+`.venv/bin/python -m pytest -q tests/test_linked_stops.py -k reader_rejects --tb=short -x --disable-warnings`.
+Full47021:
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T041447Z-66818/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh
+```
+
+Fresh4459: `git archive 89c789d25af5b11f4efcde367883aedd500fafb6 | tar -x -C <managed>/Build/source`,
+`.venv/bin/python -m venv <managed>/Packages/venv`, then that fresh Python
+`-m pip install '<managed>/Build/source[platform]' --quiet` with managed per-command
+TMPDIR/PIP_CACHE_DIR. Smoke26087 from `<managed>/Results` runs that Python
+`-m pip check` and `clean_install_smoke.py`; the external script asserts origins,
+scoped packaged DDL and fresh SQLite metadata. Managed artifacts are retained
+locally, not committed to Git or mistaken for portable live/private evidence.
+
+No CI, production provider/model/risk/endpoint change, paid/vendor call, private
+DB migration/restart/history rewrite, broker, main merge or deployment.
+Next integrate verified stop reconciliation with conservative retained allowance
+and actual repeated-continuation provenance without resetting limits or enabling
+default dispatch prematurely; complete operational owner API/UI and the remaining
+financial/ingestion/live requirements before any full-goal completion claim.
