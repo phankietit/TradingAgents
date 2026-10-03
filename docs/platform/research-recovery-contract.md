@@ -5,7 +5,15 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
-Current local checkpoint at source `60e9200`: restricted recorder/saver restore
+Latest internal source `f107b18`: linked original-graph continuation can retain
+stages and atomically publish the ordinary report/evidence/risk candidate after
+clean child exit and stopped accounting, with a separate verified completion
+receipt. Default API/worker/CLI dispatch and linked approval stay disabled.
+Exact-source local PostgreSQL/native/clean-install gates are in the 2026-10-03
+receipt; live financial/editorial, operational UI and full recovery acceptance
+remain open. Root terminal history and original allowance are not reset.
+
+Earlier local checkpoint at source `60e9200`: restricted recorder/saver restore
 and transfer into a distinct original supervised child are exercised with
 retained accounting and synthetic responses. The new-child fixture branches
 from a completed synthetic run, not a stopped/crashed one. Production recovery

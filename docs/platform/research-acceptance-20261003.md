@@ -912,3 +912,60 @@ No private database migration/restart/history rewrite, paid AI/vendor call,
 provider/risk change, broker/execution, main merge or deployment. Full R01–R14
 goal remains active; next work is linked report/decision finalization and
 stop/cancel/expiry/ACK reconciliation before default API/UI activation.
+
+## Linked stage, ordinary output pipeline and atomic completion receipt
+
+Implementation source `02e956e6ab6c4d18aa32f049ecc37961bac8461c`, ORM parity
+fix `e9cc2faa75c04916ad50e5319aa66eff531b1996`, final tested source
+`f107b18e3c8f86e45328fce57271b3274289375b`. Same authoritative branch/worktree;
+Python 3.14.7 / macOS26.5.2 arm64. Final full gate ran against committed, clean,
+unchanged f107b18. Internal private-platform draft, not release approval.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Shared original pipeline | PASS | Ordinary handler and linked publisher use extracted `jobs/report.py` and existing EvidenceGraphService/RiskEngine/DecisionCandidateFactory. No graph role, round, finance/VI/schema gate, evidence or policy path cut; no model-based executable sizing |
+| Stage retention | PASS | Exact unused observer-bound publisher, original owner-readable source reload and dispatch required. ResearchStageService retains role-owned text only, marked unvalidated/approval=false, with atomic execution/event/artifact actor links. Messages/reasoning/weights excluded; before dispatch/after stop rejected |
+| Atomic output receipt | PASS | Additive0016 stores side artifact links and one completion per execution, pins final checkpoint, report/evidence/decision, result and cumulative accounting hashes. Return/ACK only after fenced commit; original FAILED/CANCELLED run/job unchanged. Missing schema/invalid translation stays REVIEW |
+| Deterministic risk not bypassed | PASS | Real existing seeded book/policy/risk pipeline returns original target .3/current .2, identical seeded checks, three evidence entries, requires_human_approval=true. Missing portfolio remains REVIEW. This is synthetic fixture proof, not actual investment approval |
+| Publication refusal | PASS | Wrong/unreturned result, mismatched request, unstopped/unclean child, missing dispatch/latest actor, changed original sources, owner mismatch, cancelled/expired lease and duplicate writer refuse without partial completion metadata. Final-flush expiry rolls metadata back; unreferenced content-addressed blobs can survive rollback and are not deleted |
+| Committed ACK recovery | PASS | Owner-scoped read checks full original run/job, consent/dispatch/original+final checkpoint, actor links, indexed artifact columns↔manifest, actual hashes, candidate/evidence and stopped accounting. Corrupt/foreign/missing evidence rejected. Postcommit ACK loss can be read without models or live lease; no replay grant |
+| Completion fences | PASS | Further checkpoint/publication/heartbeat/cancel refused. Expiry maintenance retains committed marker, does not mark success or silently refund. Read-only archived receipt remains available after deadline subject to full integrity validation |
+| Native original-flow result | PASS | Actual spawned original child/engine/recorder/native graph: immutable failed root → authenticated linked execution → retained original restore. Interrupted prefix+suffix and result fields match uninterrupted EN/VI/bilingual/invalid-VI baseline; invalid VI remains rejected. Linked receipt/report/candidate checked, old history unchanged, child reaped. Synthetic network-forbidden SDK, not live provider/financial proof |
+| Slow clean exit / original limit | PASS | Four added actual native slow-exit cases delay local cleanup 1.5s after returning the original result. Linked supervisor polls within original retained allowance/cancel/lease checks rather than terminating at fixed1s. Five clock-controlled helper cases verify clean exit beyond1s, nonzero exit, original deadline, cancel and cancel-at-exit; no model start/new allowance |
+| PostgreSQL/migration parity | PASS | Final full suite runs actual PG atomic writer, two-concurrent-writer and named-constraint cases, plus full Alembic autogenerate metadata parity. ORM explicit unique names match packaged0016; migration itself was not rewritten. Disposable empty-table down0015/up retains old evidence; no private downgrade/migration |
+| Initial ACK diagnostic | FAIL | Handle98619: 1 failed, 12 passed, 1 PG skip, 10.60s. Artificial postcommit exception escaped fixed diagnostic boundary; added known-exception sanitization wrappers, not replay or a weakened fixture. Intermediate handles52528/42599 each14PASS+1skip; 57064:23PASS+1skip/10.37s |
+| Contaminated intermediate gate | FAIL | Handle48187: 1 failed,112 passed,6PG skips,79warnings,102.34s; source edited while native test active. Its exact-source acceptance is UNVERIFIED; runtime fingerprint drift was a hypothesis, not established root cause. No fingerprint/VI gate waived. Later unchanged67573:27PASS,1skip,16deselected,21warnings,39.79s |
+| Initial finalization focused | PASS | Handle75876:138PASS,7missing-URL PG skips,89warnings,122.81s. Ordinary handler/snapshot worker handle3728:17PASS/3.20s; initial native linked subset7661:4PASS,16deselected,20warnings,25.12s. These precede later schema/exit repairs, not final-source proof |
+| Initial full schema gate | FAIL | Handle44150 at clean02e956e:1failed,2552passed+88subtests,2skips,213warnings,553.71s. `test_migration_schema_parity_and_rollback` found ORM-generated unique names differing from migration explicit names. e9cc2fa aligns metadata names and adds SQLite/PG assertions; no private constraint rename/history rewrite |
+| Post-parity focused | PASS | Handle23941:139PASS,8missing-URL PG skips,89warnings,145.70s; shared six-file focused command below, before slow-exit repair |
+| Post-parity full native gate | FAIL | Handle11444 at clean e9cc2fa:1failed,2554passed+88subtests,2skips,213warnings,671.87s. Bilingual linked stopped fixture reached `linked result publication requires review`; sanitized exception alone does not establish which internal predicate failed |
+| Deterministic exit counterexample | FAIL | Handle34405:1failed,23deselected,5warnings,22.95s. Added real restored child delays local exit1.5s: parent returned result then terminated child, `_linked_clean_exit=False`, publication refused. This establishes the fixed1s cutoff defect without claiming underlying attestation from the earlier sanitized exception |
+| Final focused | PASS | Handle53139 terminal0:163passed,8missing-URL PG skips,109warnings,328.51s. Seven-file command below, includes four slow native cases and five wait-boundary tests. Import-only Ruff formatting repaired afterward; behavior unchanged, final full f107b18 includes repair |
+| Full final exact-source | PASS | Handle96475 terminal0: `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`, source f107b18 clean throughout:2564passed+88subtests,2skipped,233warnings,832.32s. Ruff/pip check/diff PASS; only helper-created labelled PG container removed |
+| Static/templates | PASS | `.venv/bin/ruff check .`, `git diff --check`, Ruby issue-template YAML load. Import-order lint found in research-supervision test, mechanically corrected after focused terminal; no source edits during final native/full gates |
+| Fresh noneditable final install | PASS | Exact tracked `git archive f107b18e3c8f86e45328fce57271b3274289375b` → managed Build, new Packages/venv installs Build[platform], handle51384 terminal0. Per-command TMPDIR/PIP_CACHE_DIR below managed run; no .env/private runtime copy |
+| Packaged final imports/schema | PASS | Handle33483 terminal0: fresh pip check + Results/clean_install_smoke.py outside source cwd; package/CLI/API/worker/report/linked-results/0016 imports, PG offlineDDL `0010_owner_watchlist:head`, owned fresh SQLite base→head0016 + full metadata parity. Additional handle9720 terminal0 asserts all checked module origins inside fresh venv. Full base offlineDDL remains unsupported at known data-reading0007; not claimed/rerun |
+| Retained build evidence | PASS | Final managed `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T015357Z-24296` finished completed/exit0, retained. Earlier02e install6038/smoke63350 and e9 install33713/smoke8551 passed, but their associated full gates failed; runs20261003T012543Z-15961 and20261003T013901Z-19298 finished failed/exit1, retained rather than replacing FAIL evidence |
+| Dependency/matrix/scanner scope | UNVERIFIED | Project full env:langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Fresh imports:tradingagents0.5.0/langgraph1.2.12/core1.6.6/openai1.6.7/pydantic2.13.5/SQLAlchemy2.1.3/Alembic1.20.0. Not full fresh-resolved-deps suite, lock or supported-Python matrix. gitleaks/detect-secrets unavailable; pip check/auth tests not comprehensive scanning. Optional Bedrock dependency and explicitly unset live DeepSeek key are two skips |
+| Approval/default activation | UNVERIFIED | Existing approval still requires root SUCCEEDED, deliberately refuses the linked READY_FOR_APPROVAL fixture. Integrate verified completion with immutable candidate evidence and append-only lifecycle before human approval, without relabeling root. Default worker/API/CLI dispatch disabled; multi-continuation and all late-stop/crash/cancel/expiry/transport/ACK boundaries remain open |
+| Full product/live/UI | UNVERIFIED | No frontend change/new browser journey or new paid report. Broader ingestion/source entailment, financial/VI editorial, operational process/layout/report UX and fresh live BTC/AAPL acceptance remain open; old private failures unchanged. SEC name/email not actually supplied/configured |
+| NQ=F | BLOCKED | Owner hold pending active-contract/roll metadata; no new provider or substitute instrument |
+
+Focused six-file command (75876/23941):
+`.venv/bin/pytest -q tests/test_linked_results.py tests/test_linked_publication.py tests/test_linked_execution.py tests/test_native_recorder_spawn.py tests/test_analysis_job_handler.py tests/test_snapshot_decision_worker.py --disable-warnings -x`.
+Final seven-file command53139:
+`.venv/bin/pytest -q tests/test_research_supervision.py tests/test_native_recorder_spawn.py tests/test_linked_results.py tests/test_linked_publication.py tests/test_linked_execution.py tests/test_analysis_job_handler.py tests/test_snapshot_decision_worker.py --disable-warnings -x`.
+Slow-exit counterexample34405:
+`.venv/bin/pytest -q tests/test_native_recorder_spawn.py -k 'linked_slow_exit and English and not Vietnamese' --disable-warnings -x`.
+Final full96475 uses per-command TMPDIR below the final managed run; same helper
+and reset acknowledgement as earlier full gates, exclusively disposable QA DB.
+Fresh install uses managed venv `python -m pip install 'Build[platform]' --quiet`
+with exact absolute Build path above, not editable developer installation.
+
+CI rechecked disabled_manually. One older exited QA container from another run
+was left untouched; final task's container was removed by the ownership-labelled
+helper. No private DB migration/restart/history rewrite, provider/endpoint/risk
+change, AI/vendor call, broker/execution, main merge or deployment. Next implement
+verified completion human-review/approval integration, then remaining stop/ACK
+reconciliation and authenticated API/UI activation before separately authorized
+live acceptance. Full R01–R14 goal stays active; Draft PR7 stays draft.

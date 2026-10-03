@@ -1,6 +1,37 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
-## Cập nhật đang triển khai · 2026-10-01
+## Cập nhật đang triển khai · 2026-10-03
+
+**Linked stage/report/decision completion 2026-10-03:** final tested source
+`f107b18e3c8f86e45328fce57271b3274289375b` (implementation `02e956e`, schema
+parity fix `e9cc2fa`). Exact bound parent publisher retains allowlisted,
+unvalidated stage text and atomically appends the ordinary report/evidence/
+deterministic-risk candidate plus separate additive `0016` completion receipt.
+Same extracted report projection/decision pipeline as the ordinary handler;
+no graph/financial/translation/risk gate cut. Original FAILED/CANCELLED root/job
+remains unchanged. Actual owner-readable sources and actor/hash/accounting
+bindings are rechecked; receipt reader resolves committed ACK loss without a
+model or live lease. Completion fences further writes/heartbeat/cancel.
+Native result is published only after clean child exit/reaping, reader shutdown
+and durable stopped accounting. A reproduced one-second cleanup cutoff was
+fixed by polling within the original retained allowance/cancel/lease checks;
+deadline/nonzero exit still refuses completion. No budget reset or paid call.
+Final focused **163 PASS**, 8 missing-URL PG skips, 109 warnings, 328.51 s.
+Full clean exact-source disposable PostgreSQL gate **2,564 +88 subtests PASS**,
+2 optional-provider skips, 233 warnings, 832.32 s, terminal exit 0. Ruff,
+pip check, diff/templates and fresh noneditable tracked-archive install/import,
+packaged PG DDL `0010:head`, owned SQLite head0016/metadata parity PASS.
+Initial schema FAIL, subsequent native-publication FAIL, deterministic slow-exit
+counterexample and earlier contaminated gate are retained in receipt 20261003.
+Managed build evidence retained; only this task's labelled PG container removed.
+Next: integrate verified completion with human review/approval (currently still
+requires root SUCCEEDED), preserving immutable candidate evidence and append-only
+lifecycle; stop/cancel/expiry/ACK reconciliation, multi-continuation and default
+API/UI journey remain open. Native fixtures use synthetic SDKs, not live finance
+or cost evidence. Broader ingestion/UX/financial/VI and fresh BTC/AAPL still open;
+SEC contact was not actually supplied, NQ=F remains owner-BLOCKED. No private DB
+migration/restart/history rewrite, provider/risk change, CI, paid AI/vendor call,
+merge/deploy. Full goal and Draft PR #7 remain open.
 
 **Terminal original-context / single-use linked native dispatch 2026-10-03:**
 source `27e969bd18b389854ebdb5b6c6b0af934b6cac10`. Internal loader giữ nguyên
