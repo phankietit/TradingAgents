@@ -63,7 +63,7 @@ from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.jobs import DurableJobQueue, JobWorker
 from tradingagents.platform.jobs.decision_pipeline import load_run_portfolio
 from tradingagents.platform.jobs.worker import JobExecutionContext
-from tradingagents.platform.persistence import PlatformRepository
+from tradingagents.platform.persistence import PlatformRepository, downgrade_database
 from tradingagents.platform.persistence.models import (
     ResearchCheckpointExecutionRow,
     ResearchCheckpointRow,
@@ -631,3 +631,28 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 llm.root_client.close()
                 asyncio.run(llm.root_async_client.close())
         database.dispose()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
+    ("English and Vietnamese", False), ("English and Vietnamese", True)])
+@pytest.mark.parametrize("case", ["linked_portfolio", "linked_portfolio_policy_fail"])
+def test_native_postgresql_portfolio_output_to_owner_api(tmp_path, monkeypatch, language, invalid, case):
+    url = os.getenv("TEST_POSTGRES_URL")
+    if not url or os.getenv("TA_ALLOW_TEST_DB_RESET") != "1":
+        pytest.skip("Disposable TEST_POSTGRES_URL and TA_ALLOW_TEST_DB_RESET=1 are required")
+    original_setup = setup_risk
+
+    def postgres_setup(path):
+        database, artifacts, candidate = original_setup(path, database_url=url)
+        assert database.engine.dialect.name == "postgresql"
+        return database, artifacts, candidate
+
+    monkeypatch.setattr(f"{__name__}.setup_risk", postgres_setup)
+    try:
+        # Reuse every original native/approval assertion; no alternate graph,
+        # fabricated result or looser PostgreSQL contract.
+        test_exact_engine_native_spawn_recorder_with_parent_persistence(
+            tmp_path, monkeypatch, language, invalid, case)
+    finally:
+        downgrade_database(url)  # Only the explicitly acknowledged disposable QA DB.

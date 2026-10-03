@@ -6,6 +6,10 @@ if [[ "${TA_ALLOW_TEST_DB_RESET:-}" != "1" ]]; then
   echo 'Set TA_ALLOW_TEST_DB_RESET=1 to acknowledge creation/removal of a disposable test database.' >&2
   exit 2
 fi
+if [[ $# -gt 0 && ( "$1" != --focused || $# -lt 2 ) ]]; then
+  echo 'Usage: bash scripts/verify-postgres-local.sh [--focused <pytest arguments...>]' >&2
+  exit 2
+fi
 command -v docker >/dev/null
 docker image inspect postgres:16-alpine >/dev/null
 task_id="ta-research-qa-$(date +%s)-$$"
@@ -42,4 +46,4 @@ done
 task_port=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' "$task_container")
 [[ "$task_port" =~ ^[0-9]+$ ]] || exit 1
 export TEST_POSTGRES_URL="postgresql+psycopg://ta_qa:${task_password}@127.0.0.1:${task_port}/ta_qa"
-bash scripts/verify-local.sh --postgres
+bash scripts/verify-local.sh --postgres "$@"

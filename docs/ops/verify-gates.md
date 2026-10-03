@@ -31,6 +31,12 @@ their exact Python/platform evidence. A local pass on one version is not proof
 for the complete supported Python matrix. If CI is re-enabled, record its
 matrix results separately rather than treating older green checks as current.
 
+Repository helpers and disposable PostgreSQL ownership are documented in
+`docs/platform/local-verification.md`. Their optional `--focused` mode is for
+explicit diagnostics only: record the selection and never treat its PASS as
+the full baseline gate. Default invocation still runs the full suite. Keep
+source unchanged throughout native checkpoint/fingerprint tests.
+
 ## Clean Install Gate
 
 Required for packaging, dependency, CLI entrypoint, optional-extra, or import
