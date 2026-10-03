@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Compact analysis preparation into one instrument/time/language row and a
+  responsive source grid. Choose saved sources opens and focuses the existing
+  evidence inspector without fetching, selecting sources or authorizing AI.
+  Existing coverage warnings, source failures and explicit paid consent remain.
+
 - Keep decision review readiness and approval/rejection controls visible before
   the saved report, with unchanged matching-run, policy and backend authority.
   Remove duplicate report headings and self-navigation inside Decisions; retain

@@ -77,6 +77,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const fundamentalsController = useRef<AbortController | null>(null);
   const macroController = useRef<AbortController | null>(null);
   const socialController = useRef<AbortController | null>(null);
+  const sourceInspector = useRef<HTMLDetailsElement | null>(null);
   useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); macroController.current?.abort(); socialController.current?.abort(); }, []);
   const [preparationNote, setPreparationNote] = useState('');
   const [preparationExhausted, setPreparationExhausted] = useState(false);
@@ -295,26 +296,32 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       {preparationProgress.waiting ? <p>{t(preparationProgress.reason === 'cooldown' ? 'Waiting for the local download cooldown.' : preparationProgress.reason === 'rate_limited' ? 'Yahoo is limiting requests.' : 'Data is not ready yet. Retrying automatically.')} {t('Next check in')} {preparationProgress.remaining} {t('seconds')}.</p> : <p>{t('Downloading and checking prices…')}</p>}
       <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
     </section> : null}
-    <p className="muted">{t('Build a research brief from verified market evidence. Review the coverage before starting AI analysis.')}</p>
-    <label>{t('Report language')}<select value={reportLanguage} disabled={pending || dataPending} onChange={event => {
-      setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
-    }}>
-      <option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option>
-    </select></label>
-    <p className="muted">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
-    <p className="muted">{t("Choose the instrument, research date and supporting sources. You can also review the impact on your portfolio using an allocation you specify.")}</p>
     <fieldset disabled={pending || dataPending}><div className="form-grid">
       <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setMacroNote(''); setSocialNotes({}); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
+      <label>{t('Report language')}<select value={reportLanguage} onChange={event => {
+        setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
+      }}><option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option></select></label>
     </div>
-    <section className="notice" aria-label={t('Prepare market data')}>
-      <h3>{t('1. Prepare market data')}</h3>
+    <p className="muted caption">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
+    <section className="preparation-workspace" aria-label={t('Prepare market data')}>
+      <div className="preparation-heading"><h3>{t('1. Prepare market data')}</h3><div className="section-actions">
+        <button type="button" className="primary" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
+        <button type="button" onClick={() => {
+          const inspector = sourceInspector.current;
+          if (inspector) {
+            inspector.open = true;
+            inspector.scrollIntoView({block:'start'});
+            inspector.querySelector('summary')?.focus({preventScroll:true});
+          }
+        }}>{t('Choose saved sources')}</button>
+      </div></div>
       <p>{t('Download five years of completed daily prices, matching the original research engine, or reuse verified history. Yahoo needs no API key. This step does not use AI tokens.')}</p>
-      <p className="muted">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
-      <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
-      <button type="button" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
+      <p className="muted caption">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
+      <p className="muted caption">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
       {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
       {preparationNote ? <p role={preparationExhausted ? 'alert' : 'status'}>{preparationExhausted ? `${t('Data is still incomplete after three checks.')} ` : ''}{t(preparationNote)}</p> : null}
+      <div className="preparation-sources">
       {profile.data?.allowed_analysts.includes('social') && asset?.asset_class !== 'reference_future' ? <div className="news-supplement">
         <h4>{t('Market discussions · optional')}</h4>
         <p>{t('Add the original StockTwits or Reddit feeds independently. Recent posts are a sample, not market probabilities or historical coverage. No API key or AI tokens are used.')}</p>
@@ -352,6 +359,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         <button type="button" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepareFundamentals()}>{fundamentalsPending ? t('Checking SEC filings…') : t('Add SEC fundamentals')}</button>
         {fundamentalsNote ? <p role="status">{t(fundamentalsNote)}</p> : null}
       </div> : null}
+      </div>
     </section>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>
@@ -386,7 +394,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       {sources.news?.length ? <p className="muted caption">{t('Selected economic indicators:')} {discoveredSources.filter(item => item.snapshot.dataset === 'macro' && sources.news.includes(item.snapshot.snapshot_id)).map(item => item.snapshot.metadata?.series_id ?? t('Economic indicator')).join(', ') || t('None')}. {t('Selected headline sources:')} {discoveredSources.filter(item => item.snapshot.dataset === 'news' && sources.news.includes(item.snapshot.snapshot_id)).length}. {t('Economic data does not replace news coverage.')}</p> : null}
       {profile.data && selectedRoles.length < profile.data.allowed_analysts.length ? <p className="muted caption">{t('This is a limited-scope report. Missing research areas will remain unavailable, not filled in by AI.')}</p> : null}
     </section>
-    <details className="source-inspector"><summary>{t('Inspect or change evidence sources')}</summary>
+    <details className="source-inspector" ref={sourceInspector}><summary>{t('Inspect or change evidence sources')}</summary>
     {profile.data?.allowed_analysts.map(role => <fieldset key={role} className="source-role"><legend>{researchLabel(role)}</legend>
       {!discoveredSources.some(item => item.supported_analysts.includes(role)) ? <p className="muted">{t("No suitable saved sources for this research area. It will not be included.")}</p> : discoveredSources.filter(item => item.supported_analysts.includes(role)).map(item => <label className="source-option" key={item.snapshot.snapshot_id}>
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}

@@ -124,6 +124,7 @@ export const vietnamese: Record<string, string> = {
   'Full research report': 'Báo cáo nghiên cứu',
   'Report unavailable. Decision review state is shown separately.': 'Chưa đọc được báo cáo. Trạng thái xét duyệt quyết định được hiển thị riêng.',
   'Portfolio checks & human approval': 'Kiểm tra danh mục và phê duyệt',
+  'Choose saved sources': 'Chọn nguồn đã lưu',
   'Current research stage:': 'Đang thực hiện:',
   'Market Analyst': 'Phân tích thị trường',
   'Sentiment Analyst': 'Phân tích tâm lý',

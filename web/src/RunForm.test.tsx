@@ -134,6 +134,30 @@ function setup(stale = false) {
   });
   vi.stubGlobal('fetch', fetch); return fetch;
 }
+it.each([false,true])('opens saved-source review without collecting, selecting or authorizing anything (stale=%s)', async stale => {
+  const fetch=setup(stale); const user=userEvent.setup();
+  const original=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'scrollIntoView');
+  const scroll=vi.fn();
+  Object.defineProperty(HTMLElement.prototype,'scrollIntoView',{value:scroll,configurable:true});
+  try {
+    render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+    const group=await screen.findByRole('group',{name:'Price & trend'});
+    const inspector=screen.getByText('Inspect or change evidence sources').closest('details')!;
+    expect(inspector.open).toBe(false);
+    await user.click(screen.getByRole('button',{name:'Choose saved sources'}));
+    expect(inspector.open).toBe(true);
+    expect(scroll).toHaveBeenCalledWith({block:'start'});
+    expect(document.activeElement).toBe(inspector.querySelector('summary'));
+    const box=within(group).getByRole('checkbox') as HTMLInputElement;
+    expect(box.checked).toBe(false); expect(box.disabled).toBe(stale);
+    expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+    expect(fetch.mock.calls.some(([url])=>url.includes('/prepare-') || url.endsWith('/runs'))).toBe(false);
+  } finally {
+    if(original) Object.defineProperty(HTMLElement.prototype,'scrollIntoView',original);
+    else Reflect.deleteProperty(HTMLElement.prototype,'scrollIntoView');
+  }
+});
 it('defaults to 30 minutes, resets paid consent and uses a new key for changed allowance', async () => {
   const fetch=setup();const user=userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);

@@ -8,6 +8,12 @@ run never silently opens a different result. Read-only progress refreshes retain
 the previous display while fetching, clear it on error and clear it immediately
 when identity changes. Approval/control reads retain their fail-closed behavior.
 
+Preparation uses one instrument/time/report-language row and a responsive grid
+for independent optional sources. Choose saved sources opens, scrolls to and
+focuses the native evidence-inspector summary; it does not fetch data, select
+evidence, change coverage or authorize AI. Coverage and current-data limitations
+remain visible. The source grid collapses to one column on narrow viewports.
+
 Progress groups actual events into Evidence prepared, Research and challenge,
 Report preparation and Your decision. Only events from the latest attempt count.
 There is no invented percentage or ETA. Processing complete means a report is

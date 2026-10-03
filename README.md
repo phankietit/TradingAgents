@@ -421,7 +421,10 @@ It verifies five years of completed daily sessions using the original engine's
 shared history window, saves immutable evidence, then
 requires separate paid-AI consent. The price action itself does not ingest
 news/fundamental/macro sources and is not a historical-vintage feed;
-NQ/ES preparation remains unsupported.
+NQ/ES preparation remains unsupported. The preparation form groups instrument,
+research time and report language together, and offers **Choose saved sources**
+to open and focus the evidence inspector. This shortcut does not collect data,
+select evidence or authorize AI. Optional source actions remain independent.
 See [data preparation](docs/platform/data-preparation.md).
 
 The analysis form can also **Add recent headlines** from the existing

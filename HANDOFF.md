@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Compact preparation checkpoint:** instrument/time/language share one row;
+optional sources use a responsive grid. Choose saved sources opens and focuses
+the existing inspector without collecting/selecting/authorizing. Web28750
+terminal0: typecheck/lint/152 tests/build PASS (8.45s tests), output setup-web in
+managed run20261003T155818Z-87783. Native in-app real owner API/synthetic QA on8019
+observed focus transfer, explicit price selection/consent, fixture source failure
+retaining prices and resetting consent/disabled Queue; no job submitted. VI mobile
+390×844 scrollWidth390, no console errors. No model/vendor, backend or user8000
+change. This is scoped UX evidence, not full R01–R14/professional/financial acceptance.
+Full backend proof remains at f7bca47; NQ remains owner BLOCKED.
+
 **Exact web candidate verified:** clean
 `52e7d9b24d05955fe14f95b7850a3b6ad53aa17b`, Node26.8.1; final web78992 terminal0
 typecheck/lint/**150 tests PASS**/build. Output review-exact-web is byte-identical
