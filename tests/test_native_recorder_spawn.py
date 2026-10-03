@@ -36,7 +36,10 @@ from tradingagents.platform.analysis.checkpoint_store import (
 )
 from tradingagents.platform.analysis.client_binding import build_initialized_graph_fingerprint
 from tradingagents.platform.analysis.continuation import ContinuationConsentStore
-from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
+from tradingagents.platform.analysis.linked_execution import (
+    LinkedExecutionError,
+    LinkedExecutionStore,
+)
 from tradingagents.platform.analysis.linked_publication import LinkedPublicationContext
 from tradingagents.platform.analysis.linked_recording import LinkedOriginalResearch
 from tradingagents.platform.analysis.observer import (
@@ -157,8 +160,9 @@ def assert_native_owner_api_approval(database, artifact_store, candidate, *, rea
 @pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
     ("English and Vietnamese", False), ("English and Vietnamese", True)])
 @pytest.mark.parametrize("callbacks", [False, True, "exhausted", "stopped", "linked_stopped", "linked_slow_exit",
-    "linked_portfolio", "linked_portfolio_policy_fail"])
-def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks):
+    "linked_portfolio", "linked_portfolio_policy_fail", "linked_cancelled", "linked_expired"])
+def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, monkeypatch, language, invalid, callbacks,
+                                                                  stop_receipt_expected=True):
     def forbidden(*args, **kwargs):
         raise AssertionError("parent fixture attempted provider/network invocation")
 
@@ -166,9 +170,10 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
     monkeypatch.setattr(httpx.Client, "send", forbidden)
     monkeypatch.setattr(httpx.AsyncClient, "send", forbidden)
     exhausted = callbacks == "exhausted"
-    portfolio_case = callbacks in {"linked_portfolio", "linked_portfolio_policy_fail"}
-    linked_attempt = callbacks in {"linked_stopped", "linked_slow_exit"} or portfolio_case
-    stopped_attempt = callbacks in {"stopped", "linked_stopped", "linked_slow_exit"} or portfolio_case
+    portfolio_case = callbacks in {"linked_portfolio", "linked_portfolio_policy_fail",
+        "linked_portfolio_cancelled", "linked_portfolio_expired"}
+    linked_attempt = callbacks in {"linked_stopped", "linked_slow_exit", "linked_cancelled", "linked_expired"} or portfolio_case
+    stopped_attempt = callbacks in {"stopped", "linked_stopped", "linked_slow_exit", "linked_cancelled", "linked_expired"} or portfolio_case
     child = ({False: fixture_child, True: invalid_fixture_child} if not callbacks else
              {False: callback_fixture_child, True: invalid_callback_fixture_child})[invalid and not exhausted]
     monkeypatch.setattr("tradingagents.platform.analysis.supervision._child", child)
@@ -376,6 +381,61 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 recording_inputs=recovered_recording, checkpoint_codec=codec, checkpoint_thread_id=str(run.run_id),
                 checkpoint_commit=recovered_commit, restore_checkpoint=raw,
                 **({"linked_context": linked_context} if linked_attempt else {}))
+            if callbacks in {"linked_cancelled", "linked_expired", "linked_portfolio_cancelled", "linked_portfolio_expired"}:
+                from tradingagents.platform.analysis.linked_stops import LinkedStopStore
+                from tradingagents.platform.persistence.models import (
+                    DecisionRow,
+                    ResearchExecutionCompletionRow,
+                    ResearchExecutionStopRow,
+                )
+
+                interrupted = False
+                original_commit = PrivateCheckpointStore.commit
+
+                def lose_linked_authority(checkpoints, *, context, owner_id, run_id, raw):
+                    nonlocal interrupted, later
+                    receipt = original_commit(checkpoints, context=context, owner_id=owner_id, run_id=run_id, raw=raw)
+                    if context is linked_context and receipt.sequence > observation.checkpoint_sequence and not interrupted:
+                        interrupted = True
+                        if callbacks.endswith("_cancelled"):
+                            executions.request_cancel(execution_id=consent.execution_id,
+                                session_token=auth.token, csrf_token=auth.csrf_token)
+                        else:
+                            later = lease.expires_at
+                        raise CheckpointDatabaseError("fixture lost linked checkpoint ACK after authority loss")
+                    return receipt
+
+                monkeypatch.setattr(PrivateCheckpointStore, "commit", lose_linked_authority)
+                with pytest.raises((ResearchExecutionFailed, LinkedExecutionError)):
+                    recovery.analyze(recovered_request)
+                assert interrupted and recovery._linked_return_result is None
+                assert retained._execution_stopped is True
+                suffix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
+                with pytest.raises(ProcessLookupError):
+                    os.kill(suffix["pid"], 0)
+                assert not recovery._linked_native_scope[1].is_alive()
+                stop = LinkedStopStore(executions).read(owner_id=owner, execution_id=consent.execution_id)
+                assert (stop is not None) is stop_receipt_expected
+                if stop is not None:
+                    assert stop.attempt == 2
+                    assert stop.continuation_authorized is False and stop.provider_cost_known is False
+                with database.session() as session:
+                    assert (session.get(ResearchExecutionStopRow, consent.execution_id) is not None) is stop_receipt_expected
+                    assert session.get(ResearchExecutionCompletionRow, consent.execution_id) is None
+                    assert not session.scalars(select(DecisionRow).where(DecisionRow.run_id == run.run_id)).all()
+                    unknown = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+                    assert unknown.elapsed_upper_bound is None  # Separate stop fact is not a refund/grant.
+                    allowance = load_remaining_allowance(session=session, owner_id=owner, run_id=run.run_id)
+                    assert allowance.assessment_status == "UNVERIFIED"
+                from tests.test_linked_publication import assert_old_history_unchanged
+
+                assert_old_history_unchanged(database, before_linked)
+                with pytest.raises(ValueError):
+                    linked_context.commit_checkpoint(raw)
+                if callbacks.endswith("_expired"):
+                    assert executions.mark_expired_for_review(execution_id=consent.execution_id).status == "review_required"
+                    assert LinkedStopStore(executions).read(owner_id=owner, execution_id=consent.execution_id) == stop
+                return
             try:
                 result = recovery.analyze(recovered_request)
             except ResearchExecutionFailed:
@@ -384,6 +444,12 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
                 raise
             if linked_attempt:
                 assert recovery._linked_clean_exit is True
+                from tradingagents.platform.analysis.linked_stops import LinkedStopStore
+
+                stop = LinkedStopStore(executions).read(owner_id=owner, execution_id=consent.execution_id)
+                assert (stop is not None) is stop_receipt_expected
+                if stop is not None:
+                    assert stop.child_exitcode == 0 and stop.continuation_authorized is False
             suffix = json.loads(Path(config["results_dir"] + ".fixture-trace.json").read_text())
             assert suffix["pid"] != prefix["pid"] and suffix["closed_clients"] == 2
             with pytest.raises(ProcessLookupError):
@@ -634,9 +700,11 @@ def test_exact_engine_native_spawn_recorder_with_parent_persistence(tmp_path, mo
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("language,invalid", [("English", False), ("Vietnamese", False),
-    ("English and Vietnamese", False), ("English and Vietnamese", True)])
-@pytest.mark.parametrize("case", ["linked_portfolio", "linked_portfolio_policy_fail"])
+@pytest.mark.parametrize("case,language,invalid", [
+    (case, language, invalid) for case in ("linked_portfolio", "linked_portfolio_policy_fail")
+    for language, invalid in (("English", False), ("Vietnamese", False),
+        ("English and Vietnamese", False), ("English and Vietnamese", True))
+] + [("linked_portfolio_cancelled", "English", False), ("linked_portfolio_expired", "English", False)])
 def test_native_postgresql_portfolio_output_to_owner_api(tmp_path, monkeypatch, language, invalid, case):
     url = os.getenv("TEST_POSTGRES_URL")
     if not url or os.getenv("TA_ALLOW_TEST_DB_RESET") != "1":

@@ -71,6 +71,37 @@ def test_reopened_attempts_use_latest_cumulative_not_sum_every_receipt(tmp_path)
         database.dispose()
 
 
+@pytest.mark.parametrize("bound", [True, 0, -1, 1.0, "1", 100001, 999])
+def test_receipt_prefix_rejects_invalid_or_unrecorded_bound(tmp_path, bound):
+    database, owner, run = _database(tmp_path)
+    try:
+        with database.session() as session:
+            append(session, owner, run, 1, receipt())
+        with database.session() as session, pytest.raises(AccountingEvidenceError):
+            load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id, through_sequence=bound)
+    finally:
+        database.dispose()
+
+
+def test_old_receipt_prefix_does_not_replace_latest_consent_accounting(tmp_path):
+    database, owner, run = _database(tmp_path)
+    try:
+        with database.session() as session:
+            append(session, owner, run, 1, receipt())
+            old = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+            append(session, owner, run, 2, receipt(finish=False))
+        with database.session() as session:
+            prefix = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id,
+                through_sequence=old.high_water_sequence)
+            assert prefix == old
+            latest = load_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id)
+            assert latest.attempts == (1, 2) and latest.started_calls == 2
+            with pytest.raises(AccountingEvidenceError):
+                recheck_accounting_evidence(session=session, owner_id=owner, run_id=run.run_id, expected=prefix)
+    finally:
+        database.dispose()
+
+
 @pytest.mark.parametrize("kind", ["empty", "marker", "legacy"])
 def test_missing_or_legacy_evidence_is_not_zero_cost(tmp_path, kind):
     database, owner, run = _database(tmp_path)

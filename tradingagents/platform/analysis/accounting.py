@@ -77,12 +77,15 @@ def _usage(payload, limits):
     return value, elapsed, payload.get("execution_stopped", False)
 
 
-def load_accounting_evidence(*, session, owner_id, run_id):
+def load_accounting_evidence(*, session, owner_id, run_id, through_sequence=None):
     """Read a bounded owner-scoped prefix, preserving missing/legacy uncertainty.
 
     High-water identity must be rechecked by future consent/lease transactions;
     this snapshot is not publication authority or authenticated user input.
     No historical rows are rewritten, no inferred zero-cost or exact crash time.
+    An explicit positive through_sequence reads only an immutable recorded
+    receipt prefix. It is NOT allowance/consent input: those callers and recheck
+    always load the full latest prefix, so later attempts cannot be dropped.
     """
     try:
         run = PlatformRepository(session).get_run(run_id, owner_id)
@@ -94,6 +97,11 @@ def load_accounting_evidence(*, session, owner_id, run_id):
                     "original_model_calls": limits.model_calls}
         high = session.scalar(select(func.coalesce(func.max(RunEventRow.sequence), 0)).where(
             RunEventRow.owner_id == owner_id, RunEventRow.run_id == run_id))
+        if through_sequence is not None:
+            if (type(through_sequence) is not int
+                    or not 1 <= through_sequence <= min(high, MAX_ACCOUNTING_EVENTS)):
+                raise ValueError()
+            high = through_sequence
         if not 0 <= high <= MAX_ACCOUNTING_EVENTS:
             raise ValueError()
         store = RunEventStore(session)

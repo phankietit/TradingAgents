@@ -117,3 +117,21 @@ SQLite/PostgreSQL schema checks assert these names as well as columns; the full
 PostgreSQL autogenerate parity gate must remain empty. This corrects ORM metadata,
 not the migration or an existing private database. No constraint rename or
 private-history rebuild is required or authorized by this source fix.
+
+Additive `0017_linked_stops` creates only one separate stop fact per execution,
+with owner/root, a strict hash-bound payload and stop observation time. The
+trusted original supervisor records it only after joining the actual parent-owned
+Process, closing both pipes and stopping/joining its reader. Exact original
+context/observer/request, private lease nonce/worker/deadline, source manifest,
+entry/dispatch and cumulative accounting must match. Cancel/expiry may permit
+only this control-plane fact, never ordinary publication/admission. No existing
+row/event is relabelled, no allowance or cost is inferred/refunded. The standalone
+owner-scoped reader resolves committed ACK loss and rejects missing/foreign/
+corrupt provenance. Database failure/missing fact preserves uncertainty.
+Default API/worker/CLI continuation remains disabled. No private database
+migration/restart/backfill or deletion is authorized by this source change;
+upgrade/downgrade and rollback evidence use acknowledged disposable QA only.
+The stop reader verifies its recorded immutable event prefix, not a truncated
+allowance assessment. Later appended attempts do not invalidate the old stop
+fact; consent/recheck/remaining-allowance paths still load all latest accounting
+and cannot use a prefix to drop later starts or restore an unknown time bound.

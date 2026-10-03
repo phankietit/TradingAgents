@@ -250,6 +250,18 @@ class ResearchExecutionCompletionRow(Base):
     completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ResearchExecutionStopRow(Base):
+    """One additive local-stop fact, never publication/admission authority."""
+
+    __tablename__ = "research_execution_stops"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    stopped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 class DecisionRow(Base):
     __tablename__ = "decisions"
     __table_args__ = (Index("ix_decisions_owner_as_of", "owner_id", "as_of"),)

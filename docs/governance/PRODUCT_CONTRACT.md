@@ -89,6 +89,14 @@ reject invalid timing before appending history, rather than commit an event that
 the integrity reader cannot subsequently validate. This grants no new approval
 or execution authority and does not change ordinary successful-run behavior.
 
+Internal linked supervision may append a separate local-stop receipt after
+child reaping and pipe-reader shutdown, even when cancellation/expiry prevents
+normal publication. This is control-plane evidence only: the original private
+lease identity, entry/dispatch and source/accounting bindings must still match.
+It cannot publish a report/checkpoint/decision, rewrite terminal history, claim
+remote provider termination/cost, replenish allowance or authorize continuation.
+Missing or corrupt stop evidence stays unknown; default continuation stays off.
+
 ## 4. Asset-Specific Contracts
 
 ### Equities

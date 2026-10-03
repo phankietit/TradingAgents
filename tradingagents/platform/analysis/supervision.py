@@ -185,6 +185,8 @@ class SupervisedAnalysisEngine:
         self.linked_context = linked_context
         self._linked_return_result = None
         self._linked_clean_exit = False
+        self._linked_native_scope = None
+        self._linked_native_binding = None
         if (linked_context is not None or restore_checkpoint is not None or recording_inputs is not None
                 or any(value is not None for value in supplied)):
             try:
@@ -312,6 +314,9 @@ class SupervisedAnalysisEngine:
                     return
 
         reader = Thread(target=receive, name="research-pipe-reader", daemon=True)
+        if self.linked_context is not None:
+            self._linked_native_scope = (process, reader, parent, child, stopped)
+            self._linked_native_binding = (self.linked_context, observer, request)
         try:
             observer.remaining_seconds()  # Construction/dispatch ACK cannot grant a late child start.
             process.start()
@@ -432,7 +437,6 @@ class SupervisedAnalysisEngine:
                     process.kill()
                     process.join()
                 self._linked_clean_exit = process.exitcode == 0
-                process.close()
                 child_stopped = True
             stopped.set()
             parent.close()
@@ -448,8 +452,19 @@ class SupervisedAnalysisEngine:
                 # Only after child reaping AND reader shutdown. Lease/cancel
                 # fences may refuse this append; preserve the original outcome
                 # and leave missing durable stop evidence unknown, not inferred.
-                with suppress(Exception):
-                    observer._record_supervised_stop()
+                try:
+                    with suppress(Exception):
+                        observer._record_supervised_stop()
+                    if self.linked_context is not None:
+                        # Separate control-plane fact only. Normal cancelled/expired
+                        # publication fences remain unchanged; failed persistence
+                        # never becomes a refund or continuation grant.
+                        with suppress(Exception):
+                            from .linked_stops import LinkedStopStore
+
+                            LinkedStopStore(self.linked_context._store).record_supervised(self)
+                finally:
+                    process.close()
             publisher = getattr(self.linked_context, "_result_publisher", None)
             if publisher is not None and self._linked_return_result is not None:
                 from .linked_results import LinkedResultPublisher

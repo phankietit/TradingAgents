@@ -725,7 +725,15 @@ approval. Candidate payload/hash remains immutable, with current status projecte
 from lifecycle events. Missing/corrupt approval receipt is refused. Every linked
 lifecycle event, including review/reject/expire, is rejected before writing if
 its timestamp precedes completion; a refusal does not poison readable history.
-Ordinary successful-run approval is unchanged. Multi-continuation,
+Ordinary successful-run approval is unchanged. An internal `0017` local-stop
+receipt separately records a real joined child and closed pipe reader, including
+cancel/expiry when normal publication is refused. Private original dispatch
+identity and accounting bindings are verified; no checkpoint/report/decision
+write is allowed through this path. It does not change original allowance or
+unknown provider cost, claim remote work stopped, authorize another call or
+rewrite old root/job/event history. Lost committed stop ACK can be resolved by
+an owner-scoped integrity reader without a model or live lease. Default dispatch
+remains off; missing/corrupt stop facts remain unknown. Multi-continuation,
 all late-stop/crash/expiry boundaries and the default continuation API/UI journey
 remain unfinished; local API tests are not live/browser acceptance.
 

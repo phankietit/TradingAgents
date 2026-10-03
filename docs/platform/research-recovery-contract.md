@@ -27,6 +27,29 @@ remain open. Root terminal history and original allowance are not reset.
 Optional focused local helper selections are diagnostics only, never substitutes
 for full regression; see `local-verification.md`. Default helper modes remain full.
 
+### Separate linked local-stop reconciliation
+
+The internal supervisor can append an additive `0017_linked_stops` fact after
+the actual original child has been joined and both pipes/reader are closed.
+Exact context/observer/request and original private lease identity must match
+the owner/root, consent, entry, dispatch, checkpoint and accounting provenance.
+Cancellation or expiry permits only this separate control-plane observation:
+normal event/checkpoint/report/decision publication remains fenced. No root/job
+status or old evidence is rewritten, and remote provider termination/billing
+remains unknown. Failed stop persistence leaves no apparent confirmed stop;
+an owner-scoped verified reader can resolve a committed lost ACK without any
+model call, live lease or nonce supplied by a browser.
+
+Its reader validates the exact recorded hash-bound accounting prefix so later
+appended attempts do not invalidate the historical stop fact. This prefix cannot
+be used for allowance or consent: those paths still load/recheck all latest
+accounting. The separate marker does not supply a normal accounting upper bound,
+refund time/tokens, authorize another continuation, or replace a completion
+receipt. Native cancellation/expiry and commit/ACK fixtures are local mechanism
+evidence only; source-scoped executed gates belong in the dated receipt. All-
+stage/crash/transport boundaries, actual repeated continuations and the default
+authenticated API/worker/CLI/UI journey remain unfinished and disabled.
+
 Earlier local checkpoint at source `60e9200`: restricted recorder/saver restore
 and transfer into a distinct original supervised child are exercised with
 retained accounting and synthetic responses. The new-child fixture branches
