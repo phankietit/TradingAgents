@@ -101,3 +101,10 @@ hashes and stopped cumulative accounting. It does not authorize execution or
 approval. Default API/worker and linked human-approval integration stay disabled;
 the existing approval rule still rejects a failed/cancelled root. Follow the
 same backup/owner rollout gates; schema reversal tests use disposable empty tables.
+
+The ORM and packaged `0016` migration explicitly share
+`uq_linked_completion_report` and `uq_linked_completion_decision`. Fresh disposable
+SQLite/PostgreSQL schema checks assert these names as well as columns; the full
+PostgreSQL autogenerate parity gate must remain empty. This corrects ORM metadata,
+not the migration or an existing private database. No constraint rename or
+private-history rebuild is required or authorized by this source fix.

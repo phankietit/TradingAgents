@@ -9,7 +9,7 @@ from threading import Barrier
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import inspect, select
+from sqlalchemy import UniqueConstraint, inspect, select
 from sqlalchemy.exc import SQLAlchemyError
 
 from tests.test_continuation_consent import history, prepared as prepared
@@ -388,3 +388,19 @@ def test_disposable_empty_completion_migration_preserves_history(published):
     upgrade_database(url)
     assert "research_execution_completions" in inspect(database.engine).get_table_names()
     assert history(database) == before
+
+
+@pytest.mark.parametrize("prepared", [False,
+    pytest.param("postgres_failed", marks=pytest.mark.integration)], indirect=True)
+def test_completion_constraint_names_match_packaged_migration(prepared):
+    database = prepared[0]
+    expected = {
+        "uq_linked_completion_report": ("report_artifact_id",),
+        "uq_linked_completion_decision": ("decision_id",),
+    }
+    actual = {item["name"]: tuple(item["column_names"]) for item in
+        inspect(database.engine).get_unique_constraints("research_execution_completions")}
+    modeled = {constraint.name: tuple(column.name for column in constraint.columns)
+        for constraint in ResearchExecutionCompletionRow.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)}
+    assert actual == modeled == expected

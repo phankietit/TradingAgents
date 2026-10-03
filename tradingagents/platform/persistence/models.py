@@ -232,12 +232,16 @@ class ResearchExecutionCompletionRow(Base):
     """Atomic linked output receipt; does not rewrite terminal root lifecycle."""
 
     __tablename__ = "research_execution_completions"
+    __table_args__ = (
+        UniqueConstraint("report_artifact_id", name="uq_linked_completion_report"),
+        UniqueConstraint("decision_id", name="uq_linked_completion_decision"),
+    )
     execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
     checkpoint_record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), nullable=False)
     checkpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    report_artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), nullable=False, unique=True)
+    report_artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), nullable=False)
     evidence_artifact_id: Mapped[UUID | None] = mapped_column(ForeignKey("artifacts.artifact_id"))
-    decision_id: Mapped[UUID] = mapped_column(ForeignKey("decisions.decision_id"), nullable=False, unique=True)
+    decision_id: Mapped[UUID] = mapped_column(ForeignKey("decisions.decision_id"), nullable=False)
     result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     accounting_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     report_hash: Mapped[str] = mapped_column(String(71), nullable=False)
