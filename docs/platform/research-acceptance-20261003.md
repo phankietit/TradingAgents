@@ -1659,3 +1659,13 @@ open wider reading region. Mobile first viewport still overemphasizes global
 navigation/history/metadata. Setup length, main summary positioning and complete
 professional operating journey remain UNVERIFIED; do not promote this subset
 into R11/R12 completion, WCAG, real finance/editorial or release acceptance.
+
+Final exact source for this UI slice:
+`52e7d9b24d05955fe14f95b7850a3b6ad53aa17b`, clean throughout web78992 terminal0,
+Node26.8.1. `npm run typecheck && npm run lint && npm test && npm run build --
+--outDir <managed>/Build/review-exact-web`: **PASS**,150tests/24files/5.77s;
+`diff -rq <managed>/Build/review-web <managed>/Build/review-exact-web`: exit0,
+identical entire built output, linking browser-inspected assets to the clean SHA.
+`git diff --check` and issue-template YAML parsing PASS. CI remains disabled.
+No Python/package/dependency change here, so the backend baseline above is not
+relabelled as a new full-SHA run. The wider objective still has open acceptance.

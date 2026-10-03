@@ -2,6 +2,14 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact web candidate verified:** clean
+`52e7d9b24d05955fe14f95b7850a3b6ad53aa17b`, Node26.8.1; final web78992 terminal0
+typecheck/lint/**150 tests PASS**/build. Output review-exact-web is byte-identical
+to the review-web assets inspected above/below via in-app browser (diff -rq exit0).
+No Python/package/dependency change in this UI slice; full backend receipt stays
+bound to f7bca47. No production-ready claim or user8000 restart. See PR7's exact
+continuation checkpoint; current tracked docs preserve previous source receipts.
+
 **Report/review UX implementation checkpoint · 2026-10-03:** the candidate
 containing this entry moves review readiness/actions before the saved report,
 keeps missing-risk/run-mismatch refusal visible, removes duplicate report heading
