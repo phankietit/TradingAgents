@@ -1071,3 +1071,55 @@ action, main merge or deployment. Next characterize actual native PostgreSQL
 approval and remaining recovery/reconciliation boundaries before default owner
 API/UI activation, then separately authorized live/economic/editorial acceptance.
 Full R01–R14 goal remains active; Draft PR7 remains draft.
+
+## Native PostgreSQL portfolio approval and explicit focused local QA
+
+Source `6ae34c94e1e7a32a800cc9a47e1ef5c8bb167417`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`.
+This slice changes only test coverage, local verification scripts and their
+matching documentation. Package/CLI/graph/decision/provider/risk behavior is
+unchanged; production package and CLI trees equal c04b23e. No default continuation
+activation, private schema migration or application restart.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Native PostgreSQL matrix | PASS | Eight actual PostgreSQL cases invoke the original native-spawn test with only its fixture database changed. Same graph/AnalysisEngine/parent recorder, retained accounting, original owner book/policy/risk sources, checkpoint restore and baseline trace/full-result comparison. All four analysts/two research/risk rounds retained; old FAILED root/job/event/checkpoint history unchanged; real children reaped |
+| PostgreSQL output→authenticated API | PASS | Same TestClient login/CSRF/owner transitions consume the actual native committed output. Valid EN/VI/bilingual candidates approve twice with one lifecycle event and immutable ready candidate; invalid VI plus all four policy-failure variants retain REVIEW/withheld target/zero events/API409. No separate fabricated publisher result or relaxed PG-only assertion |
+| Initial focused dirty patch | PASS | Handle19620 terminal0:8PASS,32deselected,40warnings,209.71s. Ruff/pip-check/diff included. Native test and two scripts dirty at dde388a with new CLI test; not clean-SHA or full-suite evidence. Helper removed only its own disposable PG container |
+| Explicit CLI selection | PASS | Four malformed-selection subprocess cases reject with exit2/no stdout before Python/Docker/database allocation. PATH contains only system binaries. Final precommit handle92824 terminal0:4PASS/0.14s; same tests also included in full gate. Focused mode forwards explicit pytest args and states it is not full regression; default invocation unchanged |
+| Full clean exact-source PostgreSQL | PASS | Handle63423 terminal0:2,618PASS+88subtests,2skips,347warnings,879.76s. Source6ae34c9 clean/unchanged throughout. Full helper has no focused arguments, includes new eight native PG cases and existing SQLite/native/PG/API/schema/race regression. Whole-repo Ruff, pip-check and diff PASS |
+| Static/docs | PASS | bash -n both helpers, whole-repo Ruff, pip-check, git diff --check and Ruby issue-template YAML before source commit; doc-only final checks recorded after receipt update |
+| Owned storage/database cleanup | PASS | Verified external SSD/machine policy; managed `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T034122Z-53739` finished completed/exit0 after handles terminal, retained. Full helper removed only labelled `ta-research-qa-1790999432-56011`; later inventory contains only older exited `ta-research-qa-1790495819-43615`, untouched. No owner/private database/container reset |
+| New clean install/import gate | NOT_IN_SCOPE | No package, CLI, dependency, packaging or import surface change. Git diff c04b23e..6ae34c9 for tradingagents/cli/pyproject/setup is empty; tradingagents tree80fd4fb33401f19077e7c2155d45235b3f668f36 and CLI tree4ba0d9d2beb365df426be18ffa7f99b884df0dea identical. Prior c04b23e fresh-install evidence stays pinned to that source; no new installation or fresh-dependency full-suite claim |
+| Runtime/provider/scanner limits | UNVERIFIED | Project Python3.14.7/macOS26.5.2 arm64; langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Other Python/dependency matrices untested. Two explicit skips: missing langchain_aws and deliberately unset live DeepSeek key. gitleaks/detect-secrets unavailable; no scanner certification |
+| Recovery/operational activation | UNVERIFIED | Cancel/expiry/late stop, all crash/ACK boundaries, multi-continuation and default API/worker/CLI/UI continuation remain open. Read-only inspection confirms cancelled/expired stop append refusal retains unknown elapsed upper bound; this is no refund/requeue, not finished reconciliation |
+| Broader product/live | UNVERIFIED | Synthetic SDKs forbid HTTP and do not prove finance/source entailment/editorial VI, browser/report UX or live market/model quality. Macro/social/other-asset fundamentals and fresh BTC/AAPL remain open; SEC contact presence-only check false. No paid retry/model/vendor request performed |
+| NQ=F | BLOCKED | Existing owner hold for active-contract/roll metadata, no new provider/substitute |
+
+Exact initial CLI/focused command, sequential under set-e in handle19620:
+
+```sh
+.venv/bin/python -m ruff check tests/test_native_recorder_spawn.py tests/test_local_verification_cli.py
+bash -n scripts/verify-local.sh scripts/verify-postgres-local.sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T034122Z-53739/Tmp .venv/bin/python -m pytest -q tests/test_local_verification_cli.py
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T034122Z-53739/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_native_recorder_spawn.py -k native_postgresql --tb=short -x
+```
+
+The first CLI run inside handle19620 was4PASS/0.15s; later precommit92824
+4PASS/0.14s. Focused PG result is the dirty-patch diagnostic above, not a new
+production output, clean-SHA full suite or cost measurement.
+Full exact-source handle63423 command:
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T034122Z-53739/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh
+```
+
+No source/test/doc edit during the full gate; afterward HEAD still6ae34c9 and
+worktree clean. Local helpers do not enable CI, install packages/start Docker,
+upload results or accept an existing database. CI current GitHub permissions
+rechecked enabled=false. Draft PR7 remains OPEN/DRAFT; no main merge/deploy.
+Next actual native cancel/expiry/ACK reconciliation must preserve all publication
+fences and original unknown provider cost before multi-continuation/default
+owner API/UI activation. Broader ingestion, economic/editorial/localization and
+report/process UX remain required by the full unchanged R01–R14 goal.

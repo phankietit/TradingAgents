@@ -2,6 +2,37 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Native PostgreSQL portfolio → approval / focused local QA 2026-10-03:**
+tested clean source `6ae34c94e1e7a32a800cc9a47e1ef5c8bb167417`.
+Eight actual PostgreSQL native-spawn cases reuse every original SQLite graph,
+checkpoint, retained-budget, original owner book/risk and authenticated API
+assertion. Three valid EN/VI/bilingual outputs approve idempotently with one
+event; invalid VI and all four original-policy-failure variants remain REVIEW,
+target withheld, API409. All roles/rounds and uninterrupted baseline comparison
+remain intact; old FAILED root/job/history unchanged. SDK responses are synthetic
+and HTTP refused: local PG/native/API proof, not live financial/browser acceptance.
+Focused helpers require explicit `--focused` selection, retain full default mode,
+and label narrow evidence separately. Four malformed-selection tests reject
+before runtime/database allocation. Owned disposable PG lifecycle is unchanged;
+no existing application database may be used.
+Initial focused dirty-patch handle19620 **8 PASS**,32 deselected,40 warnings,
+209.71s; CLI precommit handle92824 **4 PASS**,0.14s. Full unchanged clean source
+handle63423 **2,618 +88 subtests PASS**,2 optional-provider skips,347 warnings,
+879.76s,terminal0; Ruff/pip-check/diff/templates/shell syntax PASS.
+Managed evidence at `20261003T034122Z-53739` completed/exit0, retained on verified external SSD;
+helper removed only its current labelled container, older QA container untouched.
+No package/CLI/dependency surface changed; their source trees equal c04b23e,
+whose fresh-install receipt remains source-scoped, not a new install claim.
+Next: actual native cancel/expiry/ACK boundaries and durable, non-authorizing
+stop reconciliation, multi-continuation, then default owner continuation API/UI.
+Broader macro/social/other-asset ingestion, financial/editorial/VI quality and
+operational/report UX remain open. Fresh BTC/AAPL require appropriate live
+authorization and prerequisites; SEC contact presence-only check is still false.
+NQ=F owner BLOCKED/no new provider unchanged. No CI, paid/vendor call, risk/provider
+change, private DB migration/restart/history rewrite, broker, merge/deploy.
+Full goal and Draft PR7 remain open. Exact commands/limitations: receipt20261003,
+section **Native PostgreSQL portfolio approval and explicit focused local QA**.
+
 **Native portfolio → authenticated approval / lifecycle timing 2026-10-03:**
 tested source `c04b23e3bf88a71b594c57fdb7db3b0e07a132f8`. Reproduced actual
 writer/reader inconsistency: linked review could be written before completion,

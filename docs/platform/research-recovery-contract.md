@@ -5,7 +5,7 @@ retry endpoint, authorize a paid call, raise an existing allowance or make a
 working note an approvable decision. Original CLI checkpoint behavior remains
 separate and unchanged.
 
-Latest tested internal source `c04b23e`: linked original-graph continuation can retain
+Latest tested internal source `6ae34c9`: linked original-graph continuation can retain
 stages and atomically publish the ordinary report/evidence/risk candidate after
 clean child exit and stopped accounting, with a separate verified completion
 receipt. Default API/worker/CLI continuation dispatch stays disabled. The existing
@@ -16,11 +16,16 @@ All linked lifecycle timestamps, including review/reject/expire, are rejected
 before write/ACK if earlier than completion. Actual native SQLite fixtures with
 the original owner book/risk inputs now reach authenticated API approval for
 valid EN/VI/bilingual output; original policy failure/invalid VI remains REVIEW.
-These synthetic SDK fixtures do not establish live finance, browser or native
-PostgreSQL end-to-end acceptance.
-Exact-source local PostgreSQL/native/clean-install gates are in the 2026-10-03
+Eight additional actual PostgreSQL native-spawn cases reuse every original
+graph/portfolio/API assertion; three valid language outputs approve idempotently,
+while invalid VI and four original-policy-failure variants remain REVIEW/API409.
+These synthetic SDK fixtures establish local native PostgreSQL persistence/API
+mechanics, not live finance, browser or full operational recovery acceptance.
+Source-scoped local PostgreSQL/native and earlier clean-install gates are in the 2026-10-03
 receipt; live financial/editorial, operational UI and full recovery acceptance
 remain open. Root terminal history and original allowance are not reset.
+Optional focused local helper selections are diagnostics only, never substitutes
+for full regression; see `local-verification.md`. Default helper modes remain full.
 
 Earlier local checkpoint at source `60e9200`: restricted recorder/saver restore
 and transfer into a distinct original supervised child are exercised with
