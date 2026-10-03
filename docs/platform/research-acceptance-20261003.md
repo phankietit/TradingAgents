@@ -872,3 +872,43 @@ cancel/expiry/ACK reconciliation before default API/UI activation or paid live
 acceptance. A side actor link or hook call alone does not prove source/client
 attestation, financial correctness or human-approval readiness. Full R01–R14
 goal and Draft PR #7 remain open.
+
+## Terminal original-context and single-use linked native dispatch
+
+Source `27e969bd18b389854ebdb5b6c6b0af934b6cac10`, branch
+`fix/TA-R01-research-quality`, authoritative worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`. Source was
+committed/clean throughout the final full regression. Python 3.14.7,
+macOS 26.5.2 arm64 / Darwin 25.5.0. Internal private-platform draft only.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Complete terminal context | PASS | Separate strict linked JSON retains full original FAILED/CANCELLED RunManifest including errors/completed_at and original fingerprint/thread. Ordinary context rejects the same terminal bytes. No original history edit, lifecycle projection, live fallback or fresh observer |
+| Source/owner revalidation | PASS | Loader and pre-dispatch transaction reload actual owner-readable analyst/risk artifacts and snapshots, verify indexed row columns against manifest JSON and actual bytes/hash, original portfolio/policy and pinned checkpoint. Missing/foreign/changed data refuses dispatch; token/session/CSRF/nonce absent from transport and repr |
+| Single-use parent dispatch | PASS | Additive 0015 stores one marker per execution with pinned checkpoint ID/hash. Exact context/codec/bound checkpoint callback, request/restore bytes and unused retained observer required; mutable setup rechecked. Marker commits before Process construction; deliberate precommit failure starts nothing, lost postcommit ACK refuses respawn, original deadline checked again before start |
+| Native linked graph integration | PASS | Four actual spawn cases EN/VI/bilingual/invalid VI: original child stopped/reaped after committed nonempty market pending writes with lost ACK; root job/run become immutable FAILED; authenticated consent, separate lease/entry and original loader construct linked child restore. Prefix + suffix calls/prompts and non-message AnalysisResult match uninterrupted baseline. New checkpoint attempt 2/actor links, unchanged old rows; invalid VI still has no valid decision payload. Synthetic SDK/network-forbidden fixture, not live finance/provider billing |
+| Real-clock receipt validation | PASS | Captured observer elapsed is finite/nonnegative and ≤ fresh monotonic read; usage counters/flags remain exact, cumulative accounting still rejects reset/decrease. Five bool/nonfinite/negative/future elapsed refusal cases added. The earlier exact comparison across two real clock reads was identified by source inspection, not a reproduced native failure; final native/full gates exercise corrected real-clock callbacks |
+| Disposable PostgreSQL dispatch | PASS | Full suite executes two added integration cases: single-use original-history-preserving consumption and two concurrent parent consumers with exactly one winner. Other fault variants primarily SQLite, not every PostgreSQL crash/cancel boundary |
+| Disposable migration reversal | PASS | Empty 0015 dispatch table down to 0014/up retains original evidence. No private-history downgrade/delete or private migration performed |
+| Initial native fixture | FAIL | Handle 56037: 1 failed, 16 deselected, 5 warnings, 7.66 s. Fixture expected root error_message=ResearchExecutionFailed but worker stores root error_code and leaves error_message None; corrected assertion to full original manifest equality, without clearing/inventing history |
+| Intermediate native matrix | PASS | Handle 31499: 4 passed, 16 deselected, 20 warnings, 45.72 s, before later source-column/reload/prestart guards |
+| Initial source-integrity fixture | FAIL | Handle 2407: 1 failed, 3 passed, 5.17 s. ArtifactRow content_hash column changed while repository manifest payload stayed intact and loader accepted it. Fixed loader row↔manifest checks plus SnapshotRow checks and actual source reload before dispatch, not a weakened test |
+| Intermediate focused | PASS | Handle 35782: 97 passed, 2 missing-URL PG skips, 20.31 s; then handle 33108: 120 passed, 4 skips, 38.32 s, before final strict guards/elapsed cases |
+| Final combined focused | PASS | Handle 9748, terminal exit 0: `.venv/bin/python -m pytest -q tests/test_linked_recording.py tests/test_linked_publication.py tests/test_recording_context.py tests/test_retained_observer.py tests/test_native_recorder_spawn.py tests/test_recording_allowance_bridge.py --disable-warnings -x`: 145 passed, 4 missing-URL PostgreSQL skips, 88 warnings, 128.63 s. Precommit local evidence, not PostgreSQL proof on its own |
+| Full exact-source regression | PASS | Handle 98733, terminal exit 0: `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`: 2,522 passed +88 subtests, 2 skipped, 212 warnings, 408.24 s. Includes actual disposable PG migration/race cases; Ruff/pip check/diff passed. Source clean/exact throughout |
+| Templates/static | PASS | Ruby issue-template YAML load, Ruff and diff checks. Initial import-order lint repaired mechanically; no behavioral gate weakened |
+| Clean noneditable install | PASS | Exact `git archive 27e969bd18b389854ebdb5b6c6b0af934b6cac10` into managed external Build; fresh Packages/venv installs Build[platform] noneditable, handle 16682 terminal exit 0. TMPDIR and pip cache per-command below managed run; no .env/runtime copy |
+| Packaged imports/migrations | PASS | Handle 98271 terminal exit 0: fresh pip check and Results/clean_install_smoke.py from outside source CWD; site-packages package/CLI/API/jobs/linked recording/context/packaged 0015 imports, offline PG DDL `0010_owner_watchlist:head` and actual owned SQLite base→head0015. Known data-reading 0007 prevents full-chain base offline DDL; not claimed supported or rerun here |
+| Install evidence/runtime | PASS | Managed `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T005331Z-4519`, ownership marker verified, finished completed/exit0, retained. Project langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0; fresh tradingagents0.5.0/langgraph1.2.12/core1.6.6/openai1.6.7/pydantic2.13.5/SQLAlchemy2.1.3/Alembic1.20.0. Observations are not a dependency lock |
+| Matrix/scanners/optional providers | UNVERIFIED | Full suite used project env, not fresh resolved deps or complete Python matrix. gitleaks/detect-secrets unavailable; auth/redaction tests and pip check not comprehensive security scanning. Missing langchain_aws and explicitly unset live DeepSeek key are the two skips |
+| Default activation/finalization | UNVERIFIED | No API/worker/CLI route consumes new loader/context; consent dispatch_enabled=false. Linked stage artifact/report/decision finalization, multi-continuation and all late-stop/cancel/expiry/crash/transport reconciliation remain unfinished. Dispatch consumed is not successful execution or human approval |
+| Browser/financial/full product | UNVERIFIED | No frontend change or new browser journey; asset ingestion, operational UX, source entailment, VI editorial and fresh live BTC/AAPL remain open. Old private financial failures unchanged; no paid rerun. SEC name/email not actually supplied/configured |
+| NQ=F live | BLOCKED | Owner-selected active-contract/roll-source hold; no new provider or instrument substitute |
+
+CI verified `disabled_manually`; Draft PR7 still open/draft before push.
+Disposable helper removed only its labelled container
+`ta-research-qa-1790988792-4121`; other app/container state was not changed.
+No private database migration/restart/history rewrite, paid AI/vendor call,
+provider/risk change, broker/execution, main merge or deployment. Full R01–R14
+goal remains active; next work is linked report/decision finalization and
+stop/cancel/expiry/ACK reconciliation before default API/UI activation.

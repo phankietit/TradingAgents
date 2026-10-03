@@ -2,6 +2,38 @@
 
 ## Cập nhật đang triển khai · 2026-10-01
 
+**Terminal original-context / single-use linked native dispatch 2026-10-03:**
+source `27e969bd18b389854ebdb5b6c6b0af934b6cac10`. Internal loader giữ nguyên
+full FAILED/CANCELLED manifest/error/completed_at; ordinary context vẫn từ chối
+terminal. Reload owner-readable analyst/risk bytes, indexed columns ↔ manifest,
+book/policy và pinned original checkpoint trong linked parent fence, rồi kiểm tra
+lại trước dispatch. Không fallback live, fresh observer, budget reset hay đổi
+thread/fingerprint. Additive `0015` append one consumed-dispatch marker trước
+Process construction; lost committed ACK không respawn. Child chỉ nhận JSON/
+checkpoint, không DB/lease nonce/session/CSRF/callback. Bound checkpoint callback
+và unused retained observer được recheck; prestart kiểm tra deadline còn lại.
+Real monotonic usage validation sửa đối chiếu duration đã capture ≤ fresh read,
+counters/flags vẫn exact, cumulative accounting không chấp nhận reset/decrease.
+4 actual native EN/VI/bilingual/invalid-VI fixtures đi qua stopped original child,
+immutable FAILED root, authenticated consent/lease và linked restored child;
+prefix + suffix và result fields khớp uninterrupted original baseline. Old root/
+job/event/checkpoint không đổi, new actor links attempt 2; invalid VI vẫn fail.
+Synthetic SDK/local graph evidence, không live provider/finance/cost acceptance.
+Final combined focused **145 PASS**, 4 missing-URL PG skips, 88 warnings, 128,63 s.
+Full clean exact-source qua disposable PostgreSQL helper **2.522 +88 subtests
+PASS**, 2 optional-provider skips, 212 warnings, 408,24 s, terminal exit 0.
+Ruff/pip-check/diff/templates PASS; task-only container đã dọn. Clean noneditable
+tracked Git archive install/import + packaged PG DDL `0010:head` + owned fresh
+SQLite head 0015 PASS; managed external evidence retained. Không claim full-chain
+offline DDL (known migration 0007 limitation), fresh-dependency full test/matrix
+hay secret/vulnerability scanner. Initial fixture FAIL (root error_message None)
+và real artifact column/manifest mismatch FAIL giữ trong receipt 20261003.
+Next: linked report/decision finalization, stop/cancel/expiry reconciliation và
+all crash/ACK boundaries, multi-continuation, rồi default API/UI activation.
+Không private DB migration/restart/history rewrite, paid AI/vendor call, provider/
+risk change, CI, merge/deploy. UI/ingestion/finance/VI/live BTC/AAPL còn mở;
+SEC tên/email chưa được cung cấp, NQ=F giữ BLOCKED theo owner. Goal/PR #7 mở.
+
 **Linked parent publication / accounting prerequisite 2026-10-03:** source
 `b089fe599a45655fe503119e162683caf5bc4294`. Internal context build exact retained
 observer rồi recheck full consent high-water dưới owner/job/run/execution locks
