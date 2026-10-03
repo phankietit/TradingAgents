@@ -2,6 +2,29 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Social exact-source checkpoint · 2026-10-03 15:36 UTC:** clean frozen source
+`f7bca474fa44c9ff053b013bac79fa9a0eadd91c`, full local PostgreSQL gate5479
+terminal0: **3,000 tests +88 subtests PASS**,2 optional-provider skips,
+443warnings,1307.90s. Ruff/pip-check PASS; only helper-owned disposable PG removed.
+The interrupted earlier full handle82036 has no recoverable terminal result and
+remains UNVERIFIED; this fresh run retained its log and exact-source exit marker.
+Fresh noneditable install13505 and packaged smoke33335 terminal0 verify
+site-packages entrypoints/native social refusal, not live financial acceptance.
+Actual default installed-source probe71036 acquired StockTwits30/30 eligible
+posts, full text/hash/manifest owner readback and reuse PASS; labels7 bullish,
+0 bearish,23 unlabeled are sample opinions, not probabilities. Reddit returned
+UNAVAILABLE/unknown received count; immutable failure readback PASS, eligible
+acquisition UNVERIFIED. No AI jobs or private history changes.
+In-app UX audit at isolated8019 used real owner API/worker/storage but explicit
+synthetic prices/graph. Saved VI/EN report switching and linked REVIEW decision
+were observed; missing risk checks disable approval. Preparation remains long,
+report summary starts below the desktop fold, and review controls are buried.
+This is not professional UX, live graph, finance or translation acceptance.
+Owned server63407 stopped terminal0 and temporary tabs closed; port8000 untouched.
+Detailed source receipt and remediation priorities are in receipt20261003 below.
+R01–R14 remains active; next implement compact preparation/report/review layout
+without hiding coverage, shortening the graph or changing consent/policy.
+
 **Original social preparation checkpoint · 2026-10-03:** the candidate containing
 this entry adds structured original StockTwits/Reddit public feeds, bounded fixed
 transport/child acquisition, independent authenticated owner preparation,

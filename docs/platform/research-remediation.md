@@ -22,7 +22,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
 | R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
 | R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
-| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED/social API and macro/social EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa. Structured social live reachability, other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED/social API and macro/social EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa, actual StockTwits acquisition/full-text owner readback/reuse PASS at f7bca47. Reddit eligible acquisition UNVERIFIED (actual UNAVAILABLE retained); other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
@@ -54,7 +54,14 @@ Original StockTwits/Reddit structured preparation now has bounded transport,
 immutable independent owner snapshots, full retained text in the original
 Sentiment path, source-count facts and explicit missing-feed/sample disclosures.
 Local native child/API/threaded lock/SQLite/PostgreSQL/full-graph and EN/VI browser
-evidence remains distinct from actual new structured social/live finance proof.
+evidence remains distinct from live finance proof. Clean f7bca47 full baseline
+has3,000 tests +88 subtests PASS; fresh installed default-source probe acquired
+all30 returned eligible StockTwits posts and verified owner readback/reuse.
+Reddit's real UNAVAILABLE result is retained, not converted into neutral data or
+claimed eligible-source acceptance. In-app synthetic report/review UX audit
+confirms saved Vietnamese summaries and disabled approval without risk checks,
+but identifies excessive preparation length, below-fold conclusions and buried
+review readiness. Professional R11/R12 UX acceptance is still UNVERIFIED.
 Existing FRED/CLI defaults, risk limits and graph flow are unchanged; synthetic
 fixtures alone never authorize a live-provider or paid-model request. Detailed
 scope and actual live-source evidence are in `research-acceptance-20261003.md`.

@@ -1530,3 +1530,92 @@ and existing runtime were untouched. Failed runs/history/old source receipts
 remain unchanged. No CI, paid AI, new provider/production endpoint/risk limit,
 broker, private history rewrite, main merge or public deploy. Source changes
 invalidate prior research fingerprints; do not rebind history or reset allowance.
+
+### Social exact-source final baseline and actual acquisition
+
+Source: clean `f7bca474fa44c9ff053b013bac79fa9a0eadd91c` on
+`fix/TA-R01-research-quality`; no tracked bytes or HEAD changed during the gate.
+Python3.14.7, same owned managed run20261003T083034Z-76016.
+
+- Full default local PostgreSQL helper5479: **PASS**, terminal0,
+  3,000 tests +88 subtests,2 skips,443warnings,1307.90s. Started15:14:36 UTC,
+  terminal15:36:37 UTC; Ruff and pip-check PASS. Persistent private log
+  `Logs/full-social-regression.log` ends `EXACT_SOURCE_GATE_EXIT=0` after
+  source/clean-state checks and only helper-owned disposable PG removal.
+  Skips: optional langchain_aws absent and DEEPSEEK_API_KEY absent/placeholder;
+  those provider gates remain UNVERIFIED. Earlier interrupted handle82036 has
+  no terminal result; do not infer a pass from its partial dots or restart it.
+- Fresh tracked noneditable installation13505 and pip-check: **PASS**.
+  Outside-source packaged smoke33335: **PASS**, terminal0, imported package,
+  CLI/API/schema/worker/social/storage/facts/snapshot-graph from site-packages;
+  actual module child invalid-input refusal, no vendor/model request. The old
+  interrupted packaged handle41423 is superseded only by this verified rerun.
+- Actual default installed collector probe71036: **PASS acquisition only**,
+  terminal0,2026-10-03 09:14 UTC. Authenticated synthetic local owner/new private
+  SQLite store; no collector overrides, no prior DB reused. StockTwits ready/OK
+  in4.220s,30 received/30 eligible/0 excluded, full retained text/hash/manifest
+  readback, owner loader, fact replay and exact-source reuse PASS. Labels7
+  bullish/0 bearish/23 unlabeled describe that sample, not market probabilities.
+  Reddit unavailable/UNAVAILABLE in6.195s, unknown received count/null,0 eligible;
+  failed immutable payload/manifest/hash readback PASS and not selected as usable.
+  Reddit eligible acquisition remains UNVERIFIED. Runs endpoint empty: zero AI
+  jobs/calls/tokens. Neither source acquisition proves financial/source-entailment
+  or live original-graph report quality.
+
+Commands use the same owned external run, with source frozen until terminal:
+
+```sh
+bash <managed>/Results/full_social_gate.sh
+<managed>/Packages/venv/bin/python <managed>/Results/packaged_social_smoke.py
+<managed>/Packages/venv/bin/python <managed>/Results/live_social_sources.py
+```
+
+The first wrapper runs default `scripts/verify-postgres-local.sh` without focused
+selection, preserving source/clean checks before and after and teeing all output.
+Reproduction of live probe: use a fresh installed exact source, refuse an existing
+probe DB, bootstrap only synthetic local owner/catalog AAPL, real create_app and
+authenticated CSRF prepare-social for each original vendor; owner-load full
+stored payload, compare entire manifest/hash/identity, replay eligible posts and
+reuse only ready sources. Keep failed feed unavailable and assert no runs.
+Scripts/cache/DB/full posts remain private managed artifacts, never cloud content.
+
+### Current in-app report and decision UX audit
+
+Current audit run, source f7bca47, in-app browser, isolated localhost8019;
+desktop1280×720 and narrow390×844. Explicit synthetic prices and bilingual fake
+graph, real owner auth/API/jobworker/report compiler/storage. The25-second fake
+graph delay is only to capture running UI; not original-role/latency proof.
+Owner port8000/private runtime untouched, no vendor/model call or approval action.
+Each numbered JPEG below was saved and its exact saved bytes visually inspected.
+
+| Step | Observed health | Accepted local Results screenshots |
+| --- | --- | --- |
+| 1. Owner login | PASS visible entry; synthetic owner only | ux-01-login.jpg |
+| 2. Market → Analyze | PASS primary research entry; source identities still technical | ux-02-market.jpg |
+| 3. Prepare sources | UNVERIFIED professional UX: metadata/prose dominates fold, saved-source choice requires inspector, repeated coverage blocks | ux-03-setup-top.jpg, ux-04-source-unavailable.jpg, ux-05-saved-source.jpg |
+| 4. Running analysis | PASS actual worker status/cancel display with no fake percentage; synthetic graph only | ux-06-processing.jpg |
+| 5. Report summary | PASS saved EN/VI switching/unchanged198.02; UNVERIFIED professional UX: conclusions below fold, narrow reading width and duplicate technical footer controls | ux-07-report-mobile.jpg, ux-08-summary-mobile.jpg, ux-09-summary-vi-desktop.jpg |
+| 6. Linked decision | PASS exact selected decision/read-only; UNVERIFIED professional UX: repeated header/report blocks and review readiness far down | ux-10-decision-desktop.jpg, ux-11-decision-review.jpg, ux-12-decision-actions.jpg |
+
+Latest linked decision shows REVIEW, explicit absent portfolio and missing risk
+checks. Approval is disabled; no approve/reject mutation was exercised. VI report
+uses the saved VI summary/thesis/risks/invalidation/horizon, not live translation.
+The advanced original evidence excerpts remain their source language; do not
+misreport the main VI summary as English-only. Console error/warn list empty.
+Screenshots/AX structure do not prove WCAG/keyboard/contrast compliance, all
+loading/error/stale states, actual finance/editorial quality or owner acceptance.
+
+Next implementation priorities grounded in the existing web-design-spec:
+
+1. Compact preparation → analysis → review hierarchy; clearly visible primary
+   task, independent real source statuses, straightforward saved-source selection.
+2. Report headline/source coverage/readiness and concise summary first; retain
+   material missing-source warnings, full financial detail and technical drilldowns.
+3. Review readiness visible before the long report, exact absent portfolio/risk
+   explanations; backend still solely authorizes, no policy/consent bypass.
+4. Desktop/narrow EN/VI browser recheck with real API fixture after each change;
+   full original graph and fresh live BTC/AAPL gates remain separate and open.
+
+Temporary audit tabs closed; task-owned server63407 terminal0 with joined worker
+and disposed private QA database. All listed current handles are terminal. Managed
+outputs retained; no unrelated container/artifact cleanup or public deployment.
