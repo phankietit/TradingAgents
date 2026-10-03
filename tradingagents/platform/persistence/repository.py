@@ -569,8 +569,8 @@ class PlatformRepository:
         if row is None:
             raise ValueError("decision not found")
         decision = DecisionCandidate.model_validate(row.payload)
-        if contract.to_status is DecisionStatus.APPROVED:
-            self._validate_analysis_completion(decision, contract.occurred_at)
+        self._validate_analysis_completion(decision, contract.occurred_at,
+            approval=contract.to_status is DecisionStatus.APPROVED)
         existing = self.session.get(DecisionLifecycleEventRow, contract.event_id)
         if existing:
             if not _same_payload(existing, contract):
@@ -609,7 +609,7 @@ class PlatformRepository:
         self.session.flush()
         return contract
 
-    def _validate_analysis_completion(self, decision, occurred_at) -> None:
+    def _validate_analysis_completion(self, decision, occurred_at, *, approval: bool) -> None:
         message = "approval requires a successfully completed analysis run"
         from tradingagents.platform.analysis.continuation import _db_utc
         from tradingagents.platform.analysis.linked_results import read_linked_completion
@@ -618,13 +618,19 @@ class PlatformRepository:
 
         completion = self.session.scalar(select(ResearchExecutionCompletionRow).where(
             ResearchExecutionCompletionRow.decision_id == decision.decision_id))
+        if completion is not None and occurred_at < _db_utc(completion.completed_at):
+            raise InvalidStateTransition("decision event cannot precede linked completion")
+        if not approval:
+            # Review/rejection grants no investment authority, but must not
+            # append history that the verified completion reader will reject.
+            return
         run = self.get_run(decision.run_id, decision.owner_id)
         if completion is None:
             if run is None or run.status is not RunStatus.SUCCEEDED:
                 raise InvalidStateTransition(message)
             return  # Existing ordinary successful-run authority is unchanged.
         if (run is None or run.status not in {RunStatus.FAILED, RunStatus.CANCELLED}
-                or self.artifact_store is None or occurred_at < _db_utc(completion.completed_at)):
+                or self.artifact_store is None):
             raise InvalidStateTransition(message)
         verified = read_linked_completion(session=self.session, artifact_store=self.artifact_store,
             owner_id=decision.owner_id, execution_id=completion.execution_id)

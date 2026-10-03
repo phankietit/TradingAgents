@@ -156,3 +156,65 @@ def test_linked_human_review_and_rejection_preserve_immutable_candidate(ready_li
         PlatformRepository(session, artifact_store=publisher.artifact_store).add_decision_event(
             start.model_copy(update={"event_id": uuid4(), "occurred_at": start.occurred_at + timedelta(days=1)}))
     assert history(database) == before
+
+
+@pytest.mark.parametrize("target", ["review", "rejected", "expired"])
+def test_linked_nonapproval_event_cannot_precede_completion(ready_linked, target):
+    from tradingagents.contracts import DecisionStatus
+
+    values, _, candidate = ready_linked
+    database, _, _, _, publisher, context, _, _, _ = values
+    action = _approval(candidate).model_copy(update={
+        "to_status": DecisionStatus(target),
+        "occurred_at": context._lease.started_at - timedelta(seconds=1)})
+    with database.session() as session, pytest.raises(ValueError):
+        PlatformRepository(session, artifact_store=publisher.artifact_store).add_decision_event(action)
+    with database.session() as session:
+        repository = PlatformRepository(session)
+        assert repository.list_decision_events(candidate.decision_id, candidate.owner_id) == ()
+        assert session.get(DecisionRow, candidate.decision_id).status == candidate.status.value
+        assert read_linked_completion(session=session, artifact_store=publisher.artifact_store,
+            owner_id=context.owner_id, execution_id=context.execution_id) is not None
+
+
+@pytest.mark.parametrize("target", ["review", "rejected", "expired"])
+def test_linked_nonapproval_at_completion_boundary_is_readable(ready_linked, target):
+    from tradingagents.contracts import DecisionStatus
+
+    values, _, candidate = ready_linked
+    database, _, _, _, publisher, context, _, _, _ = values
+    action = _approval(candidate).model_copy(update={
+        "to_status": DecisionStatus(target), "occurred_at": context._lease.started_at})
+    with database.session() as session:
+        repository = PlatformRepository(session, artifact_store=publisher.artifact_store)
+        assert repository.add_decision_event(action) == action
+        assert repository.add_decision_event(action) == action
+        assert len(repository.list_decision_events(candidate.decision_id, candidate.owner_id)) == 1
+        assert read_linked_completion(session=session, artifact_store=publisher.artifact_store,
+            owner_id=context.owner_id, execution_id=context.execution_id) is not None
+
+
+@pytest.mark.parametrize("target", ["review", "rejected", "expired"])
+def test_linked_api_clock_before_completion_refuses_without_poisoning_history(ready_linked, target):
+    values, _, candidate = ready_linked
+    database, _, _, _, publisher, context, _, _, _ = values
+    api_now = [context._lease.started_at - timedelta(seconds=1)]
+    settings = ApiSettings(database_url=database.engine.url.render_as_string(hide_password=False),
+        artifact_root=publisher.artifact_store.root, allowed_origin="http://testserver",
+        secure_cookies=False, clock=lambda: api_now[0])
+    path = f"/api/v1/decisions/{candidate.decision_id}"
+    with TestClient(create_app(settings)) as client:
+        assert client.post("/api/v1/auth/login", json={
+            "email": "consent-fixture@example.test", "password": PASSWORD},
+            headers={"Origin": "http://testserver"}).status_code == 200
+        headers = {"Origin": "http://testserver", "X-CSRF-Token": client.cookies["ta_csrf"]}
+        action = {"review": "review", "rejected": "reject", "expired": "expire"}[target]
+        response = client.post(path + "/transitions", json={**body(candidate), "action": action}, headers=headers)
+        assert response.status_code == 409
+        state = client.get(path + "/state").json()
+        assert state["current_status"] == "ready_for_approval" and state["events"] == []
+        api_now[0] = context._lease.started_at
+        assert client.post(path + "/transitions", json=body(candidate), headers=headers).status_code == 200
+    with database.session() as session:
+        assert read_linked_completion(session=session, artifact_store=publisher.artifact_store,
+            owner_id=context.owner_id, execution_id=context.execution_id) is not None

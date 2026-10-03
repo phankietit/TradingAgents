@@ -103,6 +103,11 @@ decision transition route can now approve a linked candidate only after full
 completion-receipt/source integrity, original deterministic risk and human-owner
 policy/lifecycle validation; no failed/cancelled root is relabelled. Candidate
 payload/hash is immutable, current indexed status must match append-only events.
+All linked lifecycle events are checked against completion time before any write
+or idempotent acknowledgement, including review/reject/expire. The boundary is
+inclusive; later events must still strictly follow existing lifecycle history.
+Non-approval actions grant no investment authority; full approval/source/risk
+validation remains separate and mandatory for approval.
 This uses existing tables and needs no additional migration. Follow the
 same backup/owner rollout gates; schema reversal tests use disposable empty tables.
 

@@ -49,6 +49,7 @@ class NativeFixtureEngine:
         options = []
         repairs = []
         invalid_translation = self.config.get("_fixture_invalid_translation", False)
+        rating = self.config.get("_fixture_rating", "Hold")
         interrupted_node = self.config.get("_fixture_interrupt_after")
         original_propagate = trading_graph.TradingAgentsGraph.propagate_snapshots
         original_client = trading_graph.create_llm_client
@@ -169,10 +170,10 @@ class NativeFixtureEngine:
                 values = {
                     "SentimentReport": {"overall_band": "Mixed", "overall_score": 5,
                         "confidence": "low", "narrative": "Synthetic limited source sentiment."},
-                    "ResearchPlan": {"recommendation": "Hold", "rationale": "Snapshot evidence",
+                    "ResearchPlan": {"recommendation": rating, "rationale": "Snapshot evidence",
                         "strategic_actions": "Review"},
-                    "TraderProposal": {"action": "Hold", "reasoning": "Research only"},
-                    "PortfolioDecision": {"rating": "Hold", "executive_summary": "Research only",
+                    "TraderProposal": {"action": rating, "reasoning": "Research only"},
+                    "PortfolioDecision": {"rating": rating, "executive_summary": "Research only",
                         "investment_thesis": "Snapshot thesis", "confidence": .5,
                         "risks": ["Coverage risk"], "invalidation_conditions": ["New information"],
                         "evidence_claims": claims, "time_horizon": "3–6 months"},

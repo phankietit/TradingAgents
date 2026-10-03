@@ -722,8 +722,10 @@ completed research while preserving the original FAILED/CANCELLED run. Approval
 still requires the exact human owner, source bytes/evidence, deterministic risk
 replay, policy version and append-only lifecycle; a receipt alone grants no
 approval. Candidate payload/hash remains immutable, with current status projected
-from lifecycle events. Missing/corrupt receipt or a pre-completion approval time
-is refused. Ordinary successful-run approval is unchanged. Multi-continuation,
+from lifecycle events. Missing/corrupt approval receipt is refused. Every linked
+lifecycle event, including review/reject/expire, is rejected before writing if
+its timestamp precedes completion; a refusal does not poison readable history.
+Ordinary successful-run approval is unchanged. Multi-continuation,
 all late-stop/crash/expiry boundaries and the default continuation API/UI journey
 remain unfinished; local API tests are not live/browser acceptance.
 

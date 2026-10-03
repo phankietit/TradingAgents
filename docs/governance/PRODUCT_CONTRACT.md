@@ -84,6 +84,10 @@ bytes/evidence, deterministic risk, exact policy and append-only lifecycle befor
 approval. A stage note, dispatched child, missing/corrupt receipt or model prose
 cannot provide completion authority. Default continuation dispatch remains off,
 and operational/live acceptance is still incomplete.
+Review/reject/expire timestamps must also be at or after linked completion;
+reject invalid timing before appending history, rather than commit an event that
+the integrity reader cannot subsequently validate. This grants no new approval
+or execution authority and does not change ordinary successful-run behavior.
 
 ## 4. Asset-Specific Contracts
 
