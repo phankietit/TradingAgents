@@ -2,6 +2,36 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Native portfolio → authenticated approval / lifecycle timing 2026-10-03:**
+tested source `c04b23e3bf88a71b594c57fdb7db3b0e07a132f8`. Reproduced actual
+writer/reader inconsistency: linked review could be written before completion,
+then rejected by the integrity reader. All linked lifecycle transitions now
+check completion time before write/cached ACK; equality allowed, later history
+ordering still strict. Ordinary non-approval behavior and approval/risk/owner
+gates unchanged, no policy override or history rewrite.
+Eight added native spawned-child cases retain 4 analysts and 2 research/risk
+rounds, transfer actual fixture owner book/policy/risk bytes into the terminal
+original context, and compare interrupted prefix+restored suffix/full result
+to the original uninterrupted native baseline. EN/VI/bilingual valid output
+goes through existing authenticated API login/CSRF/approve: exactly one lifecycle
+event, immutable ready candidate and old FAILED root/job/history retained.
+Original policy violation (owner target .95) or invalid VI remains REVIEW,
+weight withheld, API409; no model/risk/translation gate cut. Local SQLite/synthetic
+SDK proof only, not live finance or native PostgreSQL end-to-end acceptance.
+Final focused **433 PASS**, 2 missing-URL PG skips, 167 warnings, 331.21s.
+Full clean unchanged c04b23e disposable PG gate **2,606 +88 subtests PASS**,
+2 optional-provider skips, 307 warnings, 653.63s, terminal0. Ruff/pip-check/diff/
+templates PASS; exact tracked-archive fresh noneditable install/site-packages
+imports, scoped PG DDL0010:head and owned SQLite head0016/metadata parity PASS.
+Managed evidence completed/exit0 and retained; only current labelled PG removed.
+Initial real timing FAIL plus two test-author/schema failures are retained in
+receipt20261003, not hidden or mistaken for financial acceptance.
+Next: actual native PostgreSQL approval and remaining stop/cancel/expiry/ACK
+reconciliation/multi-continuation, then default owner continuation API/UI journey.
+Broader ingestion/finance/VI/UX and fresh BTC/AAPL remain unverified; SEC contact
+still absent, NQ=F owner hold unchanged. No CI, provider/risk change, paid/vendor
+call, private DB migration/restart/history rewrite, merge/deploy. Goal/PR7 open.
+
 **Verified linked completion → human review/approval 2026-10-03:** tested source
 `bb738a7205aac9e6d10e455959e8c07368bfbe98`. Existing authenticated decision
 transition route accepts only a fully verified linked completion, without

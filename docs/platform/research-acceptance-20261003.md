@@ -1,7 +1,7 @@
 # Research acceptance checkpoint — 2026-10-03
 
-Latest tested source `bb738a7205aac9e6d10e455959e8c07368bfbe98`: see the
-appended **Verified linked-completion human review/approval** section. Earlier
+Latest tested source `c04b23e3bf88a71b594c57fdb7db3b0e07a132f8`: see the
+appended **Native portfolio approval and linked lifecycle timing** section. Earlier
 incremental evidence and failures below retain their original source scope.
 The full private-platform goal remains incomplete; no live-finance or browser
 acceptance follows from the local approval gate.
@@ -1020,4 +1020,54 @@ approval and remaining recovery/reconciliation boundaries before default owner
 API/UI activation, then separately authorized live acceptance. This removes
 the earlier linked-approval root-SUCCEEDED restriction only for fully verified
 completion evidence; it does not remove any financial or human-approval gate.
+Full R01–R14 goal remains active; Draft PR7 remains draft.
+
+## Native portfolio approval and linked lifecycle timing
+
+Source `c04b23e3bf88a71b594c57fdb7db3b0e07a132f8`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`.
+Production change is the shared linked lifecycle timestamp check before any
+write/idempotent ACK. Ordinary non-approval behavior is unchanged; full human
+approval/source/risk/completion gates are retained. No new migration, provider,
+risk limit, model call or default continuation dispatch activation.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Writer/reader timing counterexample | FAIL | Handle65549 terminal1:1failed/12deselected/1warning/3.99s; real linked review at completion minus1s did not raise. Existing reader requires all events at/after completion, so this admitted unreadable history. Fixed before append/ACK, not by weakening reader or rewriting old events |
+| Timing boundary/rollback | PASS | Review/reject/expire before completion each refuse with zero lifecycle events and unchanged indexed status; receipt still readable. Exact boundary each accepted/idempotent with one event. API clock before completion returns409, current ready projection/empty history retained; after boundary approval succeeds |
+| Initial ordinary/linked regression | PASS | Handle49612 terminal0:39PASS/2missingURL PG skips/16warnings/20.58s; linked API and existing ordinary event/lifecycle/API behavior |
+| Initial native fixture assertion | FAIL | Handle61623 terminal1:1failed/1passed/30deselected/10warnings/34.12s. English native portfolio→approval already passed; policy-fail assertion incorrectly used PolicyCheck.status instead of actual result field. Corrected fixture field, retained actual FAIL requirement; no policy/graph weakening |
+| Initial clock API fixture schema | FAIL | Handle71829 terminal1:1failed/6passed/36deselected/7warnings/17.93s. Fixture sent unsupported to_status, correctly received422; fixed to existing action(review/reject/expire) schema, no API schema change |
+| Intermediate new matrix | PASS | Handle27357 terminal0:17PASS/36deselected/49warnings/75.34s; eight native portfolio/policy/language cases plus nine timing/API cases. Predates the strengthened actual native-output→authenticated API helper; not final-source acceptance |
+| Native original portfolio context | PASS | Eight added real spawned original child/AnalysisEngine/recorder/native graph cases, SQLite owner book with two holdings, original policy and actual stored risk sources. Failed root after durable market pending-write ACK loss; authenticated continuation/lease/dispatch, terminal original loader, exact book/policy/risk transfer, retained allowance/usage and old checkpoint bytes. No fresh live fallback |
+| Original graph not cut | PASS | All 4 analysts and 2 research/risk rounds retained. Prefix+suffix actual downstream prompt trace and full published result equal uninterrupted native baseline; explicit STAGES and two Bull/Aggressive visits asserted. Child PID changes, restored SDK clients close and children reaped; old root/job/event/checkpoint history unchanged. Synthetic SDK response patch forbids HTTP send, not a live-provider attestation |
+| Native output→authenticated approval | PASS | Valid EN/VI/bilingual candidate uses original owner target .3/current .2 and identical seeded RiskEngine checks. The actual committed native result—not a separately seeded publisher output—is read through TestClient login/CSRF/existing transitions. Two identical approvals return200 with one event/current approved, immutable ready candidate. Verified completion remains readable after approval |
+| Invalid output/policy cannot approve | PASS | Original owner request .95 violates unchanged position/turnover policy; candidate REVIEW, target withheld and actual FAIL checks retained. Invalid VI/repair still REVIEW. All five native negative variants remain review/zero events; API409 on repeated approval, direct ready transition refused. No model weight or prose override |
+| Final focused/native/legacy suite | PASS | Handle12301 terminal0:433PASS/2missingURL PG skips/167warnings/331.21s. Seven-file command below; all native recorder/spawn and supervised original-graph checkpoint regression plus linked/ordinary lifecycle/risk/API tests. Source unchanged during gate; import I001 mechanically corrected before start |
+| Full clean exact-source PostgreSQL | PASS | Handle41705 terminal0:2,606 tests +88 subtests, 2optional-provider skips,307warnings,653.63s. Clean unchanged c04b23e throughout helper; Ruff/pip-check/diff PASS. Actual PG existing admission/approval/concurrent writers/schema cases run, but eight new native+API cases specifically use SQLite—not combined native PG proof |
+| Fresh exact tracked install | PASS | Handle26214 terminal0:Git archive c04b23e → owned Build, fresh Packages/venv, noneditable absolute Build[platform] install with managed per-command TMPDIR/PIP_CACHE_DIR. No private env/runtime copy |
+| Packaged imports/schema | PASS | Handle36404 terminal0:outside-source Results/clean_install_smoke.py asserts module origins inside fresh venv site-packages for package/CLI/API/worker/report/repository/linked-results/0016. Scoped packaged PG offlineDDL0010:head, owned fresh SQLite base→head0016/full metadata and named constraints parity, pip-check PASS. Known full-base offlineDDL0007 limitation unchanged/not claimed |
+| Storage/cleanup | PASS | Managed `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T030539Z-46140` completed/exit0 after all handles terminal, retained on verified external SSD. Helper removed only labelled ta-research-qa-1790997718-50683; older exited QA container untouched |
+| Runtime/dependency/scanner scope | UNVERIFIED | Full project Python3.14.7/macOS26.5.2 arm64, langgraph1.2.12/core1.6.5/openai1.6.6/pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Fresh imports tradingagents0.5.0/langgraph1.2.12/core1.6.6/openai1.6.7/pydantic2.13.5/SQLAlchemy2.1.3/Alembic1.20.0. Not a full fresh-dependency suite, lock or Python matrix; gitleaks/detect-secrets unavailable. Missing langchain_aws and unset live DeepSeek key remain skips |
+| Recovery/activation/browser | UNVERIFIED | Actual native PostgreSQL portfolio approval, full stop/cancel/expiry/transport/crash/ACK reconciliation and multi-continuation remain open. Default API/worker/CLI continuation dispatch remains off; no private DB migration/restart/browser journey or default UI activation |
+| Financial/VI/product/live | UNVERIFIED | Native mechanics/synthetic translation are not economic accuracy/source-entailment, editorial, investment suitability or browser/operational UX acceptance. Broader ingestion and fresh live BTC/AAPL remain open; no paid/provider call or old private-history rewrite. SEC contact presence-only recheck false |
+| NQ=F | BLOCKED | Owner hold pending active-contract/roll metadata unchanged; no provider/substitute added |
+
+Initial timing65549:
+`.venv/bin/pytest -q tests/test_linked_approval.py -k nonapproval_event --disable-warnings -x`.
+Intermediate matrix27357:
+`.venv/bin/pytest -q tests/test_linked_approval.py tests/test_native_recorder_spawn.py -k 'nonapproval or api_clock or linked_portfolio' --disable-warnings -x --tb=short`.
+Final focused12301:
+`.venv/bin/pytest -q tests/test_linked_approval.py tests/test_native_recorder_spawn.py tests/test_supervised_native_graph.py tests/test_decision_event_persistence.py tests/test_decision_lifecycle.py tests/test_risk_provenance.py tests/test_decision_api.py --disable-warnings -x --tb=short`.
+All use per-command TMPDIR below the current managed run. Full41705:
+`TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T030539Z-46140/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`.
+Static precommit Ruff whole repo/pip-check/diff/Ruby issue-template YAML PASS.
+
+README/ProductContract/persistence document writer-side timing semantics in the
+source commit. CI remains disabled_manually. No risk/provider/model/endpoint
+change, private DB migration/restart/history rewrite, AI/vendor call, broker
+action, main merge or deployment. Next characterize actual native PostgreSQL
+approval and remaining recovery/reconciliation boundaries before default owner
+API/UI activation, then separately authorized live/economic/editorial acceptance.
 Full R01–R14 goal remains active; Draft PR7 remains draft.
