@@ -34,6 +34,15 @@ Freshness must use the observation period as well as vintage/retrieval time;
 missing, stale, malformed and inaccessible series cannot become valid coverage.
 This prerequisite does not activate web ingestion, historical snapshot backdating,
 new providers, model calls or decision authority; API/tool/UI acceptance is separate.
+The snapshot-only macro path admits validated FRED collections to the
+news analyst, never as headlines/social/company statements. Require full
+collection/manifest parity before model construction, read-only full-history
+paging, and source-bound native-unit/period/vintage facts. Application-owned
+complete EN/VI statements must distinguish native levels, native-unit differences
+and arithmetic percentage changes; missing/invalid operands stay unavailable.
+Macro-only input must disclose absent headline coverage. This enables no live
+acquisition, does not prove exhaustive macro/news or semantic investment quality,
+and changes no graph role, repair allowance, deterministic policy or human approval.
 NQ=F is the owner-selected reference; live acceptance is BLOCKED until eligible
 active-contract/roll data exists. No substitute source has been approved.
 

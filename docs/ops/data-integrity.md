@@ -74,8 +74,23 @@ sets snapshot `as_of`; no historical backdating or previous snapshot rewrite.
 Load revalidates full collection and complete reconstructed manifest parity,
 owner access, hash, artifact kind/media and cutoff/freshness. Artifact write
 failure rolls back metadata; corrupt bytes refuse. No new DB schema is needed.
-Macro analyst admission remains disabled pending canonical fact/tool replay,
-authenticated preparation API/UI and source-coverage/publication warnings.
+Validated stored macro snapshots are admitted only to the news analyst. The
+owner loader rechecks the repository's full instrument identity and immutable
+storage provenance; the engine compares full request identity before constructing
+a graph/client. Collection/manifest parity and hash checks alone do not authenticate
+a vendor or establish identity from an instrument UUID.
+Two read-only tools page all observations and compare explicit period labels.
+Facts bind series, native units/frequency/seasonal adjustment, operands and vintage;
+missing operands, nonpositive percentage-change denominators and nonfinite results
+stay unavailable. No interpolation, literal operands or inferred economic rates.
+Latest-only prompt/catalog projections do not truncate retained/tool-accessible
+history. Application-owned full EN/VI statements distinguish native levels,
+native-unit differences (percentage points for Percent) and arithmetic percent
+changes with an explicit denominator. Existing bounded financial/translation
+repair and publication/risk/approval gates remain unchanged. Coverage warnings
+distinguish macro from headlines, and observation labels from release times.
+Bounded whole-acquisition transport/supervision and authenticated preparation
+API/UI remain unfinished; snapshot admission does not activate web acquisition.
 Local SQLite/PostgreSQL fixtures are not live FRED, financial or browser proof.
 
 ## Failure Semantics

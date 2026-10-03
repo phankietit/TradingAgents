@@ -444,9 +444,14 @@ missing values, and pin metadata/values to the previous fully elapsed Chicago
 vintage day. Native-frequency observation freshness is checked separately from
 vintage/retrieval freshness. This day-level pin is not an exact release time or
 complete macro coverage; retrieval is never backdated. Failure snapshots remain
-auditable but ineligible. Macro is still excluded from analyst source admission.
-Bounded whole-acquisition supervision, fact/tool replay, authenticated API and
-web preparation remain unfinished; see [data integrity](docs/ops/data-integrity.md).
+auditable but ineligible. Validated stored FRED snapshots can now join the news
+analyst through read-only full-history paging and exact native-unit, observation-
+label, denominator and vintage-bound facts. Application-owned EN/VI statements
+keep these meanings intact without changing research/debate roles, repairs,
+deterministic risk or human approval. Macro-only input explicitly lacks headlines.
+This is snapshot-only admission, not web acquisition or exhaustive macro coverage.
+Bounded whole-acquisition supervision and authenticated API/web preparation remain
+unfinished; see [data integrity](docs/ops/data-integrity.md).
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked

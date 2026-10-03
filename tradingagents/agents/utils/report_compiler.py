@@ -1,7 +1,7 @@
 """Resolve report quantities from immutable facts, without changing conclusions."""
 
 import re
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, SnapshotReportDraft
 from tradingagents.agents.utils.fundamental_statements import (
@@ -46,6 +46,7 @@ def compile_report(raw, facts):
     statement_keys = set()
     relation_failures = []
     fundamental_failures = []
+    macro_failures = []
     for binding in bindings:
         key = binding["key"]
         source = facts.get(binding["snapshot_id"])
@@ -54,14 +55,26 @@ def compile_report(raw, facts):
             raise PublicationValidationError(["quantity_binding_duplicate"])
         if value is None:
             raise PublicationValidationError(["quantity_binding_unknown_fact"])
-        number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
+        try:
+            number = Decimal(str(value)).quantize(Decimal(1).scaleb(-binding["decimal_places"]))
+        except InvalidOperation:
+            raise PublicationValidationError(["numeric_claim_not_supported"], binding_keys=(key,)) from None
         if not number.is_finite():
             raise PublicationValidationError(["numeric_claim_not_supported"])
         values[key] = format(number, "f")
-        if not is_percentage_fact(binding["fact_id"]) and re.search(
+        macro = binding["fact_id"].startswith("fred.")
+        if not macro and not is_percentage_fact(binding["fact_id"]) and re.search(
                 re.escape("{{" + key + "}}") + r"\s*(?:%|percent\b|per\s+cent\b)", prose, re.I):
             raise PublicationValidationError(["quantity_binding_unit_mismatch"], binding_keys=(key,))
-        if is_percentage_fact(binding["fact_id"]) or is_fundamental_fact(binding["fact_id"]):
+        if macro:
+            statement_keys.add(key)
+            if non_standalone_anchors(prose, ["{{" + key + "}}"]):
+                macro_failures.append(key)
+            try:
+                values[key] = source.statement(binding["fact_id"], values[key])
+            except (AttributeError, ValueError):
+                raise PublicationValidationError(["macro_statement_unsupported"], binding_keys=(key,)) from None
+        elif is_percentage_fact(binding["fact_id"]) or is_fundamental_fact(binding["fact_id"]):
             statement_keys.add(key)
             # Complete owned statements prevent changing a percentage's
             # denominator or an accounting fact's metric, period or units.
@@ -82,6 +95,8 @@ def compile_report(raw, facts):
         raise PublicationValidationError(["percentage_statement_requires_standalone_anchor"], binding_keys=relation_failures)
     if fundamental_failures:
         raise PublicationValidationError(["fundamental_statement_requires_standalone_anchor"], binding_keys=fundamental_failures)
+    if macro_failures:
+        raise PublicationValidationError(["macro_statement_requires_standalone_anchor"], binding_keys=macro_failures)
     used = set()
 
     def render(value):
@@ -136,6 +151,16 @@ interpretations and opposing evidence in separate sentences. A
 fundamental_statement_requires_standalone_anchor failure means move the SEC
 anchor into its own complete sentence; do not remove the underlying evidence.
 Other non-percentage price/volume bindings remain inline numeric anchors.
+FRED MACRO STATEMENTS: Every fred.* binding MUST occupy a complete standalone
+sentence '{{QA}}.' without surrounding units, series, observation period,
+vintage or comparison words. The application owns the full native-unit/period/
+vintage statement in both languages. Native levels are NOT automatically
+inflation or growth rates. difference uses native units (percentage points for
+Percent); pct_change uses the explicit reference observation as denominator,
+not a percentage-point difference or an asset return. Use exact paginated
+FRED fact IDs; missing operands are unavailable, never zero or an estimate.
+A macro_statement_requires_standalone_anchor failure means move the anchor
+into its own sentence, preserving its interpretation/opposing evidence nearby.
 Keys must match Q[A-Z]{1,5}: uppercase letters only, e.g. QA, QZ, QAA, QAB.
 For close C and reference R, price premium over R is (C/R - 1)*100,
 but a move from C to R is (R/C - 1)*100. Never reuse the former for the latter.

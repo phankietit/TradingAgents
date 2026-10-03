@@ -10,6 +10,8 @@ from collections import Counter
 from contextlib import suppress
 from decimal import Decimal, InvalidOperation
 
+from tradingagents.agents.utils.statement_anchors import non_standalone_anchors
+
 UUID_PATTERN = re.compile(r"\b[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\b", re.I)
 # Match digits in indicator names as well as prose. Keep dates and numeric
 # ranges intact so protecting '3-6 months' does not hide the range separator
@@ -25,7 +27,9 @@ PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_
     "percentage_statement_unsupported", "quantity_binding_unit_mismatch",
     "translation_block_mismatch", "translation_block_structure_mismatch",
     "translation_editorial_requires_review", "fundamental_statement_requires_standalone_anchor",
-    "fundamental_statement_unsupported", "translation_statement_requires_standalone_anchor"})
+    "fundamental_statement_unsupported", "translation_statement_requires_standalone_anchor",
+    "macro_statement_requires_standalone_anchor", "macro_statement_unsupported",
+    "macro_statement_source_unavailable"})
 
 
 class PublicationValidationError(ValueError):
@@ -47,6 +51,16 @@ def validate_canonical_report(decision, fact_sources, snapshot_ids):
                 catalog[str(claim.snapshot_id)][claim.fact_id] = source.resolve_fact(claim.fact_id)
     text = "\n".join([decision.executive_summary, decision.investment_thesis,
         *decision.risks, *decision.invalidation_conditions, decision.time_horizon or ""])
+    for claim in decision.observed_numbers:
+        if claim.fact_id.startswith("fred."):
+            source = fact_sources.get(str(claim.snapshot_id))
+            try:
+                number = format(Decimal(str(claim.value)).quantize(Decimal(1).scaleb(-claim.decimal_places)), "f")
+                statement = source.statement(claim.fact_id, number)
+                if statement not in text or non_standalone_anchors(text, [statement.removesuffix(".")]):
+                    raise ValueError()
+            except (AttributeError, InvalidOperation, ValueError):
+                raise PublicationValidationError(["macro_statement_unsupported"]) from None
     issues = scope_issues(text) + validate_numeric_claims(decision.observed_numbers, catalog)
     if unsupported_financial_numbers(text, decision.observed_numbers):
         issues.append("financial_number_requires_verified_reference")

@@ -3,6 +3,7 @@
 import os
 from copy import deepcopy
 from datetime import timedelta
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -10,7 +11,10 @@ import pytest
 from tests.test_platform_fred import NOW, collect, documents
 from tests.test_price_preparation import AAPL
 from tradingagents.contracts import DataQualityStatus
-from tradingagents.platform.analysis.snapshots import supported_snapshot_analysts
+from tradingagents.platform.analysis.snapshots import (
+    load_snapshot_context,
+    supported_snapshot_analysts,
+)
 from tradingagents.platform.artifacts import (
     ArtifactIntegrityError,
     ArtifactService,
@@ -61,7 +65,7 @@ def test_immutable_roundtrip_owner_and_temporal_identity(storage):
         manifest = writer.persist(owner_id=owner, collection=collection)
         assert writer.persist(owner_id=owner, collection=collection, snapshot_id=manifest.snapshot_id) == manifest
     assert manifest.as_of == collection.retrieved_at
-    assert supported_snapshot_analysts(manifest.dataset) == ()  # No accidental graph admission.
+    assert supported_snapshot_analysts(manifest.dataset) == ("news",)  # Explicit semantic map; full payload admission is separate.
     assert manifest.source_end == collection.vintage_available_at
     assert manifest.metadata["last_observation_date"] == "2026-10-02"
     assert manifest.metadata["availability"] == "complete_chicago_vintage_day_not_exact_release_time"
@@ -153,3 +157,20 @@ def test_artifact_failure_rolls_back_snapshot(storage, monkeypatch):
         service(session, store).persist(owner_id=owner, collection=collect(), snapshot_id=snapshot_id)
     with database.session() as session:
         assert PlatformRepository(session).get_snapshot(snapshot_id) is None
+
+
+def test_owner_context_loader_rechecks_macro_service_before_graph_admission(storage):
+    database, store, owner = storage
+    with database.session() as session:
+        writer = service(session, store)
+        manifest = writer.persist(owner_id=owner, collection=collect())
+    run = SimpleNamespace(owner_id=owner, instrument_id=AAPL.instrument_id,
+        snapshot_ids=(manifest.snapshot_id,), analysis_as_of=NOW, selected_analysts=("news",),
+        decision_inputs=SimpleNamespace(source_max_age_seconds={"news": 86400}))
+    with database.session() as session:
+        reader = service(session, store)
+        context = load_snapshot_context(reader.artifacts, run, {"news": (manifest.snapshot_id,)})
+        assert context.by_analyst["news"][0].manifest == manifest
+        run.owner_id = uuid4()
+        with pytest.raises(ValueError, match="owner"):
+            load_snapshot_context(reader.artifacts, run, {"news": (manifest.snapshot_id,)})

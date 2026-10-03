@@ -168,7 +168,7 @@ class GraphSetup:
             from tradingagents.agents.utils.report_localization import create_report_presentation
 
             workflow.add_node("Financial validation", create_financial_validation(self.deep_thinking_llm, self.snapshot_reports or {}))
-            workflow.add_node("Report presentation", create_report_presentation(self.deep_thinking_llm))
+            workflow.add_node("Report presentation", create_report_presentation(self.deep_thinking_llm, self.snapshot_reports))
             workflow.add_edge("Portfolio Manager", "Financial validation")
             workflow.add_edge("Financial validation", "Report presentation")
             workflow.add_edge("Report presentation", END)

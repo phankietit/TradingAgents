@@ -64,6 +64,23 @@ def publication_warning(snapshot_context):
             "không phải toàn bộ hồ sơ doanh nghiệp hay định giá trực tiếp. Bản đã lưu "
             "là dữ liệu ghi nhận hiện tại, không được gán ngược cho thời điểm quá khứ."
         )
+    if any(source.manifest.dataset == "macro"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "MACRO COVERAGE / PHẠM VI VĨ MÔ: Only supplied FRED series/vintages are covered. "
+            "Observation labels are not release timestamps; native levels are not inferred "
+            "inflation/growth rates or asset returns. Missing series/events are unavailable, "
+            "not neutral. / Chỉ gồm các chuỗi FRED và vintage đã cung cấp. Nhãn kỳ quan sát "
+            "không phải thời điểm công bố; mức gốc không tự trở thành tỷ lệ lạm phát, tăng "
+            "trưởng hay lợi suất tài sản. Chuỗi hoặc sự kiện chưa có dữ liệu không phải trung lập."
+        )
+        if not any(source.manifest.dataset == "news"
+                   for source in snapshot_context.by_analyst.get("news", ())):
+            warnings.append(
+                "HEADLINE COVERAGE / PHẠM VI TIN TỨC: Macro-only input provides no headline "
+                "feed or event coverage. / Dữ liệu chỉ gồm vĩ mô không cung cấp nguồn tin tức "
+                "hay phạm vi sự kiện."
+            )
     return "\n\n".join(warnings) + ("\n\n" if warnings else "")
 
 

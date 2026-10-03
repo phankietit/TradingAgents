@@ -42,8 +42,11 @@ the operational research journey and final decision-report presentation.
 R04 structured FRED acquisition/storage prerequisite is implemented separately:
 explicit series/window, pinned completed-day vintage, full observations and
 owner-scoped immutable provenance. This does not change R04's unfinished macro
-status: source admission/fact replay, bounded whole-acquisition supervision and
-authenticated API/UI ingestion still require implementation and acceptance.
+status: stored-source admission and native-unit/period/vintage fact replay now
+have full original-role/round graph fixtures, including financial validation and
+protected EN/VI statements. Bounded whole-acquisition supervision and authenticated
+API/UI ingestion still require implementation and acceptance; financial/editorial
+quality is not proven by synthetic SDK fixtures.
 Existing FRED/CLI defaults, risk limits and graph flow are unchanged; no paid or
 live-provider request follows from local fixture evidence.
 

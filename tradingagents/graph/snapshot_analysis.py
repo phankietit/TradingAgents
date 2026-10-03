@@ -13,6 +13,7 @@ from tradingagents.agents.schemas import SentimentReport, render_sentiment_repor
 from tradingagents.agents.utils.agent_utils import get_language_instruction
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
 from tradingagents.platform.analysis.fundamental_facts import SnapshotFundamentalFacts
+from tradingagents.platform.analysis.macro_facts import SnapshotMacroFacts
 from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
 
 from .analyst_execution import ANALYST_NODE_SPECS
@@ -31,6 +32,11 @@ ROLE_INSTRUCTIONS = {
         "supported by supplied sources. FRED observations require eligible release "
         "or vintage metadata; prediction-market probabilities require their own "
         "timestamped source. Missing macro or event coverage is unavailable, not neutral. "
+        "Inspect full FRED history with get_snapshot_macro; compare exact observation "
+        "labels with get_snapshot_macro_calculation. Native index/level is not a derived "
+        "inflation or growth rate; a percentage-point difference is not percent change. "
+        "Vintage availability is a conservative day boundary, not a release time. "
+        "Macro-only sources do not establish headline or event coverage. "
         "Conclude with a table of catalyst, source date, implication and uncertainty."
     ),
     "fundamentals": (
@@ -72,6 +78,8 @@ def snapshot_analyst_nodes(llm, reports):
         fundamentals = {source["snapshot_id"]: SnapshotFundamentalFacts(source)
                         for source in sources if source["provenance"]["dataset"] == "fundamentals"
                         and source["provenance"]["vendor"] == "sec_edgar"}
+        macros = {source["snapshot_id"]: SnapshotMacroFacts(source)
+                  for source in sources if source["provenance"]["dataset"] == "macro"}
 
         @tool
         def get_snapshot_candles(snapshot_id: str, offset: int = 0, limit: int = 100) -> dict:
@@ -121,10 +129,34 @@ def snapshot_analyst_nodes(llm, reports):
             """
             return fundamentals[snapshot_id].page(offset=offset, limit=limit)
 
+        @tool
+        def get_snapshot_macro(snapshot_id: str, offset: int = 0, limit: int = 100) -> dict:
+            """Page full immutable FRED observations, including missing rows.
+
+            Observation labels are not release dates. Native units/frequency,
+            revision vintage and exact fact IDs are retained. Follow next_offset.
+            """
+            return macros[snapshot_id].page(offset=offset, limit=limit)
+
+        @tool
+        def get_snapshot_macro_calculation(snapshot_id: str, operation: str,
+                                          left_period: str, right_period: str) -> dict:
+            """Compare exact FRED observation labels, never inferred/literal operands.
+
+            difference=A-B in native units (percentage points for Percent).
+            pct_change=(A/B-1)*100 with B>0, an arithmetic comparison, not
+            an automatically inferred inflation statistic or asset return.
+            Missing operands return unavailable, never zero. Use returned fact_id.
+            """
+            return macros[snapshot_id].calculation(operation=operation,
+                left_period=left_period, right_period=right_period)
+
         tools = ([get_snapshot_candles, get_snapshot_indicator, get_snapshot_return,
                   get_snapshot_calculation] if markets else [])
         if fundamentals:
             tools.append(get_snapshot_fundamentals)
+        if macros:
+            tools.extend([get_snapshot_macro, get_snapshot_macro_calculation])
         by_name = {item.name: item for item in tools}
         model = llm.bind_tools(tools) if tools else llm
         sentiment_model = bind_structured(llm, SentimentReport, "Sentiment Analyst") if role == "social" else None
@@ -133,7 +165,9 @@ def snapshot_analyst_nodes(llm, reports):
         supplied = [{**source, "data": markets[source["snapshot_id"]].summary()}
                     if source["snapshot_id"] in markets else
                     {**source, "data": fundamentals[source["snapshot_id"]].summary()}
-                    if source["snapshot_id"] in fundamentals else source for source in sources]
+                    if source["snapshot_id"] in fundamentals else
+                    {**source, "data": macros[source["snapshot_id"]].summary()}
+                    if source["snapshot_id"] in macros else source for source in sources]
 
         def analyze(state):
             messages = [

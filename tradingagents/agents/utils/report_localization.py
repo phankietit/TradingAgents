@@ -131,11 +131,23 @@ def reader_report(decision):
     return "\n\n".join(parts)
 
 
-def localize_report(llm, decision, diagnostics):
+def localize_report(llm, decision, diagnostics, *, fact_sources=None):
     english = reader_report(decision)
     statements = {}
     for observed in decision.observed_numbers:
         number = format(Decimal(str(observed.value)).quantize(Decimal(1).scaleb(-observed.decimal_places)), "f")
+        if observed.fact_id.startswith("fred."):
+            source = (fact_sources or {}).get(str(observed.snapshot_id))
+            if source is None:
+                raise PublicationValidationError(["macro_statement_source_unavailable"])
+            try:
+                en = source.statement(observed.fact_id, number)
+                if en not in english or non_standalone_anchors(english, [en.removesuffix(".")]):
+                    raise ValueError()
+                statements[en] = source.statement(observed.fact_id, number, vi=True)
+            except (AttributeError, ValueError):
+                raise PublicationValidationError(["macro_statement_unsupported"]) from None
+            continue
         try:
             for renderer in (percentage_statement, fundamental_statement):
                 en = renderer(observed.fact_id, number)
@@ -244,7 +256,12 @@ def localize_report(llm, decision, diagnostics):
     return accepted
 
 
-def create_report_presentation(llm):
+def create_report_presentation(llm, reports=None):
+    from tradingagents.platform.analysis.macro_facts import SnapshotMacroFacts
+
+    macro_sources = {source["snapshot_id"]: SnapshotMacroFacts(source)
+        for report in (reports or {}).values() for source in json.loads(report)
+        if source["provenance"]["dataset"] == "macro"}
     def present(state):
         from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
         from tradingagents.dataflows.config import get_config
@@ -256,7 +273,7 @@ def create_report_presentation(llm):
         diagnostics = list(state.get("structured_diagnostics", []))
         result = canonical.model_dump(mode="json")
         if get_config().get("output_language") in ("English and Vietnamese", "Vietnamese"):
-            localized = localize_report(llm, canonical, diagnostics)
+            localized = localize_report(llm, canonical, diagnostics, fact_sources=macro_sources)
             if localized is not None:
                 result["localized_report"] = localized.model_dump()
         return {"structured_decision": result, "structured_diagnostics": diagnostics}
