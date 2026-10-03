@@ -2,6 +2,39 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R04 stored macro → original research/report flow 2026-10-03:** tested clean
+source `c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9`. Stored eligible FRED sources
+now join the existing news analyst, never as headlines/social/company statements.
+Owner loader and engine recheck full instrument identity before graph/client
+construction; collection/manifest/hash/PIT checks remain. Read-only full-history
+paging and exact native-unit/period/denominator/vintage facts preserve missing
+versus zero. Owned full EN/VI statements prevent unit/meaning/anchor substitution.
+No original role/round, financial review, bounded repair, risk or approval cut.
+12 original full-graph fixtures cover EN/VI/bilingual, invalid binding, macro-only
+and independent macro+headline sources. Synthetic SDK/data, not live finance/MT.
+Final precommit focused96437 **273 PASS**,40.08s; full unchanged clean c7fd046
+handle81897 **2,841 +88 subtests PASS**,2 optional-provider skips,442warnings,
+1262.32s,terminal0. Fresh tracked noneditable install37299, packaged smoke65695
+and three independent packaged import entrypoints22850 terminal0. Owner macro
+load/fact/report/protected localization, SQLite head0017/ORM parity and scoped
+PG DDL0010:head PASS; not full fresh-dependency/Python matrix or macro-specific
+native/financial/editorial/browser acceptance. Ruff/pip-check/diff/templates PASS.
+Managed20261003T062502Z-11211 completed/exit0 after all handles terminal, retained;
+helper removed only its labelled PG; old exited QA container untouched.
+Receipt20261003 section **Stored macro admission and protected report flow**
+contains commands, earlier failed diagnostics and exact remaining scope.
+Next: bounded FRED transport/whole-acquisition supervision, authenticated API/web
+preparation and multi-source selection without replacing headline/macro IDs.
+No web macro acquisition yet. Broader recovery/all-stage/crash/ACK/repeated
+continuation, social/other-asset ingestion, finance/source-entailment/VI,
+operational/report UX and fresh BTC/AAPL remain open. SEC contact/FRED key absent
+by presence-only check; actual name/email not supplied. NQ=F owner BLOCKED/no
+provider/substitute unchanged. Source-byte changes invalidate older checkpoint
+fingerprints; restore original runtime, never rebind private history or reset
+allowance. No CI, paid/vendor call, private DB migration/restart/history rewrite,
+provider/risk change, broker, main merge/deploy. Full goal/Draft PR7 remain open;
+older sections below retain their original SHA scope and macro-exclusion status.
+
 **R04 structured FRED prerequisite 2026-10-03:** tested clean source
 `b4d48170e2b5333b09be8775c72b49523c1030c7`. Existing FRED request/key and CLI
 defaults stay unchanged. One explicit series/window retains full native-unit

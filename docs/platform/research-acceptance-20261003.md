@@ -1,7 +1,7 @@
 # Research acceptance checkpoint — 2026-10-03
 
-Latest tested source `b4d48170e2b5333b09be8775c72b49523c1030c7`: see the
-appended **Structured FRED acquisition/storage prerequisite** section. Earlier
+Latest tested source `c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9`: see the
+appended **Stored macro admission and protected report flow** section. Earlier
 incremental evidence and failures below retain their original source scope.
 The full private-platform goal remains incomplete; no live-finance or browser
 acceptance follows from the local approval gate.
@@ -1256,3 +1256,55 @@ quantitative/report/translation/risk/human-approval gates. Broader R01–R14
 acceptance remains open; current live failures are not cured by these fixtures.
 No CI, paid/live-provider call, private database migration/restart/history rewrite,
 production provider/model/endpoint/risk change, broker, main merge or deployment.
+
+## Stored macro admission and protected report flow
+
+Tested clean source `c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9`, branch
+`fix/TA-R01-research-quality`, worktree
+`/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents`. Incomplete
+local private-platform candidate, not production/live acceptance. Existing
+FRED/key/CLI defaults unchanged; stored sources now enter the original news
+role without activating API/web acquisition.
+
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Admission/identity/owner | PASS | Macro only maps to news. Full collection/manifest/hash/PIT replay; actual owner MacroSnapshotService loader and engine full request identity checks before graph/client construction. Wrong roles/owner/vendor/metadata/vintage/hash and self-consistent wrong instrument metadata refuse. Hash alone is not vendor authentication or identity from UUID |
+| History/facts | PASS | All101 fixture rows retained/paged, null versus real zero distinct. IDs bind series, operands, native units/frequency/seasonal adjustment and vintage. Difference=A−B (percentage points for Percent); pct_change=(A/B−1)×100 with B>0. Missing/nonpositive reference/nonfinite result unavailable, no literal/interpolated operands or inferred economic rates |
+| Report/localization | PASS | Owned standalone EN/VI sentences for3 operations×3 native units; explicit periods/vintage/denominator. Attached wrong unit/metric/negation, bypassed canonical meaning and changed/moved translation anchor refuse with existing bounded repair. Unrepresentable Decimal quantity becomes fixed publication failure |
+| Original graph/coverage | PASS | 12 actual owner SQLite/AnalysisEngine/LangGraph fixtures:4 original analysts,2 research/risk rounds,19 completed stages including financial review/presentation. EN/VI/bilingual×valid/invalid binding×macro-only/macro+independent Yahoo headlines. Actual normalized five-year price and SEC parsing/storage, explicitly synthetic social/SDK; HTTP/legacy tools/memory/writes forbidden. Invalid binding yields no decision; both news IDs/text preserved. Macro/headline absence and non-exhaustive coverage warnings distinct |
+| Final focused PG | PASS | Handle96437 terminal0:273 tests,40.08s. All19 macro storage/context cases execute on SQLite and disposable PostgreSQL; full graph fixtures are in-process SQLite, not macro-specific native-spawn proof. Earlier38659:272 PASS,37.74s |
+| Full exact-source baseline | PASS | Default disposable PG helper81897 terminal0:2,841 tests +88 subtests,2 optional-provider skips,442warnings,1262.32s. Clean unchanged c7fd046 throughout; Python3.14.7/macOS26.5.2 arm64. Existing native regression included, not new macro-native acceptance. Cached postgres16-alpine image sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777 |
+| Fresh install/import/replay | PASS | Exact tracked git archive c7fd046 → managed Build/source; fresh noneditable absolute source[platform] install37299 terminal0. Outside-source Results/clean_install_smoke.py65695:site-packages package/CLI/API/worker/FRED/macro facts/GraphSetup/financial/localization imports, scoped PG DDL0010:head, new SQLite head0017/full ORM parity, owner macro load/context/fact/report/protected localization. Three independent packaged import entrypoints22850 terminal0 |
+| Lint/dependency/docs | PASS | Ruff, pip check, git diff --check and Ruby issue-template YAML load; initial import-order Ruff finding corrected before source commit |
+| Earlier dirty-patch diagnostics | FAIL | Initial recomputed-hash title premise confused supplied hash with vendor authentication; corrected to original immutable hash refusal. Self-consistent canonical metadata exposed missing full instrument identity gate; engine and owner loader now enforce it. Whole owned-sentence guard incorrectly included its final dot, rejecting a following sentence; canonical/localization guards check before the owned dot. Earlier75254/5795/80694 failures retained, no source/PIT/risk/publication guarantee cut. Later85857:142 PASS/18 missing-URL PG skips;8144:155 PASS/19 missing-URL PG skips, both narrower than final gates |
+| Storage/cleanup | PASS | Managed20261003T062502Z-11211 completed/exit0 only after all handles terminal, artifacts retained. Full helper removed only labelled ta-research-qa-1791010597-35719; earlier helpers removed their own containers. Old exited ta-research-qa-1790495819-43615 and unrelated runtimes left untouched |
+| Matrix/scanners | UNVERIFIED | Project:langgraph1.2.12/core1.6.5/openai1.6.6/Pydantic2.13.5/SQLAlchemy2.1.1/Alembic1.20.0. Fresh:tradingagents0.5.0/core1.6.6/openai1.6.7/SQLAlchemy2.1.3; other listed versions same. Not a lock/full fresh-resolved suite/Python matrix. gitleaks/detect-secrets unavailable. Missing langchain_aws and explicitly unset live DeepSeek key remain2 skipped gates |
+| Acquisition/product/UX | UNVERIFIED | Existing FRED buffers JSON before parser limits; bounded transport/whole acquisition and authenticated API/web multi-source preparation remain unfinished. No frontend/browser change or acceptance. Social/other-asset ingestion, actual multi-continuation/all-stage/crash/ACK/default owner journey and operational/report UX remain open |
+| Finance/VI/live | UNVERIFIED | Synthetic SDK/identity translation is not source-entailment/economic/editorial/MT or investment suitability proof. Only owned macro VI sentence is deterministically localized. No new live FRED/SEC/MiniMax report; earlier live failures unchanged |
+| Owner gates | BLOCKED | Presence-only worktree check SEC_EDGAR_USER_AGENT=false/FRED_API_KEY=false; actual contact not supplied. NQ=F owner contract/roll metadata hold unchanged, no provider/substitute |
+
+Commands from the worktree, with `<managed>` equal to
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261003T062502Z-11211`:
+
+```sh
+TA_ALLOW_TEST_DB_RESET=1 TMPDIR=<managed>/Tmp bash scripts/verify-postgres-local.sh --focused tests/test_snapshot_macro_facts.py tests/test_macro_full_graph.py tests/test_macro_snapshot_service.py tests/test_platform_fred.py tests/test_report_compiler.py tests/test_report_localization.py tests/test_snapshot_analysis.py tests/test_financial_validation_stage.py --tb=short -x
+TA_ALLOW_TEST_DB_RESET=1 TMPDIR=<managed>/Tmp bash scripts/verify-postgres-local.sh
+git archive c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9 | tar -x -C <managed>/Build/source
+TMPDIR=<managed>/Tmp .venv/bin/python -m venv <managed>/Packages/venv
+TMPDIR=<managed>/Tmp PIP_CACHE_DIR=<managed>/Packages/pip-cache <managed>/Packages/venv/bin/python -m pip install '<managed>/Build/source[platform]' --quiet
+```
+
+Fresh smoke65695 ran fresh `-m pip check` and Results/clean_install_smoke.py
+outside source cwd. Independent imports22850 ran separate fresh interpreters
+for analysis.macro_facts, market_data.macro and report_localization, raw output
+withheld. Generated QA script/database/blobs remain retained local artifacts,
+not private-history exports or Git content; portable fixtures are tracked tests.
+
+Full R01–R14 remains active. Next: bounded FRED transport/supervision, then
+authenticated API/web preparation preserving macro and headline IDs (current
+prepareNews replaces the news list). Preserve original graph/repair/risk/approval
+and failure semantics. Macro-native, finance/source entailment/VI, UX and fresh
+BTC/AAPL still need evidence. No CI, paid/vendor call, provider/risk change,
+private DB migration/restart/history rewrite, broker, main merge/deploy.
+Source-byte changes invalidate old checkpoint fingerprints; restore exact
+original runtime, never rebind private history or reset retained allowance.
