@@ -5,9 +5,15 @@ day is conservative availability, not an exact publication/revision timestamp.
 Full returned history is retained, including explicit missing observations.
 """
 
+import contextlib
 import json
 import math
+import os
 import re
+import subprocess
+import sys
+import threading
+import time as monotonic_time
 from datetime import date, datetime, time, timedelta
 from typing import Literal
 from uuid import UUID
@@ -18,14 +24,26 @@ from tradingagents._compat import UTC
 from tradingagents.contracts import DataQualityStatus, InstrumentContract
 from tradingagents.dataflows.fred import (
     DEFAULT_LOOKBACK_DAYS,
+    FRED_API_BASE,
     FRED_TZ,
     FredNotConfiguredError,
     _request,
+    get_api_key,
 )
 
 MAX_OBSERVATIONS = 100_000
 MAX_RESPONSE_BYTES = 2_000_000
 FRESHNESS_DAYS = {"D": 14, "W": 28, "BW": 42, "M": 100, "Q": 210, "SA": 400, "A": 800}
+
+
+class MacroPreparationError(ValueError):
+    def __init__(self, code):
+        self.code = code
+        super().__init__(code)
+
+
+class InvalidFredResponse(ValueError):
+    """Fixed transport/parser failure, distinct from vendor unavailability."""
 
 
 def vintage_available_at(vintage: date) -> datetime:
@@ -156,6 +174,8 @@ def collect_fred_series(instrument: InstrumentContract, series_id: str, *,
         meta = fetch("series", {"series_id": series_id, **realtime})
     except FredNotConfiguredError:
         return failed(DataQualityStatus.UNAVAILABLE, "fred_not_configured")
+    except InvalidFredResponse:
+        return failed(DataQualityStatus.INVALID, "invalid_vendor_response")
     except Exception:
         return failed(DataQualityStatus.UNAVAILABLE, "vendor_request_failed")
     try:
@@ -184,6 +204,8 @@ def collect_fred_series(instrument: InstrumentContract, series_id: str, *,
             "limit": MAX_OBSERVATIONS, "offset": 0})
     except FredNotConfiguredError:
         return failed(DataQualityStatus.UNAVAILABLE, "fred_not_configured")
+    except InvalidFredResponse:
+        return failed(DataQualityStatus.INVALID, "invalid_vendor_response")
     except Exception:
         return failed(DataQualityStatus.UNAVAILABLE, "vendor_request_failed")
     try:
@@ -227,3 +249,177 @@ def collect_fred_series(instrument: InstrumentContract, series_id: str, *,
             quality_status=status, reason=reason)
     except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
         return failed(DataQualityStatus.INVALID, "invalid_vendor_response")
+
+
+class MacroAcquisitionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    instrument: InstrumentContract
+    series_id: str = Field(pattern=r"^[A-Z0-9_]{1,30}$", strict=True)
+    lookback_days: int = Field(default=DEFAULT_LOOKBACK_DAYS, ge=1, le=36525, strict=True)
+    analysis_as_of: AwareDatetime
+
+
+def _stream_request(path, params):
+    """Same configured FRED host/key; no redirects or buffered/decompressed body."""
+    import requests
+
+    if path not in {"series", "series/observations"}:
+        raise ValueError("invalid FRED path")
+    key = get_api_key()
+    # No response/URL/exception prose reaches the parent or persistence.
+    with requests.get(f"{FRED_API_BASE}/{path}", params={**params, "api_key": key,
+            "file_type": "json"}, headers={"Accept-Encoding": "identity"},
+            stream=True, allow_redirects=False, timeout=30) as response:
+        if response.status_code != 200:
+            raise MacroPreparationError("unavailable")
+        try:
+            length = int(response.headers.get("Content-Length", "0"))
+            if (response.headers.get("Content-Encoding", "identity").lower() != "identity"
+                    or not 0 <= length <= MAX_RESPONSE_BYTES):
+                raise InvalidFredResponse("invalid_vendor_response")
+            body = bytearray()
+            for chunk in response.iter_content(chunk_size=8192):
+                if len(body) + len(chunk) > MAX_RESPONSE_BYTES:
+                    raise InvalidFredResponse("invalid_vendor_response")
+                body.extend(chunk)
+            return json.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeError, RecursionError):
+            raise InvalidFredResponse("invalid_vendor_response") from None
+
+
+def _child_json(command, payload, *, wall_seconds=75, max_bytes=MAX_RESPONSE_BYTES,
+                deadline=None):
+    """Bound pipe memory and child lifetime, including blocked I/O and import.
+
+    Readers/writer have no provider/storage authority. Kill/reap before return,
+    join all pipe threads; never echo stderr or a rejected payload. Private test
+    seam only: production command is fixed by fetch_current_fred_series.
+    """
+    deadline = monotonic_time.monotonic() + wall_seconds if deadline is None else deadline
+    if len(payload) > 16384:
+        raise MacroPreparationError("invalid")
+    if monotonic_time.monotonic() >= deadline:
+        raise MacroPreparationError("unavailable")
+    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL, bufsize=0)
+    body, failed, done = bytearray(), [], threading.Event()
+    written = threading.Event()
+
+    def read():
+        try:
+            while chunk := os.read(process.stdout.fileno(), 8192):
+                if len(body) + len(chunk) > max_bytes:
+                    failed.append("invalid")
+                    break
+                body.extend(chunk)
+        except OSError:
+            failed.append("unavailable")
+        finally:
+            done.set()
+
+    def write():
+        try:
+            offset = 0
+            while offset < len(payload):
+                count = os.write(process.stdin.fileno(), payload[offset:])
+                if count <= 0:
+                    raise OSError()
+                offset += count
+        except OSError:
+            failed.append("unavailable")
+        finally:
+            try:
+                process.stdin.close()
+            except OSError:
+                failed.append("unavailable")
+            written.set()
+
+    reader = writer = None
+    try:
+        reader = threading.Thread(target=read, name="fred-output-reader")
+        writer = threading.Thread(target=write, name="fred-input-writer")
+        reader.start()
+        writer.start()
+        while not (done.is_set() and written.is_set() and process.poll() is not None):
+            if failed or monotonic_time.monotonic() >= deadline:
+                raise MacroPreparationError(failed[0] if failed else "unavailable")
+            done.wait(.02) if not done.is_set() else monotonic_time.sleep(.02)
+        if failed or process.returncode or monotonic_time.monotonic() >= deadline:
+            raise MacroPreparationError(failed[0] if failed else "unavailable")
+        try:
+            result = json.loads(body.decode("utf-8"))
+        except (ValueError, UnicodeError, RecursionError):
+            raise MacroPreparationError("invalid") from None
+        if monotonic_time.monotonic() >= deadline:
+            raise MacroPreparationError("unavailable")
+        return result
+    except RuntimeError:
+        raise MacroPreparationError("unavailable") from None
+    finally:
+        if process.poll() is None:
+            with contextlib.suppress(ProcessLookupError):
+                process.kill()
+        process.wait()
+        for thread in (reader, writer):
+            if thread is not None and thread.ident is not None:
+                thread.join()
+        process.stdin.close()
+        process.stdout.close()
+
+
+def fetch_current_fred_series(instrument, series_id, *, lookback_days=DEFAULT_LOOKBACK_DAYS,
+                              analysis_as_of=None):
+    """One supervised current acquisition; no CLI/default vendor change."""
+    request = MacroAcquisitionRequest(instrument=instrument, series_id=series_id,
+        lookback_days=lookback_days, analysis_as_of=analysis_as_of or datetime.now(UTC))
+    deadline = monotonic_time.monotonic() + 75
+    try:
+        if request.analysis_as_of > datetime.now(UTC):
+            raise MacroPreparationError("invalid")
+        get_api_key()  # Fail before spawning; no key is serialized or logged.
+        raw = _child_json([sys.executable, "-m", __name__], request.model_dump_json().encode(),
+            deadline=deadline)
+        if type(raw) is not dict:
+            raise MacroPreparationError("invalid")
+        if "error" in raw:
+            raise MacroPreparationError("invalid" if raw == {"error": "invalid"} else "unavailable")
+        collection = MacroCollection.model_validate(raw)
+        now = datetime.now(UTC)
+        if (collection.series_id != series_id or collection.analysis_as_of != request.analysis_as_of
+                or collection.vintage_date != request.analysis_as_of.astimezone(FRED_TZ).date() - timedelta(days=1)
+                or collection.retrieved_at > now
+                or collection.observation_start != collection.vintage_date - timedelta(days=lookback_days)
+                or any(getattr(collection, name) != getattr(instrument, name) for name in
+                    ("instrument_id", "canonical_symbol", "venue", "quote_currency", "timezone"))
+                or collection.asset_class != instrument.asset_class.value):
+            raise MacroPreparationError("invalid")
+        if monotonic_time.monotonic() >= deadline:
+            raise MacroPreparationError("unavailable")
+        return collection
+    except MacroPreparationError:
+        raise
+    except FredNotConfiguredError:
+        raise MacroPreparationError("unavailable") from None
+    except (ValueError, TypeError):
+        raise MacroPreparationError("invalid") from None
+    except OSError:
+        raise MacroPreparationError("unavailable") from None
+
+
+def main():
+    try:
+        request = MacroAcquisitionRequest.model_validate_json(sys.stdin.read(16385))
+        with contextlib.redirect_stdout(sys.stderr):
+            value = collect_fred_series(request.instrument, request.series_id,
+                lookback_days=request.lookback_days, analysis_as_of=request.analysis_as_of,
+                request=_stream_request)
+        output = value.model_dump_json().encode()
+        if len(output) > MAX_RESPONSE_BYTES:
+            output = b'{"error":"invalid"}'
+    except Exception:
+        output = b'{"error":"unavailable"}'
+    sys.stdout.buffer.write(output)
+
+
+if __name__ == "__main__":
+    main()

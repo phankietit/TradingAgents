@@ -11,7 +11,9 @@ export interface Snapshot {
   snapshot_id: string; dataset: string; vendor: string; as_of: string; retrieved_at: string;
   source_start: string | null; source_end: string | null; content_hash: string;
   quality_status: string; quality_reasons: string[];
-  metadata?: { freshness?: string; missing_trailing_sessions?: number; data_through?: string };
+  metadata?: { freshness?: string; missing_trailing_sessions?: number; data_through?: string;
+    series_id?: string; units?: string; frequency_short?: string; vintage_date?: string;
+    last_observation_date?: string | null; observation_start?: string; observation_end?: string };
 }
 export interface SeriesResponse {
   snapshot: Snapshot;

@@ -422,7 +422,7 @@ The analysis form can also **Add recent headlines** from the existing
 Yahoo/yfinance source as an independent, optional, owner-scoped news snapshot.
 The seven-day feed is explicitly non-exhaustive and current-vintage only;
 empty, malformed or unavailable news cannot be selected as evidence. This
-does not add social or macro acquisition, nor does it make a price-only or
+does not add social acquisition, nor does it make a price-only or
 market-plus-news report comprehensive. An owner-approved, separate **Add SEC
 fundamentals** action now prepares AAPL US GAAP companyfacts with filing dates
 and immutable provenance using the existing SEC EDGAR adapter. It requires a
@@ -436,9 +436,15 @@ as numbers. These structural checks do not prove qualitative reasoning or
 translation quality; human review is still required.
 NQ/ES automatic preparation remains unsupported.
 
-An internal structured FRED collector and immutable macro snapshot service are
-now prerequisites in this draft candidate, **not enabled web acquisition**.
-They reuse the existing FRED request boundary/key and original 365-day default,
+The draft analysis form now also offers **Add economic context** using the existing
+FRED key/endpoints and immutable macro snapshots. It requires `FRED_API_KEY` on the
+server, never a key in the browser. Explicitly choose a series and history window;
+365 days matches the original macro default and can be extended to 36,525 days.
+No AI call is made during preparation. Headline and other indicator selections
+are retained when replacing the same dataset/series, with an explicit 16-source
+selection limit rather than silently dropping evidence. Economic context and
+headlines have separate coverage disclosures even though both enter News research.
+The collector and storage reuse the existing configured FRED host/key,
 accept an explicit series/window, retain every returned observation including
 missing values, and pin metadata/values to the previous fully elapsed Chicago
 vintage day. Native-frequency observation freshness is checked separately from
@@ -449,9 +455,14 @@ analyst through read-only full-history paging and exact native-unit, observation
 label, denominator and vintage-bound facts. Application-owned EN/VI statements
 keep these meanings intact without changing research/debate roles, repairs,
 deterministic risk or human approval. Macro-only input explicitly lacks headlines.
-This is snapshot-only admission, not web acquisition or exhaustive macro coverage.
-Bounded whole-acquisition supervision and authenticated API/web preparation remain
-unfinished; see [data integrity](docs/ops/data-integrity.md).
+Current preparation authenticates owner/CSRF, reuses only recent eligible matching
+series/window/vintage snapshots, spaces repeated requests and bounds streamed
+responses/child output. A supervised 75-second acquisition deadline kills/reaps
+unfinished children; late or invalid results are withheld. Failure snapshots cannot
+authorize research. Oversized data is rejected, never silently shortened. The CLI
+request/defaults remain unchanged. Local evidence is not live FRED availability,
+comprehensive macro coverage or financial/editorial acceptance; see
+[data integrity](docs/ops/data-integrity.md) and dated acceptance receipts.
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked

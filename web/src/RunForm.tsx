@@ -11,6 +11,7 @@ import { portfolioSnapshots, policyHistory } from './portfolioData';
 import { datasetLabel, researchLabel } from './researchLabels';
 import { preparePrices } from './preparePrices';
 import type { Prepared, PreparationProgress } from './preparePrices';
+import { preparedSources } from './preparedSources';
 
 export interface Run {
   run_id: string; instrument_id: string; analysis_as_of: string; status: string; created_at: string;
@@ -21,6 +22,9 @@ export interface Run {
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
 const FUNDAMENTALS_MAX_AGE_SECONDS = 31_536_000;
+const macroIndicators: Record<string, string> = { DGS10: 'US 10-year Treasury yield',
+  CPIAUCSL: 'Consumer price index · level', UNRATE: 'US unemployment rate',
+  GDPC1: 'Real gross domestic product', M2SL: 'M2 money supply' };
 const preparationMessages: Record<string, string> = {
   unsupported: 'Automatic preparation is not available for this instrument. Futures references require contract and roll data; no substitute is used.',
   invalid: 'The data failed validation. Nothing was selected. Please retry later or check the source.',
@@ -61,11 +65,16 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const [newsNote, setNewsNote] = useState('');
   const [fundamentalsPending, setFundamentalsPending] = useState(false);
   const [fundamentalsNote, setFundamentalsNote] = useState('');
+  const [macroPending, setMacroPending] = useState(false);
+  const [macroNote, setMacroNote] = useState('');
+  const [macroSeries, setMacroSeries] = useState('DGS10');
+  const [macroDays, setMacroDays] = useState('365');
   const [preparationProgress, setPreparationProgress] = useState<PreparationProgress | null>(null);
   const preparationController = useRef<AbortController | null>(null);
   const newsController = useRef<AbortController | null>(null);
   const fundamentalsController = useRef<AbortController | null>(null);
-  useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); }, []);
+  const macroController = useRef<AbortController | null>(null);
+  useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); macroController.current?.abort(); }, []);
   const [preparationNote, setPreparationNote] = useState('');
   const [preparationExhausted, setPreparationExhausted] = useState(false);
   const [dataVersion, setDataVersion] = useState(0);
@@ -85,7 +94,10 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const correlationInstruments = riskEnabled && portfolio && Number(target) > 0
     && portfolio.positions.some(item => Number(item.weight) > 0 && item.instrument_id !== instrumentId)
     ? Array.from(new Set([instrumentId, ...portfolio.positions.filter(item => Number(item.weight) > 0).map(item => item.instrument_id)])) : [];
-  const ready = !pending && !preparing && !newsPending && !fundamentalsPending && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !fundamentalsDiscovery.loading && !discovery.error && !fundamentalsDiscovery.error
+  const dataPending = preparing || newsPending || fundamentalsPending || macroPending;
+  const macroValid = /^[A-Z0-9_]{1,30}$/.test(macroSeries) && /^\d+$/.test(macroDays)
+    && Number(macroDays) >= 1 && Number(macroDays) <= 36525;
+  const ready = !pending && !dataPending && confirmed && selectedRoles.length > 0 && !profile.loading && !discovery.loading && !fundamentalsDiscovery.loading && !discovery.error && !fundamentalsDiscovery.error
     && dateValid && ageValid && riskReady && selectedRoles.every(role => sources[role].every(id => eligible.has(id)
       && discoveredSources.find(item => item.snapshot.snapshot_id === id)?.supported_analysts.includes(role)));
   function toggle(role: string, id: string) {
@@ -93,7 +105,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     setConfirmed(false);
   }
   async function prepare() {
-    if (preparationController.current || preparing || newsPending || fundamentalsPending || pending || riskEnabled) return;
+    if (preparationController.current || dataPending || pending || riskEnabled) return;
     const controller = new AbortController();
     preparationController.current = controller;
     setPreparing(true); setPreparationNote(''); setPreparationExhausted(false); setConfirmed(false); setError('');
@@ -116,7 +128,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     finally { preparationController.current = null; setPreparationProgress(null); setPreparing(false); }
   }
   async function prepareNews() {
-    if (preparing || newsPending || fundamentalsPending || pending || riskEnabled || !profile.data?.allowed_analysts.includes('news')) return;
+    if (dataPending || pending || riskEnabled || !profile.data?.allowed_analysts.includes('news')) return;
     const controller = new AbortController();
     newsController.current = controller;
     setNewsPending(true); setNewsNote(''); setConfirmed(false); setError('');
@@ -125,7 +137,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         `/instruments/${encodeURIComponent(instrumentId)}/prepare-news`,
         undefined, 'POST', {}, AbortSignal.any([controller.signal, AbortSignal.timeout(60_000)]),
       );
-      if (result.status !== 'ready' || !result.snapshot?.snapshot_id || !Number.isFinite(Date.parse(result.analysis_as_of))) {
+      if (result.status !== 'ready' || !result.snapshot?.snapshot_id || result.snapshot.dataset !== 'news'
+          || result.snapshot.quality_status !== 'OK' || !Number.isFinite(Date.parse(result.analysis_as_of))) {
         const message: Record<string, string> = {
           no_data: 'Yahoo has no recent headlines for this instrument. News research was not selected.',
           coverage_gap: 'Yahoo has no headlines inside the requested recent window. News research was not selected.',
@@ -138,8 +151,13 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         setNewsNote(message[result.status] ?? 'Recent headlines could not be prepared. No AI analysis was started.');
         return;
       }
+      if (!preparedSources(sources.news ?? [], result.snapshot, discoveredSources.map(item => item.snapshot))) {
+        setAsOf(result.analysis_as_of); setDataVersion(value => value + 1);
+        setNewsNote('The source is saved but not selected: the research area already has 16 sources. Review the selection first.'); return;
+      }
       setAsOf(result.analysis_as_of);
-      setSources(previous => ({ ...previous, news: [result.snapshot!.snapshot_id] }));
+      setSources(previous => ({ ...previous, news: preparedSources(previous.news ?? [], result.snapshot!,
+        discoveredSources.map(item => item.snapshot)) ?? previous.news }));
       setDataVersion(value => value + 1);
       setNewsNote(result.reused
         ? 'Saved recent headlines are still eligible. Review coverage before authorizing AI.'
@@ -148,7 +166,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     finally { newsController.current = null; setNewsPending(false); }
   }
   async function prepareFundamentals() {
-    if (preparing || newsPending || fundamentalsPending || pending || riskEnabled || asset?.canonical_symbol !== 'AAPL') return;
+    if (dataPending || pending || riskEnabled || asset?.canonical_symbol !== 'AAPL') return;
     const controller = new AbortController();
     fundamentalsController.current = controller;
     setFundamentalsPending(true); setFundamentalsNote(''); setConfirmed(false); setError('');
@@ -178,6 +196,40 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setFundamentalsNote(errorMessage(cause)); }
     finally { fundamentalsController.current = null; setFundamentalsPending(false); }
   }
+  async function prepareMacro() {
+    if (dataPending || pending || riskEnabled || !macroValid || !profile.data?.allowed_analysts.includes('news')) return;
+    const controller = new AbortController();
+    macroController.current = controller;
+    setMacroPending(true); setMacroNote(''); setConfirmed(false); setError('');
+    try {
+      const result = await mutate<Prepared>(`/instruments/${encodeURIComponent(instrumentId)}/prepare-macro`,
+        {series_id: macroSeries, lookback_days: Number(macroDays)}, 'POST', {},
+        AbortSignal.any([controller.signal, AbortSignal.timeout(90_000)]));
+      if (result.status !== 'ready' || !result.snapshot?.snapshot_id || result.snapshot.dataset !== 'macro'
+          || result.snapshot.quality_status !== 'OK' || result.snapshot.metadata?.series_id !== macroSeries || !Number.isFinite(Date.parse(result.analysis_as_of))) {
+        const messages: Record<string, string> = {
+          no_data: 'No usable observations were returned for this indicator. Existing sources are unchanged.',
+          coverage_gap: 'This indicator has no observations in the requested history window. Existing sources are unchanged.',
+          stale: 'The latest observation is too old for this indicator frequency. It was not selected.',
+          invalid: 'The economic data failed validation. It was not selected.',
+          unavailable: 'Economic data is unavailable. Check the server FRED key or try later; no AI call was made.',
+          cooldown: 'Please wait one minute before checking this indicator again.',
+          unsupported: 'Automatic economic data is not available for this reference instrument.',
+          busy: 'Another data request is in progress. Please try again shortly.',
+        };
+        setMacroNote(messages[result.status] ?? messages.invalid); return;
+      }
+      if (!preparedSources(sources.news ?? [], result.snapshot, discoveredSources.map(item => item.snapshot))) {
+        setAsOf(result.analysis_as_of); setDataVersion(value => value + 1);
+        setMacroNote('The source is saved but not selected: the research area already has 16 sources. Review the selection first.'); return;
+      }
+      setSources(previous => ({ ...previous, news: preparedSources(previous.news ?? [], result.snapshot!,
+        discoveredSources.map(item => item.snapshot)) ?? previous.news }));
+      setAsOf(result.analysis_as_of); setDataVersion(value => value + 1);
+      setMacroNote('Economic data is ready. Only the selected series and history window are covered; existing headlines are retained. Review before authorizing AI.');
+    } catch (cause) { setMacroNote(errorMessage(cause)); }
+    finally { macroController.current = null; setMacroPending(false); }
+  }
   async function submit(event: FormEvent) {
     event.preventDefault(); if (!ready) return;
     const payload = { instrument_id: instrumentId, analysis_as_of: asOf, selected_analysts: selectedRoles, report_language: reportLanguage,
@@ -197,7 +249,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || preparing || newsPending || fundamentalsPending}>
+  return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || dataPending}>
     <h2>{t("Configure analysis")}</h2>
     {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
       <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
@@ -206,15 +258,15 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
     </section> : null}
     <p className="muted">{t('Build a research brief from verified market evidence. Review the coverage before starting AI analysis.')}</p>
-    <label>{t('Report language')}<select value={reportLanguage} disabled={pending || preparing} onChange={event => {
+    <label>{t('Report language')}<select value={reportLanguage} disabled={pending || dataPending} onChange={event => {
       setReportLanguage(event.target.value as 'en' | 'vi' | 'en-vi'); setConfirmed(false);
     }}>
       <option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option>
     </select></label>
     <p className="muted">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
     <p className="muted">{t("Choose the instrument, research date and supporting sources. You can also review the impact on your portfolio using an allocation you specify.")}</p>
-    <fieldset disabled={pending || preparing || newsPending || fundamentalsPending}><div className="form-grid">
-      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
+    <fieldset disabled={pending || dataPending}><div className="form-grid">
+      <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setMacroNote(''); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
     </div>
     <section className="notice" aria-label={t('Prepare market data')}>
@@ -222,19 +274,34 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <p>{t('Download five years of completed daily prices, matching the original research engine, or reuse verified history. Yahoo needs no API key. This step does not use AI tokens.')}</p>
       <p className="muted">{t('This prepares price and trend research only. News, fundamentals, sentiment and macro evidence are not downloaded by this step.')}</p>
       <p className="muted">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
-      <button type="button" disabled={riskEnabled || !instrumentId || newsPending || fundamentalsPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
+      <button type="button" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
       {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
       {preparationNote ? <p role={preparationExhausted ? 'alert' : 'status'}>{preparationExhausted ? `${t('Data is still incomplete after three checks.')} ` : ''}{t(preparationNote)}</p> : null}
       {profile.data?.allowed_analysts.includes('news') ? <div className="news-supplement">
         <h4>{t('Current headlines · optional')}</h4>
         <p>{t('Collect recent Yahoo headlines as a separate source. Coverage is not exhaustive or historical. This step uses no AI tokens.')}</p>
-        <button type="button" disabled={riskEnabled || !instrumentId || preparing || newsPending || fundamentalsPending} onClick={() => void prepareNews()}>{newsPending ? t('Checking headlines…') : t('Add recent headlines')}</button>
+        <button type="button" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepareNews()}>{newsPending ? t('Checking headlines…') : t('Add recent headlines')}</button>
         {newsNote ? <p role="status">{t(newsNote)}</p> : null}
+      </div> : null}
+      {profile.data?.allowed_analysts.includes('news') && asset?.asset_class !== 'reference_future' ? <div className="news-supplement">
+        <h4>{t('Economic context · optional')}</h4>
+        <p>{t('Add one FRED indicator at a time. Original units and observation dates are retained. This is not complete macro coverage or historical replay, and uses no AI tokens.')}</p>
+        <label>{t('Economic indicator')}<select aria-label={t('Economic indicator')} value={Object.hasOwn(macroIndicators, macroSeries) ? macroSeries : 'custom'} onChange={event => {
+          setMacroSeries(event.target.value === 'custom' ? '' : event.target.value); setMacroNote(''); setConfirmed(false);
+        }}>{Object.entries(macroIndicators).map(([id, label]) => <option key={id} value={id}>{t(label)}</option>)}<option value="custom">{t('Custom FRED series')}</option></select></label>
+        <details open={!Object.hasOwn(macroIndicators, macroSeries)}><summary>{t('Indicator history settings')}</summary>
+          <label>{t('FRED series code')}<input value={macroSeries} onChange={event => { setMacroSeries(event.target.value); setMacroNote(''); setConfirmed(false); }} /></label>
+          <label>{t('History length (days)')}<input type="number" min="1" max="36525" step="1" value={macroDays} onChange={event => { setMacroDays(event.target.value); setMacroNote(''); setConfirmed(false); }} /></label>
+          <p className="muted">{t('365 days matches the original macro lookback. You may request a longer window; unavailable data is never filled or silently shortened.')}</p>
+        </details>
+        <button type="button" disabled={riskEnabled || !instrumentId || dataPending || !macroValid} onClick={() => void prepareMacro()}>{macroPending ? t('Checking economic data…') : t('Add economic context')}</button>
+        {macroPending ? <p role="status">{t('Downloading and validating the selected indicator. Existing sources are preserved; AI has not started.')}</p> : null}
+        {macroNote ? <p role="status">{t(macroNote)}</p> : null}
       </div> : null}
       {asset?.canonical_symbol === 'AAPL' ? <div className="news-supplement">
         <h4>{t('SEC filings · optional')}</h4>
         <p>{t('Collect filed-date-aware company facts from SEC EDGAR. Reported US GAAP tags are not a complete company profile. This step uses no AI tokens.')}</p>
-        <button type="button" disabled={riskEnabled || !instrumentId || preparing || newsPending || fundamentalsPending} onClick={() => void prepareFundamentals()}>{fundamentalsPending ? t('Checking SEC filings…') : t('Add SEC fundamentals')}</button>
+        <button type="button" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepareFundamentals()}>{fundamentalsPending ? t('Checking SEC filings…') : t('Add SEC fundamentals')}</button>
         {fundamentalsNote ? <p role="status">{t(fundamentalsNote)}</p> : null}
       </div> : null}
     </section>
@@ -267,6 +334,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
           onChange={value => { setRiskSources(previous => ({ ...previous, [id]: value })); setConfirmed(false); }} />)}</> : null}
     </section> : null}
     <section className="coverage-overview"><h3>{t('Research coverage')}</h3><div className="coverage-grid">{profile.data?.allowed_analysts.map(role => <div key={role}><span>{researchLabel(role)}</span><strong className={selectedRoles.includes(role) ? 'coverage-included' : 'muted'}>{selectedRoles.includes(role) ? t('Included') : t('Not included')}</strong></div>)}</div>
+      {sources.news?.length ? <p className="muted caption">{t('Selected economic indicators:')} {discoveredSources.filter(item => item.snapshot.dataset === 'macro' && sources.news.includes(item.snapshot.snapshot_id)).map(item => item.snapshot.metadata?.series_id ?? t('Economic indicator')).join(', ') || t('None')}. {t('Selected headline sources:')} {discoveredSources.filter(item => item.snapshot.dataset === 'news' && sources.news.includes(item.snapshot.snapshot_id)).length}. {t('Economic data does not replace news coverage.')}</p> : null}
       {profile.data && selectedRoles.length < profile.data.allowed_analysts.length ? <p className="muted caption">{t('This is a limited-scope report. Missing research areas will remain unavailable, not filled in by AI.')}</p> : null}
     </section>
     <details className="source-inspector"><summary>{t('Inspect or change evidence sources')}</summary>
@@ -275,6 +343,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         <input type="checkbox" disabled={!item.metadata_eligible || !item.supported_analysts.includes(role) || !sources[role]?.includes(item.snapshot.snapshot_id) && sources[role]?.length >= 16}
           checked={sources[role]?.includes(item.snapshot.snapshot_id) ?? false} onChange={() => toggle(role, item.snapshot.snapshot_id)} />
         <span>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}<small>{timestamp(item.snapshot.source_end)}  {t("· Quality:")} {item.snapshot.quality_status} · {item.metadata_eligible ? t("Available to select; verified before research") : item.ineligibility_reasons.join(', ')}</small>
+          {item.snapshot.dataset === 'macro' ? <small>{item.snapshot.metadata?.series_id} · {item.snapshot.metadata?.units} · {t('Latest observation:')} {item.snapshot.metadata?.last_observation_date ?? t('None')} · {t('Vintage:')} {item.snapshot.metadata?.vintage_date}</small> : null}
           {item.snapshot.metadata?.freshness === 'delayed' ? <small className="warning">{t('Source publication is delayed by one daily candle. Research uses completed prices only through:')} {timestamp(item.snapshot.source_end)} (UTC). {t('This is not a current-market assessment. No missing candle is filled.')}</small> : null}
         </span>
       </label>)}
@@ -282,7 +351,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
     </details>
     <h3>{t('2. Review sources and authorize AI')}</h3>
-    <ResearchAllowance seconds={allowanceSeconds} disabled={pending || preparing || newsPending || fundamentalsPending}
+    <ResearchAllowance seconds={allowanceSeconds} disabled={pending || dataPending}
       onChange={seconds => { setAllowanceSeconds(seconds); setConfirmed(false); }} />
     {!selectedRoles.length ? <p className="warning">{t('To continue, prepare latest prices above or select an eligible saved source. No AI analysis has been submitted.')}</p> : null}
     {selectedRoles.some(role => sources[role].some(id => !eligible.has(id))) ? <p className="warning">{t('A selected source is not eligible for this research time. Prepare current prices or change the selection.')}</p> : null}

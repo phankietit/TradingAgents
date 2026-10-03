@@ -143,6 +143,7 @@ class FailedSyntheticGraph(SyntheticSnapshotGraph):
 
 def create_app(settings):
     """Synthetic browser fixtures must never acquire live market data."""
+    from tradingagents.dataflows.platform_fred import MacroPreparationError
     from tradingagents.dataflows.platform_news import NewsPreparationError
     from tradingagents.dataflows.platform_prices import PricePreparationError
     from tradingagents.dataflows.platform_sec import SecPreparationError
@@ -158,9 +159,13 @@ def create_app(settings):
     def unavailable_sec(_instrument):
         raise SecPreparationError("unavailable")
 
+    def unavailable_macro(_instrument, _series_id, **_kwargs):
+        raise MacroPreparationError("unavailable")
+
     app.state.fetch_daily_prices = unavailable
     app.state.collect_yahoo_news = unavailable_news
     app.state.collect_sec_facts = unavailable_sec
+    app.state.collect_fred_series = unavailable_macro
     return app
 
 

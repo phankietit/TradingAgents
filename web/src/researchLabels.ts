@@ -6,7 +6,9 @@ export function researchLabel(role: string): string {
 }
 
 export function datasetLabel(dataset: string): string {
-  return dataset === 'ohlcv.daily' ? t('Daily prices & volume') : dataset;
+  const labels: Record<string, string> = { 'ohlcv.daily': 'Daily prices & volume',
+    news: 'Recent headlines', macro: 'Economic indicator', fundamentals: 'Company filings' };
+  return Object.hasOwn(labels, dataset) ? t(labels[dataset]) : dataset;
 }
 
 export function profileLabel(profile: string): string {

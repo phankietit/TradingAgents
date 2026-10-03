@@ -2,6 +2,36 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R04 current macro preparation checkpoint 2026-10-03:** candidate containing
+this checkpoint implements the existing FRED series/window transport, supervised
+75-second child acquisition with bounded response/output and kill/reap/pipe joins,
+owner/CSRF API, immutable failure auditing and exact-vintage/window reuse.
+No legacy CLI/provider/default change, new schema, AI call or history rewrite.
+Web EN/VI economic-context controls retain headlines/other indicators when
+replacing only the same dataset/series, explicitly refuse selection overflow,
+reset paid consent and show native observation/vintage scope. One acquisition
+at a time; process-local cooldown is not multi-process/public-deployment proof.
+Focused PG85438:284 PASS/58.73s (before one additional lock test); final API5662:
+26 PASS/47.22s. Native transport processes cover hang/trickle/nonzero/oversize,
+thread construction/start failure and actual pipe closure/reaping, no vendor call.
+Final web86973:144 PASS, typecheck/lint/build PASS. Browser90062 terminal0 uses
+bundled Playwright1.62.1 (Browser plugin absent), synthetic owner HTTP/API on
+127.0.0.1:8017; desktop1440×1000/mobile390×844 EN/VI, DGS10 1825days + independent
+headlines + UNRATE retained, paid consent only/no job; identity/nonblank/overlay/
+console/interactions/screenshots PASS. Browser fixture identity timestamps and
+test locator fixes are diagnostics, not provider or policy bypass. Screenshot
+review finds no target clipping/horizontal overflow; broader process/report UX
+remains unfinished. Task-owned server handles28927/97900 terminal0; private
+application/runtime not touched. Managed20261003T072641Z-47907 is still prepared;
+full exact-SHA regression and fresh packaged smoke for this candidate are next,
+currently UNVERIFIED, not replaced by focused/browser evidence.
+Presence-only SEC contact/FRED key both absent; no actual name/email supplied,
+no key printed/copied. Live FRED/SEC/BTC/AAPL/financial/VI/editorial remain open;
+NQ=F owner BLOCKED/no provider/substitute unchanged. R01–R14/Draft PR7 stay active,
+including recovery/all-stage/crash/ACK/default owner journey, social/other-asset
+ingestion and operational/report UX. Preserve all older receipts/history below;
+new source bytes invalidate old checkpoint fingerprints, never rebind/reset them.
+
 **R04 stored macro → original research/report flow 2026-10-03:** tested clean
 source `c7fd0465979e9eeb64a7e2f80e4c057361b3e6c9`. Stored eligible FRED sources
 now join the existing news analyst, never as headlines/social/company statements.

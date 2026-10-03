@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add authenticated current FRED series/window preparation with bounded streamed
+  transport and supervised/reaped acquisition, immutable owner snapshots and
+  distinct failure states. Web economic-context selection preserves independent
+  headlines and other indicators, resets paid consent and never starts AI itself.
+  CLI defaults, historical records, research flow, policy and approval stay unchanged.
+  Synthetic local evidence does not establish live FRED or financial acceptance.
+
 - Add a structured current-vintage Yahoo news collector with publication and
   retrieval provenance and explicit failure/coverage states. This is adapter
   groundwork; web collection, persistence and full-source analyst parity are

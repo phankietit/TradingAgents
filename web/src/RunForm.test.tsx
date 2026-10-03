@@ -7,6 +7,67 @@ const catalog = [{ instrument_id: 'aapl', canonical_symbol: 'AAPL', display_name
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['market'] };
 afterEach(() => vi.unstubAllGlobals());
+
+it.each(['macro-first', 'headlines-first'])('preserves distinct economic and headline sources through %s preparation and explicit consent', async order => {
+  const now=new Date().toISOString();
+  const macro={snapshot:{snapshot_id:'macro-new',dataset:'macro',vendor:'fred',source_end:now,quality_status:'OK',
+    metadata:{series_id:'DGS10',units:'Percent',last_observation_date:'2026-10-02',vintage_date:'2026-10-02'}},metadata_eligible:true,ineligibility_reasons:[],supported_analysts:['news']};
+  const news={...macro,snapshot:{snapshot_id:'news-new',dataset:'news',vendor:'yfinance',source_end:now,quality_status:'OK'}};
+  const oldMacro={...macro,snapshot:{...macro.snapshot,snapshot_id:'macro-old'}};
+  const oldNews={...news,snapshot:{...news.snapshot,snapshot_id:'news-old'}};
+  let macroReady=false,newsReady=false;
+  const fetch=vi.fn(async (url:string,init?:RequestInit)=>{
+    if(url.includes('/analysis-profile'))return json({allowed_analysts:['market','news'],investable:true});
+    if(url.includes('/snapshots?'))return json([source,oldMacro,oldNews,...(macroReady?[macro]:[]),...(newsReady?[news]:[])]);
+    if(url.endsWith('/auth/csrf'))return json({csrf_token:'test'});
+    if(url.endsWith('/prepare-macro')){expect(JSON.parse(init!.body as string)).toEqual({series_id:'DGS10',lookback_days:365});macroReady=true;return json({status:'ready',snapshot:macro.snapshot,analysis_as_of:now,reused:false});}
+    if(url.endsWith('/prepare-news')){newsReady=true;return json({status:'ready',snapshot:news.snapshot,analysis_as_of:now,reused:false});}
+    if(url.includes('/portfolios?')||url.includes('/policies?'))return json([]);
+    return json({},503);
+  });
+  vi.stubGlobal('fetch',fetch);
+  const user=userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  const newsGroup=await screen.findByRole('group',{name:'News & events'});
+  await user.click(within(newsGroup).getAllByRole('checkbox')[0]);
+  await user.click(within(newsGroup).getAllByRole('checkbox')[1]);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  const first=order==='macro-first'?'Add economic context':'Add recent headlines';
+  const second=order==='macro-first'?'Add recent headlines':'Add economic context';
+  await user.click(screen.getByRole('button',{name:first}));
+  await screen.findByText(order==='macro-first'?/Economic data is ready/:/Recent headlines are ready/);
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await user.click(screen.getByRole('button',{name:second}));
+  await screen.findByText(order==='macro-first'?/Recent headlines are ready/:/Economic data is ready/);
+  await waitFor(()=>expect(within(newsGroup).getAllByRole('checkbox').filter(input=>(input as HTMLInputElement).checked)).toHaveLength(2));
+  expect(screen.getByText(/Economic data does not replace news coverage/).textContent).toContain('DGS10');
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(screen.getByRole('button',{name:'Queue analysis'}));
+  const posted=fetch.mock.calls.find(([url])=>url.endsWith('/runs'))!;
+  expect(JSON.parse(posted[1]!.body as string).decision_inputs.snapshots_by_analyst.news).toEqual(expect.arrayContaining(['macro-new','news-new']));
+  expect(JSON.parse(posted[1]!.body as string).decision_inputs.snapshots_by_analyst.news).toHaveLength(2);
+});
+
+it('discloses failed economic coverage in Vietnamese and never selects it or starts AI',async()=>{
+  const fetch=setup();
+  fetch.mockImplementation(async(url:string)=>{
+    if(url.includes('/analysis-profile'))return json({allowed_analysts:['market','news'],investable:true});
+    if(url.includes('/snapshots?'))return json([source]);
+    if(url.endsWith('/auth/csrf'))return json({csrf_token:'test'});
+    if(url.endsWith('/prepare-macro'))return json({status:'coverage_gap',snapshot:null,analysis_as_of:new Date().toISOString(),reused:false});
+    return json([]);
+  });
+  const user=userEvent.setup();
+  render(<><LanguageSwitch/><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/></>);
+  await user.click(await screen.findByRole('button',{name:'Add economic context'}));
+  expect(await screen.findByText(/no observations in the requested history window/)).toBeTruthy();
+  await user.click(screen.getByRole('button',{name:/VI/}));
+  expect(await screen.findByText(/không có số liệu trong khoảng lịch sử yêu cầu/)).toBeTruthy();
+  expect((screen.getByRole('button',{name:'Gửi phân tích'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+});
 function setup(stale = false) {
   const fetch = vi.fn(async (url: string) => {
     if (url.includes('/portfolios?')) return json([{ portfolio_id: 'portfolio1', as_of: '2026-09-01T00:00:00Z', base_currency: 'USD', positions: [], cash: [], net_asset_value:'10000',realized_pnl:'0',unrealized_pnl:'0',content_hash:'fixture-hash' }]);

@@ -95,6 +95,7 @@ from .schemas import (
     LoginResponse,
     OwnerResponse,
     PrepareDataResponse,
+    PrepareMacroRequest,
     RunAcceptedResponse,
     RunCreateRequest,
     RunJobStateResponse,
@@ -251,11 +252,14 @@ def create_app(settings: ApiSettings) -> FastAPI:
     app.state.collect_yahoo_news = fetch_current_yahoo_news
     from tradingagents.dataflows.platform_sec import fetch_current_sec_facts
     app.state.collect_sec_facts = fetch_current_sec_facts
+    from tradingagents.dataflows.platform_fred import fetch_current_fred_series
+    app.state.collect_fred_series = fetch_current_fred_series
     preparation_lock = Lock()
     preparation_attempts: dict[tuple[UUID, UUID], float] = {}
     preparation_failures: dict[tuple[UUID, UUID], str] = {}
     news_attempts: dict[tuple[UUID, UUID], float] = {}
     sec_attempts: dict[tuple[UUID, UUID], float] = {}
+    macro_attempts: dict[tuple[UUID, UUID, str, int], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -818,6 +822,97 @@ def create_app(settings: ApiSettings) -> FastAPI:
             if collection.quality_status is DataQualityStatus.OK:
                 return outcome("ready", snapshot=manifest)
             return outcome(collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-macro",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_macro(
+        instrument_id: UUID, body: PrepareMacroRequest, owner: CsrfOwnerDependency,
+        session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """One current FRED series/window; no model, substitution or backdating."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.fred import FRED_TZ
+        from tradingagents.dataflows.platform_fred import MacroCollection, MacroPreparationError
+        from tradingagents.dataflows.platform_prices import PricePreparationError, approved_symbol
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.macro import MacroSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds)
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            vintage = now.astimezone(FRED_TZ).date() - timedelta(days=1)
+            start = vintage - timedelta(days=body.lookback_days)
+            service = MacroSnapshotService(repository, ArtifactService(artifact_store, repository))
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "macro" or snapshot.vendor != "fred"
+                        or snapshot.metadata.get("series_id") != body.series_id
+                        or snapshot.metadata.get("observation_start") != start.isoformat()
+                        or snapshot.metadata.get("observation_end") != vintage.isoformat()
+                        or snapshot.metadata.get("vintage_date") != vintage.isoformat()
+                        or snapshot.retrieved_at < now - timedelta(minutes=15)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=604800)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id, body.series_id, body.lookback_days)
+            elapsed = time.monotonic() - macro_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            macro_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_fred_series(instrument, body.series_id,
+                    lookback_days=body.lookback_days, analysis_as_of=now)
+                collection = MacroCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, MacroCollection) else acquired)
+            except MacroPreparationError as error:
+                return outcome(error.code if error.code in {"invalid", "unavailable"} else "unavailable")
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (collection.series_id != body.series_id or collection.analysis_as_of != now
+                    or collection.vintage_date != vintage or collection.observation_start != start
+                    or collection.retrieved_at > _now(settings)
+                    or any(getattr(collection, name) != getattr(instrument, name) for name in
+                        ("instrument_id", "canonical_symbol", "venue", "quote_currency", "timezone"))
+                    or collection.asset_class != instrument.asset_class.value):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = MacroSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            return outcome("ready" if collection.quality_status is DataQualityStatus.OK
+                else collection.quality_status.value.lower(), snapshot=manifest)
         finally:
             preparation_lock.release()
 

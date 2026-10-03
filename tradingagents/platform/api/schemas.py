@@ -37,6 +37,11 @@ class PrepareDataResponse(ApiModel):
     last_failure: Literal["no_data", "stale", "coverage_gap", "rate_limited", "unavailable"] | None = None
 
 
+class PrepareMacroRequest(ApiModel):
+    series_id: str = Field(pattern=r"^[A-Z0-9_]{1,30}$", strict=True)
+    lookback_days: int = Field(default=365, ge=1, le=36525, strict=True)
+
+
 class LoginRequest(ApiModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=1024)

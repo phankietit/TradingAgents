@@ -36,8 +36,8 @@ to their source artifact.
 
 ### Structured FRED prerequisite (draft candidate)
 
-`dataflows/platform_fred.py` reuses the existing FRED request boundary; no CLI
-default, new provider or web/model call path changes. One explicit series and
+`dataflows/platform_fred.py` reuses the existing FRED key/endpoints; no CLI
+default or new provider changes. One explicit series and
 requested window use the original 365-day lookback unless explicitly supplied.
 Both metadata and observations pin `realtime_start == realtime_end` to the last
 fully elapsed Chicago day before the analysis cutoff. The next Chicago midnight
@@ -52,9 +52,15 @@ Transformed values, wrong vintage/identity, unordered/duplicate/future rows,
 nonfinite values and incomplete pagination are `INVALID`, never truncated into
 valid evidence. Explicit resource ceilings (100,000 rows, 2 MB parsed response,
 100-year maximum request) reject rather than silently shorten the window.
-These are parser limits **after the existing request buffers JSON**, not a
-streaming memory bound or whole-acquisition deadline. Hard supervision and
-bounded transport must be accepted before web activation.
+The legacy/CLI `_request` still buffers JSON before parser limits. The separate
+current preparation wrapper instead streams uncompressed HTTP with no redirects,
+rejects advertised/actual bodies over 2 MB and bounds child output to 2 MB. Fixed
+child invocation, bounded input, reader/writer shutdown and kill/reap supervise
+the 75-second acquisition deadline including import, network and child parsing.
+Parent bounded parsing/validation checks that same deadline and withholds late
+results; termination/reaping takes cleanup time, not a remote provider-stop claim.
+No abandoned provider thread remains. HTTP/read timeout is 30 seconds per request;
+whole supervision handles slow trickle or multiple requests beyond that bound.
 
 Observation-period freshness limits are daily14, weekly28, biweekly42,
 monthly100, quarterly210, semiannual400, annual800 calendar days. A fresh
@@ -89,9 +95,22 @@ native-unit differences (percentage points for Percent) and arithmetic percent
 changes with an explicit denominator. Existing bounded financial/translation
 repair and publication/risk/approval gates remain unchanged. Coverage warnings
 distinguish macro from headlines, and observation labels from release times.
-Bounded whole-acquisition transport/supervision and authenticated preparation
-API/UI remain unfinished; snapshot admission does not activate web acquisition.
-Local SQLite/PostgreSQL fixtures are not live FRED, financial or browser proof.
+Authenticated owner/CSRF `POST /api/v1/instruments/{id}/prepare-macro` accepts only
+an explicit series and 1–36,525-day window (default365), no client analysis cutoff.
+The server pins current time/vintage and rechecks full identity/window before
+append-only persistence. Matching owner snapshots can be reused only within
+15 minutes, the same current complete Chicago vintage and exact series/window;
+quality/content checks still apply. One acquisition at a time and a 60-second
+owner/instrument/series/window cooldown bound repetition; these process-local
+controls are not multi-process/public deployment guarantees. NQ/ES stay unsupported.
+Failed valid collections are audited but cannot be selected; driver errors return
+fixed unavailable/invalid states without raw vendor prose. No AI job is created.
+The web replaces only the same dataset/series, retains other selected sources,
+requires explicit review at 16 sources and resets paid consent. Coverage separates
+macro from headlines; original native units, observation dates and vintage remain
+inspectable. Synthetic fixtures refuse live acquisition by default.
+Local transport/SQLite/PostgreSQL and browser fixtures are not live FRED or
+financial/editorial proof; dated receipts state which gates actually ran.
 
 ## Failure Semantics
 

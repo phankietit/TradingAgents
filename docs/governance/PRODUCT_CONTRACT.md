@@ -22,7 +22,7 @@ release readiness.
 
 Current candidate acquisition covers Yahoo daily prices and non-exhaustive
 recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
-Social/macro ingestion and other-asset fundamentals remain unfinished. Missing
+Social ingestion and other-asset fundamentals remain unfinished. Missing
 coverage stays explicit; analyst readers alone do not prove source acquisition.
 
 Macro ingestion may reuse the existing FRED adapter with explicit series and
@@ -32,19 +32,28 @@ structured observations, units/frequency and missing values with immutable
 instrument/retrieval/window provenance, never the CLI's shortened display table.
 Freshness must use the observation period as well as vintage/retrieval time;
 missing, stale, malformed and inaccessible series cannot become valid coverage.
-This prerequisite does not activate web ingestion, historical snapshot backdating,
-new providers, model calls or decision authority; API/tool/UI acceptance is separate.
+The separate authenticated current preparation path is implemented below;
+historical snapshot backdating, new providers and decision authority are not enabled.
 The snapshot-only macro path admits validated FRED collections to the
 news analyst, never as headlines/social/company statements. Require full
 collection/manifest parity before model construction, read-only full-history
 paging, and source-bound native-unit/period/vintage facts. Application-owned
 complete EN/VI statements must distinguish native levels, native-unit differences
 and arithmetic percentage changes; missing/invalid operands stay unavailable.
-Macro-only input must disclose absent headline coverage. This enables no live
-acquisition, does not prove exhaustive macro/news or semantic investment quality,
+Macro-only input must disclose absent headline coverage. Snapshot admission alone
+does not prove live acquisition, exhaustive macro/news or semantic investment quality,
 and changes no graph role, repair allowance, deterministic policy or human approval.
 NQ=F is the owner-selected reference; live acceptance is BLOCKED until eligible
 active-contract/roll data exists. No substitute source has been approved.
+
+The draft current-macro preparation path reuses FRED's configured key/endpoints
+for one explicit series/window. Bound both streamed response and child output;
+supervise the entire acquisition, reap the child, and withhold late/invalid data.
+Authenticated owner/CSRF preparation must preserve immutable history, distinct
+failure states, explicit scope and existing headline selections. No new AI call,
+provider, portfolio authority, historical backdating or NQ substitute is enabled.
+Its implementation is not live FRED, economic/editorial or release acceptance;
+dated receipts distinguish local transport/API/browser evidence from live proof.
 
 Neither the baseline nor this candidate provides a portfolio simulator, paper
 or live broker, order execution, or autonomous trading system. The web candidate
