@@ -28,7 +28,7 @@ source→explicitconsent→real durable syntheticworker→guard/locale/restore r
 only initialauth/me401, no later HTTPerror/consolewarning/pageerror. Browser
 plugin not available; bundledPlaywright/Chromium/Node24.19.0, managedTMPDIR,
 externalQA scripts/screenshots/runtime only. Ownedfixture52822/19922 shutdown
-confirmed;75014/20975 shutdown requested after finalreadback, confirmterminal.
+confirmed;75014/20975 terminal0 normalshutdown/process absence confirmed.
 Primaryfb38391 remains clean/frozen withfull51929 live/latest30%; no restart,
 integration, paid/provider/model/risk/allowance/history/main/deploy change.
 Scoped UI acceptance only, wholeR01–R14 ACTIVE: broader operational/decision/
