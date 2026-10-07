@@ -1,5 +1,18 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 clean coalesced polling component gate · 2026-10-08:** frozen side
+`fab4a034887881009212111fd6df1bab48030fdd`,62251 terminal0:
+`npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
+build299modules/lint/default29files215tests PASS20.40s,Node26.8.1/npm11.19.0.
+Source unchanged through terminal. Three added slow-tick/lateidentity/unmount
+controls plus existing failure-clear/defaultapproval controls PASS. This is
+mocked hook/component/fullweb evidence, NOT rendered slow-network, actual
+generalconcurrentpolling/Postgres/provider/release acceptance. No UI layout or
+approval/provider/data/analysis semantics changed. Rendered slow-response and
+restoration test is next; side-only, do not integrate before primaryfull terminal.
+Primary37c1a42 full88556 live/PID33387/latest15%, source frozen/no restart. Whole
+R01–R14 ACTIVE; pending live/operator/asset/version gates retained.
+
 **R08 slow-polling starvation WIP · 2026-10-08:** ownedside fast-forwarded to
 primary37c1a42 before change. General useResource previously aborted each pending
 status fetch on every polling version; a request slower than five-second ticks
