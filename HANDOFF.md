@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 uninstrumented full candidate gate · 2026-10-08:** frozen clean
+`cfd31da326216e434e94cd68ee5efaf90f5a1366`, primary73101 terminal0:
+`set -o pipefail; TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh 2>&1 | sed -u -E 's#([[:alnum:]+.-]+://[^[:space:]:/@]+:)[^@[:space:]]+(@)#\\1[REDACTED]\\2#g'`.
+3248PASS/88subtestsPASS,2optional skipsUNVERIFIED,502warnings,3234.25s(53m54s),
+Python3.14.7 existing venv; Ruff/dependency/diff PASS. No external observer or
+test instrumentation, no restart on output silence and source unchanged through
+terminal. Optional langchain_aws missing; DEEPSEEK_API_KEY absent/placeholder
+live check not run. No optional-provider acceptance inferred. Helper confirmed
+removal of its task-owned disposable PostgreSQL; parent88908/helper88910/pytest
+88944 no longer present, no ta-research-qa containers remain at cleanup check.
+This proves this source's local full gate, not supported-version clean install,
+operator encrypted restore, live semantic/VI quality or release readiness.
+Staged R14 operator/session and R07 V2 activation work on
+`fix/TA-R07-summary-provenance` is NOT in this full candidate. Side source
+24512760fcf53214ddef67aae838c9637dcf073e has227selected/8native14-stage PASS,
+but340native resume and new-candidate integration/full/browser/live/UX gates
+remain open. Preserve prior failed receipts and private history. Whole R01–R14
+ACTIVE, PR7 Draft, NQ owner-BLOCKED, no paid/provider/risk/allowance/deploy change.
+
 **R14 integrated PostgreSQL restore receipt · 2026-10-08:** frozen clean primary
 `e64de6ba4d97bd7daa61a32d9688ba65c7509c9d`, primary7164 terminal0:
 same six-file focused command as side56247 below;66selected PASS18.87s,
