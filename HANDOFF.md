@@ -1,5 +1,26 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 failed-job-refresh clean acceptance · 2026-10-08:** frozen clean source
+`351bc0ba8fd00e59e8139dfe07710ba6fe1753c5`, owned side worktree.15639 terminal0
+`npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
+TypeScript/Vite299modules/lint PASS; default29files212tests PASS21.91s,
+Node26.8.1/npm11.19.0 existingdeps. Source unchanged through terminal.
+Browser84857 terminal0, synthetic loopback8001: actual setup/consent/durable
+syntheticworker report, then read-only counterfactual run-running/job-succeeded
+responses; next job refresh deliberately503 withdraws old completion, keeps
+separate run-running/history/currentphase and retained-report warning. EN1440x1000
+and VI390x844 screenshots inspected; no overflow/pageerror/blank/frameworkoverlay.
+Unroute/reload restores real persisted successful fixture, no owner/private or
+provider calls. Console only initialauth/me401 and deliberatelymocked job503.
+Browser35831 failed at VI screenshot because English region locator no longer
+matched after locale switch; QA locator corrected, not product/assertion change.
+Browser plugin not available; bundledPlaywright/Chromium/Node24.19.0 fallback,
+managedTMPDIR/externalQA scripts/screenshots only. Ownedfixture22955/PID27937
+normalshutdown terminal0; no history/artifact deletion. This proves scoped UI
+failure recovery, not live finance/translation/Postgres/concurrentpoll acceptance.
+Primaryfb38391 full51929 remains live/frozen/latest40%; no restart/integration.
+WholeR01–R14 ACTIVE; SEC user-agent/freshpaidapproval/eligibleNQ remain owner gates.
+
 **R08 failed-job-refresh observation WIP · 2026-10-08:** side-only fix withdraws
 the parent's old job status when a refresh fails or returns another run identity.
 The separate run response remains authoritative for run status; no completion,
