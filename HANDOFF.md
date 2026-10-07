@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 exact authenticated restore gate · 2026-10-08:** clean frozen source
+`668662e3f6830cc18c9ee21936ce096c1804d917`, side91853 terminal0:53selected tests
+PASS17.04s,Ruff/dependency/diff PASS,Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py --tb=short`.
+Source unchanged/clean before and after; helper confirmed removal of only its
+owned disposable PostgreSQL. Three new cases prove synthetic paired SQLite/
+artifact authenticated restore and integrity refusal. PostgreSQL evidence here
+is the existing schema/persistence test, NOT pg_dump/pg_restore or restored API
+on PostgreSQL. No provider,original graph,owner backup,retained-session safety,
+active-job,encrypted transfer,browser restore or release acceptance is implied.
+Package/runtime source unchanged; this is a tests/docs-only patch. Next integrate
+after terminal and preserve whole R01-R14 FAIL/BLOCKED/UNVERIFIED requirements.
+
 **R14 authenticated paired-restore gate WIP · 2026-10-08:** isolated owned
 `fix/TA-R14-authenticated-restore`, base e215f2c. New test-only SQLite/artifact
 fixture backs up a quiesced newly generated DB with SQLite backup API, copies
