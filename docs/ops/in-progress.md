@@ -9,6 +9,7 @@ recorded in GitHub history.
 
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
+| R14 | current thread, operator restore contract | docs/TA-R14-operator-restore | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Paired encrypted backup/restore runbook, session and paid-worker restart fences; docs only while primary full73101 stays frozen | in-progress | 2026-10-08 |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization, native reliability, operational UX and live acceptance; Draft PR7; full18967 terminal PASS instrumented02ed0cc, owned PG cleanup confirmed; staged UX integrated2766a48 afterwards; whole goal incomplete | in-progress | 2026-10-08 |
 
 Rules:

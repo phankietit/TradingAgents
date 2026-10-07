@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 operator restore contract · 2026-10-08:** isolated docs-only
+`docs/TA-R14-operator-restore`, base cfd31da. New
+`docs/platform/operator-backup-restore.md` defines approved private paired
+capture, authenticated encryption/transfer/key recovery, fresh empty target,
+artifact extraction/inventory integrity, copied-session fence and separate
+queued/active paid-worker audit/restart gates. Startup/persistence link to it.
+Existing auth/session code confirms password rotation revokes unrevoked sessions;
+this is not a tested restore/session fence or implemented operator command.
+No backup/transfer/restore/private DB/process/env/provider mutation occurred.
+Dirty docs whitespace, issue-template YAML and relative Markdown links PASS.
+Operational tooling, encryption/path/session/active-work/browser rehearsal and
+owner runtime remain UNVERIFIED; no release or full goal PASS is implied.
+Primary full73101 is running at frozen clean
+`cfd31da326216e434e94cd68ee5efaf90f5a1366`, default uninstrumented
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`,
+with credential-URL redaction in output. No primary edit/integration until this
+same handle is terminal and owned cleanup confirmed; observation timeout alone
+does not authorize a restart. Full result remains UNVERIFIED while running.
+
 **R14 integrated PostgreSQL restore receipt · 2026-10-08:** frozen clean primary
 `e64de6ba4d97bd7daa61a32d9688ba65c7509c9d`, primary7164 terminal0:
 same six-file focused command as side56247 below;66selected PASS18.87s,
