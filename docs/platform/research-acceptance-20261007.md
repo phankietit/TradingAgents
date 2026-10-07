@@ -32,6 +32,49 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Exact initialized preflight full regression and staged factory lease proof
+
+Clean frozen `17294ddeb08f374079497ee1f24e0a132faee6b6`, full disposable
+PostgreSQL78779 terminal0: **3,073PASS,88 subtests PASS,2 skips,443warnings,
+1211.59s**, Python3.14.7. Command: task-owned external TMPDIR,
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`.
+Ruff/pip-check PASS; source/HEAD unchanged throughout and helper removed only
+its labelled PostgreSQL. Skipped Bedrock dependency and live DeepSeek remain
+UNVERIFIED. This is full local preflight proof, not default recording, owner
+recovery/consent, financial/editorial/VI/live or release acceptance.
+
+Staged external original owner source loader: independent corrective PG40080
+terminal0,26PASS/5warnings/2.30s, Ruff/pip-check PASS. Includes22 source contract
+fixtures and four real SQLite/PostgreSQL repository/blob cases: original book
+Decimal, exact policy/risk bytes, owner refusal and unchanged original rows.
+Initial PG10970 failed25/1 due duplicate canonical AAPL fixture UUIDs; unique
+synthetic aliases fix fixture isolation without resetting history or assertions.
+No correlation/coverage/risk-policy approval is inferred from recording input
+admission. Staged factory74569:12PASS/5warnings/8.99s; its lease/ACK were mocked.
+
+Expanded real factory lease/ACK56230 terminal0:10PASS/5warnings/59.41s; both
+SQLite/PostgreSQL, actual current JobExecutionContext/claimed queue lease,
+owner-readable snapshot loading, actual native SDK/graph preflight and parent
+PrivateCheckpointStore callback. SDK/network invoke forbidden. Codec fixture
+checkpoint commits idempotently, survives reopening, preserves original run,
+and does not increment model starts. Expired/foreign-worker/cancelled/failed
+heartbeat fences reject both ACK and checkpoint row. This does not execute or
+interrupt/resume a real default graph/job, authenticate a browser or prove
+financial output. Both candidate helpers remain external/not integrated.
+
+First expanded14859 terminal1:9PASS/1FAIL/5warnings/35.70s, PG reopen failed
+because str(SQLAlchemy URL) masks its password. Corrected reopen uses the same
+original disposable connection configuration in memory only, not credential
+printing/storage or an authentication bypass. Native assertions are retained.
+Each helper removed only its labelled owned disposable database, separate from
+the full helper. Commands: scoped external TMPDIR/PYTHONPATH,
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused
+<owned-run>/Results/test_recording_factory_lease.py --tb=short` (same selection
+for source-loader file above). No paid AI/provider/risk/history/CI/main/deploy
+action. Next integrate authenticated original sources + fresh per-run recording
+while preserving entered-attempt uncertainty, original observer/lease/ACK and
+explicit human consent; no automatic continuation/prefix rerun is authorized.
+
 ### Initialized SDK lifecycle root cause and isolated diagnostic
 
 At clean `9de33344d6b03fc3fd01eff27d3e68a36f8ceef5`, Python3.14.7,
