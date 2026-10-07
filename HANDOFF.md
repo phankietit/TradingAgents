@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Default recording integration candidate (2026-10-07):** after full17294
+terminal0, integrate staged original source loader/factory and tests into repo.
+Default runtime enables recording for snapshot jobs; explicit engine injection
+retains its testing seam. Handler loads original owner book/policy/risk bytes,
+keeps entered research fence + same observer, creates per-run engine/codec and
+parent-fenced store callback; template/CLI/legacy tools/history unchanged.
+Dirty source ataf56a1e: first normal77978 terminal1,46PASS/7PG prerequisite
+skips/2 setup errors/189.17s. Both errors are 45-second initialized preflight
+deadline refusal in sqlite worker/cancel lease fixtures; no provider invoke.
+All skipped PG cases UNVERIFIED. Repository Ruff/diff PASS. Do NOT hide errors,
+relax deadline/fences or call this default-flow acceptance. Machine parallel load
+was observed but causality is not established. Next measure child constructor/
+fingerprint/cleanup/exit timing, fix actual cause, then production-path native,
+PG/full and owner browser recovery gates. No user runtime restart, paid run,
+provider/risk/history/CI/main/deploy action; goal ACTIVE.
+
 **Initialized preflight full baseline (2026-10-07):** clean frozen
 `17294ddeb08f374079497ee1f24e0a132faee6b6`, helper78779 terminal0:
 3,073 tests+88 subtests PASS/2 optional-provider skips UNVERIFIED/443warnings/

@@ -46,8 +46,11 @@ def run_worker(settings, *, once=False, stopped=None, poll_seconds=1.0, worker_i
         store = LocalArtifactStore(settings.artifact_root)
         config = {**DEFAULT_CONFIG, "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
                   "results_dir": str(store.root / "worker-runtime" / "reports")}
-        handler = AnalysisJobHandler(database, store, engine=engine or SupervisedAnalysisEngine(base_config=config),
-                                     prompt_version=settings.prompt_version)
+        # Explicit engine injection is a local testing seam, not production
+        # recording authority. Default snapshot jobs require per-run recording.
+        handler = AnalysisJobHandler(database, store,
+            engine=engine if engine is not None else SupervisedAnalysisEngine(base_config=config),
+            prompt_version=settings.prompt_version, recording_enabled=engine is None)
         worker = JobWorker(database, worker_id=worker_id or f"worker-{uuid4()}",
                            handlers={JobKind.ANALYSIS_RUN: handler})
         while not stopped.is_set():

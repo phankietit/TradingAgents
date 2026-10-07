@@ -32,6 +32,32 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Default recording integration after the exact preflight baseline
+
+After full17294 finished, move original source loader and per-run factory into
+the package. Default local runtime enables ordinary snapshot recording; engine
+injection remains an explicit test seam. Handler loads owner original full
+Decimal book/policy/risk bytes inside its authenticated run/job loading session,
+preserves research.execution_started before preparation and the same observer,
+then uses a per-run codec/store/supervisor without mutating its template. Legacy
+CLI/live-tool behavior and original human/risk/continuation boundaries remain.
+No restore/linked dispatch or paid permission is introduced.
+
+Initial dirty integration at `af56a1e3228b0d5936adb8b22c1f5d4f69ef28da`,
+normal focused77978 terminal1: **46PASS,7 PostgreSQL prerequisite skips,
+2 setup errors,189.17s**. Selection: test_worker_runtime, test_recording_factory,
+test_recording_sources, test_recording_factory_lease; scoped external TMPDIR,
+`.venv/bin/python -m pytest -q ... --tb=short`. Ruff/diff PASS. Errors in native
+sqlite-worker/sqlite-cancelled fixtures refuse on the initialized preflight's
+45-second total ceiling. Children invoke neither model nor network; do not
+promote old staged/full proof or rerun selected cases alone as a full acceptance.
+Other concurrent machine workloads were observed, not established as the cause.
+Next instrument bounded child preparation/fingerprint/cleanup/clean-exit timing
+without bypassing admission, cleanup, cancellation or original allowance.
+Default production native graph and owner journeys, new PG/full baseline and
+financial/VI/live acceptance remain UNVERIFIED. No owner runtime was restarted
+by this work, and no paid AI/provider/risk/private-history/CI/main/deploy action.
+
 ### Exact initialized preflight full regression and staged factory lease proof
 
 Clean frozen `17294ddeb08f374079497ee1f24e0a132faee6b6`, full disposable

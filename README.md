@@ -586,7 +586,15 @@ ceiling and child reaping. Only a sanitized fingerprint/node list is returned
 after SDK cleanup and clean child exit; no model call or continuation permission
 is granted. Parent credentials are not serialized and no supplied client/factory
 is accepted. Default per-run recording, owner continuation and live acceptance
-remain unfinished; this prerequisite is not wired into default workers yet.
+remain unfinished. The draft default local worker now attempts per-run recording
+for snapshot jobs: reload original owner-scoped Decimal book/policy/risk bytes,
+retain the entered-attempt uncertainty fence and same observer, prepare actual
+identity, then construct a fresh supervisor with original parent-fenced commits.
+No shared template mutation, recording fallback, automatic retry/resume or new
+approval authority. Legacy tools/CLI stay unchanged; explicit engine injection
+is a testing seam, not production recording authority. Current integration QA
+has two preparation-deadline errors; default graph/owner journey and a new full
+baseline remain unverified. Do not infer acceptance from the prior preflight gate.
 Private checkpoint persistence now has an internal append-only database store
 and migration `0011_research_checkpoints`, separate from report artifacts. It
 validates restricted JSON, binds owner/run/job, commits under the existing

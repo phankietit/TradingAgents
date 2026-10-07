@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Wire the draft default snapshot worker to original owner-scoped recording
+  inputs and a fresh per-run recording supervisor. Preserve exact Decimal
+  book/policy, full declared risk bytes, original observer/uncertainty fence and
+  parent lease/ACK boundaries. No silent recording fallback, CLI change or
+  automatic continuation. Integration is not accepted: current QA includes
+  preparation-deadline errors and needs new native/default/full gates.
+
 - Add an internal spawn-isolated initialized SDK/graph identity prerequisite
   for durable research recording. Bound JSON transfer and preparation lifetime,
   preserve the original observer budget/cancellation/lease fence, reap owned

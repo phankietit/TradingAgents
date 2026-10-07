@@ -103,10 +103,17 @@ class AnalysisJobHandler:
     exists. A free-text fallback is never parsed into a structured decision.
     """
 
-    def __init__(self, database, artifact_store, *, engine=None, prompt_version="1"):
+    def __init__(self, database, artifact_store, *, engine=None, prompt_version="1", recording_enabled=False):
+        from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
+
+        if type(recording_enabled) is not bool:
+            raise ValueError("recording configuration requires review")
         self.database = database
         self.artifact_store = artifact_store
-        self.engine = engine or AnalysisEngine()
+        self.engine = engine if engine is not None else AnalysisEngine()
+        if recording_enabled and type(self.engine) is not SupervisedAnalysisEngine:
+            raise ValueError("recording configuration requires review")
+        self.recording_enabled = recording_enabled
         self.prompt_version = prompt_version
 
     def __call__(self, job, context):
@@ -180,6 +187,14 @@ class AnalysisJobHandler:
                 raise ValueError("run instrument unavailable")
             snapshot_context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst) if run.decision_inputs else None
             portfolio = load_run_portfolio(repository, run)
+            original_sources = None
+            if self.recording_enabled and snapshot_context is not None:
+                from tradingagents.platform.analysis.recording_sources import (
+                    load_original_recording_sources,
+                )
+
+                original_sources = load_original_recording_sources(repository=repository,
+                    artifacts=artifacts, run=run)
         def emit(event_type, payload):
             from datetime import datetime
 
@@ -220,7 +235,7 @@ class AnalysisJobHandler:
         # Recovery must not guess that a crashed provider request cost nothing.
         emit("research.execution_started", {})
         entered_engine[0] = True
-        result = self.engine.analyze(AnalysisRequest(
+        request = AnalysisRequest(
             instrument=instrument, analysis_date=run.analysis_as_of.date(),
             selected_analysts=run.selected_analysts,
             snapshot_context=snapshot_context,
@@ -231,7 +246,18 @@ class AnalysisJobHandler:
                               "deep_think_llm": run.deep_model,
                               **({"output_language": {"en": "English", "vi": "Vietnamese", "en-vi": "English and Vietnamese"}[run.report_language]}
                                  if run.report_language is not None else {})},
-        ))
+        )
+        engine = self.engine
+        if self.recording_enabled and snapshot_context is not None:
+            from tradingagents.platform.analysis.recording_factory import build_recorded_engine
+
+            # Original owner-loaded Decimal inputs, not the LLM's float view.
+            # Per-run engine/codec/commit only; never mutate the shared template.
+            engine = build_recorded_engine(template=self.engine, context=context, run=run,
+                request=request, observer=observer,
+                portfolio_snapshot=original_sources.portfolio_snapshot,
+                policy=original_sources.policy, risk_snapshots=original_sources.risk_snapshots)
+        result = engine.analyze(request)
         context.raise_if_cancelled()
         context.heartbeat()  # Reject a lost/expired lease before publishing.
         # Deliberately exclude raw graph messages, which may contain provider
