@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean summary red reproduction · 2026-10-08:** frozen clean
+`65bff3d685f89a5183febe437378bda6601d8e89`, side76715 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`.
+1FAIL3PASS2.76s; same mixed-source uncited executive-summary case as61119.
+This is FAIL, not an expected green gate. New schema/compiler/reviewer source
+binding is still unimplemented; no skip/xfail, relaxed assertion or text deletion.
+Clean docs YAML/relative links/whitespace PASS only; Python3.14.7 existing venv.
+Test/receipt/design source unchanged during reproduction. Branch deliberately
+remains WIP/red and must not be integrated/released before the fix and full
+acceptance. Main full73101 still running on clean cfd31da, separately unchanged.
+Next implement version-aware generated summary references/lossless projection,
+legacy reading tests and original-role/bounded-repair parity, then focused/native/
+integrated/full and explicitly approved live gates. Whole R01–R14 ACTIVE.
+
 **R07 summary provenance red baseline · 2026-10-08:** owned isolated
 `fix/TA-R07-summary-provenance`, base500a594 carrying staged claim-local/R14 work.
 Source inspection confirms canonical material-citation parity excludes the
