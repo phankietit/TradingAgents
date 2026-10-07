@@ -2,6 +2,18 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact integrated focused PASS:** clean frozen
+`336584420dc4af1254599f2686d80f9b644b45ce`, session30737 terminal0:
+135PASS/14.62s, Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_social_review_parity.py --tb=short -x`
+Full Ruff/diff PASS before merge commit; only HANDOFF conflicted, both complete
+receipt blocks retained and historical running statements labelled historical.
+No graph role, source, allowance, policy/provider or owner-history change.
+Known qualifier/cause families and bounded repair tested, not general semantic
+or actual-report quality. Next: full unselected disposable PostgreSQL gate on
+the following receipt candidate, clean/frozen until terminal; earlier fullFAIL
+causes remain UNVERIFIED, live acceptance and NQ owner-BLOCKED unchanged.
+
 **Integrated continuation (2026-10-08):** merge the known-semantic side only
 after primary full11461 and side matrix16132 were terminal. Preserve both
 branches' exact receipts below; chronological running statements are historical,
