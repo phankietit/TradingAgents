@@ -1,4 +1,4 @@
-"""Staged V2 schema/compiler tests; default generation activation is still pending."""
+"""V2 schema/compiler component tests; not native/live financial acceptance."""
 
 import copy
 from uuid import uuid4

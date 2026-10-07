@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_financial_validation_stage import candidate
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
@@ -32,12 +33,12 @@ def _review(claim, *, include_news, cite_news=False):
         def with_structured_output(self, schema):
             def invoke(prompt):
                 calls.append(prompt)
-                return schema.model_validate(raw)
+                return schema.model_validate(summary_response(raw, [prices["snapshot_id"]]))
             return SimpleNamespace(invoke=invoke)
 
         def invoke(self, prompt):
             calls.append(prompt)
-            return AIMessage(content=json.dumps(raw))
+            return AIMessage(content=json.dumps(summary_response(raw, [prices["snapshot_id"]])))
 
     result = create_financial_validation(Model(), reports)({"structured_decision": raw})
     assert json.dumps(raw, sort_keys=True) == before

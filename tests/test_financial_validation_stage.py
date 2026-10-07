@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
 
@@ -24,7 +25,7 @@ def test_valid_canonical_report_receives_one_bounded_financial_review():
     class Model:
         def with_structured_output(self, schema):
             return SimpleNamespace(invoke=lambda prompt:
-                prompts.append(prompt) or schema.model_validate(original))
+                prompts.append(prompt) or schema.model_validate(summary_response(original, [data["snapshot_id"]])))
     result = create_financial_validation(Model(), {"market":json.dumps([data])})({
         "structured_decision": original})
     assert result["structured_decision"]["rating"] == original["rating"]
@@ -54,7 +55,7 @@ def test_numeric_validity_does_not_bypass_review_of_unsupported_causality():
     class Model:
         def with_structured_output(self, schema):
             return SimpleNamespace(invoke=lambda prompt:
-                prompts.append(prompt) or schema.model_validate(reviewed))
+                prompts.append(prompt) or schema.model_validate(summary_response(reviewed, [data["snapshot_id"]])))
     result = create_financial_validation(Model(), {"market": json.dumps([data])})({
         "structured_decision": original})
     assert len(prompts) == 1 and claim in prompts[0]
@@ -94,7 +95,7 @@ def test_financial_repair_preserves_rejected_candidate_and_uses_exact_evidence()
     prompts = []
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda prompt: (prompts.append(prompt) or schema.model_validate(candidate(data["snapshot_id"]))))
+            return SimpleNamespace(invoke=lambda prompt: (prompts.append(prompt) or schema.model_validate(summary_response(candidate(data["snapshot_id"]), [data["snapshot_id"]]))))
     bad = candidate(data["snapshot_id"], incorrect=True)
     result = create_financial_validation(Model(), {"market":json.dumps([data])})({"structured_decision":bad})
     assert result["structured_decision"] is not None
@@ -106,13 +107,14 @@ def test_financial_repair_preserves_rejected_candidate_and_uses_exact_evidence()
 def test_invalid_financial_repair_cannot_publish_or_loop():
     data = source()
     bad = candidate(data["snapshot_id"], incorrect=True)
+    response = summary_response(bad, [data["snapshot_id"]])
     calls = []
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda _: schema.model_validate(bad))
+            return SimpleNamespace(invoke=lambda _: schema.model_validate(response))
         def invoke(self, prompt):
             calls.append(prompt)
-            return AIMessage(content=json.dumps(bad))
+            return AIMessage(content=json.dumps(response))
     result = create_financial_validation(Model(), {"market":json.dumps([data])})({"structured_decision":bad})
     assert result["structured_decision"] is None
     assert result["rejected_structured_decision"] == bad
@@ -163,7 +165,7 @@ def test_financial_review_receives_complete_selected_evidence_not_only_fact_ids(
 
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda prompt: prompts.append(prompt) or schema.model_validate(raw))
+            return SimpleNamespace(invoke=lambda prompt: prompts.append(prompt) or schema.model_validate(summary_response(raw, [prices["snapshot_id"]])))
 
     reports = {"market": json.dumps([prices]), "news": json.dumps([news]),
                "social": json.dumps([social])}
@@ -197,7 +199,7 @@ def test_review_prompt_is_identical_after_json_object_key_reordering():
 
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda prompt: prompts.append(prompt) or schema.model_validate(raw))
+            return SimpleNamespace(invoke=lambda prompt: prompts.append(prompt) or schema.model_validate(summary_response(raw, [prices["snapshot_id"]])))
 
     original = {"market": json.dumps([prices]), "news": json.dumps([news])}
     restored = {"news": json.dumps([reorder(news)]), "market": json.dumps([reorder(prices)])}

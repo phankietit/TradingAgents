@@ -10,6 +10,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_platform_fred import NOW, collect, documents
 from tests.test_price_preparation import AAPL
 from tests.test_report_compiler import draft
@@ -257,7 +258,7 @@ def test_macro_financial_review_and_protected_translation_use_the_same_sources()
 
     class Reviewer:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda prompt: review_calls.append(prompt) or schema.model_validate(raw))
+            return SimpleNamespace(invoke=lambda prompt: review_calls.append(prompt) or schema.model_validate(summary_response(raw, [source["snapshot_id"]])))
 
     reviewed = create_financial_validation(Reviewer(), {"news": json.dumps([source])})({"structured_draft": raw})
     assert reviewed["structured_decision"] is not None and len(review_calls) == 1

@@ -15,7 +15,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "valid_v2", "unknown_summary_v2", "missing_summary_v2", "tampered_summary_v2", "fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "valid_v2", "legacy_output", "unknown_summary_v2", "missing_summary_v2", "tampered_summary_v2", "fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -64,7 +64,11 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
                 claims[0]["snapshot_ids"] = [str(uuid4())]
             payload = {"rating": "Buy", "executive_summary": "Research", "investment_thesis": "Thesis",
                 "confidence": .7, "risks": ["Risk"], "invalidation_conditions": ["Invalidation"],
-                "evidence_claims": claims}
+                "evidence_claims": claims, "report_contract_version": "2.0",
+                "summary_evidence": {"claim": "Research", "snapshot_ids": [str(source)]}}
+            if case == "legacy_output":
+                payload.pop("report_contract_version")
+                payload.pop("summary_evidence")
             if case in {"valid_v2", "unknown_summary_v2", "missing_summary_v2", "tampered_summary_v2"}:
                 payload["report_contract_version"] = "2.0"
                 payload["summary_evidence"] = {"claim": "Research", "snapshot_ids": [str(source)]}
@@ -129,11 +133,10 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             assert len(job.output_artifact_ids) == 2
             evidence = EvidenceGraphService(ArtifactService(store, repo)).read(job.output_artifact_ids[1], run.owner_id)
             if case in {"valid", "valid_v2"}:
-                assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation"} | (
-                    {"Research"} if case == "valid_v2" else set())
+                assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation", "Research"}
             else:
                 assert "SYNTHETIC LOCAL QA" in decision.thesis
-                assert len(evidence.claims) == 3
+                assert len(evidence.claims) == 4
             assert all(ref.snapshot_id == source for ref in evidence.evidence)
             if case == "valid_v2":
                 import json

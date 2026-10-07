@@ -57,6 +57,10 @@ def create_financial_validation(llm, reports):
             CanonicalSnapshotDecisionV2 if v2 else CanonicalSnapshotDecision)
         compiler = compile_report_v2 if v2 else compile_report
         candidate = schema.model_validate(raw)
+        # Legacy input is readable, not authority to generate another uncited
+        # report. A separately reviewed result always uses explicit V2. The
+        # original input remains untouched in rejected_structured_decision.
+        output_schema = SnapshotReportDraftV2 if is_draft else CanonicalSnapshotDecisionV2
         diagnostics = list(state.get("structured_diagnostics", []))
         checks = ()
         failure = None
@@ -76,7 +80,7 @@ def create_financial_validation(llm, reports):
 
         def capture(value):
             nonlocal accepted
-            compiled = compiler(value.model_dump(), facts) if is_draft else value
+            compiled = compile_report_v2(value.model_dump(), facts) if is_draft else value
             validate_canonical_report(compiled, facts, snapshot_ids)
             validate_price_only_attributions(compiled, sources)
             accepted = compiled.model_dump(mode="json")
@@ -124,18 +128,17 @@ def create_financial_validation(llm, reports):
         )
         if is_draft:
             prompt += BINDING_INSTRUCTIONS
-        if v2:
-            prompt += ("\nPreserve report_contract_version=2.0. summary_evidence must repeat the "
+        prompt += ("\nReturn report_contract_version=2.0. summary_evidence must repeat the "
                        "COMPLETE executive_summary exactly, including quantity placeholders, with "
                        "the actual immutable snapshot IDs supporting that summary. Never infer "
                        "summary support from unrelated available sources or copy a union of thesis "
                        "citations. Keep all opposing evidence and explicitly unverified scenarios. "
                        "Missing summary evidence cannot downgrade output to a legacy report.")
         rendered = invoke_structured_or_freetext(
-            bind_structured(llm, schema, "Financial validation"), llm,
+            bind_structured(llm, output_schema, "Financial validation"), llm,
             prompt, (lambda value: value.model_dump_json()) if is_draft else reader_report,
             "Financial validation", on_structured=capture,
-            repair_schema=schema, diagnostics=diagnostics,
+            repair_schema=output_schema, diagnostics=diagnostics,
         )
         if accepted is not None:
             rendered = reader_report(read_canonical_snapshot_report(accepted))

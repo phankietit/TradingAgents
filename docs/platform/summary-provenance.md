@@ -1,10 +1,12 @@
 # R07 summary provenance — implementation design
 
-Status: staged V2 schema/compiler components; default-flow regression remains
-FAIL. Default generation/publication activation pending, not release acceptance.
-`tests/test_summary_source_coverage.py` proves the current canonical summary can
-assert an uncited external cause when unrelated news is available, even after
-the claim-local thesis guard. See exact receipts in [HANDOFF](../../HANDOFF.md).
+Status: V2 generation/review/publication activated on the isolated R07 branch;
+local regression verified, clean/native/full/live acceptance pending. Not release
+acceptance or integrated PR-head behavior. Historical red receipts show an
+uncited external cause was accepted when unrelated news was available. The
+summary regression now supplies explicit synthetic model citations and retains
+the original refusal/conditional assertions, adding checks that refusal is for
+unsupported causality, not merely absent schema fields. See [HANDOFF](../../HANDOFF.md).
 Do not fix this by deleting the summary, selecting every available source,
 keyword-matching a guessed citation or expanding a vocabulary blacklist.
 
@@ -20,15 +22,16 @@ schema uses required `report_contract_version: "2.0"` and `summary_evidence`
 `CanonicalSnapshotDecisionV2` preserve the provider tool name `PortfolioDecision`.
 The legacy schema and original CLI contract remain unchanged.
 
-Staged `compile_report_v2` refuses missing V2 fields, including removal of both
+`compile_report_v2` refuses missing V2 fields, including removal of both
 fields. Lossless quantity substitution preserves exact summary/evidence text
 parity and requires each summary quantity's source among its supplied references.
 The version-aware reader accepts explicit V2 or separately identified legacy
 reports, rejecting unknown explicit versions; legacy reading is not permission
 for new output to downgrade. Canonical validation checks supplied summary IDs,
 and the known price-only motive guard uses the summary's actual citations.
-The bounded financial node now accepts explicit V2 input without allowing its
-output to drop version/source fields; it retains the original rejected candidate
+Snapshot Portfolio Manager requires V2. The bounded financial node accepts V2
+or separately readable legacy input, but ALL newly reviewed output requires V2:
+legacy input cannot authorize legacy output. It retains the original rejected candidate
 and original structured-attempt/one-repair bound. Presentation and checkpoint
 transport understand explicit V2, including a separately localized saved report,
 and retain exact summary sources. Canonical review input still requires null
@@ -44,7 +47,7 @@ quality or decision readiness. Existing risk and owner approval stay authoritati
 Worker fixtures verify V2 report/evidence readback and ordinary human approval,
 not native full-role/live/browser acceptance. Generation and full publication/
 approval integrity review plus original-role integrated/native gates must verify
-together before activation; retain rejected original
+before integration/acceptance; retain rejected original
 inputs and immutable legacy history. The uncited-summary default-flow red test
 remains authoritative.
 

@@ -60,6 +60,8 @@ class SyntheticSnapshotGraph:
         )
         narrative = {
             "rating": "Hold", "executive_summary": "SYNTHETIC GRAPH OUTPUT — NO MODEL CALL",
+            "report_contract_version": "2.0", "summary_evidence": {
+                "claim": "SYNTHETIC GRAPH OUTPUT — NO MODEL CALL", "snapshot_ids": self.sources},
             "investment_thesis": claims[0], "confidence": .5,
             "risks": [claims[1]], "invalidation_conditions": [claims[2]],
             "evidence_claims": [{"claim": claim, "snapshot_ids": self.sources} for claim in claims],
@@ -95,7 +97,7 @@ class BilingualSyntheticGraph(SyntheticSnapshotGraph):
 
     def propagate_snapshots(self, *args, **kwargs):
         from tradingagents.agents.research_schemas import LocalizedResearchReport
-        from tradingagents.agents.utils.report_compiler import compile_report
+        from tradingagents.agents.utils.report_compiler import compile_report_v2
         from tradingagents.agents.utils.report_localization import reader_report
         from tradingagents.platform.analysis.research_validation import validate_canonical_report
 
@@ -113,7 +115,9 @@ class BilingualSyntheticGraph(SyntheticSnapshotGraph):
                "time_horizon": "Browser verification only.",
                "quantity_bindings": [{"key": "QA", "snapshot_id": snapshot_id,
                                       "fact_id": "latest.close", "decimal_places": 2}]}
-        report = compile_report(raw, self.facts)
+        raw["report_contract_version"] = "2.0"
+        raw["summary_evidence"] = {"claim": raw["executive_summary"], "snapshot_ids": [snapshot_id]}
+        report = compile_report_v2(raw, self.facts)
         validate_canonical_report(report, self.facts, set(self.sources))
         amount = f"{report.observed_numbers[0].value:.2f}"
         localized = LocalizedResearchReport(en=reader_report(report), vi=(

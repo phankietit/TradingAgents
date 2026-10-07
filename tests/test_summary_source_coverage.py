@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_financial_validation_stage import candidate
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
@@ -17,6 +18,7 @@ def _summary_review(summary, *, include_news):
     raw = candidate(prices["snapshot_id"])
     raw["executive_summary"] = summary
     before = json.dumps(raw, sort_keys=True)
+    response = summary_response(raw, [prices["snapshot_id"]])
     reports = {"market": json.dumps([prices])}
     if include_news:
         news = {"snapshot_id": str(uuid4()), "provenance": {"dataset": "news"},
@@ -28,12 +30,12 @@ def _summary_review(summary, *, include_news):
         def with_structured_output(self, schema):
             def invoke(prompt):
                 calls.append(prompt)
-                return schema.model_validate(raw)
+                return schema.model_validate(response)
             return SimpleNamespace(invoke=invoke)
 
         def invoke(self, prompt):
             calls.append(prompt)
-            return AIMessage(content=json.dumps(raw))
+            return AIMessage(content=json.dumps(response))
 
     result = create_financial_validation(Model(), reports)({"structured_decision": raw})
     assert json.dumps(raw, sort_keys=True) == before
@@ -48,6 +50,8 @@ def test_uncited_factual_cause_in_summary_is_withheld(include_news):
                              include_news=include_news)
     assert result["structured_decision"] is None
     assert result["final_trade_decision"].startswith("UNVALIDATED RESEARCH")
+    assert any("external_cause_requires_nonprice_evidence" in item.get("checks", [])
+               for item in result["structured_diagnostics"])
 
 
 @pytest.mark.parametrize("include_news", [False, True])
@@ -55,3 +59,4 @@ def test_unverified_conditional_summary_stays_research_not_fact(include_news):
     result = _summary_review("Tax-loss selling could explain the decline; this is unverified.",
                              include_news=include_news)
     assert result["structured_decision"] is not None
+    assert result["structured_decision"]["summary_evidence"]["claim"] == result["structured_decision"]["executive_summary"]

@@ -2,6 +2,28 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 V2 activation WIP · 2026-10-08:** isolated summary branch requires V2
+in snapshot Portfolio Manager and snapshot adapter output. Financial review may
+read legacy input, but every newly reviewed output (structured and sole repair)
+requires V2; original rejected input is unchanged, no downgrade. Canonical CLI
+is unchanged. Synthetic web fixtures updated to explicit V2/no live calls.
+Initial dirty48000 terminal1:30FAIL60PASS27.91s after schema activation: existing
+fake models still returned legacy output, including valid conditional controls.
+Fixtures now explicitly supply known test source IDs in fake model responses;
+runtime never guesses refs. Original causal/conditional/rejected-history/call-
+bound assertions retained; causal regression strengthened to require the actual
+external-cause publication code, not schema rejection. Legacy-output escape has
+an explicit two-call refusal test even with valid prose. Negative numeric repair
+now supplies valid V2 metadata so it still exercises the numeric guard.
+Dirty12416 terminal0:90PASS25.44s, dirty80484 terminal0:73PASS13.45s after worker/
+fixture migration, dirty66863 terminal0:227PASS33.00s across summary/compiler/
+review/transport/result, original-role macro/snapshot graph, social, worker and
+claim-local controls. Ruff PASS. Clean exact-SHA, native/integrated/full/live/
+browser/editorial gates remain UNVERIFIED; no scope reduction or completion.
+Main full73101 remains live on frozen cfd31da, latest79%; this activation is not
+in that full gate or PR head. No integration, paid call, provider/model/risk/
+allowance/history/public deployment change. Whole R01–R14 remains ACTIVE.
+
 **R07 clean V2 result/evidence gate · 2026-10-08:** frozen clean source
 `3bb5c50ff285bd35270beac6c2bdd6adda2ca9e2`, side24590 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_result_v2.py tests/test_snapshot_decision_worker.py tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_analysis_engine.py tests/test_snapshot_analysis.py tests/test_evidence_graph.py tests/test_decision_lifecycle.py tests/test_report_localization.py tests/test_artifact_store.py --tb=short`.

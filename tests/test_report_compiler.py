@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from tests.summary_fixtures import summary_response
 from tests.test_financial_validation_stage import candidate
 from tests.test_snapshot_market_facts import source
 from tradingagents.agents.utils.financial_validation import create_financial_validation
@@ -86,7 +87,7 @@ def test_draft_requires_one_financial_meaning_review_even_when_math_passes():
     calls = []
     class Model:
         def with_structured_output(self, schema):
-            return SimpleNamespace(invoke=lambda prompt: calls.append(prompt) or schema.model_validate(raw))
+            return SimpleNamespace(invoke=lambda prompt: calls.append(prompt) or schema.model_validate(summary_response(raw, [data["snapshot_id"]])))
     node = create_financial_validation(Model(), {"market": json.dumps([data])})
     result = node({"structured_draft": raw})
     assert result["structured_decision"]["observed_numbers"][0]["value"] == 499

@@ -16,7 +16,11 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from tradingagents.agents.research_schemas import ObservedNumber, read_snapshot_report
+from tradingagents.agents.research_schemas import (
+    ObservedNumber,
+    SnapshotPortfolioDecisionV2,
+    read_snapshot_report,
+)
 from tradingagents.agents.schemas import PortfolioDecision
 from tradingagents.agents.utils.agent_utils import build_instrument_context
 from tradingagents.contracts import InstrumentContract
@@ -167,7 +171,7 @@ class AnalysisEngine:
         raw_decision = final_state.get("structured_decision")
         if raw_decision is not None:
             try:
-                parsed = read_snapshot_report(raw_decision) if request.snapshot_context is not None else PortfolioDecision.model_validate(raw_decision)
+                parsed = SnapshotPortfolioDecisionV2.model_validate(raw_decision) if request.snapshot_context is not None else PortfolioDecision.model_validate(raw_decision)
                 if request.snapshot_context is not None:
                     # Invalid publication can retain schema-valid quantities
                     # for audit; they never grant decision authority.

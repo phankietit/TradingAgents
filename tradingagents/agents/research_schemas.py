@@ -118,8 +118,8 @@ def _summary_evidence_matches(self):
     return self
 
 
-# Staged V2 contract. Default graph generation still uses the legacy classes
-# until all review/read/publication consumers and native gates are migrated.
+# V2 is required for new snapshot generation/review and adapter publication.
+# Legacy schemas remain separately readable, never new-output fallback.
 # No default version/citations: a model must explicitly provide both fields.
 SnapshotPortfolioDecisionV2 = create_model(
     "PortfolioDecision", __base__=SnapshotPortfolioDecision,

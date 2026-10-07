@@ -148,8 +148,8 @@ def compile_report(raw, facts):
 def compile_report_v2(raw, facts):
     """Strict new-generation entry: removing both V2 fields cannot downgrade.
 
-    Default graph activation is pending; the legacy compiler stays available
-    for separately identified historical inputs, never new-output fallback.
+    The legacy compiler stays available for separately identified historical
+    inputs, never new-output fallback.
     """
     SnapshotReportDraftV2.model_validate(raw)
     return compile_report(raw, facts)

@@ -20,12 +20,15 @@ risk checks and human review. Its R01–R14 acceptance is incomplete; see
 Implemented web controls do not establish live financial/editorial quality or
 release readiness.
 
-The isolated R07 continuation stages an explicit V2 summary-evidence contract
-and lossless compiler with required supplied source references. It is not yet
-active in default web generation/publication; the default uncited-summary
-regression remains FAIL. Explicit V2 input is now supported by bounded financial
+The isolated R07 continuation activates an explicit V2 summary-evidence contract
+and lossless compiler with required supplied source references for snapshot
+generation and ALL newly reviewed output, including review of legacy input.
+The snapshot adapter requires V2 for new publication; historical readers retain
+legacy reports unchanged, without authorizing new-output fallback. This branch
+is not yet integrated into the PR head; local fake-model regression evidence
+does not prove native/full/live acceptance. Explicit V2 input is supported by bounded financial
 review, localization and checkpoint transport, with original repair bounds and
-rejected input retained. This staged support does not certify active full-flow
+rejected input retained. This support does not certify accepted full-flow
 publication, native recovery or translation quality. Explicit V2 results also
 retain summary citations in the evidence graph, with adapter publication checks
 and independent worker metadata/narrative/source parity before readiness. Existing

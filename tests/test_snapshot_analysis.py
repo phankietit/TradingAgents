@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_analysis_engine import _instrument
 from tests.test_risk_engine import NOW
 from tradingagents.contracts import SnapshotManifest
@@ -67,6 +68,9 @@ def test_real_graph_snapshot_path_has_no_live_tools_memory_or_legacy_writes(tmp_
                 payload["investment_thesis"] = [claims[0]]
                 payload["risks"] = [claims[1]]
                 payload["invalidation_conditions"] = [claims[2]]
+            if "report_contract_version" in schema.model_fields:
+                values["PortfolioDecision"] = summary_response(values["PortfolioDecision"],
+                    [str(inputs.by_analyst["market"][0].manifest.snapshot_id)])
             return SimpleNamespace(invoke=lambda prompt: (structured_prompts.append(prompt)
                 or schema.model_validate(values[schema.__name__])))
 
@@ -170,6 +174,7 @@ def test_failed_upstream_schema_repair_cannot_be_hidden_by_valid_final_report(ph
         def propagate_snapshots(self, *args, **kwargs):
             return {"structured_decision": {"rating":"Hold", "confidence":.5,
                 "executive_summary":"Limited research", "investment_thesis":"Thesis",
+                "report_contract_version":"2.0", "summary_evidence":{"claim":"Limited research", "snapshot_ids":[sid]},
                 "risks":["Risk"], "invalidation_conditions":["Conditional change"],
                 "evidence_claims":[{"claim":text,"snapshot_ids":[sid]} for text in ("Thesis","Risk","Conditional change")]},
                 "structured_diagnostics":[{"agent":"Research Manager","phase":phase,"error_type":"ValueError"}]}, "Hold"
