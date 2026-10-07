@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Side recovery matrix FAIL (2026-10-07):** clean frozen
+`91d3c4f1abd8054eeea3d65268927f5aadb5bd75`, session23564 terminal1:
+8PASS/1FAIL/16 synthetic SDK warnings/217.65s. Command:
+`PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x`
+Ruff/pip startup PASS; helper removed only its labelled disposable PostgreSQL
+container. PostgreSQL/en/worker returned a reservation UUID, no analysis child,
+with InitializedPreflightError at the final preflight boundary after cleanup.
+The 45-second preflight limit and original research/lease fences remain intact;
+root cause is not yet established. Add numeric elapsed/source-check diagnostics
+only, then retry that selected case to locate time spent. No budget increase,
+clock substitution, skipped assertion, extra model/provider call or replay of
+owner history. This FAIL is not superseded by the earlier single SQLite PASS.
+Primary c1308ef full11461 remains live, frozen and separate; no integration.
+
 **Exact known-semantic guard acceptance:** clean frozen side
 `3e2a91c4ab3083db69ec344d8dbefa077b39c515`, focused10526 terminal0:
 135PASS/2.02s, Python3.14.7; scoped Ruff/diff PASS, command below unchanged.

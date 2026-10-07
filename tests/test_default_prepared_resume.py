@@ -1,6 +1,7 @@
 """Default stopped graph to explicit consent; real DB, synthetic SDK and ACK loss."""
 import json
 import os
+from time import monotonic
 from uuid import uuid4
 
 import pytest
@@ -292,6 +293,39 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
 
         execution_failures = []
         renewal_failures = []
+        preflight_timings = []
+        from tradingagents.platform.analysis import reserved_preparation
+
+        original_preflight = reserved_preparation.prepare_recording_identity
+        def observed_preflight(**kwargs):
+            # Measure the real boundary without changing its clock, deadline,
+            # lease checks or original allowance. Only bounded numeric timing
+            # leaves the test; never exception text, DB URLs or request values.
+            observer = kwargs["observer"]
+            original_check = observer.check_cancelled
+            started = monotonic()
+            checks = 0
+            check_seconds = 0.0
+            def measured_check():
+                nonlocal checks, check_seconds
+                check_started = monotonic()
+                try:
+                    return original_check()
+                finally:
+                    checks += 1
+                    check_seconds += monotonic() - check_started
+            observer.check_cancelled = measured_check
+            try:
+                return original_preflight(**kwargs)
+            finally:
+                observer.check_cancelled = original_check
+                preflight_timings.append({
+                    "elapsed_seconds": round(monotonic() - started, 3),
+                    "source_check_seconds": round(check_seconds, 3),
+                    "source_checks": checks,
+                    "preflight_limit_seconds": initialized_preflight.PREFLIGHT_SECONDS,
+                })
+        monkeypatch.setattr(reserved_preparation, "prepare_recording_identity", observed_preflight)
         original_heartbeat = LinkedPublicationContext.heartbeat
         def observed_heartbeat(self, **kwargs):
             try:
@@ -322,6 +356,7 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
                 "clients_closed": suffix["closed_clients"] == 2,
                 "execution_failures": execution_failures,
                 "renewal_failures": renewal_failures,
+                "preflight_timings": preflight_timings,
             }, sort_keys=True)
         )
         assert trace["trace"] + suffix["trace"] == json.loads(json.dumps(baseline.model_trace))
