@@ -2,6 +2,15 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Opt-in native shutdown diagnostic:** synthetic test child only,
+`TA_TEST_PREFLIGHT_TRACE=1` enables stdlib faulthandler stack-location dumps
+after 10s, repeated until process exit. No locals, exception/provider text or
+request payloads; no production path or .env change. Watchdog remains enabled
+through interpreter shutdown so a post-reply exit stall can be located. Parent
+deadline, original allowance, client-close/exit/reaping assertions unchanged.
+Use only with synthetic native tests and external managed logs; absent flag
+preserves ordinary test behavior. This instrumentation is not a cause/fix claim.
+
 **Selected factory retry PASS, full acceptance still FAIL:** clean frozen
 `1ff58d41d51ddce007034b1ff96af1886634748e`, session75936 terminal0:
 1PASS/11.52s, Python3.14.7. Command:

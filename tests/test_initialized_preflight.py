@@ -1,7 +1,9 @@
 """Native spawn identity and failure refusal, genuine SDKs with no requests."""
 
 import asyncio
+import faulthandler
 import multiprocessing
+import os
 import threading
 from decimal import Decimal
 from time import sleep
@@ -27,6 +29,12 @@ def _forbidden(*args, **kwargs):
 
 
 def _exercise_child(connection, raw, case):
+    if os.environ.get("TA_TEST_PREFLIGHT_TRACE") == "1":
+        # Explicit synthetic-native diagnostic only. Stack locations contain
+        # no messages/locals/request values. Keep the watchdog through process
+        # exit so a post-reply interpreter shutdown stall is observable; do not
+        # alter the parent's deadline, cleanup or required exit status.
+        faulthandler.dump_traceback_later(10, repeat=True)
     models, attempts = [], []
     factory = trading_graph.create_llm_client
     original_close = openai.OpenAI.close
