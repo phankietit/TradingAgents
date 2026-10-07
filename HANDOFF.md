@@ -2,6 +2,45 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Browser consent -> default native worker PASS (2026-10-07):** clean frozen
+`75e6f933eed497f406f5cd3864c921a72acfdc62`, external QA bridge3171 terminal0:
+1PASS/2synthetic-model warnings/41.44s, Python3.14.7. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -c pyproject.toml -q <managed-run>/test_browser_native_bridge.py --basetemp=<managed-run>/browser-native-75e6f93-b --tb=short -x -s`
+Managed run is
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163`.
+No production source/HEAD changes during the gate. Built web came from exact8bc
+(75e6f93 is docs-only). No new dependency, provider, CI, owner DB or paid call.
+
+The bridge reuses the original `test_default_stopped_job_to_authenticated_consent`
+worker/bilingual SQLite case, preserving its complete native graph trace,
+accounting/checkpoint/history/consent/idempotency/process-reaping assertions.
+Before its first valid internal consent, a real loopback8018 FastAPI/Uvicorn
+and installed Playwright mobile390x844 browser login/prepare/confirm create the
+reservation. API routes/SDK initialization/consent/DB guards are real. Fixture
+config and synthetic SDK responses are the original native test setup. Seed only
+the browser-generated idempotency UUID to that test's expected key, so its real
+internal idempotent reread proves the UI created the same identity; no clock,
+allowance, source, consent, fingerprint or policy guard is replaced. All three
+checkboxes are exercised: submit disabled until the third; exactly one prepare
+and one reservation POST, reserved200/dispatch_enabled false, no page errors.
+Switch reserved UI to VI; screenshot/overflow check PASS. Then original opt-in
+worker consumes that reservation, preserves original failed history and publishes
+the linked report. Fresh real API/browser EN/VI desktop1440x1000/mobile390x844
+readback/linked decision/disabled approval PASS. The native fixture intentionally
+revokes logins before worker dispatch; readback uses a new login, not a claim of
+uninterrupted active-session/polling UX. No browser direct dispatch/approval.
+
+First bridge74935 FAIL/51.09s after successful API reservation used the wrong VI
+heading locator (`Đã lưu lượt tiếp tục`). Correct only QA locator to the actual
+message (`Đã lưu yêu cầu tiếp tục`), rerun in a NEW disposable DB, preserve prior
+fixture evidence. Corrected gate3171 has no skips. All browser contexts closed,
+server thread joined/shutdown complete; port8018 has no listener. Screenshots
+were visually inspected, remain external Logs/native-consent-* and native-api-*;
+external bridge scripts are not shipped product functionality.
+This proves browser-originated consent plus default native fixture continuation,
+not concurrent cancel/polling, PostgreSQL browser runtime, semantic finance,
+translation fidelity or live MiniMax acceptance. Goal ACTIVE; NQ owner-BLOCKED.
+
 **Exact8bc UI label acceptance and cloud checkpoint (2026-10-07):** clean frozen
 `8bc107ee2bc6d05c95c540abb2cc1dc7e0ac2061`, web5880 terminal0:
 typecheck/lint/166tests(27files)/9.43s/build299/diff PASS using the full web command
