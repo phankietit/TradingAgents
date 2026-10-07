@@ -2,6 +2,29 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact final local-stop display gate (2026-10-07):** clean frozen
+`c314913b2e866f5084fbfcf240ba5b78d9b08180`, web52663 terminal0:
+type/lint/173tests(27files)/9.22s/build299/diff PASS. External browser/native31637
+terminal0:1PASS/5synthetic warnings/20.90s. Command:
+`TA_QA_TAG=c314913 PYTHONPATH=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -c pyproject.toml -q <managed-run>/test_browser_active_cancel.py --basetemp=<managed-run>/active-cancel-c314913 --tb=short -x -s`
+Actual loopback8018 mobile390x844 auth/Stop200 with child still alive -> original
+native receipt/reaping/no publication/history assertions -> fresh EN/VI verified
+local stop. Both heading and selected option now agree; no repeated Stop,
+new-attempt or Read report, unknown provider-charge/termination disclaimer intact.
+No page errors/overflow; title/content/overlay/interaction checked. Fresh full-page
+Logs/active-cancel-c314913-{request,after-local-stop}-mobile-vi.png remain external,
+after-stop visually inspected. Browsers closed, Uvicorn32637 joined/stopped,
+no8018 listener. Not desktop/PG rendered/live/editorial/financial acceptance.
+
+Source gates remain exactly c314913; the following receipt-only commit is not
+that SHA's full native matrix. Next: full unselected local PostgreSQL helper,
+clean frozen candidate, no source changes until its handle is terminal. Command:
+`TMPDIR=<managed-run>/Tmp PYTEST_ADDOPTS=--tb=short TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`
+Disposable DB URLs are redacted before external log persistence. Full regression
+is UNVERIFIED until terminal; preserve all earlier failure receipts. No CI,
+paid call/provider/risk change or owner-history mutation. Goal ACTIVE; fresh
+paid BTC/AAPL approval pending, NQ owner-BLOCKED.
+
 **Exact stop-projection browser acceptance (2026-10-07):** clean frozen
 `6788bfab599e91a4002f625f0e2565c751720c7a`, web64031 terminal0:
 type/lint/173tests(27files)/10.36s/build299/diff PASS. Active browser/native64618
