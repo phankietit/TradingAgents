@@ -1,5 +1,25 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 controlled slow-network browser evidence · 2026-10-08:** unchanged
+side app sourcefab4a03 (docsHEAD8ed80bf). Browser61184 terminal1: after rendered
+status became available, delayed-request count exceeded unchanged<=2 criterion;
+first failure lacks detailed timing/abort trace, cause/repeatability UNVERIFIED.
+External QA added timing/requestfailed logging only, no assertions/deadlines or
+product edits. Browser12114 and31166 terminal0 with identical assertions: actual
+setup/explicitconsent/durable syntheticworker report, read-only mocked run-running
+and job responses delayed12000ms while UI polls every5000ms; first completions
+12059ms/12049ms, exactlyone subsequent read, no requestfailed/aborted job read.
+EN1440x1000/VI390x844 screenshot/readback/currentphase/retainedreport warning,
+no overflow/pageerror/blank/frameworkoverlay; unrouteAll(wait)/reload restores
+real persisted succeeded report. Console only initialauth/me401; no provider or
+owner data call. Browser plugin not available, existing Playwright1.62.1/
+Chromium/bundledNode24.19.0 fallback; managedTMPDIR/external scripts/screenshots.
+Ownedfixture25230/PID36658 normalshutdown/process absence confirmed; no history
+or unrelated runtime deletion. These are two controlled-rendered PASS receipts,
+not general concurrent/PG/live operational or repeatability acceptance; initial
+counterFAIL remains open, never removed by reruns. Primary37c1a42 full88556 live/
+PID33387/latest15%, source frozen/no restart/integration. WholegoalACTIVE.
+
 **R08 clean coalesced polling component gate · 2026-10-08:** frozen side
 `fab4a034887881009212111fd6df1bab48030fdd`,62251 terminal0:
 `npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
