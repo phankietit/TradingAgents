@@ -60,6 +60,11 @@ If a processing-status refresh fails or returns another run's identity, its
 previous observation is withdrawn from the workflow and history row. The
 separately fetched run status remains available; the warning does not invent
 job completion, a retry, or a new paid request.
+Read-only polling coalesces ticks while a fetch is still pending, then performs
+one follow-up refresh. A slow request is not cancelled every five seconds.
+Changing the resource or leaving the screen still aborts it and ignores late
+responses. Decision/approval refreshes retain their default clear-and-cancel
+behavior; this does not cache approvals or authorize any retry of analysis.
 When a report is retained during active processing, only the observed processing
 phase is marked current. Report availability does not simultaneously mark owner
 review as the current phase; a queued job cannot invent a current phase.

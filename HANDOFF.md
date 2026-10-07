@@ -1,5 +1,21 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 slow-polling starvation WIP · 2026-10-08:** ownedside fast-forwarded to
+primary37c1a42 before change. General useResource previously aborted each pending
+status fetch on every polling version; a request slower than five-second ticks
+could never publish. Dirty61058 red1FAIL3PASS3.82s: first signal incorrectly
+aborted on ticks. Read-only polling now scopes request to resource/validator/
+retention identity, coalesces ticks into one follow-up; default decision/approval
+consumers still clear/cancel on version changes. Resource changes/unmount abort
+and suppress old queued work/late responses. React dependency guidance applied;
+no render-time ref mutation/persistent cache/provider request or analysis retry.
+Dirty59989 selected3files19PASS11.07s; dirty98733 selected3files21PASS3.51s after
+late-response/queued-unmount controls. Existing retained-error/default failclosed
+tests kept. Clean fullweb and slow-response rendered browser gates pending;
+general concurrent/PG/live operational acceptance remains UNVERIFIED. Primary
+37c1a42 full88556 live/PID33387/latest13%, frozen/no restart/integration. Wholegoal
+ACTIVE, no paid/provider/model/risk/history/main/deploy change.
+
 **R08/R13 primary integration · 2026-10-08:** after full51929 terminalFAIL and
 confirmed ownedPG/process cleanup, primary fast-forwarded fb38391 to ownedside
 `2ab3411ea9a32b73fbc9852ee65fb3f1ca767831`, pushed origin/PR7Draft. Includes

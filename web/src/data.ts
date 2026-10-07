@@ -1,5 +1,5 @@
 import { t, formatLocale } from './i18n';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ApiError, request } from './api';
 
 export interface Instrument {
@@ -73,18 +73,38 @@ type Resource<T> = { path: string | null; data?: T; error?: unknown; loading: bo
 /** Path-tagged state prevents even one paint of a previous instrument's values. */
 export function useResource<T>(path: string | null, version = 0, validate?: (value: T) => T, retainWhileRefreshing = false) {
   const [state, setState] = useState<Resource<T>>({ path, loading: !!path });
+  const refresh = useRef<(() => void) | null>(null);
+  // Default consumers still cancel/clear on every version change. Only read-only
+  // polling keeps the request scope stable across ticks, avoiding starvation.
+  const resetVersion = retainWhileRefreshing ? 0 : version;
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    // Opt-in for read-only polling surfaces. Identity changes and failed fetches
-    // still clear data; approval/configuration consumers keep fail-closed defaults.
-    setState(previous => retainWhileRefreshing && previous.path === path && previous.data !== undefined
-      ? {path, data: previous.data, loading: false} : { path, loading: true });
-    request<T>(path, { signal: controller.signal }).then(value => validate ? validate(value) : value)
-      .then(data => { if (!controller.signal.aborted) setState({ path, data, loading: false }); })
-      .catch(error => { if (!controller.signal.aborted) setState({ path, error, loading: false }); });
-    return () => controller.abort();
-  }, [path, version, validate, retainWhileRefreshing]);
+    let reading = false;
+    let again = false;
+    const read = async () => {
+      if (reading) { again = true; return; }
+      reading = true;
+      do {
+        again = false;
+        setState(previous => retainWhileRefreshing && previous.path === path && previous.data !== undefined
+          ? {path, data: previous.data, loading: false} : { path, loading: true });
+        try {
+          const value = await request<T>(path, {signal:controller.signal});
+          const data = validate ? validate(value) : value;
+          if (controller.signal.aborted) return;
+          setState({path, data, loading:false});
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          setState({path, error, loading:false});
+        }
+      } while (again && !controller.signal.aborted);
+      reading = false;
+    };
+    refresh.current = read;
+    return () => { controller.abort(); refresh.current = null; };
+  }, [path, resetVersion, validate, retainWhileRefreshing]);
+  useEffect(() => { refresh.current?.(); }, [path, version, validate, retainWhileRefreshing]);
   return state.path === path ? state : { path, loading: !!path } as Resource<T>;
 }
 
