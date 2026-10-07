@@ -2,6 +2,32 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Full9c terminal PASS; UI integrated after freeze (2026-10-07):** clean frozen
+`9c891f5a4c4b2af398d30d2b90f624db2cbacb5f`, local full gate25685, Python3.14.7:
+3200PASS/88subtestsPASS/482warnings/3057.96s (50m57s), terminal0. Ruff/pip/diff
+PASS. Two optional skips remain UNVERIFIED: absent langchain_aws and deliberately
+withheld live DEEPSEEK_API_KEY. Command (no focused selection):
+`TMPDIR=<managed-run>/Tmp PYTEST_ADDOPTS=--tb=short TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`
+Output was piped through disposable DB URL redaction with pipefail to
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Logs/full-9c891f5-20261007.log`.
+Source/HEAD stayed unchanged until terminal; only helper-owned labelled disposable
+PostgreSQL was removed. No paid/live model or private-history mutation occurred.
+Prior full5894 preparation and full6f consent failures did not recur, but their
+causes remain UNVERIFIED; retain the original FAIL receipts, not a causal fix claim.
+
+Only after terminal PASS, the primary branch fast-forwarded to
+`d4dc2e197348ae59506fc7ff62b0c9a3c30f0156`, integrating the pushed owned UI branch.
+Changes after9c are web/tests/docs only; no Python/package/dependency changes.
+Full9c is not an exact integrated-candidate full regression. UI source
+`00d3ee68fe588e603178697981e8f92a2a386c29` separately has exact type/lint/164tests
+(27files)/build299/diff PASS (gate66511, Vitest6.94s) and synthetic desktop/mobile
+browser PASS (gate91829): full101event paging, disclosures/one reservation,
+cancel/completion, EN/VI, accessible report focus/scroll without route/write change.
+Browser APIs/EventSource were fixtures, not an actual backend/native/provider.
+Next: integrated web gate and real local API/browser/native fixture acceptance,
+then financial/editorial and authorized live gates. NQ remains owner-BLOCKED;
+live valid-report acceptance FAIL, release UNVERIFIED, overall goal ACTIVE.
+
 **Isolated mobile report access (2026-10-07):** side branch
 `fix/TA-R08-continuation-ui`, owned dirty
 `ecd71b151d34d8460774a4b166faff48c3704d30`; primary full25685 remains frozen9c.

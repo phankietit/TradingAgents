@@ -31,7 +31,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; focused synthetic EN/VI desktop/mobile continuation and report-access QA PASS at side00d3ee6. Professional end-to-end UX and actual combined backend/browser/native acceptance UNVERIFIED; valid live final report FAIL |
 | R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Prior baselines PASS; latest clean full5894 FAIL (6 cases: terminal preparation + 5 stale canonical social assertions). Dirty5894 social/review46 PASS; isolated preparation case1 PASS/73.07s. Clean93 default recovery13 PASS/288.73s; preparation cause UNVERIFIED. Full6f consent failure unresolved. Clean51 recovery94 PASS and focused R07 graph418 PASS do not replace full gates; live valid-report acceptance FAIL |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Clean frozen full9c PASS:3200tests/88subtests/3057.96s, Ruff/pip/diff PASS; 2 optional skips UNVERIFIED. Prior full5894 preparation/full6f consent causes UNVERIFIED, original FAIL receipts retained. UI integrated only after terminal to d4dc2e1; full9c is not an exact integrated-candidate full gate. Actual combined browser/backend/native and live valid-report acceptance remain UNVERIFIED/FAIL respectively |
 | R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS current receipts and Draft PR #7; final R01–R14 acceptance and release UNVERIFIED, not an owner-approved deferral |
 
 Overall goal is not complete. The previous extra BTC execution failed report
@@ -44,10 +44,14 @@ Current isolated UI source `00d3ee68fe588e603178697981e8f92a2a386c29` on
 adds a report-reading shortcut with keyboard focus and no route/write change.
 Exact-source type/lint/164 web tests/build and synthetic desktop/mobile browser
 checks PASS; no actual backend/native/provider or financial/editorial acceptance
-is inferred. Primary full regression is still RUNNING on frozen
-`9c891f5a4c4b2af398d30d2b90f624db2cbacb5f`; do not integrate UI or revise its
-receipt before the terminal result. The full5894 and prior live FAIL receipts
-remain unchanged. NQ remains owner-BLOCKED pending contract/roll metadata.
+is inferred. Primary full regression on clean frozen
+`9c891f5a4c4b2af398d30d2b90f624db2cbacb5f` ended terminal0:3200tests and88subtests
+PASS/3057.96s; 2optional skips remain UNVERIFIED. Only after terminal, primary
+fast-forwarded the owned UI branch to `d4dc2e197348ae59506fc7ff62b0c9a3c30f0156`.
+No Python/package/dependency changes after9c; integrated web/runtime gates remain
+separate. The full5894 and prior live FAIL receipts remain unchanged; unreproduced
+preparation/consent causes stay UNVERIFIED. NQ remains owner-BLOCKED pending
+contract/roll metadata. See HANDOFF for the full command and external log path.
 
 R04 structured FRED acquisition/storage and current web preparation are implemented:
 explicit series/window, pinned completed-day vintage, full observations and
