@@ -1,5 +1,37 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 two-tab PG ordinary-completion boundary gate · 2026-10-08:** unchanged
+app sourcefab4a03/clean checkout `27c7720fde2f2c5f239918e8ae88f5a6a55b7d2d`.
+External QA now records run JSON status before application consumption, terminal
+SSE before explicit close, signal cleanup and bounded artifact reader completion/
+cancel. API/worker/PG migrations/persistence real, original syntheticgraph20s,
+no response mocking/provider/model/owner data. 48817 terminal1 FAIL: setup chart
+navigation abort matched controller but was not in the job-phase allowlist.
+38957 terminal1 FAIL: terminal-before-job cleanup proved (desktop event
+1791413017590/runJSON1791413017858 < jobabort1791413017935), but one artifact
+abort lacked signal/close trace; historical cause remains UNVERIFIED.
+External measurement adds explicit setup-navigation phase and reader trace,
+not app/source/timeout edits or blanket ERR_ABORTED whitelist. 9230 terminal0
+PASS: both tabs repeated real HTTP200running/attempt1 then succeeded/report ENVI/
+reload; desktop terminalSSE1791413087971/runJSON1791413088114 < jobcleanup
+1791413088192; mobile runJSON1791413087810 < cleanup1791413087852. Other aborted
+requests matched observed lifecycle or explicit successful reload; no premature
+job-request failure before terminal in this run. Page identity/nonblank/nooverlay/
+nooverflow/screens/interaction PASS, console only initialauth/me401. Six pure
+controls on the extracted exact terminal-before-cleanup predicate PASS: absent/
+running-only/late/wrong-run terminal refuses; prior same-run JSON/SSE accepts.
+No request/provider call in predicate controls; extraction preserves expression.
+This proves scoped real PG/two-tab ordinary completion, NOT general concurrency,
+cancel/retry/expiry/native/live semantic/editorial/release acceptance; prior FAILs
+retained and historical unmatched artifact cause not assigned from this rerun.
+Browser plugin absent, existing Playwright1.62.1/Chromium/bundledNode24.19.0;
+external managed scripts/screens/TMPDIR, Python3.14.7 existingvenv. Ownedfixture
+6805/PID53213 normalshutdown terminal0; exactlythree deliberate syntheticgraph
+calls for three browser submissions; only labelverified disposable container
+ta-browser-pg-1791412892-53213 removed, PID/container absence verified. No private
+history/unrelated runtime deletion. Primary37c1a42 full88556 live/PID33387/latest
+40%, source frozen/no restart/integration. Whole R01–R14 ACTIVE.
+
 **R08 real PostgreSQL/two-tab rendered diagnostic · 2026-10-08:** unchanged
 side app sourcefab4a03, clean docsHEAD `7e8366644fa22545f6104a2f50ee4638ed9c8e82`.
 External wrapper seeded only a new owned disposable PG16 database; migrations,
