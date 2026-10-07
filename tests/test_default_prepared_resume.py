@@ -17,7 +17,12 @@ from tradingagents.platform.analysis.checkpoint_store import (
     CheckpointDatabaseError,
     PrivateCheckpointStore,
 )
-from tradingagents.platform.analysis.continuation import ContinuationConsentError
+from tradingagents.platform.analysis.continuation import (
+    ContinuationConsentError,
+    _db_utc,
+    _digest,
+    _payload,
+)
 from tradingagents.platform.analysis.engine import AnalysisEngine
 from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
 from tradingagents.platform.analysis.linked_factory import build_linked_recorded_engine
@@ -50,6 +55,39 @@ def restored_default_child(connection, base_config, request_data, engine_factory
                            recording_data, restore_checkpoint):
     fixture_child(connection, base_config, request_data, engine_factory, checkpoint_options, recording_data,
                   callbacks=True, restore_checkpoint=restore_checkpoint)
+
+
+def _safe_exception_chain(error):
+    """Test diagnostics only: no messages, locals, payloads or credentials."""
+    failures = []
+    for _ in range(6):
+        if error is None:
+            break
+        frames = []
+        frame = error.__traceback__
+        while frame is not None:
+            filename = frame.tb_frame.f_code.co_filename
+            if "/tradingagents/" in filename:
+                frames.append([filename.split("/tradingagents/", 1)[1],
+                               frame.tb_frame.f_code.co_name, frame.tb_lineno])
+            frame = frame.tb_next
+        failures.append({"type": type(error).__name__, "locations": frames[-6:]})
+        error = error.__cause__ or error.__context__
+    return failures
+
+
+def test_safe_exception_chain_omits_private_messages_and_locals():
+    private_input = "synthetic-private-marker"
+    try:
+        try:
+            raise ValueError(private_input)
+        except ValueError:
+            raise RuntimeError(private_input) from None
+    except RuntimeError as error:
+        diagnostic = _safe_exception_chain(error)
+    assert diagnostic == [{"type": "RuntimeError", "locations": []},
+                          {"type": "ValueError", "locations": []}]
+    assert private_input not in json.dumps(diagnostic)
 
 
 @pytest.fixture(params=["sqlite", "postgresql"])
@@ -173,7 +211,41 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
     with pytest.raises(ContinuationConsentError):
         consents.record(**{**values, "csrf_token": "invalid"})
     consent = consents.record(**values)
-    assert consents.record(**values) == consent
+    # Keep the real clock and strict idempotency assertion. If the rare full-suite
+    # refusal recurs, expose predicates only, never tokens/payloads/DB URLs.
+    record_times = []
+    original_clock = consents.clock
+    def observed_clock():
+        timestamp = original_clock()
+        record_times.append(timestamp)
+        return timestamp
+    consents.clock = observed_clock
+    try:
+        duplicate = consents.record(**values)
+    except ContinuationConsentError:
+        from tradingagents.platform.persistence.models import ResearchContinuationRow
+        try:
+            with database.session() as session:
+                row = session.get(ResearchContinuationRow, consent.execution_id)
+                current = consents.observe(session=session, owner_id=run.owner_id, run_id=run.run_id)
+                payload = _payload(current)
+                predicates = {"row_present": row is not None}
+                if row is not None:
+                    predicates.update(source_run_matches=row.source_run_id == current.run_id,
+                        source_job_matches=row.source_job_id == current.source_job_id,
+                        checkpoint_matches=row.checkpoint_record_id == current.checkpoint_record_id,
+                        sequence_matches=row.source_event_sequence == current.accounting.high_water_sequence,
+                        observation_matches=_payload(observation) == payload,
+                        observation_hash_matches=row.observation_hash == _digest(payload),
+                        stored_payload_hash_matches=_digest(row.payload) == row.observation_hash,
+                        stored_payload_equals_current=row.payload == payload,
+                        created_not_future=bool(record_times) and _db_utc(row.created_at) <= record_times[0])
+        except Exception:
+            predicates = {"diagnostic_unavailable": True}
+        pytest.fail("Consent idempotency refused; predicates=" + json.dumps(predicates, sort_keys=True), pytrace=False)
+    finally:
+        consents.clock = original_clock
+    assert duplicate == consent
     with database.session() as session:
         assert PlatformRepository(session).get_run(run.run_id, run.owner_id) == retained
         assert DurableJobQueue(session).get(completed.job_id, run.owner_id) == completed
@@ -213,9 +285,42 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
         expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
             AnalysisEngine(base_config=options).analyze(baseline_request))
         monkeypatch.setattr(supervision, "_child", restored_default_child)
+        from tradingagents.platform.jobs import linked_worker
+
+        execution_failures = []
+        renewal_failures = []
+        original_heartbeat = LinkedPublicationContext.heartbeat
+        def observed_heartbeat(self, **kwargs):
+            try:
+                return original_heartbeat(self, **kwargs)
+            except Exception as error:
+                renewal_failures.extend(_safe_exception_chain(error))
+                raise
+        monkeypatch.setattr(LinkedPublicationContext, "heartbeat", observed_heartbeat)
+        original_execute = linked_worker.execute_reserved_continuation
+        def observed_execute(**kwargs):
+            try:
+                return original_execute(**kwargs)
+            except Exception as error:
+                execution_failures.extend(_safe_exception_chain(error))
+                raise
+        monkeypatch.setattr(linked_worker, "execute_reserved_continuation", observed_execute)
         result = runtime.run_worker(runtime.WorkerSettings(url, store.root), once=True,
                                     continuations=True, worker_id="native-linked-worker")
         suffix = json.loads((store.root / "worker-runtime" / "reports.fixture-trace.json").read_text())
+        # Polling returns the reservation UUID on a failed execution, not a
+        # report. Diagnose that boundary before comparing a stale/partial trace
+        # with the uninterrupted graph; never treat a stop as a completed run.
+        assert hasattr(result, "model_dump"), (
+            "Linked worker did not return analysis; " + json.dumps({
+                "result_type": type(result).__name__,
+                "child_created": suffix["pid"] != trace["pid"],
+                "suffix_calls": len(suffix["trace"]),
+                "clients_closed": suffix["closed_clients"] == 2,
+                "execution_failures": execution_failures,
+                "renewal_failures": renewal_failures,
+            }, sort_keys=True)
+        )
         assert trace["trace"] + suffix["trace"] == json.loads(json.dumps(baseline.model_trace))
         assert suffix["pid"] != trace["pid"] and suffix["closed_clients"] == 2
         with pytest.raises(ProcessLookupError):

@@ -246,13 +246,20 @@ class LinkedExecutionStore:
                        for field in ("started_at", "deadline_at", "expires_at"))):
             _reject()
         consent, observation, current = self._source(session, lease.reservation.execution_id, now, recheck=recheck)
-        row = self._execution(session, consent, observation, now)
+        # Another legitimate publication/heartbeat can commit while this
+        # transaction waits for the owner lock. Validate its execution timestamp
+        # against a clock sampled AFTER those locks, not the pre-lock instant.
+        # Keep future-time, rollback and expired-lease checks fully enforced.
+        locked_now = self._now()
+        if locked_now < now:
+            _reject()
+        row = self._execution(session, consent, observation, locked_now)
         fresh = self._now()  # Acquiring owner/job/run locks can consume the lease.
         if (row is None or row.status != "leased"
                 or _canonical(asdict(_reservation(row))) != _canonical(asdict(lease.reservation))
                 or row.worker_id != lease.worker_id or not secrets.compare_digest(row.lease_token_hash, _token_hash(lease.token))
                 or _db_utc(row.started_at) != lease.started_at or _db_utc(row.deadline_at) != lease.deadline_at
-                or fresh < now or fresh >= _db_utc(row.lease_expires_at)):
+                or fresh < locked_now or fresh >= _db_utc(row.lease_expires_at)):
             _reject()
         return row, current
 

@@ -91,6 +91,52 @@ def test_concurrent_allocation_idempotent_but_claim_has_one_winner(prepared, all
     assert history(database) == before
 
 
+@pytest.mark.parametrize("prepared", [
+    pytest.param("postgres_failed", marks=pytest.mark.integration)], indirect=True)
+def test_heartbeat_accepts_valid_update_committed_before_owner_lock(prepared, monkeypatch):
+    database, store, params, clock = setup(prepared)
+    reserved = store.allocate(**params)
+    lease = store.claim(execution_id=reserved.execution_id, worker_id="fixture")
+    before = history(database)
+    other = LinkedExecutionStore(ContinuationConsentStore(database, codec=store.consents.codec,
+                                                         clock=store.consents.clock))
+    original_source = store._source
+    interleaved = []
+
+    def source_after_other_writer(session, execution_id, now, **kwargs):
+        # Deterministic ordering: this reader sampled now but has not acquired
+        # owner/job/run locks. Another legitimate lease transaction commits.
+        # PostgreSQL starts deferred; SQLite BEGIN IMMEDIATE already owns its
+        # writer fence before sampling now and cannot have this interleaving.
+        if not interleaved:
+            clock[0] += timedelta(seconds=1)
+            interleaved.append(other.heartbeat(lease))
+        return original_source(session, execution_id, now, **kwargs)
+
+    monkeypatch.setattr(store, "_source", source_after_other_writer)
+    renewed = store.heartbeat(lease)
+    assert len(interleaved) == 1
+    assert renewed == interleaved[0]
+    assert renewed.token == lease.token and renewed.deadline_at == lease.deadline_at
+    assert renewed.started_at == lease.started_at
+    assert history(database) == before
+
+
+@pytest.mark.parametrize("prepared", [False,
+    pytest.param("postgres_failed", marks=pytest.mark.integration)], indirect=True)
+def test_heartbeat_still_refuses_future_execution_timestamp(prepared):
+    database, store, params, clock = setup(prepared)
+    reserved = store.allocate(**params)
+    lease = store.claim(execution_id=reserved.execution_id, worker_id="fixture")
+    with database.session() as session:
+        row = session.get(ResearchExecutionRow, reserved.execution_id)
+        row.updated_at = clock[0] + timedelta(seconds=1)
+    before = history(database)
+    with pytest.raises(LinkedExecutionError):
+        store.heartbeat(lease)
+    assert history(database) == before
+
+
 @pytest.mark.parametrize("leased", [False, True])
 def test_owner_cancel_never_claims_an_active_worker_was_stopped(prepared, leased):
     database, store, params, _ = setup(prepared)

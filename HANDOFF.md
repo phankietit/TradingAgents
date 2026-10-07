@@ -2,6 +2,56 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R08 lease lock-time race; verification incomplete (2026-10-07):** source base
+`a33f19d7d0ed068fb76ba04b09509a0503bc6338`, owned dirty candidate. Integrated
+native/API matrix83942:9PASS/1FAIL/436.07s, stopped early on PostgreSQL/VI/worker
+trace assertion. Exact-case diagnostic68864:FAIL/142.34s; result was an execution
+UUID, no new child, stale original trace. Diagnostic88843:FAIL/157.94s; new child
+made9calls then stopped, preparation succeeded. Diagnostic2372:FAIL/186.08s;
+new child made8calls, publication rejected `_renewal_failed`. Diagnostic46102:
+1PASS/101.47s, no renewal failure observed. None proves a native stability fix.
+All used synthetic SDK/model responses; no paid request or private history change.
+
+A separate deterministic PostgreSQL interleaving proves a real fence bug:
+heartbeat samples time, then another valid lease transaction commits before the
+owner lock is acquired; the committed `updated_at` is incorrectly judged future
+relative to the pre-lock instant. Original-source PG repro24569:1FAIL/3.10s.
+Candidate refreshes the clock after owner/job/run locks, before execution-row
+validation; rollback/future-time/expiry/token/original-budget checks remain.
+Lease/publication gate8911:81PASS/36.78s on SQLite/PostgreSQL, including explicit
+true-future refusal. First race fixture also selected SQLite and failed because
+BEGIN IMMEDIATE already holds its writer fence; that invalid interleaving was
+removed, not called evidence of the PostgreSQL bug. Source restored to the fixed
+candidate after the original-source comparison; all gates terminal, helper-owned
+databases removed. The observed native heartbeat exception's underlying cause
+is still UNVERIFIED; do not equate it with this separately proven race.
+
+Test-only diagnostics now report consent predicate booleans and bounded exception
+types/code locations, never exception messages, locals, credentials or payloads.
+Worker return type is checked before comparing stale/partial model traces.
+Full6f consent-idempotency FAIL is still unresolved. Current full regression,
+combined backend/browser/native and live financial/editorial acceptance remain
+UNVERIFIED/FAIL as applicable; NQ remains owner-BLOCKED. Goal ACTIVE.
+
+**R08 source integrated; consent failure still unresolved (2026-10-07):** after
+both original full5639 and side native14008 were terminal, clean owned R01 branch
+fast-forwarded to `a33f19d7d0ed068fb76ba04b09509a0503bc6338`. Main/release branch
+not changed. R08 remote/history preserved. No port8000 listener at inventory,
+no runtime or worker started; no private DB migration/history or paid provider.
+README/coordination now distinguish integrated source from runtime acceptance.
+
+External diagnostic46358 on exact clean6f:1PASS/11deselected/34warnings/27.21s;
+existing consent-refusal hook logs predicate booleans only, no changed guard.
+External numeric32174:1PASS/1.74s,208JSONB numeric samples, only negative-zero
+representation hash drift observed. This is NOT proof that negative zero caused
+the full native failure; full FAIL remains. Both helper-owned PGs removed.
+Add tracked test-only predicate diagnostics to the existing duplicate-consent
+assertion: capture the same real clock value used by record, compare row/source/
+checkpoint/sequence/hash/payload/time flags if refused, then FAIL with flags only.
+Do not print values/tokens/DB URLs, alter production code, relax fences, change
+the equality assertion or substitute focused PASS for full FAIL. Next native
+matrix/full rerun must establish the actual failing criterion or remain unresolved.
+
 **Native linked reader matrix and full regression FAIL (2026-10-07):** isolated
 base `d9030a361a7c6b399bb43195c3545cb03a667bc1` plus assertions in existing
 default prepared worker test. Actual default worker resume, reaped child/full

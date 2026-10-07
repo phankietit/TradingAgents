@@ -877,9 +877,10 @@ projection. Later polling uses the validated cursor; overlapping polls coalesce
 rather than aborting a long read. A failed page clears both display and cursor,
 and selection changes abort in-flight reads. It does not persist private progress
 or silently cap the timeline. Native/backend combined acceptance is pending.
-The candidate is on
-`fix/TA-R08-continuation-ui`, not yet integrated into the frozen R01 regression
-candidate or installed in the user's runtime. Default polling remains off.
+The recovery candidate is now integrated into `fix/TA-R01-research-quality`
+from the preserved R08 branch. It is not installed or accepted in the user's
+runtime; full regression currently has an unresolved consent idempotency failure.
+Default polling remains off.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

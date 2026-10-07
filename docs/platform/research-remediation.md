@@ -31,7 +31,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | PASS UI and real processing flow; valid final report FAIL |
 | R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | PASS local; live valid-report acceptance FAIL |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Prior baselines PASS; latest full6f FAIL (consent idempotency), integrated native matrix FAIL (worker stop), current full regression UNVERIFIED. Focused lease/publication81 PASS does not replace these gates; live valid-report acceptance FAIL |
 | R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS receipt and Draft PR #7; overall release DEFERRED |
 
 Overall goal is not complete. The previous extra BTC execution failed report

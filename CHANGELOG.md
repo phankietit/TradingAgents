@@ -10,6 +10,17 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Validate leased execution timestamps against a fresh clock after owner locks
+  rather than the pre-lock timestamp. A legitimate concurrent lease update no
+  longer looks future-dated. Preserve true-future, clock rollback, expiry, token
+  and original-budget checks; add deterministic PostgreSQL regression and safe
+  native failure diagnostics. Full and native stability acceptance remain pending.
+
+- Integrate the R08 recovery source into the R01 candidate after all frozen gates
+  ended. Add test-only predicate diagnostics for an unresolved PostgreSQL consent
+  idempotency refusal; keep real clock behavior, original assertion and all
+  production integrity/time/budget checks unchanged. Full regression is not PASS.
+
 - Consume complete paginated continuation progress, with incremental validated
   cursors, coalesced polling, identity-change abort and fail-closed invalid-page
   behavior. Handle long timelines without JavaScript argument-spread limits.
