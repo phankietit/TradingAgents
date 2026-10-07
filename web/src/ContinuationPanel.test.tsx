@@ -8,6 +8,23 @@ const runId = '11111111-1111-4111-8111-111111111111';
 const executionId = '22222222-2222-4222-8222-222222222222';
 const saved = {run_id:runId,execution_id:executionId,attempt:2,status:'reserved',
   preparation_requires_review:false,lease_expired:false,report_artifact_id:null,evidence_artifact_id:null,decision_id:null};
+it('shows verified local stop without completed report, new attempt or repeated stop authority', async () => {
+  const stopped = {...saved,status:'cancel_requested',local_stop:{stopped_at:'2026-10-07T00:00:00Z',
+    continuation_authorized:false,provider_cost_known:false}};
+  const fetch = vi.fn(async(url:string) => new Response(JSON.stringify(url.endsWith('/events')
+    ? {events:[],has_more:false,approval_eligible:false} : {items:[stopped],has_more:false})));
+  vi.stubGlobal('fetch',fetch);
+  const onReports = vi.fn();
+  render(<ContinuationPanel runId={runId} version={0} onReports={onReports} onNewAttempt={vi.fn()} />);
+  await screen.findByRole('heading',{name:'Local processing stopped'});
+  expect(screen.getByText(/Provider termination and charges are not confirmed/)).toBeTruthy();
+  expect(screen.queryByRole('button',{name:'Stop continuation'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'Configure new attempt'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'Read report'})).toBeNull();
+  expect(screen.queryByText('Stop requested; shutdown not yet verified')).toBeNull();
+  await waitFor(() => expect(onReports).toHaveBeenCalledWith([]));
+  expect(fetch.mock.calls.every(([url]) => !url.endsWith('/cancel'))).toBe(true);
+});
 
 it('never prepares or reserves automatically and requires all disclosures before explicit consent', async () => {
   let reserved = false;

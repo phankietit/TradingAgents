@@ -13,6 +13,7 @@ from tradingagents.platform.analysis.continuation import _db_utc, _digest, _payl
 from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
 from tradingagents.platform.analysis.linked_publication import validate_entry
 from tradingagents.platform.analysis.linked_results import read_linked_completion
+from tradingagents.platform.analysis.linked_stops import read_linked_local_stop
 from tradingagents.platform.analysis.observer import STAGES
 from tradingagents.platform.analysis.preparation_refusals import validate_refusal
 from tradingagents.platform.analysis.terminal_preparation import prepare_terminal_continuation
@@ -35,6 +36,7 @@ from .schemas import (
     ContinuationProgressResponse,
     ContinuationReservationResponse,
     ContinuationStateResponse,
+    LocalStopResponse,
 )
 
 
@@ -75,14 +77,23 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
             validate_refusal(refusal, execution=execution, now=now)
         completed = read_linked_completion(session=session, artifact_store=artifact_store,
             owner_id=execution.owner_id, execution_id=execution.execution_id)
+        lease_expired = execution.lease_expires_at is not None and _db_utc(execution.lease_expires_at) <= now
+        # Successful supervision records local stop BEFORE publishing completion.
+        # Never turn that intermediate leased fact into a terminal browser state.
+        local_stop = None
+        if completed is None and (execution.status in {"cancel_requested", "review_required"}
+                or (execution.status == "leased" and lease_expired)):
+            local_stop = read_linked_local_stop(session=session, owner_id=execution.owner_id,
+                execution_id=execution.execution_id, clock=settings.clock)
         return ContinuationStateResponse(run_id=execution.source_run_id, execution_id=execution.execution_id,
             status="completed" if completed is not None else execution.status,
             preparation_requires_review=refusal is not None,
-            lease_expired=execution.lease_expires_at is not None and _db_utc(execution.lease_expires_at) <= now,
+            lease_expired=lease_expired,
             attempt=execution.attempt,
             report_artifact_id=completed.report_artifact_id if completed is not None else None,
             evidence_artifact_id=completed.evidence_artifact_id if completed is not None else None,
-            decision_id=completed.decision_id if completed is not None else None)
+            decision_id=completed.decision_id if completed is not None else None,
+            local_stop=LocalStopResponse(stopped_at=local_stop.stopped_at) if local_stop is not None else None)
 
     def load_control(session, run_id, execution_id, token, csrf):
         now = settings.clock()

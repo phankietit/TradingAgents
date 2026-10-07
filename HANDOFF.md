@@ -2,6 +2,36 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Verified local-stop API/UI implementation (2026-10-07):** owned dirty source
+on `63126fa5fee5d1c4f0de06a0db6c5eaeb559785f`. Reuse the complete internal
+source/entry/dispatch/accounting/hash reader as static validation, expose only
+stopped_at and literal false continuation/cost flags behind owner authentication.
+Only cancel_requested/review_required/expired leased publication fences admit
+the projection; valid completion retains precedence. Successful leased stop
+BEFORE publication returns leased/local_stop null, preserving final-report polling.
+No status/history/accounting/allowance rewrite or SDK/client construction.
+EN/VI UI separates requested stop, verified local stop and review uncertainty;
+verified local stop removes Stop/new-attempt controls, never offers report or
+approval. Missing remains unknown, corrupt receipt refuses with fixed409.
+Strict frontend payload/flag/time/fence checks, legacy absent metadata grants nothing.
+
+Dirty web33795 terminal0:type/lint/173tests(27files)/16.60s/build299/diff PASS.
+React review: derived booleans, primitive polling dependency, stable hook order;
+no new state/cache/dependency or write path. Focused Python38564 terminal0:
+4PASS/20synthetic warnings/26.25s (three actual native cancel/expire/complete API
+cases plus full native receipt-tamper loop). Native race18739 terminal0:
+1PASS/5warnings/34.21s, actual child stop receipt -> authenticated API read BEFORE
+completion -> original successful native publication. Commands:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q tests/test_linked_stops.py::test_native_stop_owner_api_projection_preserves_completion_and_history tests/test_linked_stops.py::test_native_receipt_reader_rejects_tamper_and_foreign_owner --basetemp=<managed-run>/stop-projection-dirty631-b --tb=short -x`
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q tests/test_linked_stops.py::test_native_stop_before_successful_publication_keeps_api_leased --basetemp=<managed-run>/stop-projection-race-dirty631 --tb=short -x`
+First Python74087 FAIL:3PASS/1FAIL/36.95s; new shared receipt reader exposed
+OverflowError for corrupt oversized integer elapsed. Catch it into the fixed
+LinkedStopError, preserve tamper case, rerun new disposable DB to PASS. This is
+not live provider, financial/translation or full regression acceptance. Next:
+freeze source, exact active browser pending->verified-stop EN/VI gate and full
+local regression. Fresh paid BTC/AAPL approval pending; NQ owner-BLOCKED;
+goal ACTIVE. No CI/provider/risk/production/private-history changes.
+
 **Exact pending-stop UI acceptance (2026-10-07):** clean frozen
 `888e28f85075b141781c84b296e691e5e0a23c51`. Web16763 terminal0:
 `npm --prefix web run typecheck && npm --prefix web run lint && npm --prefix web test && npm --prefix web run build && git diff --check`

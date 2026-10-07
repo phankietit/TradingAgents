@@ -4,6 +4,18 @@ afterEach(() => vi.unstubAllGlobals());
 const runId = '11111111-1111-4111-8111-111111111111';
 const item = {run_id:runId,execution_id:'22222222-2222-4222-8222-222222222222',attempt:2,status:'reserved',
   preparation_requires_review:false,lease_expired:false,report_artifact_id:null,evidence_artifact_id:null,decision_id:null};
+it('admits local stop only behind a publication fence without cost or retry authority', () => {
+  const local_stop = {stopped_at:'2026-10-07T00:00:00Z',continuation_authorized:false as const,provider_cost_known:false as const};
+  expect(continuation({...item,status:'cancel_requested',local_stop},runId).local_stop).toBe(local_stop);
+  expect(continuation({...item,status:'leased',lease_expired:true,local_stop},runId).local_stop).toBe(local_stop);
+  for (const status of ['reserved','leased','cancelled','completed']) {
+    expect(() => continuation({...item,status,local_stop},runId)).toThrow();
+  }
+  for (const change of [{provider_cost_known:true},{continuation_authorized:true},{stopped_at:'invalid'},
+    {stopped_at:'2026-10-07T00:00:00'},{extra:true}]) {
+    expect(() => continuation({...item,status:'cancel_requested',local_stop:{...local_stop,...change} as typeof local_stop},runId)).toThrow();
+  }
+});
 it('does not promote reservation IDs, wrong ownership or corrupt completion into report authority', () => {
   expect(continuation(item,runId)).toBe(item);
   expect(() => continuation({...item,run_id:'different'},runId)).toThrow();

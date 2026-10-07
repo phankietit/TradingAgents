@@ -4,6 +4,11 @@ import ResearchWorkflow, {type ResearchEvent} from './ResearchWorkflow';
 import {setLocale} from './i18n';
 
 afterEach(() => setLocale('en'));
+it('does not infer shutdown from an uncertain execution requiring review', () => {
+  render(<ResearchWorkflow events={[]} status="review_required" hasSources hasReport={false} />);
+  expect(screen.getByText('Processing state needs review')).toBeTruthy();
+  expect(screen.queryByText('Processing stopped')).toBeNull();
+});
 
 const event = (sequence: number, event_type: string, stage?: string): ResearchEvent => ({sequence, event_type, stage, occurred_at:'2026-09-27T07:00:00Z'});
 it.each(['en', 'vi'] as const)('does not turn a cancellation request into shutdown proof in %s', locale => {

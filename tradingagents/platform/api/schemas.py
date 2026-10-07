@@ -61,6 +61,12 @@ class ContinuationReservationResponse(ApiModel):
     dispatch_enabled: Literal[False] = False
 
 
+class LocalStopResponse(ApiModel):
+    stopped_at: AwareDatetime
+    continuation_authorized: Literal[False] = False
+    provider_cost_known: Literal[False] = False
+
+
 class ContinuationStateResponse(ApiModel):
     run_id: UUID
     execution_id: UUID
@@ -71,6 +77,7 @@ class ContinuationStateResponse(ApiModel):
     report_artifact_id: UUID | None = None
     evidence_artifact_id: UUID | None = None
     decision_id: UUID | None = None
+    local_stop: LocalStopResponse | None = None
 
 
 class ContinuationDiscoveryResponse(ApiModel):

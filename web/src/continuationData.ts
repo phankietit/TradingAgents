@@ -7,6 +7,7 @@ export interface Continuation {
   run_id: string; execution_id: string; attempt: number; status: string;
   preparation_requires_review: boolean; lease_expired: boolean;
   report_artifact_id: string | null; evidence_artifact_id: string | null; decision_id: string | null;
+  local_stop?: {stopped_at: string; continuation_authorized: false; provider_cost_known: false} | null;
 }
 export interface Discovery { items: Continuation[]; has_more: boolean }
 export interface Preparation { run_id: string; observation_hash: string; remaining_wall_seconds: number;
@@ -21,6 +22,14 @@ export function continuation(value: Continuation, runId: string): Continuation {
   if (value.status === 'completed') {
     if (!value.report_artifact_id || !value.decision_id || value.preparation_requires_review) reject();
   } else if (value.report_artifact_id || value.evidence_artifact_id || value.decision_id) reject();
+  if (value.local_stop != null) {
+    const stop = value.local_stop;
+    if (!['cancel_requested', 'review_required'].includes(value.status) && !(value.status === 'leased' && value.lease_expired)) reject();
+    if (typeof stop !== 'object' || Array.isArray(stop) || typeof stop.stopped_at !== 'string'
+      || !/^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$/.test(stop.stopped_at) || !Number.isFinite(Date.parse(stop.stopped_at))
+      || stop.continuation_authorized !== false || stop.provider_cost_known !== false
+      || Object.keys(stop).sort().join('|') !== 'continuation_authorized|provider_cost_known|stopped_at') reject();
+  }
   return value;
 }
 export function discovery(value: Discovery, runId: string): Discovery {

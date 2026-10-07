@@ -57,10 +57,11 @@ class LinkedStopStore:
             _reject()
         self.executions = executions
 
-    def _source(self, session, execution_id, now, *, owner_id, through_sequence=None):
-        consent, observation, _ = self.executions._source(session, execution_id, now,
+    @staticmethod
+    def _source(session, execution_id, now, *, owner_id, through_sequence=None):
+        consent, observation = LinkedExecutionStore._control_source(session, execution_id, now,
             owner_id=owner_id, active=False)
-        execution = self.executions._execution(session, consent, observation, now)
+        execution = LinkedExecutionStore._execution(session, consent, observation, now)
         if execution is None or execution.status not in {"leased", "cancel_requested", "review_required"}:
             _reject()
         validate_entry(session, execution)
@@ -78,7 +79,8 @@ class LinkedStopStore:
             _reject()
         return execution, entry, dispatch, evidence
 
-    def _read(self, session, row, source, now):
+    @staticmethod
+    def _read(session, row, source, now):
         execution, entry, dispatch, evidence = source
         value = row.payload
         elapsed = value.get("local_elapsed_seconds") if type(value) is dict else None
@@ -129,7 +131,6 @@ class LinkedStopStore:
                 return self._read(session, row, source, self.executions._now())
         except (ValueError, TypeError, AttributeError, KeyError, IndexError, SQLAlchemyError):
             _reject()
-
     def record_supervised(self, engine):
         """Trusted supervisor only, before closing its joined Process handle.
 
@@ -202,3 +203,27 @@ class LinkedStopStore:
             return result  # Never acknowledge before commit; no old row/event rewrite.
         except (ValueError, TypeError, AttributeError, KeyError, IndexError, SQLAlchemyError):
             _reject()
+
+
+def read_linked_local_stop(*, session, owner_id, execution_id, clock):
+    """Read-only receipt validation; caller must authenticate the owner first.
+
+    Reuse the complete internal source/entry/dispatch/accounting/hash validation.
+    An absent receipt grants nothing. No codec, SDK, lease nonce or writer needed.
+    """
+    try:
+        if type(owner_id) is not UUID or type(execution_id) is not UUID:
+            _reject()
+        row = session.get(ResearchExecutionStopRow, execution_id)
+        if row is None:
+            return None
+        if row.owner_id != owner_id:
+            _reject()
+        through_sequence = row.payload["accounting"]["high_water_sequence"]
+        if type(through_sequence) is not int or through_sequence < 1:
+            _reject()
+        source = LinkedStopStore._source(session, execution_id, clock(), owner_id=owner_id,
+            through_sequence=through_sequence)
+        return LinkedStopStore._read(session, row, source, clock())
+    except (ValueError, TypeError, AttributeError, KeyError, IndexError, OverflowError, SQLAlchemyError):
+        _reject()

@@ -132,11 +132,15 @@ lease identity, entry/dispatch and source/accounting bindings must still match.
 It cannot publish a report/checkpoint/decision, rewrite terminal history, claim
 remote provider termination/cost, replenish allowance or authorize continuation.
 Missing or corrupt stop evidence stays unknown; default continuation stays off.
-The browser progress step distinguishes a cancellation request from verified
-shutdown: `cancel_requested` does not render processing as stopped. The current
-API does not yet project the integrity-verified local-stop receipt to the UI;
-after local shutdown its pending heading remains an unfinished operational UX
-gate, not proof that the provider stopped or that retry is authorized.
+The authenticated browser state projects only the integrity-verified local-stop
+timestamp and literal false continuation/cost flags, without rewriting execution
+status. Cancellation or expired/review-required publication fences must exist;
+a successful still-leased stop receipt cannot suppress completion polling.
+The EN/VI UI distinguishes pending cancellation, verified local shutdown and
+uncertain state requiring review. Local shutdown neither approves a report nor
+enables retry or promises remote provider termination/refund. Missing receipt
+remains unknown; corrupt receipt refuses the state read. Local/native/browser
+and full/live acceptance remain separate gates.
 
 Internal terminal preparation derives a trusted checkpoint codec from original
 owner-readable inputs and bounded actual SDK initialization. Existing locked

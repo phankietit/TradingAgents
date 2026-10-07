@@ -539,9 +539,13 @@ CSRF/Origin and cancels a reservation or requests an active attempt's stop.
 Completed status requires the full completion/report reader, not a database flag.
 While cancellation is requested, the EN/VI progress step explicitly says shutdown
 is not yet verified; requesting cancellation is not proof that processing stopped.
-The integrity-checked local-stop receipt is not yet projected into browser state,
-so the after-stop pending heading remains an unfinished operational UX gate.
-Neither message establishes provider termination, known charges or retry authority.
+Once the complete local-stop receipt is verified behind a cancellation/expired
+publication fence, the EN/VI browser shows local processing stopped, removes
+repeated-stop/new-attempt controls and retains unknown provider charges and
+nonapproval disclosures. Missing receipt remains pending/unknown; corrupt receipt
+refuses the read. Successful leased publication still polls for the final report.
+Neither message establishes provider termination, known charges or retry authority;
+operational, full regression and live acceptance remain separately evidenced.
 Candidate `GET /api/v1/runs/{id}/continuations` discovers owner-scoped attempts
 after browser refresh, with descending attempt pagination (`limit` up to 50,
 `before_attempt`) and explicit `has_more`. State includes attempt and report/

@@ -24,7 +24,11 @@ from tradingagents.platform.analysis.accounting import (
     recheck_accounting_evidence,
 )
 from tradingagents.platform.analysis.allowance import load_remaining_allowance
-from tradingagents.platform.analysis.linked_stops import LinkedStopError, LinkedStopStore
+from tradingagents.platform.analysis.linked_stops import (
+    LinkedStopError,
+    LinkedStopStore,
+    read_linked_local_stop,
+)
 from tradingagents.platform.analysis.observer import ResearchExecutionFailed
 from tradingagents.platform.persistence import (
     PlatformRepository,
@@ -144,6 +148,9 @@ def test_native_receipt_reader_rejects_tamper_and_foreign_owner(tmp_path, monkey
     store, engine = capture_native(tmp_path, monkeypatch)
     context, database = engine.linked_context, store.executions.database
     expected = store.read(owner_id=context.owner_id, execution_id=context.execution_id)
+    with database.session() as session:
+        assert read_linked_local_stop(session=session, owner_id=context.owner_id,
+            execution_id=context.execution_id, clock=store.executions._now) == expected
     with pytest.raises(LinkedStopError):
         store.read(owner_id=uuid4(), execution_id=context.execution_id)
     with database.session() as session:
@@ -174,12 +181,95 @@ def test_native_receipt_reader_rejects_tamper_and_foreign_owner(tmp_path, monkey
             assert str(error) == "linked local stop requires review"
         else:
             pytest.fail(f"Stop mutation {index} ({field}) was not refused")
+        with database.session() as session, pytest.raises(LinkedStopError):
+            read_linked_local_stop(session=session, owner_id=context.owner_id,
+                execution_id=context.execution_id, clock=store.executions._now)
         with database.session() as session:
             row = session.get(ResearchExecutionStopRow, context.execution_id)
             for key, original_value in original.items():
                 setattr(row, key, deepcopy(original_value))
             flag_modified(row, "payload")
         assert store.read(owner_id=context.owner_id, execution_id=context.execution_id) == expected
+
+
+@pytest.mark.parametrize("mode", ["linked_cancelled", "linked_expired", "linked_stopped"])
+def test_native_stop_owner_api_projection_preserves_completion_and_history(tmp_path, monkeypatch, mode):
+    from fastapi.testclient import TestClient
+
+    from tradingagents.platform.api import ApiSettings, continuation_routes, create_app
+
+    store, engine = capture_native(tmp_path, monkeypatch, mode=mode)
+    context, database = engine.linked_context, store.executions.database
+    before = history(database)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Stop projection must not initialize SDKs or models")
+
+    monkeypatch.setattr(continuation_routes, "prepare_terminal_continuation", forbidden)
+    settings = ApiSettings(database_url=database.engine.url.render_as_string(hide_password=False),
+        artifact_root=tmp_path / "owned-blobs", allowed_origin="http://testserver",
+        secure_cookies=False, clock=store.executions._now)
+    with TestClient(create_app(settings)) as client:
+        path = f"/api/v1/runs/{context.run_id}/continuations/{context.execution_id}"
+        assert client.get(path).status_code == 401
+        assert client.post("/api/v1/auth/login", json={"email":"native-linked@example.test",
+            "password":"synthetic fixture password"}, headers={"Origin":"http://testserver"}).status_code == 200
+        assert client.get(path.replace(str(context.execution_id), str(uuid4()))).status_code == 404
+        response = client.get(path)
+        assert response.status_code == 200, response.text
+        value = response.json()
+        if mode == "linked_stopped":
+            assert value["status"] == "completed" and value["local_stop"] is None
+            assert value["report_artifact_id"] is not None
+        else:
+            assert value["status"] in {"cancel_requested", "leased", "review_required"}
+            assert value["report_artifact_id"] is None
+            assert value["local_stop"] == {"stopped_at": store.read(owner_id=context.owner_id,
+                execution_id=context.execution_id).stopped_at.isoformat().replace("+00:00", "Z"),
+                "continuation_authorized":False,"provider_cost_known":False}
+            with database.session() as session:
+                row = session.get(ResearchExecutionStopRow, context.execution_id)
+                row.payload_hash = "0" * 64
+            response = client.get(path)
+            assert response.status_code == 409
+            assert response.json() == {"detail":"continuation requires review"}
+    assert history(database) == before
+
+
+def test_native_stop_before_successful_publication_keeps_api_leased(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from tradingagents.platform.api import ApiSettings, create_app
+
+    original = LinkedStopStore.record_supervised
+    checked = []
+
+    def read_before_publication(store, engine):
+        stop = original(store, engine)
+        context, database = engine.linked_context, store.executions.database
+        assert stop is not None
+        before = history(database)
+        with database.session() as session:
+            assert session.get(ResearchExecutionCompletionRow, context.execution_id) is None
+        settings = ApiSettings(database_url=database.engine.url.render_as_string(hide_password=False),
+            artifact_root=tmp_path / "owned-blobs", allowed_origin="http://testserver",
+            secure_cookies=False, clock=store.executions._now)
+        with TestClient(create_app(settings)) as client:
+            assert client.post("/api/v1/auth/login", json={"email":"native-linked@example.test",
+                "password":"synthetic fixture password"}, headers={"Origin":"http://testserver"}).status_code == 200
+            response = client.get(f"/api/v1/runs/{context.run_id}/continuations/{context.execution_id}")
+            assert response.status_code == 200, response.text
+            value = response.json()
+            assert value["status"] == "leased" and value["lease_expired"] is False
+            assert value["local_stop"] is None and value["report_artifact_id"] is None
+        assert history(database) == before
+        checked.append(True)
+        return stop
+
+    monkeypatch.setattr(LinkedStopStore, "record_supervised", read_before_publication)
+    # Original fixture subsequently requires real successful linked publication.
+    run_native(tmp_path, monkeypatch, "English", False, "linked_stopped", stop_receipt_expected=True)
+    assert checked == [True]
 
 
 def test_native_stop_remains_readable_after_later_accounting_without_grant(tmp_path, monkeypatch):
