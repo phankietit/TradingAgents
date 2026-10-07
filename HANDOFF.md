@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean staged V2 gate · 2026-10-08:** frozen clean source
+`2f16dfd02e9f8ae10c1ad02162e9896c796f683e`, side97397 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_provenance_v2.py tests/test_report_compiler.py tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py --tb=short`.
+112selected PASS6.84s; Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same unchanged source, side81768 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS4.20s. Default mixed-source uncited-summary cause still accepted;
+component PASS does not hide or repair that active-flow FAIL. No skip/xfail or
+relaxed original red assertion. No model/provider call. Default activation and
+all original-role/checkpoint/localization/publication/approval consumer migrations
+remain next; native/full/live/manual acceptance UNVERIFIED. Primary full73101
+polled on the same live handle, no new output, source cfd31da unchanged. Do not
+restart on observation silence or integrate while the source-frozen gate is live.
+
 **R07 staged V2 summary components · 2026-10-08:** isolated owned
 `fix/TA-R07-summary-provenance`, base31c2b1a. Required explicit version and full
 summary/citation parity, strict generation compiler entry, actual quantity/source
