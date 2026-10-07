@@ -1,5 +1,28 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13/R14 clean installed Python3.12 gate · 2026-10-08:** exact archive
+`f0c607ef9cdeabbbe35b4d3dd068f75468c8e15d`, side branch. Managed external
+fresh venv from bundledPython3.12.14; no systemsitepackages/editable/owner.env.
+38762 terminal0: environment-cleared pip install `./source[dev,platform]` from
+public PyPI, isolated build, wheel538832bytes SHA256
+094eb76fd6a31a118b22358394dc88a344017394028310cf1f3600287b9559c6.
+81336 terminal0: `python -I installed_smoke.py`, pipcheck and installed
+tradingagents/API/worker `--help` PASS outside checkout; imports under isolated
+prefix, noneditable direct-url origin and packaged migration template asserted.
+9213 terminal0: `python -I installed_tests.py`, importlib-mode explicit11files
+154PASS20.67s. Selection: summary_source_coverage/review_v2/result_v2/transport_v2/
+provenance_v2, report_compiler, financial_validation_stage, report_localization,
+platform_api, api_entrypoint, run_job_api. External runner exposes only archived
+tests namespace, never adds archive root to sys.path; every loaded tradingagents/
+cli module path asserted inside installed prefix after pytest. Synthetic models,
+SQLite API/owner/auth/idempotency, no database/provider credentials or paid calls.
+Fresh resolved deps include langchain-core1.6.7/langgraph1.2.14/pydantic2.13.5/
+pandas3.0.6/FastAPI0.142.4/SQLAlchemy2.1.4. Runtime/dependencies in existing developer
+venv untouched. No new provider, repo dependency/config/model/risk/history change.
+This is clean-install/import/selected Python3.12 evidence, NOT full3.12/Postgres/
+supported-version/live-financial/operator/release acceptance. Primaryfb38391
+51929 full remains live/latest66%, source frozen; no restart/integration. Goal ACTIVE.
+
 **R08 failed-job-refresh clean acceptance · 2026-10-08:** frozen clean source
 `351bc0ba8fd00e59e8139dfe07710ba6fe1753c5`, owned side worktree.15639 terminal0
 `npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
