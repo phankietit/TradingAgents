@@ -10,6 +10,12 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Keep a completed continuation's report and nonapproval warning prominent;
+  collapse its operational explanation, attempt selector and refresh controls
+  into an accessible EN/VI disclosure. Active, stopped and consent states retain
+  their full controls. Synthetic desktop/mobile QA is not live financial or
+  combined backend/browser acceptance.
+
 - Remove the canonical-report shortcut around Financial validation. Mechanically
   valid legacy reports now receive the same bounded source-context review as
   drafts; failed review cannot retain a publishable canonical decision. Preserve

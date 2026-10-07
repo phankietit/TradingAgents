@@ -2,6 +2,28 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Isolated completed-continuation UI hierarchy (2026-10-07):** side worktree
+`/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`, branch
+`fix/TA-R08-continuation-ui`, dirty source on
+`9c891f5a4c4b2af398d30d2b90f624db2cbacb5f`; primary full25685 source remains
+frozen/unchanged. Fresh synthetic desktop1440×1000/mobile390×844 screenshots
+showed the completed operational panel pushing the report down. Keep completed
+heading/nonapproval notice visible; collapse explanation/selector/refresh into
+native details with EN/VI label. Active/preparation/consent/cancel states and
+validated report IDs, polling, all disclosures and backend authority unchanged.
+Web3602 terminal0:typecheck/lint/164tests(27files)/build(299modules)/diff PASS,
+Vitest14.31s. Browser plugin absent; existing Playwright, loopback5174 only,
+all API/EventSource synthetic, no owner DB/model/provider request. Browser35385
+terminal0:page identity/title/content, no overlay/errors/overflow, disclosure
+open/close/refresh visibility, consent3/one reservation,101event paging,
+cancel/completed/unvalidated report collapse and VI PASS on both viewports.
+Completed panel height193.59desktop/249.59mobile; report heading y595.27/y1052.05.
+Mobile report remains below first viewport; do not call the whole journey done.
+First browser40479 FAIL used the English region name after switching to VI;
+corrected only that fixture locator, no product guard loosened. Fresh screenshots
+remain external under Logs/recovery-compact-{desktop,mobile}-completed-vi.png;
+source/native/backend/live/editorial acceptance are separate. Goal ACTIVE.
+
 **Exact93 recovery matrix PASS (2026-10-07):** clean frozen
 `93cc6eab7f2a83b63770383de314a2cac33be9fc`, gate68162:
 `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x`

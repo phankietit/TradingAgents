@@ -430,6 +430,7 @@ export const vietnamese: Record<string, string> = {
   'Continuation cancelled': 'Đã hủy lượt tiếp tục',
   'Continuation needs review': 'Cần kiểm tra trước khi tiếp tục',
   'Continuation report available': 'Đã có báo cáo từ lượt tiếp tục',
+  'Continuation details': 'Chi tiết lượt tiếp tục',
   'The original attempt stays unchanged. A continuation uses its saved context and remaining allowance, not a fresh analysis.': 'Lần xử lý cũ được giữ nguyên. Lượt tiếp tục dùng ngữ cảnh đã lưu và phần thời gian, lượt xử lý còn lại, không phải một phân tích mới.',
   'Saved continuation': 'Lượt tiếp tục đã lưu',
   'Processing could not continue safely. Do not assume it is still running or retry it automatically.': 'Chưa thể tiếp tục xử lý an toàn. Không mặc định phân tích vẫn đang chạy hoặc tự động thử lại.',

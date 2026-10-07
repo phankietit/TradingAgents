@@ -52,4 +52,13 @@ it('shows verified completion despite an old lease and does not expose a retry/s
   expect(screen.queryByRole('button',{name:'Stop continuation'})).toBeNull();
   expect(screen.queryByText(/Processing could not continue safely/)).toBeNull();
   expect(screen.getByText(/Completion does not mean/)).toBeTruthy();
+  const details = screen.getByText('Continuation details').closest('details')!;
+  expect(details.hasAttribute('open')).toBe(false);
+  // Approval disclaimer stays outside collapsed operational detail.
+  expect(screen.getByText(/Completion does not mean/).closest('details')).toBeNull();
+  const user = userEvent.setup();
+  await user.click(screen.getByText('Continuation details'));
+  expect(details.hasAttribute('open')).toBe(true);
+  expect(screen.getByRole('combobox')).toBeTruthy();
+  expect(screen.getByRole('button', {name:'Refresh continuation'})).toBeTruthy();
 });

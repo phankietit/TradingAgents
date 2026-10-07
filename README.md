@@ -520,7 +520,8 @@ prior research. No client codec/config is accepted. Both responses explicitly
 state `dispatch_enabled: false`: HTTP does not directly dispatch a model and
 ordinary worker startup does not enable continuation polling. An operator can
 explicitly enable polling with `tradingagents-worker --continuations`; ordinary
-queued jobs take priority. Browser continuation controls are not integrated yet.
+queued jobs take priority. Explicit browser continuation controls are implemented
+in this candidate; operator enablement and combined runtime acceptance are separate.
 Reservation does not approve a decision or rewrite history.
 Local/native API and full-candidate acceptance are recorded separately in HANDOFF.
 
@@ -540,7 +541,12 @@ Candidate `GET /api/v1/runs/{id}/continuations` discovers owner-scoped attempts
 after browser refresh, with descending attempt pagination (`limit` up to 50,
 `before_attempt`) and explicit `has_more`. State includes attempt and report/
 evidence/decision IDs only after the full completion reader verifies them. These
-IDs are read links, not approval authority. The browser journey is still pending.
+IDs are read links, not approval authority. The browser has explicit continuation
+controls; combined real backend/browser/native acceptance remains pending.
+After verified completion, its nonapproval warning stays visible while operational
+details, attempt selection and refresh use an expandable EN/VI section. Active
+processing and explicit consent remain fully visible; a compact completed panel
+does not establish the report's financial validity or human approval.
 The corresponding `GET .../{execution_id}/events` provides cursor-paginated,
 actor-linked progress (`after_sequence`, `limit` up to 100, `has_more`). It
 validates entry provenance and owner/run/attempt/time bindings and returns only
@@ -549,7 +555,7 @@ non-approval evidence and does not change the original terminal SSE lifecycle.
 Migration `0018_preparation_refusals` is additive and requires an explicit operator
 migration with a consistent private DB/artifact backup; worker startup never
 migrates. Downgrading removes refusal receipts and must not be used to enable a
-retry. Browser controls and live operational acceptance remain unfinished.
+retry. Broader browser workflow and live operational acceptance remain unfinished.
 Synthetic native parity is not live financial/editorial proof.
 
 Durable snapshot jobs retain private, immutable working notes when each graph

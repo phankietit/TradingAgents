@@ -297,7 +297,11 @@ input, select, textarea, .safe-text { background: #141614; color: #ecece8; }
 .compact-run-picker { display: none; }
 .continuation-panel { padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface, #171a16); }
 .continuation-panel h2 { margin: 8px 0 12px; }
-.continuation-panel > label { display: grid; gap: 8px; max-width: 420px; }
+.continuation-panel label:not(.continuation-check) { display: grid; gap: 8px; max-width: 420px; }
+.continuation-completed { padding-block: 16px; background: transparent; }
+.continuation-completed .notice { margin-bottom: 12px; }
+.continuation-details > summary { color: var(--muted); font-size: 13px; }
+.continuation-details[open] > summary { margin-bottom: 16px; }
 .continuation-panel .section-actions { flex-wrap: wrap; justify-content: flex-start; margin-top: 20px; }
 .continuation-consent { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .continuation-check { display: flex; align-items: flex-start; gap: 12px; margin: 16px 0; line-height: 1.6; }

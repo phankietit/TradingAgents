@@ -75,9 +75,8 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
     finally { setPending(''); }
   }
   const needsReview = current && (current.preparation_requires_review || (current.lease_expired && current.status !== 'completed') || current.status === 'review_required');
-  return <section className="continuation-panel" aria-label={t('Saved research continuation')}>
-    <p className="eyebrow">{t('SAVED RESEARCH')}</p>
-    <h2>{t(current ? needsReview ? 'Continuation needs review' : labels[current.status] : 'Research stopped before completion')}</h2>
+  const completed = current?.status === 'completed' && !needsReview;
+  const controls = <>
     <p className="muted">{t('The original attempt stays unchanged. A continuation uses its saved context and remaining allowance, not a fresh analysis.')}</p>
     {current ? <>
       <label>{t('Saved continuation')}<select value={current.execution_id} onChange={event => setSelected(event.target.value)}>
@@ -86,7 +85,7 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
       {needsReview ? <p className="notice warning">{t('Processing could not continue safely. Do not assume it is still running or retry it automatically.')}</p>
         : current.status === 'reserved' ? <p className="notice">{t('Your continuation is saved. Processing starts only when the local continuation service is enabled. Do not submit a duplicate request.')}</p>
           : current.status === 'cancel_requested' ? <p className="notice">{t('Stopping has been requested. Provider work and charges may continue until the current step stops.')}</p> : null}
-      {current.status === 'completed' ? <p className="notice">{t('Read the new report below. Completion does not mean its conclusions or a portfolio decision have been approved.')}</p> : <ResearchWorkflow
+      {current.status === 'completed' ? null : <ResearchWorkflow
         events={events.data?.events ?? []} status={needsReview ? 'failed' : current.status === 'leased' ? 'running' : current.status}
         hasSources={true} hasReport={false} />}
       {events.error ? <p className="warning">{t('Continuation progress is unavailable. This does not confirm processing is running.')}</p> : null}
@@ -110,5 +109,13 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
       {!active && current?.status !== 'completed' ? <button disabled={!!pending} onClick={onNewAttempt}>{t('Configure new attempt')}</button> : null}
     </div>}
     {data.data?.has_more ? <button disabled={!!pending} onClick={() => { setBefore(data.data!.items.at(-1)!.attempt); setSelected(''); }}>{t('Older saved continuations')}</button> : null}
+  </>;
+  return <section className={`continuation-panel${completed ? ' continuation-completed' : ''}`} aria-label={t('Saved research continuation')}>
+    <p className="eyebrow">{t('SAVED RESEARCH')}</p>
+    <h2>{t(current ? needsReview ? 'Continuation needs review' : labels[current.status] : 'Research stopped before completion')}</h2>
+    {completed ? <>
+      <p className="notice">{t('Read the new report below. Completion does not mean its conclusions or a portfolio decision have been approved.')}</p>
+      <details className="continuation-details"><summary>{t('Continuation details')}</summary>{controls}</details>
+    </> : controls}
   </section>;
 }
