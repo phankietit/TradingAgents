@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean claim-local gate · 2026-10-08:** frozen clean source
+`d7e5af810a756785cd16490212027dd184d78c18`, side89233 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_financial_validation_stage.py tests/test_report_localization.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.
+167selected PASS12.22s,Ruff/dependency/diff PASS,Python3.14.7; source clean/
+unchanged during gate. Five new cases cover rejection despite unrelated available
+news, unchanged all-price rejection, conditional/unverified preservation and
+genuine mixed-source noncausal coverage. Existing original-role/round graph
+fixtures, numeric compiler, protected EN/VI and source count tests remain selected;
+SDK/vendor data synthetic, no live model/provider proof. Dirty64583 earlier
+42selected PASS2.89s. No new vocabulary/model loop or weakened original bound.
+This fixes claim-local known-motive coverage, not general mixed-source causal
+entailment, executive-summary semantic binding, unknown paraphrases, calibration
+or live financial/VI quality. Prompt/source changes alter recovery fingerprint;
+old private checkpoint compatibility cannot be presumed and must never be
+backfilled/relabelled to fit new code. No private history was touched. Primary
+full73101 remains frozen cfd31da and does not include this new runtime patch.
+Keep side separate until terminal/owned cleanup, then integrated/native/full
+verification remains mandatory. Staged R14 operator/session work retained.
+Goal ACTIVE, PR7 draft; NQ owner-BLOCKED, no paid call/provider/risk/deploy change.
+
 **R07 claim-local causal coverage WIP · 2026-10-08:** owned isolated
 `fix/TA-R07-claim-local-coverage`, base bd829c9 carrying staged R14 work. Inspection
 found the existing known external-motive guard returned early for any nonprice
