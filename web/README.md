@@ -51,6 +51,12 @@ authorization, report or approval contract changes. Rendered desktop/mobile
 acceptance must be recorded against the exact candidate SHA; build/unit tests
 alone do not prove layout quality.
 
+The workflow keeps saved-report availability separate from job completion:
+only a `succeeded` status can show the finished-processing message. A retained
+report during queued, running, retry, cancellation, review or failure states
+instead asks the owner to verify processing status and report validation.
+Neither message grants financial validity or human approval.
+
 The analysis setup now has an independent **Add recent headlines** action
 beside price preparation. It saves owner-scoped Yahoo news only when the
 current-vintage feed passes identity, content and cutoff checks. The action is

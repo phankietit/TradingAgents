@@ -27,6 +27,8 @@ export default function ResearchWorkflow({events, status, hasSources, hasReport}
       <span className="workflow-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
       <div><strong>{t(step.title)}</strong><span>{t(step.detail)}</span></div>
     </li>)}</ol>
-    {hasReport ? <p className="muted caption">{t('Processing is finished. Check the report validation status before using its conclusions.')}</p> : null}
+    {hasReport ? <p className="muted caption">{t(status === 'succeeded'
+      ? 'Processing is finished. Check the report validation status before using its conclusions.'
+      : 'A saved report does not confirm processing has finished. Check status and validation before using conclusions.')}</p> : null}
   </section>;
 }

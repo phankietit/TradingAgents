@@ -42,6 +42,28 @@ it('distinguishes report availability from validated conclusions', () => {
   expect(within(review).getByText('Read the findings and limitations')).toBeTruthy();
   expect(screen.queryByText('Approved')).toBeNull();
 });
+it.each(['queued', 'running', 'retry_wait', 'cancel_requested', 'review_required', 'failed', 'cancelled'])('does not infer finished processing from a saved report while status is %s', status => {
+  render(<ResearchWorkflow events={[]} status={status} hasSources hasReport />);
+  expect(screen.getByText('Saved report available')).toBeTruthy();
+  expect(screen.queryByText('Processing is finished. Check the report validation status before using its conclusions.')).toBeNull();
+  expect(screen.getByText('A saved report does not confirm processing has finished. Check status and validation before using conclusions.')).toBeTruthy();
+  expect(screen.queryByText('Approved')).toBeNull();
+});
+it.each(['queued', 'running', 'retry_wait', 'cancel_requested', 'review_required', 'failed', 'cancelled'])('preserves the saved-report/status distinction in Vietnamese for %s', status => {
+  setLocale('vi');
+  render(<ResearchWorkflow events={[]} status={status} hasSources hasReport />);
+  expect(screen.getByText('Báo cáo đã được lưu')).toBeTruthy();
+  expect(screen.queryByText('Đã xử lý xong. Hãy kiểm tra trạng thái xác minh báo cáo trước khi sử dụng kết luận.')).toBeNull();
+  expect(screen.getByText('Báo cáo đã lưu không chứng minh việc xử lý đã hoàn tất. Hãy kiểm tra trạng thái xử lý và xác minh báo cáo trước khi sử dụng kết luận.')).toBeTruthy();
+});
+it('updates completion wording only after authoritative status changes to succeeded', () => {
+  const view = render(<ResearchWorkflow events={[]} status="running" hasSources hasReport />);
+  expect(screen.getByText('A saved report does not confirm processing has finished. Check status and validation before using conclusions.')).toBeTruthy();
+  view.rerender(<ResearchWorkflow events={[]} status="succeeded" hasSources hasReport />);
+  expect(screen.queryByText('A saved report does not confirm processing has finished. Check status and validation before using conclusions.')).toBeNull();
+  expect(screen.getByText('Processing is finished. Check the report validation status before using its conclusions.')).toBeTruthy();
+  expect(screen.queryByText('Approved')).toBeNull();
+});
 it('reads a long linked timeline without an argument-spread limit or discarding the latest stage', () => {
   const events = Array.from({length:150_000},(_,index)=>({...event(index+1,'model.usage'),attempt:2}));
   events.push({...event(150_001,'stage.started','Financial validation'),attempt:2});

@@ -1,5 +1,17 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 saved-report/status truth WIP · 2026-10-08:** ResearchWorkflow previously
+said processing finished whenever an artifact existed, even while job status
+queued/running/retry/cancel/review/failed. Dirtyred89397:7FAIL9PASS3.36s
+on seven non-success statuses, exact absence assertion contradicted by old UI.
+Now completion wording requires succeeded; retained report otherwise advises
+processing/validation review, no backend/roles/approval changes. EN+VI7status
+matrix and rerender transition added, existing actual-stage/no-percentage/
+cancellation/long-timeline tests retained. Dirty91409:7FAIL16PASS4.47s only new
+VI fixture used wrong existing availability label; corrected to actual label,
+not weakening new safety-message assertions. Clean frontend/rendered gates
+pending. Primaryfull51929 still live/frozenfb38391, no restart/integration.
+
 **R08 isolated mobile context acceptance · 2026-10-08:** frozen clean
 `289de454844e057164c47441f02d20590ac3edc7`, owned side branch/worktree.
 CSS-only compact account/nav/header/report context; decorative tagline omitted

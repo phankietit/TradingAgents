@@ -422,6 +422,7 @@ export const vietnamese: Record<string, string> = {
   'Your decision': 'Bạn xem xét',
   'Read the findings and limitations': 'Đọc kết luận, rủi ro và giới hạn dữ liệu',
   'Processing is finished. Check the report validation status before using its conclusions.': 'Đã xử lý xong. Hãy kiểm tra trạng thái xác minh báo cáo trước khi sử dụng kết luận.',
+  'A saved report does not confirm processing has finished. Check status and validation before using conclusions.': 'Báo cáo đã lưu không chứng minh việc xử lý đã hoàn tất. Hãy kiểm tra trạng thái xử lý và xác minh báo cáo trước khi sử dụng kết luận.',
   'Report presentation': 'Trình bày báo cáo',
   'Financial validation': 'Kiểm tra số liệu và căn cứ',
   'Select analysis': 'Chọn phân tích',
