@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 integrated PostgreSQL restore receipt · 2026-10-08:** frozen clean primary
+`e64de6ba4d97bd7daa61a32d9688ba65c7509c9d`, primary7164 terminal0:
+same six-file focused command as side56247 below;66selected PASS18.87s,
+whole Ruff/dependency/diff PASS,Python3.14.7. Owned disposable PostgreSQL removal
+confirmed. No runtime/package/CLI/LangGraph change; source clean/unchanged during
+gate. Side restore scope integrated; coordination row removed. Source/schema/
+per-table data and authenticated paired EN/VI restore acceptance are now locally
+verified on PostgreSQL, not just migration. Operational encryption/transfer,
+retained-session revocation, concurrent writers, active jobs/checkpoints, browser
+and owner-runtime restore remain UNVERIFIED; prior financial/live failures and
+whole UX work stay open. NQ owner-BLOCKED. Goal ACTIVE, PR7 draft, no main merge,
+public deployment, paid run or private-history mutation. Next full regression
+must use the resulting clean cloud SHA without further source edits; previous
+full02ed0cc instrumented PASS does not prove this current candidate.
+
 **R14 clean PostgreSQL paired restore gate · 2026-10-08:** frozen clean source
 `fcdad82f921f65b2c766bc94db1b9ae455920889`, side56247 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_postgres_paired_restore.py tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py tests/test_local_verification_cli.py --tb=short`.
