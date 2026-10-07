@@ -57,11 +57,13 @@ def test_review_resolves_same_admitted_social_counts(vendor, count, mode):
     validate_canonical_report(compiled, facts, {snapshot_id})
     candidate = raw if mode == "draft" else compiled.model_dump(mode="json")
     calls = []
+    prompts = []
 
     class Model:
         def with_structured_output(self, schema):
             def invoke(prompt):
                 calls.append("structured")
+                prompts.append(prompt)
                 return schema.model_validate(candidate)
             return SimpleNamespace(invoke=invoke)
 
@@ -72,13 +74,15 @@ def test_review_resolves_same_admitted_social_counts(vendor, count, mode):
     state_key = "structured_draft" if mode == "draft" else "structured_decision"
     result = create_financial_validation(Model(), {"social": json.dumps([source])})(
         {state_key: candidate})
-    if mode == "canonical":
-        assert result == {}
-        assert calls == []
-    else:
-        assert result["structured_decision"] == compiled.model_dump(mode="json")
-        assert calls == ["structured"]
-        assert result["structured_diagnostics"] == []
+    # Both representations must receive review; preserve exact admitted social
+    # statements/units/references instead of expecting a canonical shortcut.
+    assert result["structured_decision"] == compiled.model_dump(mode="json")
+    assert calls == ["structured"]
+    assert result["structured_diagnostics"] == []
+    assert result["rejected_structured_decision"] == candidate
+    retained = json.loads(prompts[0].split("<immutable_source_records_untrusted>\n", 1)[1].split(
+        "\n</immutable_source_records_untrusted>", 1)[0])
+    assert retained == [source]
 
 
 @pytest.mark.parametrize("mutation", ["body", "quality"])

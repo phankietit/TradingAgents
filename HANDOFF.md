@@ -2,6 +2,49 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Full5894 follow-up diagnostics (2026-10-07):** owned dirty candidate on
+`5894be8295992040b9d761f4d70767f19f0dd771`; no production changes.
+`python -m pytest -q tests/test_social_review_parity.py tests/test_financial_validation_stage.py --tb=short -x`
+gate70007 terminal0:46PASS/1.95s. Canonical/draft social cases now require the
+same full reviewed result and immutable source context, not a no-review shortcut.
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused 'tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[postgresql-en-vi-worker]' --tb=short -x`
+gate63980 terminal0:1PASS/2warnings/73.07s, Python3.14.7, Ruff/pip/diff PASS;
+only helper-owned disposable PG removed. Logs/TMP stayed in the managed external
+run, with disposable connection URLs redacted. Native SDK/model fixtures are
+synthetic; no paid/live call or private-history rewrite. Source/HEAD frozen for
+the entire case. The full5894 preparation failure did not recur, so its root
+cause remains UNVERIFIED; this is not a stability fix or replacement full gate.
+Tracked test-only bounded exception-chain diagnostics are retained for the next
+matrix/full run. Goal ACTIVE; financial/editorial/browser/live gates unchanged.
+Final dirty5894 test-only gate78206:
+`.venv/bin/python -m ruff check tests/test_default_prepared_resume.py tests/test_social_review_parity.py && .venv/bin/python -m pytest -q tests/test_social_review_parity.py tests/test_financial_validation_stage.py tests/test_default_prepared_resume.py::test_safe_exception_chain_omits_private_messages_and_locals --tb=short -x && git diff --check`
+terminal0:47PASS/5.14s, Ruff/diff PASS. A preliminary bare `python` invocation
+was unavailable in the shell; the repository's configured virtualenv was used
+for the successful gate. This receipt is not an exact-clean-SHA full regression.
+
+**Full5894 terminal FAIL (2026-10-07):** clean frozen
+`5894be8295992040b9d761f4d70767f19f0dd771`, full PostgreSQL local helper10083,
+Python3.14.7:6FAIL/3194PASS/2optional skips UNVERIFIED/480warnings/88subtestsPASS,
+2756.02s, exit1. Ruff/pip PASS; script's post-pytest diff gate was not reached.
+Source/HEAD unchanged throughout; helper-owned disposable PG removed. Log used
+short traceback and redacted disposable DB URLs; raw QA data remains outside Git.
+Five canonical social parity cases still expected an empty result/no review,
+contradicting the newly approved mandatory canonical Financial validation path.
+Update them to require exactly one structured review, exact complete canonical
+output, unchanged social count statements/units/refs, original candidate retention,
+empty diagnostics and full immutable source context for both draft/canonical.
+No production source or review bound is changed by this test-contract update.
+
+The sixth FAIL is
+`test_default_stopped_job_to_authenticated_consent[postgresql-en-vi-worker]`:
+`prepare_terminal_continuation` refused BEFORE consent/linked dispatch. It is not
+the old consent-idempotency failure or an observed heartbeat failure. Root cause
+UNVERIFIED; do not label it CPU/timeout solely from isolated success. Add the
+existing safe exception-chain test diagnostic at terminal preparation: bounded
+exception types/code locations only, no message/locals/credentials/input values,
+and preserve actual SDK/DB/owner/accounting/clock/lease/budget behavior. Full
+candidate remains FAIL; focused reproducer cannot replace it. Goal ACTIVE.
+
 **R07 canonical review bypass removed; recovery exact gate PASS (2026-10-07):**
 clean source `51be8f1e259bd0a5cc147038e355d0e525d4889e` recovery matrix90991
 terminal0:94PASS/24warnings/467.29s, Python3.14.7, Ruff/pip/diff PASS. Covers

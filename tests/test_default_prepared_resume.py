@@ -179,10 +179,13 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
     assert completed.status is JobStatus.FAILED
     assert completed.error_code == "RESEARCH_EXECUTION_FAILED"
     assert captured and not completed.output_artifact_ids
-    prepared = prepare_terminal_continuation(database=database, artifact_store=store, run_id=run.run_id,
-        base_config={**args["base_config"], "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
-                     "results_dir": str(store.root / "worker-runtime" / "reports")},
-        session_token=issued.token, csrf_token=issued.csrf_token)
+    try:
+        prepared = prepare_terminal_continuation(database=database, artifact_store=store, run_id=run.run_id,
+            base_config={**args["base_config"], "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
+                         "results_dir": str(store.root / "worker-runtime" / "reports")},
+            session_token=issued.token, csrf_token=issued.csrf_token)
+    except Exception as error:
+        pytest.fail("Terminal preparation refused; " + json.dumps(_safe_exception_chain(error)), pytrace=False)
     consents = prepared.consents
     assert consents.codec is not captured["codec"]
     assert consents.codec.fingerprint == captured["codec"].fingerprint
