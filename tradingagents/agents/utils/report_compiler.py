@@ -3,7 +3,12 @@
 import re
 from decimal import Decimal, InvalidOperation
 
-from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, SnapshotReportDraft
+from tradingagents.agents.research_schemas import (
+    CanonicalSnapshotDecision,
+    CanonicalSnapshotDecisionV2,
+    SnapshotReportDraft,
+    SnapshotReportDraftV2,
+)
 from tradingagents.agents.utils.fundamental_statements import (
     fundamental_statement,
     is_fundamental_fact,
@@ -22,7 +27,8 @@ ANCHOR = re.compile(r"\{\{(Q[A-Z]{1,5})\}\}")
 
 
 def compile_report(raw, facts):
-    draft = SnapshotReportDraft.model_validate(raw)
+    v2 = raw.get("report_contract_version") == "2.0"
+    draft = (SnapshotReportDraftV2 if v2 else SnapshotReportDraft).model_validate(raw)
     material = [*draft.investment_thesis, *draft.risks, *draft.invalidation_conditions]
     prose = "\n".join([draft.executive_summary, *[item.claim for item in material], draft.time_horizon or ""])
     if unsupported_financial_numbers(prose, ()):
@@ -41,6 +47,12 @@ def compile_report(raw, facts):
                 invalidation_conditions=[item.claim for item in draft.invalidation_conditions],
                 evidence_claims=[{"claim": claim, "snapshot_ids": list(dict.fromkeys(ids))} for claim, ids in merged.items()])
     bindings = data.pop("quantity_bindings")
+    if v2:
+        summary_keys = set(ANCHOR.findall(draft.executive_summary))
+        summary_sources = {str(value) for value in draft.summary_evidence.snapshot_ids}
+        if any(binding["key"] in summary_keys and binding["snapshot_id"] not in summary_sources
+               for binding in bindings):
+            raise PublicationValidationError(["material_claim_citation_mismatch"])
     values = {}
     observations = []
     statement_keys = set()
@@ -130,7 +142,17 @@ def compile_report(raw, facts):
     if used != set(values):
         raise PublicationValidationError(["quantity_binding_unused"])
     data["observed_numbers"] = observations
-    return CanonicalSnapshotDecision.model_validate(data)
+    return (CanonicalSnapshotDecisionV2 if v2 else CanonicalSnapshotDecision).model_validate(data)
+
+
+def compile_report_v2(raw, facts):
+    """Strict new-generation entry: removing both V2 fields cannot downgrade.
+
+    Default graph activation is pending; the legacy compiler stays available
+    for separately identified historical inputs, never new-output fallback.
+    """
+    SnapshotReportDraftV2.model_validate(raw)
+    return compile_report(raw, facts)
 
 
 BINDING_INSTRUCTIONS = """

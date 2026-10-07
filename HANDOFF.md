@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 staged V2 summary components · 2026-10-08:** isolated owned
+`fix/TA-R07-summary-provenance`, base31c2b1a. Required explicit version and full
+summary/citation parity, strict generation compiler entry, actual quantity/source
+binding, version-aware legacy reader and citation-local known-motive validation
+are implemented as components, NOT activated in the default graph. No guessed
+thesis-source union, removed summary, added blacklist or historical rewrite.
+Dirty10516 terminal0:46selected PASS6.37s in
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_provenance_v2.py tests/test_report_compiler.py tests/test_claim_local_causal_coverage.py --tb=short`.
+This is not clean-SHA, full, original-role integration or live acceptance.
+Default summary red regression remains unresolved until all generator/reviewer/
+checkpoint/localization/publication/approval consumers migrate together; legacy
+reading cannot authorize new output downgrade. Primary full73101 remains on
+unchanged cfd31da; no mid-gate integration. Whole R01–R14 stays ACTIVE; no paid
+call/provider/risk/allowance/public deployment change.
+
 **R07 clean summary red reproduction · 2026-10-08:** frozen clean
 `65bff3d685f89a5183febe437378bda6601d8e89`, side76715 terminal1:
 `TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`.

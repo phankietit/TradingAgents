@@ -20,6 +20,14 @@ risk checks and human review. Its R01–R14 acceptance is incomplete; see
 Implemented web controls do not establish live financial/editorial quality or
 release readiness.
 
+The isolated R07 continuation stages an explicit V2 summary-evidence contract
+and lossless compiler with required supplied source references. It is not yet
+active in the web graph or its review/read/publication consumers; the default
+uncited-summary regression remains FAIL. Original CLI and legacy report schemas
+are unchanged. Component validation is provenance evidence, not proof of causal
+entailment, live financial quality or permission to publish new legacy-format
+output. See [summary provenance](../platform/summary-provenance.md).
+
 Current candidate acquisition covers Yahoo daily prices and non-exhaustive
 recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
 Independent authenticated StockTwits/Reddit preparation now uses the original

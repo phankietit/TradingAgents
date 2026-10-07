@@ -1,6 +1,7 @@
 # R07 summary provenance — implementation design
 
-Status: FAIL red regression; not implemented, not release acceptance.
+Status: staged V2 schema/compiler components; default-flow regression remains
+FAIL. Not activated in generation/review/read/publication, not release acceptance.
 `tests/test_summary_source_coverage.py` proves the current canonical summary can
 assert an uncited external cause when unrelated news is available, even after
 the claim-local thesis guard. See exact receipts in [HANDOFF](../../HANDOFF.md).
@@ -14,8 +15,23 @@ snapshot references, as thesis/risk/invalidation blocks already do. The original
 CLI `PortfolioDecision` remains unchanged. Introduce an explicit versioned web
 report contract: new generation/review output uses the new version, while stored
 legacy reports retain a separately readable original representation. The exact
-schema names/fields require implementation review; this document does not claim
-that new fields already exist.
+schema uses required `report_contract_version: "2.0"` and `summary_evidence`
+(complete summary text plus actual snapshot IDs). `SnapshotReportDraftV2` and
+`CanonicalSnapshotDecisionV2` preserve the provider tool name `PortfolioDecision`.
+The legacy schema and original CLI contract remain unchanged.
+
+Staged `compile_report_v2` refuses missing V2 fields, including removal of both
+fields. Lossless quantity substitution preserves exact summary/evidence text
+parity and requires each summary quantity's source among its supplied references.
+The version-aware reader accepts explicit V2 or separately identified legacy
+reports, rejecting unknown explicit versions; legacy reading is not permission
+for new output to downgrade. Canonical validation checks supplied summary IDs,
+and the known price-only motive guard uses the summary's actual citations.
+Component fixtures cover these boundaries, not default graph activation or
+general semantic entailment. Generation, bounded financial review, checkpoint
+codec, localization, result/publication and approval readers must be migrated and
+verified together before activation; retain rejected original inputs and immutable
+legacy history. The uncited-summary default-flow red test remains authoritative.
 
 The model supplies summary prose and citations. The deterministic compiler
 projects prose and references losslessly into canonical text plus versioned

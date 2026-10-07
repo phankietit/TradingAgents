@@ -95,7 +95,11 @@ def validate_price_only_attributions(decision, sources):
     if all(source["provenance"]["dataset"] == "ohlcv.daily" for source in sources):
         fields.extend([decision.executive_summary, decision.investment_thesis,
                        *decision.risks, *decision.invalidation_conditions])
-    for claim in decision.evidence_claims:
+    claims = list(decision.evidence_claims)
+    summary = getattr(decision, "summary_evidence", None)
+    if summary is not None:
+        claims.append(summary)
+    for claim in claims:
         cited = {str(snapshot_id) for snapshot_id in claim.snapshot_ids}
         if cited and cited <= price_ids:
             fields.append(claim.claim)

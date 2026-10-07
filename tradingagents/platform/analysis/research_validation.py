@@ -73,6 +73,12 @@ def validate_canonical_report(decision, fact_sources, snapshot_ids):
         issues.append("material_claim_citation_mismatch")
     if any(str(source) not in snapshot_ids for item in decision.evidence_claims for source in item.snapshot_ids):
         issues.append("unknown_snapshot_reference")
+    summary = getattr(decision, "summary_evidence", None)
+    if summary is not None:
+        if summary.claim != decision.executive_summary:
+            issues.append("material_claim_citation_mismatch")
+        if any(str(source) not in snapshot_ids for source in summary.snapshot_ids):
+            issues.append("unknown_snapshot_reference")
     if issues:
         raise PublicationValidationError(issues)
 
