@@ -2,6 +2,42 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Active browser/native cancellation and pending-text correction (2026-10-07):**
+clean frozen `8ef88b012400c963aa6186eba7b784a3822ce04b`, external QA74601
+terminal0:1PASS/5warnings/24.80s, Python3.14.7. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -c pyproject.toml -q <managed-run>/test_browser_active_cancel.py --basetemp=<managed-run>/active-cancel-8ef88b0-c --tb=short -x -s`
+Managed run is the same `20261007T052328Z-89163` external owned run below.
+The bridge preserves the original synthetic native linked-cancelled fixture,
+intercepting its first internal cancellation only to drive actual mobile390x844
+login/Stop through real loopback8018 FastAPI/built web. Real spawned child is
+asserted alive before and after browser cancel200/cancel_requested, while its
+checkpoint awaits ACK. Mandatory browser-completed assertion prevents a browser
+failure from being swallowed by the fixture's expected checkpoint exception.
+Then the original fixture proves child reaping/reader closure/verified local
+stop, no report/decision or late publication, unchanged original history and
+unknown provider cost/no refund/no continuation authority. Fresh mobile EN/VI
+readback after local shutdown still has pending status. Fixture clock is reused;
+this is not real-time expiry, provider termination or live/financial acceptance.
+All browsers closed, server joined/shutdown complete, no8018 listener. First
+QA47997 FAIL/73.69s used the wrong VI heading locator; correct QA locator only,
+preserve earlier disposable evidence. QA90415 PASS/13.55s preceded the stronger
+live-child assertions; QA74601 is the current stronger control proof.
+
+Finding: progress said `Processing stopped` while the child was still alive;
+after verified local stop, the API does not project its receipt and heading
+remains pending. This change corrects only premature progress wording EN/VI:
+cancel_requested explicitly says shutdown is not yet verified. Terminal
+failed/cancelled text and report/consent/approval/history/allowance remain intact.
+Owned dirty8ef source web34278 terminal0:typecheck/lint/170tests(27files)/13.01s/
+build299/diff PASS. New EN/VI cancellation-request and terminal-status tests.
+React review retains derived rendering, hook order and existing fetch boundaries.
+Next gate: exact frozen corrected browser/native test; then implement the full
+integrity-checked local-stop API projection and after-stop UI. Do NOT rewrite raw
+execution status or stop polling successful leased publication merely because a
+local-stop receipt exists. That receipt is not provider-stop/cost/retry authority.
+Overall R08/R11 and goal remain incomplete; fresh paid BTC/AAPL approval is still
+pending, NQ owner-BLOCKED. No provider/CI/deploy/private history change.
+
 **Actual browser reserved cancellation PASS (2026-10-07):** clean frozen
 `1701c6f15d4157a3ac6dc21ce08d848912630c84`, external QA2373 terminal0:
 1PASS/8.36s/no warnings/skips, Python3.14.7. Command:

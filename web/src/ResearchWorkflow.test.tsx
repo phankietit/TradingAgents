@@ -1,8 +1,25 @@
 import {render, screen, within} from '@testing-library/react';
-import {expect, it} from 'vitest';
+import {afterEach, expect, it} from 'vitest';
 import ResearchWorkflow, {type ResearchEvent} from './ResearchWorkflow';
+import {setLocale} from './i18n';
+
+afterEach(() => setLocale('en'));
 
 const event = (sequence: number, event_type: string, stage?: string): ResearchEvent => ({sequence, event_type, stage, occurred_at:'2026-09-27T07:00:00Z'});
+it.each(['en', 'vi'] as const)('does not turn a cancellation request into shutdown proof in %s', locale => {
+  setLocale(locale);
+  render(<ResearchWorkflow events={[event(1,'stage.started','Bear Researcher')]} status="cancel_requested" hasSources hasReport={false} />);
+  expect(screen.getByText(locale === 'en' ? 'Stop requested; shutdown not yet verified' : 'Đã yêu cầu dừng; chưa xác minh xử lý đã dừng')).toBeTruthy();
+  expect(screen.queryByText(locale === 'en' ? 'Processing stopped' : 'Đã dừng xử lý')).toBeNull();
+  expect(screen.queryByText(/Processing is finished/)).toBeNull();
+  expect(screen.queryByRole('progressbar')).toBeNull();
+});
+it.each(['failed', 'cancelled'])('retains terminal processing text for %s without a report', status => {
+  render(<ResearchWorkflow events={[]} status={status} hasSources hasReport={false} />);
+  expect(screen.getByText('Processing stopped')).toBeTruthy();
+  expect(screen.queryByText('Stop requested; shutdown not yet verified')).toBeNull();
+  expect(screen.queryByText(/Processing is finished/)).toBeNull();
+});
 it('shows the actual active stage without inventing a completion percentage', () => {
   render(<ResearchWorkflow events={[event(1,'run.started'),event(2,'stage.started','Bear Researcher')]} status="running" hasSources hasReport={false} />);
   expect(screen.getByText('Bear Researcher')).toBeTruthy();

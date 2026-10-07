@@ -397,6 +397,7 @@ export const vietnamese: Record<string, string> = {
   'No sources selected': 'Chưa chọn nguồn dữ liệu',
   'Research & challenge': 'Phân tích và phản biện',
   'Processing stopped': 'Đã dừng xử lý',
+  'Stop requested; shutdown not yet verified': 'Đã yêu cầu dừng; chưa xác minh xử lý đã dừng',
   'Analysts, opposing views and risk review': 'Nghiên cứu, đối chiếu luận điểm và đánh giá rủi ro',
   'Report preparation': 'Hoàn thiện báo cáo',
   'Saved report available': 'Báo cáo đã được lưu',
