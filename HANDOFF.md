@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact8bc UI label acceptance and cloud checkpoint (2026-10-07):** clean frozen
+`8bc107ee2bc6d05c95c540abb2cc1dc7e0ac2061`, web5880 terminal0:
+typecheck/lint/166tests(27files)/9.43s/build299/diff PASS using the full web command
+below. Browser85097 terminal0 with the same external Playwright script and real
+loopback8017 API/disposable native fixture DB: EN/VI desktop1440x1000/mobile390x844
+saved-report readback, focus/route invariants, original-attempt processing label
+and disabled approval PASS. Login is the only POST; initial auth/me401 is expected,
+all authenticated responses200, no page error/other console diagnostic/overflow.
+Fresh report/review screenshots were visually inspected. Source/HEAD unchanged
+through both gates. API10619 exited0 after explicit shutdown; all browsers closed,
+no owner runtime/DB/provider used. The native worker fixture itself ran at ab13fe0;
+8bc changes only web/tests/docs, not Python. This is not exact8bc native rerun,
+browser-driven dispatch, financial/editorial/live or complete professional UX.
+
+Ordinary push succeeded; remote and OPEN/DRAFT PR7 head were verified8bc107e.
+No main merge/CI/deploy/force push. This subsequent receipt-only commit will have
+its own cloud SHA; do not relabel source gates with that documentation SHA.
+Goal ACTIVE; original failure receipts and owner-BLOCKED NQ remain intact.
+
 **Integrated native/API/browser fixture acceptance (2026-10-07):** clean frozen
 `ab13fe0d163b7fb03930f06ae9263fe66df9b432`, web33326 terminal0:
 `npm --prefix web run typecheck && npm --prefix web run lint && npm --prefix web test && npm --prefix web run build && git diff --check`
