@@ -29,7 +29,8 @@ PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_
     "translation_editorial_requires_review", "fundamental_statement_requires_standalone_anchor",
     "fundamental_statement_unsupported", "translation_statement_requires_standalone_anchor",
     "macro_statement_requires_standalone_anchor", "macro_statement_unsupported",
-    "macro_statement_source_unavailable"})
+    "macro_statement_source_unavailable", "social_statement_requires_standalone_anchor",
+    "social_statement_unsupported", "social_statement_source_unavailable"})
 
 
 class PublicationValidationError(ValueError):
@@ -52,7 +53,7 @@ def validate_canonical_report(decision, fact_sources, snapshot_ids):
     text = "\n".join([decision.executive_summary, decision.investment_thesis,
         *decision.risks, *decision.invalidation_conditions, decision.time_horizon or ""])
     for claim in decision.observed_numbers:
-        if claim.fact_id.startswith("fred."):
+        if claim.fact_id.startswith(("fred.", "social.")):
             source = fact_sources.get(str(claim.snapshot_id))
             try:
                 number = format(Decimal(str(claim.value)).quantize(Decimal(1).scaleb(-claim.decimal_places)), "f")
@@ -60,7 +61,8 @@ def validate_canonical_report(decision, fact_sources, snapshot_ids):
                 if statement not in text or non_standalone_anchors(text, [statement.removesuffix(".")]):
                     raise ValueError()
             except (AttributeError, InvalidOperation, ValueError):
-                raise PublicationValidationError(["macro_statement_unsupported"]) from None
+                code = "social_statement_unsupported" if claim.fact_id.startswith("social.") else "macro_statement_unsupported"
+                raise PublicationValidationError([code]) from None
     issues = scope_issues(text) + validate_numeric_claims(decision.observed_numbers, catalog)
     if unsupported_financial_numbers(text, decision.observed_numbers):
         issues.append("financial_number_requires_verified_reference")
@@ -103,8 +105,15 @@ def unsupported_financial_numbers(text: str, claims) -> bool:
     Conditional price assumptions lacking source support deliberately withhold
     readiness rather than being mislabeled as verified market facts.
     """
-    amounts = re.findall(r"(?:\$|USD\s*)\s*([-+−]?\d+(?:,\d{3})*(?:\.\d+)?)|([-+−]?\d+(?:,\d{3})*(?:\.\d+)?)\s*%", text)
-    supported = {Decimal(str(claim.value)) for claim in claims}
+    amounts = re.findall(
+        r"(?:\$|USD\s*)\s*([-+−]?\d+(?:,\d{3})*(?:\.\d+)?)"
+        r"|([-+−]?\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:%|percent\b|per\s+cent\b)",
+        text, re.I,
+    )
+    # Social counts cannot attest monetary/percentage observations just because
+    # their scalar value happens to match. Their own statements retain units.
+    supported = {Decimal(str(claim.value)) for claim in claims
+                 if not getattr(claim, "fact_id", "").startswith("social.")}
     return any(Decimal((money or percent).replace(",", "").replace("−", "-")) not in supported
                for money, percent in amounts)
 

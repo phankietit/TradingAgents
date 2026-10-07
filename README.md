@@ -425,6 +425,12 @@ The existing financial-review step receives complete selected immutable source
 records as untrusted evidence, in addition to the draft and numeric facts. This
 does not add a model call but may increase input tokens; it does not prove that
 all qualitative claims are entailed or remove the need for human review.
+The same validated social count facts are available during compilation and
+financial review. Count bindings render complete source-owned EN/VI statements
+about the supplied sample and user labels, not price, market probability or
+neutral absence. Publication and translation preserve their unit and scope;
+unreferenced `percent`/`per cent` values also require valid financial bindings.
+These checks do not establish general qualitative entailment or live acceptance.
 
 NQ/ES preparation remains unsupported. The preparation form groups instrument,
 research time and report language together, and offers **Choose saved sources**

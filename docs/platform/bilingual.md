@@ -68,6 +68,15 @@ phrasing and changed number formatting in Vietnamese. Both PM outputs failed
 the parity check. The editorial prompt alone has not passed live acceptance;
 see the remediation receipt. No failed report was rewritten or promoted.
 
+Social sample-count observations in new snapshot reports use complete source-owned
+English and Vietnamese statements, like the existing source-owned macro/accounting
+observations. Exact vendor, count unit, user-label and non-exhaustive limitations
+are protected during localization, not chosen by the translator. The original
+bound source is required; attaching money/another subject to the protected sentence
+refuses publication within the existing bounded repair. Older reports are not
+rewritten. This does not certify the rest of the financial interpretation or
+semantic translation quality.
+
 ## Historical bilingual checkpoint (2026-09-27)
 
 Implementation branch: `feature/TA-M4-bilingual`, based on `origin/main`

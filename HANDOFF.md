@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**2026-10-07 social count candidate:** compiler/review now share eligible original
+SocialFacts; complete source-owned EN/VI count sentences retain vendor/sample/
+user-label meaning, reject reattached money/probability/neutral meanings and are
+rechecked in canonical publication and protected localization. Counts cannot
+attest monetary/percentage observations through scalar equality. Word-percent
+lexer covers percent/per cent without matching dates/periods. Complete-source
+fixture uses a real eligible collection/manifest; original assertions retained.
+Dirty patch at32de260: focused33705 terminal0,121 PASS/3.60s; expanded15644 terminal0,
+229 PASS/11 PG prerequisite skips/14.38s; Ruff/pip-check/diff PASS. New exact-source
+PG/native/full proof remains UNVERIFIED, prior full2c is not promoted. Remaining
+financial/translation/default-owner/live/R01–R14 gates stay open. No paid AI,
+provider/risk/graph change, history rewrite, CI, merge or deployment.
+
 **2026-10-07 full corrective baseline:** clean frozen
 `2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, full local PG12988 terminal0:
 3,002 tests+88 subtests PASS,2 optional-provider skips UNVERIFIED,443warnings,

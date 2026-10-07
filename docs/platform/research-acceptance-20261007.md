@@ -63,6 +63,28 @@ standalone/canonical checks and EN-VI preservation before integration. No
 sentence blacklist, assertion relaxation, source/debate truncation or extra
 review call. Original source and private history remain unchanged.
 
+### Social count implementation candidate (after the full baseline)
+
+The subsequent candidate adds original validated SocialFacts resolver parity,
+source-owned standalone EN/VI count sentences, canonical/source checks and
+protected localization. Counts cannot attest money/percent just through scalar
+equality. Raw percent/per cent grammar is case insensitive; dates/period controls
+remain. The context fixture now uses a real eligible synthetic collection and
+manifest, retaining untrusted text and all original context-equality assertions.
+No added graph/review call, debate/source cut, provider/policy change or historical
+rewrite. This is implementation, not live/editorial/default recovery acceptance.
+
+Dirty patch based on32de260: normal focused33705 exit0,121 PASS/3.60s. Expanded
+15644 exit0:229 PASS/11 PostgreSQL prerequisite skips/14.38s; Ruff/pip-check and
+diff check PASS. Selection: social_review_parity, financial_number_word_units,
+financial_validation_stage, report_compiler, research_validation,
+report_localization, social_snapshot_service, social_lookahead, macro_full_graph,
+snapshot_macro_facts. Skipped PostgreSQL cases remain UNVERIFIED; new exact-source
+native/full baseline still needs proof. Older full2c proof does not cover this
+new implementation. Additional tests cover source-owned count translation,
+wrong-money reattachment, canonical scalar collision, unknown labels, zero
+label counts and bounded localization refusal.
+
 ### Exact native PostgreSQL corrective gate
 
 Clean frozen code candidate `f64984db8338eb0eed69c820ab503bc65818159c`.

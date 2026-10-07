@@ -17,6 +17,7 @@ from tradingagents.platform.analysis.research_validation import (
     PublicationValidationError,
     validate_canonical_report,
 )
+from tradingagents.platform.analysis.social_facts import SnapshotSocialFacts
 
 
 def create_financial_validation(llm, reports):
@@ -31,6 +32,9 @@ def create_financial_validation(llm, reports):
                   and source["provenance"]["vendor"] == "sec_edgar"})
     facts.update({source["snapshot_id"]: SnapshotMacroFacts(source) for source in sources
                   if source["provenance"]["dataset"] == "macro"})
+    facts.update({source["snapshot_id"]: SnapshotSocialFacts(source) for source in sources
+                  if source["provenance"]["dataset"] == "social"
+                  and source["provenance"]["vendor"] in {"reddit", "stocktwits"}})
 
     def validate(state):
         is_draft = state.get("structured_draft") is not None

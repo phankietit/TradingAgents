@@ -47,6 +47,7 @@ def compile_report(raw, facts):
     relation_failures = []
     fundamental_failures = []
     macro_failures = []
+    social_failures = []
     for binding in bindings:
         key = binding["key"]
         source = facts.get(binding["snapshot_id"])
@@ -63,17 +64,19 @@ def compile_report(raw, facts):
             raise PublicationValidationError(["numeric_claim_not_supported"])
         values[key] = format(number, "f")
         macro = binding["fact_id"].startswith("fred.")
+        social = binding["fact_id"].startswith("social.")
         if not macro and not is_percentage_fact(binding["fact_id"]) and re.search(
                 re.escape("{{" + key + "}}") + r"\s*(?:%|percent\b|per\s+cent\b)", prose, re.I):
             raise PublicationValidationError(["quantity_binding_unit_mismatch"], binding_keys=(key,))
-        if macro:
+        if macro or social:
             statement_keys.add(key)
             if non_standalone_anchors(prose, ["{{" + key + "}}"]):
-                macro_failures.append(key)
+                (social_failures if social else macro_failures).append(key)
             try:
                 values[key] = source.statement(binding["fact_id"], values[key])
             except (AttributeError, ValueError):
-                raise PublicationValidationError(["macro_statement_unsupported"], binding_keys=(key,)) from None
+                code = "social_statement_unsupported" if social else "macro_statement_unsupported"
+                raise PublicationValidationError([code], binding_keys=(key,)) from None
         elif is_percentage_fact(binding["fact_id"]) or is_fundamental_fact(binding["fact_id"]):
             statement_keys.add(key)
             # Complete owned statements prevent changing a percentage's
@@ -97,6 +100,8 @@ def compile_report(raw, facts):
         raise PublicationValidationError(["fundamental_statement_requires_standalone_anchor"], binding_keys=fundamental_failures)
     if macro_failures:
         raise PublicationValidationError(["macro_statement_requires_standalone_anchor"], binding_keys=macro_failures)
+    if social_failures:
+        raise PublicationValidationError(["social_statement_requires_standalone_anchor"], binding_keys=social_failures)
     used = set()
 
     def render(value):
@@ -151,6 +156,12 @@ interpretations and opposing evidence in separate sentences. A
 fundamental_statement_requires_standalone_anchor failure means move the SEC
 anchor into its own complete sentence; do not remove the underlying evidence.
 Other non-percentage price/volume bindings remain inline numeric anchors.
+SOCIAL SAMPLE COUNTS: Every social.* binding MUST occupy a complete standalone
+sentence '{{QA}}.' with no surrounding money, percentage, label or interpretation.
+The application owns its vendor, sample-count unit and user-label limitations
+in English and Vietnamese. Counts are not price, market probability or complete
+market coverage; unlabeled does not mean neutral. Keep the financial interpretation
+and opposing evidence in separate sentences; do not omit them to pass a check.
 FRED MACRO STATEMENTS: Every fred.* binding MUST occupy a complete standalone
 sentence '{{QA}}.' without surrounding units, series, observation period,
 vintage or comparison words. The application owns the full native-unit/period/

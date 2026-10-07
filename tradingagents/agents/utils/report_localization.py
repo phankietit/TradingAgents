@@ -136,17 +136,20 @@ def localize_report(llm, decision, diagnostics, *, fact_sources=None):
     statements = {}
     for observed in decision.observed_numbers:
         number = format(Decimal(str(observed.value)).quantize(Decimal(1).scaleb(-observed.decimal_places)), "f")
-        if observed.fact_id.startswith("fred."):
+        if observed.fact_id.startswith(("fred.", "social.")):
+            social = observed.fact_id.startswith("social.")
             source = (fact_sources or {}).get(str(observed.snapshot_id))
             if source is None:
-                raise PublicationValidationError(["macro_statement_source_unavailable"])
+                code = "social_statement_source_unavailable" if social else "macro_statement_source_unavailable"
+                raise PublicationValidationError([code])
             try:
                 en = source.statement(observed.fact_id, number)
                 if en not in english or non_standalone_anchors(english, [en.removesuffix(".")]):
                     raise ValueError()
                 statements[en] = source.statement(observed.fact_id, number, vi=True)
             except (AttributeError, ValueError):
-                raise PublicationValidationError(["macro_statement_unsupported"]) from None
+                code = "social_statement_unsupported" if social else "macro_statement_unsupported"
+                raise PublicationValidationError([code]) from None
             continue
         try:
             for renderer in (percentage_statement, fundamental_statement):

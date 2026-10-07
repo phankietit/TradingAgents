@@ -140,6 +140,15 @@ or vote/comment facts. Canonical deterministic source-count facts are sample
 counts, not calibrated sentiment. The original prefetched Sentiment path receives
 every retained post; no graph/debate role or publication/repair/approval cut.
 
+The compiler and financial reviewer reconstruct the same eligible social fact
+resolver. Each count binding owns a standalone complete EN/VI sentence identifying
+the supplied sample, vendor and post/user-label unit. Unlabeled is not neutral;
+counts do not attest price, percentages, market probability or complete coverage.
+Canonical publication rechecks these sentences; localization protects/restores
+them from the original bound source. Altered payloads/manifests, missing sources
+or reattached units refuse; no change to older stored reports or source records.
+These structural/quantitative guards are not general qualitative entailment.
+
 Fixed uncompressed streaming requests disable redirects and reject advertised or
 actual responses above 2 MB; full bodies over post/collection bounds refuse,
 never truncate. Each HTTP request has a 15-second read timeout. The reused native

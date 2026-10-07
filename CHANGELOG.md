@@ -10,6 +10,15 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Reuse the validated original social fact resolver during financial review.
+  Social quantities render source-owned EN/VI sample-count statements, preserving
+  user-label limitations and forbidding attached currency, probability or neutral
+  meanings. Canonical validation and localization preserve those statements;
+  social counts cannot attest monetary/percentage observations. Recognize unbound
+  `percent`/`per cent` spellings without misclassifying dates or indicator periods.
+  Original review/repair/debate and approval flow stay unchanged; local fixtures
+  are not live semantic acceptance.
+
 - Canonicalize role and JSON-object key order in the complete financial-review
   source context so PostgreSQL durable reload does not change model prompts.
   Preserve source record ordering and original values; no trace assertion,
