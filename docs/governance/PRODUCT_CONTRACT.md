@@ -187,7 +187,10 @@ separate unfinished gates.
 The draft financial/presentation stages additionally guard known semantic-loss
 families. Price-only evidence cannot publish a known external motive/flow as a
 factual cause; an explicit unverified hypothesis or coverage disclosure remains
-research. Mixed-source causal entailment is not established by this guard.
+research. Claim-local citations define this coverage check: unrelated nonprice
+snapshots elsewhere in the run cannot substantiate a claim citing only prices.
+No additional vocabulary blacklist or model/repair call is added. Actual mixed
+citation causal entailment is not established by this guard.
 EN/VI action intensity, time/condition, epistemic negation/uncertainty and retained
 opposing-case markers are checked in their financial sentence domains. Counts
 prevent one marker covering two separate conditions; decimal points and explicit

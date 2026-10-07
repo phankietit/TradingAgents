@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 claim-local causal coverage WIP · 2026-10-08:** owned isolated
+`fix/TA-R07-claim-local-coverage`, base bd829c9 carrying staged R14 work. Inspection
+found the existing known external-motive guard returned early for any nonprice
+source, even when a material thesis claim cited only OHLCV. First scaffold28204
+failed3/5 because appended evidence was not anchored to rendered report text;
+that was a fixture error, not proof of the product defect. Correct full thesis/
+claim binding at29888 terminal1 produced1FAIL4PASS2.27s: adding unrelated news
+allowed the price-only cited factual cause through final financial capture.
+New guard keeps the old all-price narrative checks and additionally examines
+each claim's actual cited IDs against price-source IDs. No lexical blacklist,
+source truncation, graph role, provider/model, repair allowance, risk or history
+change. The original bounded reviewer prompt now explicitly excludes unrelated
+available records from claim support. Explicit unverified hypotheses/noncausal
+mixed-source observations remain eligible. Actual mixed-citation semantic
+entailment, unknown motive families, live quality and VI fidelity remain open;
+source presence is not authenticated entailment. Primary full73101 still frozen
+cfd31da; side not integrated until terminal/owned cleanup.
+
 **R14 clean copied-session gate · 2026-10-08:** frozen clean isolated source
 `5d7d51e40d69c6dba8cf189cb3b91267318d4dd1`, side87438 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_postgres_paired_restore.py tests/test_owner_auth.py tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py tests/test_local_verification_cli.py --tb=short`.

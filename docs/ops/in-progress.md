@@ -9,7 +9,7 @@ recorded in GitHub history.
 
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
-| R14 | current thread, restored session acceptance | fix/TA-R14-restored-session-fence | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Synthetic copied-token/password-rotation API acceptance on owned PostgreSQL; carries staged operator docs; primary full73101 stays frozen | in-progress | 2026-10-08 |
+| R07/R14 | current thread, claim-local coverage | fix/TA-R07-claim-local-coverage | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Per-claim cited-source scope for existing external-motive guard; carries staged restore/session docs/tests; primary full73101 stays frozen | in-progress | 2026-10-08 |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization, native reliability, operational UX and live acceptance; Draft PR7; full18967 terminal PASS instrumented02ed0cc, owned PG cleanup confirmed; staged UX integrated2766a48 afterwards; whole goal incomplete | in-progress | 2026-10-08 |
 
 Rules:

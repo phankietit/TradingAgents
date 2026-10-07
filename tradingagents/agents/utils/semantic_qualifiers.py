@@ -83,13 +83,22 @@ def validate_price_only_attributions(decision, sources):
     """Prices cannot prove known external motives/flows as factual causes.
 
     A conditional unverified inference remains research, not an observation.
-    This deliberately narrow coverage guard does not validate causality for
-    mixed sources or authenticate statements from a news/source citation.
+    Coverage is claim-local: a separate nonprice source elsewhere in the run
+    cannot substantiate a claim citing only prices. Actual mixed citations still
+    require semantic review; this does not authenticate a news/source statement.
     """
-    if not sources or any(source["provenance"]["dataset"] != "ohlcv.daily" for source in sources):
+    if not sources:
         return
-    fields = [decision.executive_summary, decision.investment_thesis,
-              *decision.risks, *decision.invalidation_conditions]
+    price_ids = {str(source["snapshot_id"]) for source in sources
+                 if source["provenance"]["dataset"] == "ohlcv.daily"}
+    fields = []
+    if all(source["provenance"]["dataset"] == "ohlcv.daily" for source in sources):
+        fields.extend([decision.executive_summary, decision.investment_thesis,
+                       *decision.risks, *decision.invalidation_conditions])
+    for claim in decision.evidence_claims:
+        cited = {str(snapshot_id) for snapshot_id in claim.snapshot_ids}
+        if cited and cited <= price_ids:
+            fields.append(claim.claim)
     for field in fields:
         for sentence in re.split(r"[.!?;]\s*", field):
             if (EXTERNAL_MOTIVE.search(sentence) and CAUSE.search(sentence)
