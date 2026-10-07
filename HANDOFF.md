@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean V2 result/evidence gate · 2026-10-08:** frozen clean source
+`3bb5c50ff285bd35270beac6c2bdd6adda2ca9e2`, side24590 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_result_v2.py tests/test_snapshot_decision_worker.py tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_analysis_engine.py tests/test_snapshot_analysis.py tests/test_evidence_graph.py tests/test_decision_lifecycle.py tests/test_report_localization.py tests/test_artifact_store.py --tb=short`.
+141selected PASS15.23s; Ruff/dependency/diff PASS, Python3.14.7 existing venv;
+clean unchanged source through terminal. Earlier1715 terminal4 selected a
+nonexistent test_evidence_artifact_service.py: no tests ran; corrected explicit
+existing selection above, not product/source/assertion changes. Dirty12414
+terminal0:13worker cases PASS10.95s before freeze, including post-adapter tamper
+refusal. Synthetic worker V2 success retains saved canonical metadata, four
+evidence claims including summary, exact run source, deterministic owner target
+and ordinary approval; missing/unknown summary and tampered metadata stay REVIEW.
+Same frozen source6240 terminal1: unchanged default red
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS5.03s. Generator/default canonical reviewer activation still required;
+no claim of fixed default defect, native full-role/live/browser or full regression.
+Main full73101 remains live/frozen cfd31da, no integration. Goal ACTIVE; no paid
+call/provider/model/risk/allowance/history/public deployment change.
+
 **R07 V2 result/evidence WIP · 2026-10-08:** isolated summary branch now reads
 explicit V2 graph results, rechecks canonical/source/known price-only motive
 publication guards, retains audit quantities on publication failure and carries
