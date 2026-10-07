@@ -2,6 +2,30 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact R14 API acceptance:** clean frozen side
+`6cdaab50e344d4d5f5dca653550fe53e5d621c2e`, focused80448 terminal0:
+50PASS/44.57s, Python3.14.7, same three-file command below; scoped Ruff/diff PASS.
+Build30321/install12054/installed-console12782 all terminal0. Exact Git archive
+built outside checkout with isolated setuptools and no runtime dependency
+resolution. Wheel535963 bytes, SHA256
+`04abcb60fef0df491b20d6a5557cdbe89224f7b3250e318bbb6e15cb1a2ed30a`.
+Archive name scan excludes env/DB/SQLite/Git/venv and root runtime directories,
+not a complete secret-content/security certification. Installed runtime.__file__
+verified beneath target, not source. Actual installed console --help/-h exit0;
+unknown-option and --host exit2 with fixed text, no echoed synthetic private
+value or host, no traceback/service. Test subprocesses remove TRADINGAGENTS_*
+settings, never start a configured service; normal startup/port/origin/loopback
+checks remain in the50-test gate. No model/provider request or private DB/history.
+
+Commands: `git archive <exact-sha> | tar -x -C <managed-package>/source`;
+primary dependency interpreter `-m pip wheel --no-deps --wheel-dir <package>/wheels <package>/source`,
+then `-m pip install --no-deps --target <package>/installed <package>/wheels/tradingagents-0.5.0-py3-none-any.whl`.
+From external package dir, `PYTHONPATH=<package>/installed TMPDIR=<run>/Tmp <primary>/.venv/bin/python smoke_console.py`.
+Smoke script/artifacts stay in managed external run. Runtime dependencies reused;
+fresh dependency/other-Python/full baseline/live UX acceptance still UNVERIFIED.
+Primary e3b837b/full3309 remains clean/frozen/live; no side integration until
+terminal. This following receipt commit is not relabelled as the tested source.
+
 **R14 API entrypoint implementation:** isolated side dirty source on b4176d2.
 Argparse admits help before environment/logging/app/server construction; unknown
 arguments refuse with fixed text and no echoed values. Explicit argv supports
