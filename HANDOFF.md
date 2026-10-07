@@ -1,5 +1,28 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 polling observation-boundary validation · 2026-10-08:** unchanged app
+source `fab4a034887881009212111fd6df1bab48030fdd`, docsHEAD855b0e6. External QA
+now captures first rendered processing status inside the document, independent
+of driver scheduling; keeps <=2 reads at that instant, 12000ms delay and existing
+deadlines, and additionally requires serialized responses/no failed job reads.
+21730 terminal0 with deliberate15000ms observation lag: first response12050ms,
+two reads at first render, three reads by driver observation, serialized/no abort.
+This controlled counterexample proves the former observation-time total-count
+oracle can fail healthy polling, NOT that historical61184 had this cause; its
+missing trace/cause remains UNVERIFIED and its FAIL is retained below.
+56649 terminal0 without lag: first response12010ms, one read at first render,
+one serialized follow-up/no failed reads. Both actual synthetic setup/consent/
+durable report -> mocked read-only running/slow status -> unroute/reload actual
+saved success; EN1440x1000/VI390x844 identity/content/nooverlay/nooverflow/screens/
+interaction PASS. Only initialauth/me401; no pageerror/provider/owner-private call.
+Existing Playwright1.62.1/Chromium/bundledNode24.19.0, Browser plugin unavailable;
+scripts/screenshots outside Git. No app/assertion-threshold/timeout/provider/
+approval change. Ownedfixture61852/PID43397 normalshutdown terminal0; process
+absence verified, no history or unrelated runtime deletion. Controlled evidence
+only; general concurrent/Postgres/live and
+historical failure attribution remain UNVERIFIED. Primary37c1a42 full88556 live/
+PID33387, source frozen; side not integrated, whole goal ACTIVE.
+
 **R08 controlled slow-network browser evidence · 2026-10-08:** unchanged
 side app sourcefab4a03 (docsHEAD8ed80bf). Browser61184 terminal1: after rendered
 status became available, delayed-request count exceeded unchanged<=2 criterion;
