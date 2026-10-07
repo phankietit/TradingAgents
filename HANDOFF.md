@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 clean PostgreSQL paired restore gate · 2026-10-08:** frozen clean source
+`fcdad82f921f65b2c766bc94db1b9ae455920889`, side56247 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_postgres_paired_restore.py tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py tests/test_local_verification_cli.py --tb=short`.
+66selected tests PASS21.90s, whole Ruff/dependency/diff PASS, Python3.14.7.
+Source clean/unchanged during gate; helper confirmed owned container removal.
+This includes three real PG16 custom dump/restore + paired artifact authenticated
+API cases, five fail-closed ownership/endpoint guards and dump-comparison guard,
+alongside prior SQLite/API/artifact/migration/helper regression. Full restored
+DDL/data dump comparison and independent every-table rows equality precede
+login; source SQL/rows/blobs unchanged afterward. Quiesced new synthetic fixture,
+same-process fresh API context, no operator backup, encrypted transfer, retained
+sessions, active-job/checkpoint recovery or owner-runtime/browser acceptance.
+Only helper identity exports changed outside tests/docs; runtime/package/CLI/
+LangGraph/provider/risk code unchanged. Full exact-current regression and whole
+financial/editorial/live/UX gates remain incomplete. Goal ACTIVE, PR7 draft.
+
 **R14 actual PostgreSQL restore WIP · 2026-10-08:** isolated owned
 `fix/TA-R14-postgres-restore`, base fc6efa1. Helper exports its owned container
 identity; tests check label, acknowledgement and exact endpoint before creating
