@@ -1,5 +1,24 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13/R14 current clean Python3.12 installation · 2026-10-08:** new isolated
+external current-python312-cefHp4 env/source, archive frozen
+`b3779f8bdd9893a301f127a4d4f8812152c6f3df`; no env/private/runtime files copied.
+Existing bundled Python3.12.14 creates fresh non-system/noneditable venv.
+Environment-cleared install38492 terminal0:
+`python -m pip install --index-url https://pypi.org/simple '<archive>[dev,platform]'`,
+PIP_CONFIG_FILE=/dev/null, managed TMPDIR and existing managed cache. Wheel538832
+bytes SHA2567c8dac92b3d54115478cb8baffcfcf36d90e14b9d07dd7013c93deafb8f38242.
+Installed outside-checkout smoke57252 terminal0: isolated -I import-origin/
+noneditable-distribution/migration-resource assertions, pipcheck, API/worker
+help PASS. CLI help45100 terminal0 PASS, no services or providers started.
+Fresh LangGraph1.2.14/langchain-core1.6.7/Pydantic2.13.5/pandas3.0.6/
+FastAPI0.142.4/SQLAlchemy2.1.4; no dependency/lockfile/default/model/env change.
+This proves current archive clean installation/imports, NOT full3.12, supported
+matrix, native/provider/financial/recovery/release acceptance. Next default
+local PostgreSQL gate uses this new interpreter against a frozen primary
+checkout; its source-run evidence is distinct from installed-package smoke.
+Whole R01–R14 ACTIVE with prior failures and owner/external gates retained.
+
 **R08/R13 primary integration after terminal full PASS · 2026-10-08:** frozen
 primary `37c1a423ef20e53b6fab692021fdd440279f4ade`, session88556 terminal0:
 3306tests +88subtests PASS,2optional skips UNVERIFIED,502warnings,3355.28s
