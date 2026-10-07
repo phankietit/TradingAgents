@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 integrated authenticated restore receipt · 2026-10-08:** primary
+`fix/TA-R01-research-quality` fast-forwarded to clean source
+`6e305a57fc949b64217d10834d902276e6e8eab9`. Primary93448 terminal0:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q tests/test_paired_restore_api.py --tb=short && .venv/bin/python -m ruff check . && git diff --check`.
+Three synthetic SQLite/artifact authenticated restore cases PASS3.37s; whole
+Ruff and whitespace PASS. Side91853 proves the separately listed 53-test gate
+on668662e, including PostgreSQL migration/persistence, not PostgreSQL restore.
+No runtime/package/CLI/LangGraph changes in this tests/docs-only integration.
+The isolated restore scope is complete and its coordination row removed; the
+whole R01–R14 goal remains ACTIVE. Next: actual PostgreSQL paired dump/restore
+acceptance and operational backup/restore tooling/runbook, without touching
+owner history. Encryption/transfer, retained-session safety, active jobs and
+checkpoints, browser restore, full exact-candidate regression, financial/live
+and professional whole-journey acceptance remain UNVERIFIED or previously FAIL;
+NQ remains owner-BLOCKED. No release, deployment, paid run or owner-data mutation.
+
 **R14 exact authenticated restore gate · 2026-10-08:** clean frozen source
 `668662e3f6830cc18c9ee21936ce096c1804d917`, side91853 terminal0:53selected tests
 PASS17.04s,Ruff/dependency/diff PASS,Python3.14.7. Command:
