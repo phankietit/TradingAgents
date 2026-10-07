@@ -32,6 +32,17 @@ captured a resource_tracker and normal graph children, not a failed preflight
 exit; the root cause is still UNVERIFIED. This instrumented selected diagnostic
 does not replace the failed full baseline or live/professional UX acceptance.
 
+R11 fresh browser audit at801a09c verified synthetic AAPL browser consent ->
+real durable worker/API/persistence -> saved bilingual report -> decision,
+not native original-graph or live financial acceptance. At clean40b32c6,
+selected decision precedes history on desktop/mobile and report/portfolio/policy
+disclosure precedes owner actions. History shortcut retains keyboard focus;
+no eligibility/transition changes. Exact174 web tests/type/lint/build PASS;
+1280x720/390x844 rendered no-overlay/console/reading-order/refusal/shortcut PASS.
+Mobile chrome/first-viewport summary, staged setup and full professional
+long-running journey remain incomplete. See HANDOFF for commands/private
+evidence boundaries; no current full baseline or live PASS is implied.
+
 ## Tickets and acceptance
 
 Every ticket carries one type, area and priority below. Statuses distinguish

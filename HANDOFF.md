@@ -2,6 +2,50 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R11 fresh browser audit and decision reading order (2026-10-08 local):**
+clean frozen source `40b32c62fdf30a703bc7a52edc2ef931168a19aa`.
+`cd web && npm run typecheck && npm run lint && npm test && npm run build`
+session52682 terminal0:27 files/174 tests PASS, tests28.79s, TypeScript/ESLint/
+Vite PASS; Node26.8.1/npm11.19.0, macOS. `git diff --check` PASS.
+Earlier dirty gates are not relabelled as this exact-source gate.
+Selected decision details precede history in DOM and desktop/mobile layout;
+saved report precedes portfolio context, policy disclosure and owner actions.
+History shortcut scrolls and transfers keyboard focus to the retained region.
+Review identity/eligibility, dialog reason/idempotency and backend transitions
+are unchanged; no approval/readiness waiver or new model/provider/API call.
+README updated; regression asserts reading order, focus and no transition.
+
+Fresh baseline audit at801a09c used an isolated synthetic local QA fixture:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m scripts.web_fixture --synthetic-local-only --built-web --fixture-worker --graph-result bilingual --all-assets --screening`.
+In-app browser login -> markets -> AAPL setup -> price snapshot selection ->
+explicit consent -> dispatch -> saved bilingual report -> linked decision:
+PASS for this synthetic graph/real durable worker/API/persistence flow. This
+fixture replaces model output, refuses live vendors and proves neither the
+original complete LangGraph nor actual financial/editorial/provider quality.
+No paid call, portfolio change, approval/rejection or owner history mutation.
+Initial autofill screenshot is rejected/private and must not be published;
+autofilled owner credentials were not submitted. Accepted subsequent QA used
+only labelled synthetic credentials and records.
+
+At40b32c6:in-app browser tab3 localhost decisions,1280x720 and390x844,
+meaningful page/no overlay/console warnings-errors[] PASS. Fresh saved/reopened
+screenshots qa-10-desktop-decision-40b32c6.jpg, qa-11-mobile-decision-40b32c6.jpg
+and qa-12-mobile-history-40b32c6.jpg remain private under managed-run/Logs.
+DOM mobile scrollWidth390, selected details before history and research before
+actions PASS. History shortcut focus/scroll PASS; missing-policy approval
+remains disabled. Temporary viewport reset and VI restored; task-owned QA tab
+marked for continuation, server48660/PID4563 retained solely for synthetic QA.
+Baseline desktop/mobile screenshots and notes are local evidence, not Git assets.
+
+Professional UX remains incomplete: mobile chrome/title still consumes about
+half the first viewport and executive summary remains below it. Markets/setup
+layout, immutable consent brief and full long-running process journey need
+further work; keyboard/screen-reader/contrast and actual-device gates UNVERIFIED.
+Full3309 FAIL/native shutdown cause, live financial/EN-VI, fresh dependencies/
+restore and NQ owner-BLOCKED remain unchanged. Goal ACTIVE, Draft PR7 only;
+no CI/main merge/provider/risk/credential/deployment change. Next: compact
+workspace/report hierarchy and staged setup without removing any source/gate.
+
 **Native-observed recovery matrix diagnostic PASS (2026-10-08):** clean frozen
 `a2a5b04ba3d53d846240a1c033eb58bf5365805a`, session26493 terminal0:
 13PASS/24 warnings/441.83s, Python3.14.7. Entire
