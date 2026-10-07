@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 summary provenance red baseline · 2026-10-08:** owned isolated
+`fix/TA-R07-summary-provenance`, base500a594 carrying staged claim-local/R14 work.
+Source inspection confirms canonical material-citation parity excludes the
+executive summary; the draft summary is plain text without a cited-source block.
+Synthetic read-only probe73260 terminal0 confirms an unsupported uncited factual
+summary is accepted with unrelated news, using one fake model call (no paid SDK).
+Dirty61119 terminal1:1FAIL3PASS4.61s in
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`.
+The failing case is mixed available sources; price-only factual cause refusal
+and two explicitly unverified scenario controls pass. This is a reproducible
+product gap, not an expected PASS/skip/xfail. Test must remain red until fixed.
+Ruff focused/whitespace PASS does not change financial status.
+`docs/platform/summary-provenance.md` records the version-aware source-binding
+implementation requirements, not existing behavior. Preserve CLI/legacy reading,
+original source bytes, graph roles and repair bounds; no automatic guessed
+citations, blacklist expansion, new source/model/risk/allowance or history rewrite.
+Primary full73101 remains live/frozen cfd31da; no mid-gate integration. Fresh
+BTC/AAPL paid-run approval requested asynchronously; absent answer grants none.
+Goal ACTIVE; general finance/VI/live/UX/operational requirements remain open.
+
 **R07 clean claim-local gate · 2026-10-08:** frozen clean source
 `d7e5af810a756785cd16490212027dd184d78c18`, side89233 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_financial_validation_stage.py tests/test_report_localization.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.
