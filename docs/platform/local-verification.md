@@ -53,6 +53,14 @@ On the designated Mac, check `codex-storage status` first and put per-command
 `TMPDIR` under the current managed external run. Do not inspect/print the generated
 database password or connection URL.
 
+The helper also exports its exact task-owned container identity for the synthetic
+paired PostgreSQL restore tests. Those tests refuse a bare `TEST_POSTGRES_URL`;
+they validate the ownership label and loopback port before creating fresh
+fixture source/target databases. They use cached PG16's real dump/restore tools,
+never restore over an existing DB, and leave container cleanup to the helper.
+Absent owned-container metadata means these restore cases skip (UNVERIFIED).
+No owner backup/restore or private runtime migration is authorized by this gate.
+
 ### Focused diagnostics (not full regression)
 
 Both helpers optionally forward an explicit selection to pytest after the same

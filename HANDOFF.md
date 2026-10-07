@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 actual PostgreSQL restore WIP · 2026-10-08:** isolated owned
+`fix/TA-R14-postgres-restore`, base fc6efa1. Helper exports its owned container
+identity; tests check label, acknowledgement and exact endpoint before creating
+UUID-named synthetic source/target databases. Real custom pg_dump/pg_restore,
+paired artifacts, fresh authenticated API EN/VI readback, owner isolation and
+missing/tampered refusal; source unchanged. No owner data/provider/model calls.
+Dirty5149 terminal1:3FAIL14PASS9.39s because raw SQL dump formatting differs
+after restore. Dirty33112 terminal1:3FAIL3.84s narrowed difference to PG16's
+equivalent element-wise versus whole-array text cast in the same five-value
+research execution status CHECK. No product schema defect inferred. Comparison
+now permits only that exact expression reformat, statement order and fresh psql
+restriction nonce; all per-table rows compare independently. Dirty10930
+terminal0:17selected PASS12.44s, Ruff/dependency/diff PASS, owned container removed.
+Six added guard/comparison tests still need execution after that receipt.
+Exact clean scoped gate next; full current-candidate regression, encrypted
+operator backup/restore, retained sessions, active jobs/checkpoints and browser
+restore remain UNVERIFIED. Whole R01–R14 goal ACTIVE; earlier failures preserved.
+
 **R14 integrated authenticated restore receipt · 2026-10-08:** primary
 `fix/TA-R01-research-quality` fast-forwarded to clean source
 `6e305a57fc949b64217d10834d902276e6e8eab9`. Primary93448 terminal0:

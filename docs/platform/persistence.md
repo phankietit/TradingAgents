@@ -35,7 +35,7 @@ Milestone 1 tickets.
 `tests/test_paired_restore_api.py` is a local SQLite/artifact recovery gate, not
 an operator backup command. It creates a new synthetic account, instrument,
 run and separate EN/VI report blobs, closes writers, uses SQLite's backup API,
-then copies artifacts into a new restore root. A fresh API process context logs
+then copies artifacts into a new restore root. A fresh API context logs
 in with the copied synthetic account and checks unchanged run metadata and
 exact report bytes/hashes. Anonymous reads refuse, foreign-owner artifacts
 remain inaccessible, and missing/tampered restored blobs return integrity errors.
@@ -50,6 +50,24 @@ UX or an operational owner restore. Those remain required before private
 platform release. Never copy a live owner DB with this test or overwrite its
 history. An actual rollout needs the separately reviewed paired backup/restore
 and session/worker restart runbook described above.
+
+`tests/test_postgres_paired_restore.py` adds actual PG16 custom-format
+`pg_dump`/`pg_restore` into a newly created database, paired with a new artifact
+root, and authenticated API readback of synthetic EN/VI bytes and run metadata.
+It runs only via the acknowledged local helper after validating the exact
+container ownership label and loopback endpoint. Every case creates fresh
+source/target DB names; there is no DROP, restore-over-existing, owner DB or
+model/provider call. The helper removes only its labelled container afterward.
+The restored full dump is compared ignoring statement ordering, fresh psql
+restriction nonces and one exact PG16 equivalent IN-array cast reformat;
+all reflected tables' rows are additionally compared by table. Source SQL,
+rows and artifacts must remain unchanged after restored login/readback.
+Missing/tampered artifacts refuse; foreign-owner/anonymous reads stay denied.
+Guard tests refuse a missing acknowledgement, wrong label/name/host/port before
+any allocation. Exact receipts, not test presence, determine gate status.
+This is still synthetic, quiesced, same-process API acceptance; it does not
+prove operator tooling, encrypted transfer, concurrent writers, retained-session
+safety, active jobs/checkpoints, browser restore or an owner runtime rollout.
 
 ## Draft research recovery additions
 

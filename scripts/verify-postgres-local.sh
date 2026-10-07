@@ -46,4 +46,8 @@ done
 task_port=$(docker inspect --format '{{(index (index .NetworkSettings.Ports "5432/tcp") 0).HostPort}}' "$task_container")
 [[ "$task_port" =~ ^[0-9]+$ ]] || exit 1
 export TEST_POSTGRES_URL="postgresql+psycopg://ta_qa:${task_password}@127.0.0.1:${task_port}/ta_qa"
+# Restore tests must verify this exact owned container; never discover or accept
+# an arbitrary PostgreSQL service from TEST_POSTGRES_URL alone.
+export TA_TEST_POSTGRES_CONTAINER="$task_container"
+export TA_TEST_POSTGRES_OWNER="$task_id"
 bash scripts/verify-local.sh --postgres "$@"
