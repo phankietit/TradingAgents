@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Read-only resource observation during side matrix16132:** host has16GiB
+physical memory; memory_pressure reported28% free, encrypted swap usage
+19780.69MiB of20480MiB, verified external SSD390GiB available. These are
+system-wide observations, not proof of swap activity in a specific child or the
+cause of either preflight timeout. Side pytest54220 was still alive at17m58s,
+with successive task-owned research children; no restart/source change/kill.
+Read-only owned-child native sample64734 showed research guard/IPC/lock activity,
+not the failed preflight's interpreter exit. Sample stays in external managed
+logs; no owner application/process was stopped. Preserve fullFAIL and keep
+native preflight reliability UNVERIFIED pending stronger evidence.
+
 **Exact SQLite factory diagnostic PASS:** frozen
 `dfb14bf309dd021bad7bfa4bc7741ad7e1aa328a`, session63469 terminal0:
 5PASS/5 PostgreSQL cases deselected/55.94s, Python3.14.7. Command:
