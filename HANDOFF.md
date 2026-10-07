@@ -2,6 +2,37 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Actual browser reserved cancellation PASS (2026-10-07):** clean frozen
+`1701c6f15d4157a3ac6dc21ce08d848912630c84`, external QA2373 terminal0:
+1PASS/8.36s/no warnings/skips, Python3.14.7. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -c pyproject.toml -q <managed-run>/test_browser_reserved_cancel.py --tb=short -x -s`
+Managed run remains
+`/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163`.
+Copied only the earlier stopped synthetic fixture with its real browser-created
+reservation into a new mktemp-owned `reserved-cancel-1701c6f.ZPMfpa/fixture`;
+the prior DB/artifacts were untouched. Checked no WAL before copying. No private
+runtime or production config/credential/history/provider changes.
+
+Real built web/FastAPI/Uvicorn loopback8018, installed Playwright (Browser plugin
+absent): desktop1440x1000 login -> Stop continuation -> cancelled200 -> reload
+still cancelled; fresh mobile390x844 login/readback, VI switching and screenshot
+PASS. Exactly one desktop cancel POST, no mobile cancel/research/approval writes.
+No page exceptions/bad authenticated responses/overflow; auth/me401 before login
+is expected. Cancelled UI has no Stop continuation or Read report shortcut.
+The real default opt-in worker ran once and returned None: no eligible reservation,
+no dispatch or completion row. SDK preparation and linked execution were guarded
+with forbidden-call assertions, not mocked successful responses. Entire original
+run/job/event/checkpoint history compared equal before/after; execution remains
+cancelled. All browsers closed, API thread joined/shutdown complete, no8018 listener.
+Fresh external Logs/reserved-cancel-{desktop,mobile}-vi.png inspected.
+
+This proves browser cancellation BEFORE dispatch, not in-flight provider stop,
+concurrent active polling/cancel, PostgreSQL rendered runtime or live finance.
+No product code changed; goal ACTIVE. Requested fresh authorization for at most
+one BTC and one AAPL MiniMax acceptance run, same full flow/original allowance,
+no automatic extra run on failure. No paid call starts without that answer.
+NQ remains owner-BLOCKED; no provider/contract substitute.
+
 **Browser consent -> default native worker PASS (2026-10-07):** clean frozen
 `75e6f933eed497f406f5cd3864c921a72acfdc62`, external QA bridge3171 terminal0:
 1PASS/2synthetic-model warnings/41.44s, Python3.14.7. Command:
