@@ -2,6 +2,59 @@
 
 Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
+## Trusted worker operation and renewal/stop separation
+
+Dirty source base `ff4d67b4a79340d11d5840485ff1f3019c38f6c0`:
+reserved_preparation.py, jobs/linked_worker.py, shared terminal inputs,
+linked publication renewal guards, default prepared/terminal tests, linked
+publication/stops test expansions. README/CHANGELOG/Product Contract updated.
+No stored browser credentials, caller codec or fresh allowance. Server-derived
+SDK identity/full consent and original accounting precede separate one-time
+claim; original graph, heartbeat, publication and human review stay authoritative.
+No default polling/status/cancel/browser dispatch yet.
+
+Final exact focused command:
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp \
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused \
+tests/test_default_prepared_resume.py tests/test_linked_publication.py \
+tests/test_linked_stops.py --tb=short -x
+```
+
+PG24826 terminal0: **64 PASS**, no skips,84warnings/510.51s, Python3.14.7,
+Ruff/pip-check/diff PASS, source frozen throughout, only owned labelled PG removed.
+Original worker/manual EN/VI/bilingual native restore uses both SQLite/PostgreSQL;
+full prefix+suffix prompt trace/output matches uninterrupted original graph.
+Session revocation after consent does not require saved browser credentials.
+Original job/run/checkpoint prefix and full usage/remaining limits preserved;
+completion/report are separate, candidate remains REVIEW/human approval required.
+Second worker refuses before SDK construction. Stop-native fixtures use SQLite;
+command's PG context is not proof of native PG stop behavior.
+
+Renewal uncertainty refuses normal entry/callback/publication, including the
+post-write check. Exact binding remains usable only for actual reaped-child/
+closed-pipe stop proof; no remote-stop, provider-cost, refund or continuation grant.
+New native stopped/cancelled/expired tests require stop receipt with no final
+completion/decision under injected renewal uncertainty and unchanged original run.
+This is synthetic SDK/real graph and owned DB evidence, no paid model/live source.
+
+Earlier gates: worker44091 SQLite3PASS/9deselected/6warnings/50.13s;
+renewal50882 1PASS/1PG skip UNVERIFIED/35deselected/4.45s after F821 fixture
+import correction. Broader pre-refinement PG39351:163PASS/24warnings/739.39s,
+no skips (prepared resume, terminal/API, publication/execution/consent/preflight).
+New stop fixture25474 initially FAIL1/12deselected/5warnings/41.85s because it
+expected ordinary successful publication after injected renewal uncertainty.
+Corrected new expectation requires exact publication refusal plus stop proof;
+no application guard/assertion relaxation. SIM117 formatting corrected.
+Corrective12838 3PASS/12deselected/15warnings/20.84s. All old failures retained.
+
+**UNVERIFIED:** current clean full regression, durable polling/default browser
+journey, financial/VI semantics, live BTC/AAPL and release. **BLOCKED:** NQ owner
+active-contract/roll source. Next durable worker polling/owner status/cancel and
+professional rendered recovery UX, then combined candidate/native/browser/full
+and explicitly authorized live gates. Goal stays ACTIVE.
+
 ## Recovered full-regression failure
 
 Exact source `213529889a168b517d9397586a4f122de4981f8e`, clean during execution.

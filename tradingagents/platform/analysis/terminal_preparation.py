@@ -32,6 +32,34 @@ class PreparedTerminalContinuation:
     observation: ContinuationObservation
 
 
+def load_terminal_inputs(*, session, artifact_store, run_id, owner_id):
+    """Trusted read-only original inputs. Caller must establish owner authority."""
+    repo = PlatformRepository(session, artifact_store=artifact_store)
+    run = repo.get_run(run_id, owner_id)
+    if (run is None or run.status not in {RunStatus.FAILED, RunStatus.CANCELLED}
+            or run.decision_inputs is None):
+        raise ValueError('terminal continuation preparation requires review')
+    artifacts = ArtifactService(artifact_store, repo)
+    instrument = repo.get_instrument(run.instrument_id)
+    if instrument is None:
+        raise ValueError('terminal continuation preparation requires review')
+    sources = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst)
+    original = load_original_recording_sources(repository=repo, artifacts=artifacts, run=run)
+    overrides = {'llm_provider': run.llm_provider, 'quick_think_llm': run.quick_model,
+                 'deep_think_llm': run.deep_model}
+    if run.report_language is not None:
+        overrides['output_language'] = {'en': 'English', 'vi': 'Vietnamese',
+                                       'en-vi': 'English and Vietnamese'}[run.report_language]
+    request = AnalysisRequest(instrument=instrument, analysis_date=run.analysis_as_of.date(),
+        selected_analysts=run.selected_analysts, snapshot_context=sources,
+        portfolio=load_run_portfolio(repo, run), config_overrides=overrides)
+    binding = _digest({'run': run.model_dump(mode='json'), 'request': request.model_dump(mode='json'),
+        'book': original.portfolio_snapshot.model_dump(mode='json') if original.portfolio_snapshot else None,
+        'policy': original.policy.model_dump(mode='json') if original.policy else None,
+        'risk': [item.model_dump(mode='json') for item in original.risk_snapshots]})
+    return run, request, original, binding
+
+
 def prepare_terminal_continuation(*, database, artifact_store, run_id, base_config,
                                   session_token, csrf_token, clock=lambda: datetime.now(UTC)):
     """Derive trusted codec from original owner-readable inputs/actual SDKs.
@@ -47,30 +75,8 @@ def prepare_terminal_continuation(*, database, artifact_store, run_id, base_conf
         return OwnerAuth(session).lock_authenticated_consent(session_token, csrf_token, now=clock())
 
     def load(session, owner_id):
-        repo = PlatformRepository(session, artifact_store=artifact_store)
-        run = repo.get_run(run_id, owner_id)
-        if (run is None or run.status not in {RunStatus.FAILED, RunStatus.CANCELLED}
-                or run.decision_inputs is None):
-            reject()
-        artifacts = ArtifactService(artifact_store, repo)
-        instrument = repo.get_instrument(run.instrument_id)
-        if instrument is None:
-            reject()
-        sources = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst)
-        original = load_original_recording_sources(repository=repo, artifacts=artifacts, run=run)
-        overrides = {'llm_provider': run.llm_provider, 'quick_think_llm': run.quick_model,
-                     'deep_think_llm': run.deep_model}
-        if run.report_language is not None:
-            overrides['output_language'] = {'en': 'English', 'vi': 'Vietnamese',
-                                           'en-vi': 'English and Vietnamese'}[run.report_language]
-        request = AnalysisRequest(instrument=instrument, analysis_date=run.analysis_as_of.date(),
-            selected_analysts=run.selected_analysts, snapshot_context=sources,
-            portfolio=load_run_portfolio(repo, run), config_overrides=overrides)
-        binding = _digest({'run': run.model_dump(mode='json'), 'request': request.model_dump(mode='json'),
-            'book': original.portfolio_snapshot.model_dump(mode='json') if original.portfolio_snapshot else None,
-            'policy': original.policy.model_dump(mode='json') if original.policy else None,
-            'risk': [item.model_dump(mode='json') for item in original.risk_snapshots]})
-        return run, request, original, binding
+        return load_terminal_inputs(session=session, artifact_store=artifact_store,
+                                    run_id=run_id, owner_id=owner_id)
 
     try:
         if type(run_id) is not UUID or type(base_config) is not dict:

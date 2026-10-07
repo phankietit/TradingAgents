@@ -521,6 +521,13 @@ state `dispatch_enabled: false`: default linked worker and browser controls are
 not integrated yet. Reservation does not approve a decision or rewrite history.
 Local/native API and full-candidate acceptance are recorded separately in HANDOFF.
 
+The trusted worker operation can rebuild a reserved continuation's actual SDK
+identity without browser credentials, claim once, retain original allowance,
+restore the original graph and publish a separately fenced report. Uncertain
+lease renewal blocks callbacks/publication; uncertain ACKs are not automatically
+retried. This operation is not yet connected to default durable polling or the
+browser controls. Synthetic native parity is not live financial/editorial proof.
+
 Durable snapshot jobs retain private, immutable working notes when each graph
 role returns reader text. Notes bind to the run, snapshots and declared config,
 are always **unvalidated**, and cannot authorize portfolio approval. Prompts,

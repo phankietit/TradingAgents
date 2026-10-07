@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add trusted reserved-continuation preparation and a single-execution linked
+  worker operation without stored browser credentials. Rebuild actual original
+  identity before separate one-time claim, keep retained accounting, heartbeat,
+  original graph/receipt/report and human review gates; renewal uncertainty
+  blocks callbacks/publication. No blind retry, fresh budget, original-history
+  rewrite, default polling or browser dispatch enabled.
+
 - Add owner-authenticated original continuation preparation and explicit
   disclosure/consent reservation API routes. Derive checkpoint identity on the
   server, reject stale observations/client codecs, retain original allowance and

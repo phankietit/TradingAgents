@@ -75,6 +75,33 @@ def assert_old_history_unchanged(database, before):
 
 @pytest.mark.parametrize("prepared", [False,
     pytest.param("postgres_failed", marks=pytest.mark.integration)], indirect=True)
+def test_failed_worker_renewal_fences_callbacks_and_checkpoint(prepared, monkeypatch):
+    from threading import Event, enumerate as threads
+
+    from tradingagents.platform.jobs.linked_worker import _keepalive
+
+    database, store, _, _, context, _ = entered(prepared)
+    checkpoints, raw = raw_checkpoint(context, store)
+    before = history(database)
+    invoked = Event()
+    initial_threads = {thread.ident for thread in threads()}
+
+    def failed(**kwargs):
+        invoked.set()
+        raise ValueError("synthetic renewal uncertainty")
+
+    monkeypatch.setattr(context, "heartbeat", failed)
+    with _keepalive(context, lease_seconds=0.03):
+        assert invoked.wait(1)
+    assert context._renewal_failed is True
+    assert {thread.ident for thread in threads()} == initial_threads
+    with pytest.raises(LinkedExecutionError):
+        context.raise_if_cancelled()
+    with pytest.raises((LinkedExecutionError, CheckpointStoreError)):
+        save(context, checkpoints, raw)
+    assert history(database) == before
+
+
 def test_parent_entry_usage_stop_checkpoint_provenance_and_original_history(prepared):
     database, store, _, clock, context, before = entered(prepared)
     initial = evidence(database, context)

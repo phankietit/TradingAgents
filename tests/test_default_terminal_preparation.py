@@ -243,5 +243,34 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
     assert len(trace["trace"]) == 1 and trace["closed_clients"] is None
     with pytest.raises(ProcessLookupError):
         os.kill(trace["pid"], 0)
+    from tradingagents.platform.analysis.reserved_preparation import prepare_reserved_continuation
+
+    worker_values = {"database": database, "artifact_store": store, "execution_id": consent.execution_id,
+                     "base_config": settings}
+    before = len(native.children)
+    with pytest.raises(ValueError, match="reserved continuation preparation requires review"):
+        prepare_reserved_continuation(**{**worker_values, "execution_id": uuid4()})
+    assert len(native.children) == before
+    worker_prepared = prepare_reserved_continuation(**worker_values)
+    assert worker_prepared.observation == observation
+    assert worker_prepared.consents.codec is not prepared.consents.codec
+    assert worker_prepared.consents.codec.fingerprint == prepared.consents.codec.fingerprint
+    assert worker_prepared.consents.codec.nodes == prepared.consents.codec.nodes
+    with pytest.raises(ValueError, match="reserved continuation preparation requires review"):
+        prepare_reserved_continuation(**{**worker_values, "base_config": changed_config})
+    with database.session() as session:
+        assert load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id) == accounting
+        assert session.scalars(select(ResearchExecutionRow)).one().status == "reserved"
+    from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
+
+    LinkedExecutionStore(worker_prepared.consents).request_cancel(execution_id=consent.execution_id,
+        session_token=issued.token, csrf_token=issued.csrf_token)
+    before = len(native.children)
+    with pytest.raises(ValueError, match="reserved continuation preparation requires review"):
+        prepare_reserved_continuation(**worker_values)
+    assert len(native.children) == before
+    with database.session() as session:
+        assert session.scalars(select(ResearchExecutionRow)).one().status == "cancelled"
+        assert load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id) == accounting
     _assert_reaped(native)
     database.dispose()

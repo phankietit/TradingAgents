@@ -2,6 +2,48 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Trusted single-execution worker continuation (2026-10-07):** base
+`ff4d67b4a79340d11d5840485ff1f3019c38f6c0` plus reserved_preparation.py,
+jobs/linked_worker.py, shared original terminal input loader, renewal guards and
+four existing test expansions. Durable reservation preparation needs no browser
+session token: recheck active owner/original job/run/inputs/full accounting,
+derive actual SDK identity, then validate full consent/checkpoint observation
+before a separate one-time claim. Worker assembles retained context/original
+sources/bound publisher/factory, heartbeat, original graph restore and separate
+report. ACK uncertainty never grants retry; original terminal history and caps
+are unchanged. Default polling/status/cancel/browser dispatch remain unfinished.
+
+SQLite worker44091 terminal0:3PASS/9deselected/6warnings/50.13s, full prompt
+trace/output equals uninterrupted baseline, login revoked after consent, exact
+aggregate usage, original history/checkpoint prefix, REVIEW/human approval and
+second-worker refusal retained. First renewal helper failed at F821 (wrong test
+exception import), corrected existing CheckpointStoreError without runtime change;
+50882 terminal0:1PASS/1PG skip UNVERIFIED/35deselected/4.45s. Broader PG39351
+terminal0:163PASS/24warnings/739.39s, no skips, before stop-control refinement.
+Selection: default prepared resume, default terminal/API preparation, linked
+publication/execution, continuation consent and initialized preflight.
+
+Renewal uncertainty is now a normal-entry/callback/publication gate, not a
+binding-identity failure: actual child reaping/pipe shutdown can still produce
+control-only stop proof. First SIM117 lint refusal corrected mechanically.
+25474 terminal1:1FAIL/12deselected/5warnings/41.85s: new successful-stop fixture
+injected renewal failure before final publication and correctly got
+RESEARCH_EXECUTION_FAILED instead of its usual success. Corrected that new case
+to require exact publication refusal, no completion/decision and unchanged
+original run; cancellation/expiry and existing assertions unchanged. Corrective
+12838 terminal0:3PASS/12deselected/15warnings/20.84s, actual stopped/cancelled/
+expired child stop proof with no continuation/provider-cost authority.
+
+Final source-frozen PG24826 terminal0:64PASS/84warnings/510.51s, no skips;
+Python3.14.7, Ruff/pip-check/diff PASS; only labelled helper-owned PG removed.
+Selection: default_prepared_resume, linked_publication, linked_stops (--tb=short
+-x). Worker/manual EN/VI/bilingual restore runs both DBs; stop-native fixtures
+are SQLite and are not promoted to PG native-stop proof. This is dirty-source
+focused evidence, not clean full regression, default polling/browser recovery,
+semantic financial/VI, live BTC/AAPL or release acceptance. Full current candidate
+UNVERIFIED, previous fullc166 not promoted. No paid AI, market-provider/risk/model/CI/
+private-history/main/deploy change. R01–R14 ACTIVE, NQ owner BLOCKED.
+
 **Original continuation API integration (2026-10-07):** source base
 `992c7bec75162545fbc62e0e6670b7a76ff4a022` plus continuation_routes.py,
 strict schemas/app mount, continuation store docstring, native API journey and

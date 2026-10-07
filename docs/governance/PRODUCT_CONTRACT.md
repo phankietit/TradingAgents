@@ -152,6 +152,16 @@ deployment. Responses keep dispatch_enabled false; no default linked worker or
 browser control is enabled yet. API/native/full and live/semantic acceptance
 remain separately evidenced. No original-history rewrite or fresh allowance is granted.
 
+Trusted reserved preparation rechecks durable consent, active owner, immutable
+original job/run/input bindings and complete accounting, derives actual SDK
+identity without an owner session token, then validates the entire observation
+and checkpoint before a separate one-time claim. A single-execution worker
+operation assembles retained publication context, original sources, exact
+publisher/factory, heartbeat, original graph restore and separate completion.
+Renewal uncertainty refuses callback/publication; ACK uncertainty cannot reset
+the attempt. This is not default polling/browser dispatch, a fresh allowance,
+rewritten terminal history, financial/translation acceptance or human approval.
+
 ## 4. Asset-Specific Contracts
 
 ### Equities

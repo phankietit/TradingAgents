@@ -58,6 +58,7 @@ class LinkedPublicationContext:
         self._emit_callback = self._emit
         self.observer = None
         self._binding = None
+        self._renewal_failed = False
 
     def __repr__(self):
         return object.__repr__(self)
@@ -82,8 +83,12 @@ class LinkedPublicationContext:
         return context
 
     def _observer(self):
+        # Exact binding identity is also needed for control-plane stop proof.
+        # Renewal uncertainty blocks normal callbacks/publication separately;
+        # it must not erase observed reaping or grant remote-stop/cost authority.
         observer, binding = self.observer, self._binding
-        if (type(self._store) is not LinkedExecutionStore or type(self._lease) is not LinkedExecutionLease
+        if (type(self._renewal_failed) is not bool
+                or type(self._store) is not LinkedExecutionStore or type(self._lease) is not LinkedExecutionLease
                 or self.database is not self._store.database
                 or (self.job_id, self.owner_id, self.run_id, self.execution_id) != (
                     self._lease.reservation.source_job_id, self._lease.reservation.owner_id,
@@ -105,6 +110,10 @@ class LinkedPublicationContext:
             _reject()
         return observer
 
+    def _check_renewal(self):
+        if self._renewal_failed is not False:
+            _reject()
+
     def _append(self, session, event_type, payload, now):
         event = RunEventStore(session).append(owner_id=self.owner_id, run_id=self.run_id,
             event_type=event_type, payload={**payload, "attempt": self._lease.reservation.attempt}, occurred_at=now)
@@ -125,6 +134,7 @@ class LinkedPublicationContext:
             _reject()
 
     def _begin(self):
+        self._check_renewal()
         observer = self._observer()
         with self._store._transaction() as (session, now):
             execution, current = self._store._fence(session, self._lease, now, recheck=True)
@@ -143,6 +153,7 @@ class LinkedPublicationContext:
         # Return only after commit. Missing ACK is not permission to re-enter.
 
     def raise_if_cancelled(self):
+        self._check_renewal()
         if self.observer is not None:
             self._observer()
         with self._store._transaction() as (session, now):
@@ -151,6 +162,7 @@ class LinkedPublicationContext:
                 _reject()
 
     def heartbeat(self, *, lease_seconds=300):
+        self._check_renewal()
         self._observer()
         self._lease = self._store.heartbeat(self._lease, lease_seconds=lease_seconds)
 
@@ -162,6 +174,7 @@ class LinkedPublicationContext:
 
     @contextmanager
     def publication_session(self, *, lock_timeout_seconds=5.0):
+        self._check_renewal()
         self._observer()
         with self._store._transaction(lock_timeout_seconds=lock_timeout_seconds) as (session, now):
             execution, _ = self._store._fence(session, self._lease, now)
@@ -169,6 +182,7 @@ class LinkedPublicationContext:
                 _reject()
             validate_entry(session, execution)
             yield session
+            self._check_renewal()
             # Lock acquisition / serialization / flush may consume the lease.
             # A pre-write check alone must not ACK a late publication.
             final_now = self.clock()

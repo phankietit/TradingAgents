@@ -25,12 +25,17 @@ from tradingagents.platform.analysis.accounting import (
 )
 from tradingagents.platform.analysis.allowance import load_remaining_allowance
 from tradingagents.platform.analysis.linked_stops import LinkedStopError, LinkedStopStore
+from tradingagents.platform.analysis.observer import ResearchExecutionFailed
 from tradingagents.platform.persistence import (
     PlatformRepository,
     downgrade_database,
     upgrade_database,
 )
-from tradingagents.platform.persistence.models import ResearchExecutionStopRow
+from tradingagents.platform.persistence.models import (
+    DecisionRow,
+    ResearchExecutionCompletionRow,
+    ResearchExecutionStopRow,
+)
 
 
 def capture_native(tmp_path, monkeypatch, *, mode="linked_stopped", fault=None):
@@ -39,6 +44,9 @@ def capture_native(tmp_path, monkeypatch, *, mode="linked_stopped", fault=None):
 
     def remember(store, engine):
         captured.append((store, engine))
+        if fault == "renewal":
+            engine.linked_context._renewal_failed = True
+            return original(store, engine)
         if fault == "guards":
             context = engine.linked_context
             original_lease = context._lease
@@ -81,7 +89,13 @@ def capture_native(tmp_path, monkeypatch, *, mode="linked_stopped", fault=None):
 
     monkeypatch.setattr(LinkedStopStore, "record_supervised", remember)
     # Actual joined production child/graph/owner context; no standalone result.
-    run_native(tmp_path, monkeypatch, "English", False, mode, stop_receipt_expected=fault != "rollback")
+    if fault == "renewal" and mode == "linked_stopped":
+        # This fixture normally publishes after clean exit. Injected renewal
+        # uncertainty must refuse that result, while retaining actual stop proof.
+        with pytest.raises(ResearchExecutionFailed, match="^linked result publication requires review$"):
+            run_native(tmp_path, monkeypatch, "English", False, mode, stop_receipt_expected=True)
+    else:
+        run_native(tmp_path, monkeypatch, "English", False, mode, stop_receipt_expected=fault != "rollback")
     assert len(captured) == 1
     return captured[0]
 
@@ -105,6 +119,25 @@ def test_actual_parent_scope_and_private_identity_are_required(tmp_path, monkeyp
     context = engine.linked_context
     stop = store.read(owner_id=context.owner_id, execution_id=context.execution_id)
     assert stop is not None and stop.continuation_authorized is False
+
+
+@pytest.mark.parametrize("mode", ["linked_stopped", "linked_cancelled", "linked_expired"])
+def test_renewal_uncertainty_retains_actual_stop_without_publication(tmp_path, monkeypatch, mode):
+    store, engine = capture_native(tmp_path, monkeypatch, mode=mode, fault="renewal")
+    context = engine.linked_context
+    stop = store.read(owner_id=context.owner_id, execution_id=context.execution_id)
+    assert stop is not None
+    assert stop.continuation_authorized is False and stop.provider_cost_known is False
+    before = history(store.executions.database)
+    with pytest.raises(ValueError):
+        context.raise_if_cancelled()
+    with pytest.raises(ValueError), context.publication_session():
+        pytest.fail("renewal uncertainty must not authorize publication")
+    assert history(store.executions.database) == before
+    with store.executions.database.session() as session:
+        assert session.get(ResearchExecutionCompletionRow, context.execution_id) is None
+        assert not session.scalars(select(DecisionRow).where(DecisionRow.run_id == context.run_id)).all()
+        assert PlatformRepository(session).get_run(context.run_id, context.owner_id) == engine.recording_inputs.read().run
 
 
 def test_native_receipt_reader_rejects_tamper_and_foreign_owner(tmp_path, monkeypatch):

@@ -69,8 +69,9 @@ def isolated_database_url(tmp_path, request):
             downgrade_database(url)
 
 
+@pytest.mark.parametrize("driver_mode", ["manual", "worker"])
 @pytest.mark.parametrize("language", ["en", "vi", "en-vi"])
-def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, language, isolated_database_url):
+def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, language, isolated_database_url, driver_mode):
     args = inputs()
     args["base_config"]["backend_url"] = "https://example.test/v1/" + uuid4().hex
     instrument = args["request"].instrument
@@ -190,6 +191,69 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
     _assert_reaped(native)
     executions = LinkedExecutionStore(consents)
     executions.allocate(execution_id=consent.execution_id, session_token=issued.token, csrf_token=issued.csrf_token)
+    if driver_mode == "worker":
+        from tradingagents.platform.analysis.terminal_preparation import load_terminal_inputs
+        from tradingagents.platform.jobs.linked_worker import execute_reserved_continuation
+        from tradingagents.platform.persistence.models import OwnerSessionRow
+
+        with database.session() as session:
+            _, request, _, _ = load_terminal_inputs(session=session, artifact_store=store,
+                                                   run_id=run.run_id, owner_id=run.owner_id)
+            # Durable consent does not require storing or keeping browser login alive.
+            for login in session.scalars(select(OwnerSessionRow)):
+                login.revoked_at = consents.clock()
+        baseline_request = request.model_copy(update={"execution_observer": ResearchObserver(
+            check_cancelled=lambda: None, emit=lambda *args: None)})
+        baseline_config = {**args["base_config"],
+            "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
+            "results_dir": str(store.root / "worker-runtime" / "reports")}
+        baseline = NativeFixtureEngine(base_config={**baseline_config, "_fixture_callbacks": True})
+        baseline.snapshot_recorder = SnapshotRecorder(owner_id=run.owner_id, run=run,
+            expected_fingerprint=captured["codec"].fingerprint, commit=lambda raw: None)
+        expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
+            AnalysisEngine(base_config=options).analyze(baseline_request))
+        monkeypatch.setattr(supervision, "_child", restored_default_child)
+        result = execute_reserved_continuation(database=database, artifact_store=store,
+            execution_id=consent.execution_id, base_config=baseline_config, worker_id="native-linked-worker")
+        suffix = json.loads((store.root / "worker-runtime" / "reports.fixture-trace.json").read_text())
+        assert trace["trace"] + suffix["trace"] == json.loads(json.dumps(baseline.model_trace))
+        assert suffix["pid"] != trace["pid"] and suffix["closed_clients"] == 2
+        with pytest.raises(ProcessLookupError):
+            os.kill(suffix["pid"], 0)
+        assert set(baseline_request.execution_observer.completed) == STAGES
+        expected_data = expected.model_dump()
+        expected_data["final_state"] = {key: value for key, value in expected_data["final_state"].items()
+                                       if key in RESULT_FIELDS}
+        for key in ("investment_debate_state", "risk_debate_state"):
+            expected_data["final_state"][key] = {"history": expected_data["final_state"][key].get("history", "")}
+        assert result.model_dump() == expected_data
+        with database.session() as session:
+            aggregate = load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id)
+            assert aggregate.attempts == (1, 2)
+            assert aggregate.started_calls == len(baseline.model_trace)
+            assert aggregate.reported_total_tokens == len(baseline.model_trace) * 15
+            assert aggregate.elapsed_upper_bound >= accounting.elapsed_upper_bound
+            assert PlatformRepository(session).get_run(run.run_id, run.owner_id) == retained
+            assert DurableJobQueue(session).get(completed.job_id, run.owner_id) == completed
+            rows = session.scalars(select(ResearchCheckpointRow).where(
+                ResearchCheckpointRow.run_id == run.run_id).order_by(ResearchCheckpointRow.sequence)).all()
+            assert [(row.record_id, row.content_hash, row.payload) for row in rows[:len(old_rows)]] == old_rows
+            completion = session.get(ResearchExecutionCompletionRow, consent.execution_id)
+            assert completion is not None and completion.checkpoint_record_id == rows[-1].record_id
+            repo = PlatformRepository(session, artifact_store=store)
+            candidate = repo.get_decision(completion.decision_id, run.owner_id)
+            assert candidate.requires_human_approval is True and candidate.status.value == "review"
+            report = json.loads(ArtifactService(store, repo).read(completion.report_artifact_id, run.owner_id)[1])
+            assert report["linked_execution"]["original_run_status"] == "failed"
+            assert report["linked_execution"]["accounting"]["reported_total_tokens"] == aggregate.reported_total_tokens
+        before = len(native.children)
+        with pytest.raises(ValueError, match="linked worker execution requires review"):
+            execute_reserved_continuation(database=database, artifact_store=store,
+                execution_id=consent.execution_id, base_config=baseline_config, worker_id="second-worker")
+        assert len(native.children) == before
+        _assert_reaped(native)
+        database.dispose()
+        return
     lease = executions.claim(execution_id=consent.execution_id, worker_id="default-linked-factory")
     publisher = LinkedResultPublisher(store)
     linked = LinkedPublicationContext.prepare(executions, lease, save_stage=publisher.save_stage)
