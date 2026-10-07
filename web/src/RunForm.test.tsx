@@ -8,6 +8,21 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 const source = { snapshot: { snapshot_id: 'source1', dataset: 'ohlcv.daily', vendor: 'TEST FIXTURE', source_end: '2026-09-01T00:00:00Z', quality_status: 'OK' }, metadata_eligible: true, ineligibility_reasons: [], supported_analysts: ['market'] };
 afterEach(() => vi.unstubAllGlobals());
 
+// Exercise the visible staged journey; never query hidden panels to bypass it.
+async function visitData(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /^(Prepare market data|Chuẩn bị dữ liệu thị trường)$/ }));
+}
+async function inspectSources(user: ReturnType<typeof userEvent.setup>) {
+  await visitData(user);
+  await user.click(screen.getByRole('button', { name: /^(Choose saved sources|Chọn nguồn đã lưu)$/ }));
+}
+async function visitReview(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /^(Review & authorize|Kiểm tra & cấp phép)$/ }));
+}
+async function visitScope(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: /^(Research scope|Phạm vi nghiên cứu)$/ }));
+}
+
 it.each(['stocktwits','reddit'])('prepares original social feeds independently with %s first and resets AI consent',async first=>{
   const now=new Date().toISOString();
   const make=(vendor:string,id:string)=>({snapshot:{snapshot_id:id,dataset:'social',vendor,source_end:now,quality_status:'OK',metadata:{posts:3}},metadata_eligible:true,ineligibility_reasons:[],supported_analysts:['social']});
@@ -25,13 +40,18 @@ it.each(['stocktwits','reddit'])('prepares original social feeds independently w
   });
   vi.stubGlobal('fetch',fetch);const user=userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await inspectSources(user);
   const group=await screen.findByRole('group',{name:'Market sentiment'});
   for(const box of within(group).getAllByRole('checkbox'))await user.click(box);
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await visitData(user);
   const names={stocktwits:'Add StockTwits discussions',reddit:'Add Reddit discussions'};
   await user.click(screen.getByRole('button',{name:names[first as keyof typeof names]}));
   await screen.findByText(/StockTwits · Discussion posts are ready|Reddit · Discussion posts are ready/);
+  await visitReview(user);
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await visitData(user);
   await user.click(screen.getByRole('button',{name:names[first==='stocktwits'?'reddit':'stocktwits']}));
   await waitFor(()=>expect(within(group).getAllByRole('checkbox').filter(item=>(item as HTMLInputElement).checked)).toHaveLength(2));
   expect(screen.getByText(/Selected discussion feeds:/).textContent).toContain('stocktwits');
@@ -52,14 +72,21 @@ it('does not turn failed Reddit into neutral sentiment or remove StockTwits, and
     return json([]);
   }));
   const user=userEvent.setup();render(<><LanguageSwitch/><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/></>);
+  await inspectSources(user);
   const group=await screen.findByRole('group',{name:'Market sentiment'});
-  await user.click(within(group).getByRole('checkbox'));await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.click(within(group).getByRole('checkbox'));
+  await visitReview(user);
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await visitData(user);
   await user.click(screen.getByRole('button',{name:'Add Reddit discussions'}));
   await screen.findByText(/Reddit · This discussion source is unavailable/);
   expect((within(group).getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  await visitReview(user);
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await visitData(user);
   await user.click(screen.getByRole('button',{name:/VI/}));
   expect(await screen.findByText(/Reddit · Chưa kết nối được nguồn thảo luận/)).toBeTruthy();
+  await visitReview(user);
   expect((screen.getByRole('button',{name:'Gửi phân tích'}) as HTMLButtonElement).disabled).toBe(true);
 });
 
@@ -83,20 +110,26 @@ it.each(['macro-first', 'headlines-first'])('preserves distinct economic and hea
   vi.stubGlobal('fetch',fetch);
   const user=userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await inspectSources(user);
   const newsGroup=await screen.findByRole('group',{name:'News & events'});
   await user.click(within(newsGroup).getAllByRole('checkbox')[0]);
   await user.click(within(newsGroup).getAllByRole('checkbox')[1]);
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await visitData(user);
   const first=order==='macro-first'?'Add economic context':'Add recent headlines';
   const second=order==='macro-first'?'Add recent headlines':'Add economic context';
   await user.click(screen.getByRole('button',{name:first}));
   await screen.findByText(order==='macro-first'?/Economic data is ready/:/Recent headlines are ready/);
+  await visitReview(user);
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  await visitData(user);
   await user.click(screen.getByRole('button',{name:second}));
   await screen.findByText(order==='macro-first'?/Recent headlines are ready/:/Economic data is ready/);
   await waitFor(()=>expect(within(newsGroup).getAllByRole('checkbox').filter(input=>(input as HTMLInputElement).checked)).toHaveLength(2));
   expect(screen.getByText(/Economic data does not replace news coverage/).textContent).toContain('DGS10');
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  await visitReview(user);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
   await user.click(screen.getByRole('button',{name:'Queue analysis'}));
@@ -116,10 +149,12 @@ it('discloses failed economic coverage in Vietnamese and never selects it or sta
   });
   const user=userEvent.setup();
   render(<><LanguageSwitch/><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/></>);
+  await visitData(user);
   await user.click(await screen.findByRole('button',{name:'Add economic context'}));
   expect(await screen.findByText(/no observations in the requested history window/)).toBeTruthy();
   await user.click(screen.getByRole('button',{name:/VI/}));
   expect(await screen.findByText(/không có số liệu trong khoảng lịch sử yêu cầu/)).toBeTruthy();
+  await visitReview(user);
   expect((screen.getByRole('button',{name:'Gửi phân tích'}) as HTMLButtonElement).disabled).toBe(true);
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
 });
@@ -137,18 +172,22 @@ function setup(stale = false) {
 it('shows exact current request context and all selected sources before paid consent', async () => {
   const fetch = setup(); const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await inspectSources(user);
   const group = await screen.findByRole('group',{name:'Price & trend'});
+  await user.click(within(group).getByRole('checkbox'));
+  await visitReview(user);
   const summary = screen.getByRole('region',{name:'Analysis request summary'});
   expect(within(summary).getByText('AAPL — Apple')).toBeTruthy();
   expect(within(summary).getByText('English + Vietnamese')).toBeTruthy();
   expect(within(summary).getByText('Asset research only')).toBeTruthy();
-  await user.click(within(group).getByRole('checkbox'));
   expect(within(summary).getByText(/Daily prices & volume · TEST FIXTURE/)).toBeTruthy();
   expect(within(summary).getByText(/Source data through: 2026-09-01/)).toBeTruthy();
   expect(within(summary).getByText('Not included')).toBeTruthy();
   expect(summary.compareDocumentPosition(screen.getByRole('checkbox',{name:/I authorize/})) & Node.DOCUMENT_POSITION_CONTAINED_BY).toBeTruthy();
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await visitScope(user);
   await user.selectOptions(screen.getByLabelText('Report language'),'vi');
+  await visitReview(user);
   expect(within(summary).getByText('Vietnamese')).toBeTruthy();
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
@@ -157,9 +196,12 @@ it('shows exact current request context and all selected sources before paid con
 it('moves focus to review without changing consent, collecting sources or starting AI', async () => {
   const fetch = setup(); const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await inspectSources(user);
   await screen.findByRole('group',{name:'Price & trend'});
+  await visitReview(user);
   const summary = screen.getByRole('region',{name:'Analysis request summary'});
   const scroll = vi.fn(); summary.scrollIntoView = scroll;
+  await visitScope(user);
   await user.click(screen.getByRole('button',{name:'Review & authorize'}));
   expect(scroll).toHaveBeenCalledWith({block:'start'});
   expect(document.activeElement).toBe(summary);
@@ -170,11 +212,13 @@ it('moves focus to review without changing consent, collecting sources or starti
 it('shows selected portfolio, governed policy and owner allocation in the consent brief', async () => {
   setup(); const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await inspectSources(user);
   await screen.findByRole('group',{name:'Price & trend'});
   await user.click(screen.getByRole('checkbox',{name:/Evaluate against my portfolio/}));
   await user.selectOptions(screen.getByLabelText('Portfolio snapshot'),'portfolio1');
   await user.selectOptions(screen.getByLabelText('Risk policy version'),'policy1:1');
   await user.type(screen.getByLabelText('Owner target weight (0–1)'),'0.2');
+  await visitReview(user);
   const summary = screen.getByRole('region',{name:'Analysis request summary'});
   expect(within(summary).getByText('Portfolio policy evaluation')).toBeTruthy();
   expect(within(summary).getByText(/USD · 2026-09-01/)).toBeTruthy();
@@ -189,15 +233,17 @@ it.each([false,true])('opens saved-source review without collecting, selecting o
   Object.defineProperty(HTMLElement.prototype,'scrollIntoView',{value:scroll,configurable:true});
   try {
     render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
-    const group=await screen.findByRole('group',{name:'Price & trend'});
+    await visitData(user);
     const inspector=screen.getByText('Inspect or change evidence sources').closest('details')!;
     expect(inspector.open).toBe(false);
     await user.click(screen.getByRole('button',{name:'Choose saved sources'}));
+    const group=await screen.findByRole('group',{name:'Price & trend'});
     expect(inspector.open).toBe(true);
     expect(scroll).toHaveBeenCalledWith({block:'start'});
     expect(document.activeElement).toBe(inspector.querySelector('summary'));
     const box=within(group).getByRole('checkbox') as HTMLInputElement;
     expect(box.checked).toBe(false); expect(box.disabled).toBe(stale);
+    await visitReview(user);
     expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
     expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
     expect(fetch.mock.calls.some(([url])=>url.includes('/prepare-') || url.endsWith('/runs'))).toBe(false);
@@ -209,9 +255,11 @@ it.each([false,true])('opens saved-source review without collecting, selecting o
 it('defaults to 30 minutes, resets paid consent and uses a new key for changed allowance', async () => {
   const fetch=setup();const user=userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
+  await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
+  await visitReview(user);
   const picker=screen.getByRole('combobox',{name:'Research time allowance'});
   expect((picker as HTMLSelectElement).value).toBe('1800');
-  await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
   await user.click(screen.getByRole('button',{name:'Queue analysis'}));await screen.findByRole('alert');
   await user.selectOptions(picker,'3600');
@@ -228,9 +276,13 @@ it('defaults to 30 minutes, resets paid consent and uses a new key for changed a
 });
 it('requires evidence and explicit paid-call authorization', async () => {
   setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   const group = await screen.findByRole('group', { name: 'Price & trend' });
+  await visitReview(user);
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
+  await visitData(user);
   await user.click(await within(group).findByRole('checkbox'));
+  await visitReview(user);
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(false);
@@ -244,21 +296,31 @@ it('discloses delayed source cutoff before paid consent in both languages', asyn
   }));
   const user = userEvent.setup();
   render(<><LanguageSwitch /><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} /></>);
+  await inspectSources(user);
   expect(await screen.findByText(/Source publication is delayed/)).toBeTruthy();
+  await visitReview(user);
   expect((screen.getByRole('button', {name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  await visitData(user);
   await user.click(screen.getByRole('button', {name:/VI/}));
   expect(await screen.findByText(/Nguồn cập nhật chậm một nến ngày/)).toBeTruthy();
 });
 it('keeps report language independent of UI and resets consent when changing generation language', async () => {
   const fetch = setup(); const user = userEvent.setup();
   render(<><LanguageSwitch /><RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} /></>);
+  expect((screen.getByLabelText('Report language') as HTMLSelectElement).value).toBe('en-vi');
+  await inspectSources(user);
   await user.click(await within(await screen.findByRole('group', { name: 'Price & trend' })).findByRole('checkbox'));
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
+  await visitScope(user);
   expect((screen.getByLabelText('Report language') as HTMLSelectElement).value).toBe('en-vi');
   await user.click(screen.getByRole('button', { name: /VI/ }));
   expect((screen.getByLabelText('Ngôn ngữ báo cáo') as HTMLSelectElement).value).toBe('en-vi');
+  await visitReview(user);
   expect((screen.getByRole('button', { name: 'Gửi phân tích' }) as HTMLButtonElement).disabled).toBe(false);
+  await visitScope(user);
   await user.selectOptions(screen.getByLabelText('Ngôn ngữ báo cáo'), 'vi');
+  await visitReview(user);
   expect((screen.getByRole('button', { name: 'Gửi phân tích' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', { name: /Tôi cho phép/ }));
   await user.click(screen.getByRole('button', { name: 'Gửi phân tích' }));
@@ -268,16 +330,20 @@ it('keeps report language independent of UI and resets consent when changing gen
 });
 it('withholds price snapshots from news and pins risk request to portfolio time', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   const news = await screen.findByRole('group', {name:'News & events'});
   expect(within(news).queryByRole('checkbox')).toBeNull();
   expect(within(news).getByText('No suitable saved sources for this research area. It will not be included.')).toBeTruthy();
   await user.click(screen.getByRole('checkbox', {name:/Evaluate against my portfolio/}));
   await user.selectOptions(screen.getByLabelText('Portfolio snapshot'), 'portfolio1');
+  await visitScope(user);
   expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).value).toBe('2026-09-01T00:00');
   expect((screen.getByLabelText('Research date & time (UTC)') as HTMLInputElement).disabled).toBe(true);
+  await visitData(user);
   await user.selectOptions(screen.getByLabelText('Risk policy version'), 'policy1:1');
   await user.type(screen.getByLabelText('Owner target weight (0–1)'), '0.2');
   await user.click(await within(screen.getByRole('group', {name:'Price & trend'})).findByRole('checkbox'));
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox', {name:/I authorize/}));
   await user.click(screen.getByRole('button', {name:'Queue analysis'}));
   await screen.findByRole('alert');
@@ -290,9 +356,14 @@ it('uses explicit UTC date controls and keeps advanced freshness unchanged',asyn
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
   const date = screen.getByLabelText('Research date & time (UTC)');
   fireEvent.change(date,{target:{value:'2026-08-31T13:45:12.123'}});
+  await inspectSources(user);
+  const advanced = screen.getByText('Advanced data settings');
+  expect(advanced.closest('details')?.open).toBe(false);
+  await user.click(advanced);
   expect((screen.getByLabelText('Maximum source age (seconds)') as HTMLInputElement).value).toBe('604800');
-  expect(screen.getByLabelText('Maximum source age (seconds)').closest('details')?.open).toBe(false);
+  expect(screen.getByLabelText('Maximum source age (seconds)').closest('details')?.open).toBe(true);
   await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
   await user.click(screen.getByRole('button',{name:'Queue analysis'}));
   await screen.findByRole('alert');
@@ -300,18 +371,23 @@ it('uses explicit UTC date controls and keeps advanced freshness unchanged',asyn
   const body = JSON.parse(calls.find(([url])=>url.endsWith('/runs'))![1].body as string);
   expect(body.analysis_as_of).toBe('2026-08-31T13:45:12.123Z');
   expect(body.decision_inputs.source_max_age_seconds).toEqual({market:604800});
+  await visitScope(user);
   fireEvent.change(date,{target:{value:''}});
+  await visitReview(user);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
 });
 it('disables stale evidence', async () => {
   setup(true); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(userEvent.setup());
   const group = await screen.findByRole('group', { name: 'Price & trend' });
   expect((await within(group).findByRole('checkbox') as HTMLInputElement).disabled).toBe(true);
 });
 it('reuses idempotency key on unchanged failed submission', async () => {
   const fetch = setup(); const user = userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   const group = await screen.findByRole('group', { name: 'Price & trend' });
   await user.click(await within(group).findByRole('checkbox'));
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
   await user.click(screen.getByRole('button', { name: 'Queue analysis' }));
   await screen.findByRole('alert');
@@ -337,11 +413,14 @@ it('prepares current evidence without AI and requires fresh consent before submi
   });
   vi.stubGlobal('fetch',fetch);
   const user=userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await visitReview(user);
   await screen.findByText(/To continue, prepare/);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await inspectSources(user);
   await user.click(screen.getByRole('button',{name:'Prepare latest prices'}));
   await screen.findByText(/Prices are ready/);
   await waitFor(()=>expect((screen.getByRole('group',{name:'Price & trend'}).querySelector('input') as HTMLInputElement).checked).toBe(true));
+  await visitReview(user);
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
@@ -369,12 +448,16 @@ it('adds recent news as a separate, non-exhaustive source without starting AI', 
   vi.stubGlobal('fetch',fetch);
   const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   await user.click(await within(await screen.findByRole('group',{name:'Price & trend'})).findByRole('checkbox'));
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await visitData(user);
   await user.click(await screen.findByRole('button',{name:'Add recent headlines'}));
   expect(await screen.findByText(/not a complete record of all news/)).toBeTruthy();
   await waitFor(() => expect((within(screen.getByRole('group',{name:'News & events'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true));
   expect((within(screen.getByRole('group',{name:'Price & trend'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  await visitReview(user);
   expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
 });
@@ -390,6 +473,7 @@ it('does not select an empty recent-news feed', async () => {
   });
   const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   await user.click(await screen.findByRole('button',{name:'Add recent headlines'}));
   expect(await screen.findByText(/News research was not selected/)).toBeTruthy();
   expect(within(screen.getByRole('group',{name:'News & events'})).queryByRole('checkbox')).toBeNull();
@@ -416,10 +500,12 @@ it('prepares AAPL SEC facts separately with a filing-specific freshness limit an
   vi.stubGlobal('fetch', fetch);
   const user = userEvent.setup();
   render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await inspectSources(user);
   await user.click(await screen.findByRole('button',{name:'Add SEC fundamentals'}));
   expect(await screen.findByText(/reported US GAAP tags, not a complete company profile/)).toBeTruthy();
   await waitFor(() => expect((within(screen.getByRole('group',{name:'Business fundamentals'})).getByRole('checkbox') as HTMLInputElement).checked).toBe(true));
   expect(fetch.mock.calls.some(([url])=>url.endsWith('/runs'))).toBe(false);
+  await visitReview(user);
   await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
   await user.click(screen.getByRole('button',{name:'Queue analysis'}));
   const calls = fetch.mock.calls as unknown as [string, RequestInit][];
@@ -437,9 +523,12 @@ it('explains source failure and keeps AI submission disabled',async()=>{
     return json([]);
   });
   const user=userEvent.setup(); render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await visitData(user);
   await user.click(screen.getByRole('button',{name:'Prepare latest prices'}));
   await screen.findByText(/Data is not ready yet. Retrying automatically/);
+  await visitReview(user);
   expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('button',{name:'Stop automatic retries'}));
+  await visitData(user);
   await screen.findByText(/Automatic retries stopped/);
 });

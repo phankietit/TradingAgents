@@ -2,6 +2,29 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R11 staged tests continuation (2026-10-08):** all original24 RunForm tests
+now navigate the visible scope/data/review controls and open source inspection
+through its button. All source, consent-reset, allowance, language, UTC,
+portfolio/policy, failure, payload and idempotency assertions retained. Advanced
+settings are asserted closed before opening them to inspect freshness. No hidden
+queries or expose-all mode added. Dirty selected43865:6PASS/18unselected;
+2838:24PASS9.74s before the final explicit advanced-settings navigation.
+Dirty full7859 terminal0: typecheck/lint/28files179tests PASS17.98s/build PASS.
+This repairs the earlier24FAIL16124; earlier failure receipt remains above.
+Clean exact-SHA full web gate still required after commit.
+
+Fresh built CUA QA tab4 at8000, synthetic-only fixture55352: scope -> data ->
+saved synthetic AAPL price -> review, without acquisition/consent/submission.
+Mobile390x844 heading159.625px below sticky nav133.156px, scrollWidth390;
+review focused, no overlay/console[]; screenshotqa-19 saved and reopened.
+Desktop1280x720 review shortcut, Queue disabled without consent, meaningful
+page/title/URL, no overlay/console[]; screenshotqa-20 saved and reopened.
+Viewport reset and tabs3/4 marked for continuation. This is scoped rendering QA,
+not original graph/live financial/translation/professional whole-product signoff.
+Primary full18967 remains live at70%, primary frozen unchanged02ed0cc. Do not
+integrate before its terminal result and owned PostgreSQL cleanup. SEC owner
+name/email has not been supplied; no invented environment value or paid call.
+
 **R11 staged workspace WIP (2026-10-08):** isolated side branch
 `fix/TA-R11-staged-workspace` at
 `/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`, based exactly
