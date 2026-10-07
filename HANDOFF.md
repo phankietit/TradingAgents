@@ -2,6 +2,14 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact semantic red-baseline receipt:** clean frozen side
+`019b527d05b9dec8fd96d1f43aa1f7e2c8cbca1c`, gate36100 terminal1:
+7FAIL/7PASS/1.38s, no skips, Python3.14.7, same side command below. Ruff and
+diff PASS; module paths verified side. These are intentionally unsatisfied
+regressions requiring fixes, NOT accepted product behavior. Ordinary side push
+confirmed019b527; primary still clean c1308ef/full11461 running, no integration.
+This following docs-only SHA is a receipt checkpoint, not relabelled test source.
+
 **Isolated semantic red baseline (2026-10-07):** reuse the existing task-owned
 clean side worktree `/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`
 on new `fix/TA-R12-semantic-parity` from c1308ef2e460899d7d99a47106b946565830b523.
