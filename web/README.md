@@ -40,6 +40,14 @@ the charcoal/sage workspace redesign. Current status and live limitations are
 tracked in [research remediation](../docs/platform/research-remediation.md);
 historical M4 receipts do not certify this candidate.
 
+On screens up to 600px, the workspace uses a compact brand/account/navigation
+header and tighter report-context spacing. Owner identity, sign-out, language
+switching, run selection, coverage warnings, source details and human-review
+controls remain available. This is presentation only: no role, source,
+authorization, report or approval contract changes. Rendered desktop/mobile
+acceptance must be recorded against the exact candidate SHA; build/unit tests
+alone do not prove layout quality.
+
 The analysis setup now has an independent **Add recent headlines** action
 beside price preparation. It saves owner-scoped Yahoo news only when the
 current-vintage feed passes identity, content and cutoff checks. The action is

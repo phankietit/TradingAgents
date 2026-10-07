@@ -10,6 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | V2/operator/session sidec32662f integrated after uninstrumented full73101 PASS on cfd31da and owned cleanup; integrated native resume/full/browser/live/UX/operator acceptance pending; Draft PR7; whole goal incomplete | in-progress | 2026-10-08 |
+| R08 | current thread isolated UI | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Compact mobile chrome/report context from integratedfb38391; preserve primary frozen native/full candidate; synthetic desktop/mobile readback and frontend regression required | in-progress | 2026-10-08 |
 
 Rules:
 

@@ -1,5 +1,19 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 mobile layout WIP · 2026-10-08:** isolated owned side worktree
+fast-forwarded to integratedfb38391 before CSS-only compact chrome/report
+spacing. Prior integrated synthetic browser journey/readback PASS is recorded
+on PR7 comment6047093774; initial390x844 report conclusion belowfold is UXFAIL.
+No controls/coverage/source/human-review rules removed; new rendered mobile,
+desktop and frontend regression proof pending. Primary source remains frozen
+for default full51929. Primary native5551 terminal0 on cleanfb38391:
+395PASS,13PG-prerequisite skipsUNVERIFIED,216warnings,1349.65s; command selects
+test_supervised_native_graph/native_analysis_recording/native_recorder_spawn/
+default_recording_native via verify-local.sh local --focused and managedTMPDIR.
+This proves all selected native/resume cases that ran, not full/localPG/live
+editorial/UX/operator acceptance. Whole goal ACTIVE, no paid/provider/risk/
+allowance/history/main/deployment changes.
+
 ## Cập nhật đang triển khai · 2026-10-03
 
 **R07/R14 integration · 2026-10-08:** merged owned side
