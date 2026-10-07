@@ -368,6 +368,6 @@ input, select, textarea, .safe-text { background: #141614; color: #ecece8; }
   .report-header { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
   .report-header h2 { font-size: 20px; }
   .report-header .caption { margin-bottom: 4px; font-size: 12px; }
-  .report-navigation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; margin-block: 12px; }
-  .report-navigation button { font-size: 12px; padding-inline: 8px; }
+  .report-navigation { flex-wrap: nowrap; overflow-x: auto; gap: 4px; margin-block: 8px; }
+  .report-navigation button { flex: 0 0 auto; min-height: 44px; white-space: nowrap; font-size: 12px; padding: 8px; }
 }
