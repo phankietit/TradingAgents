@@ -2,6 +2,29 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean activation/native14 checkpoint · 2026-10-08:** frozen clean
+`24512760fcf53214ddef67aae838c9637dcf073e`, side29634 terminal0:
+same explicit227-file-selection command as96748 below (13 test files),
+227selected PASS30.23s, Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same unchanged source83104 terminal0:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_supervised_native_graph.py -k all_fourteen --tb=short`:
+8PASS340deselected32.67s. Eight actual spawned original14-stage configurations
+cover English/VI/EN-VI, invalid translation and in-memory/committed checkpoint
+bridge. Existing role/order/translation refusal/call/privacy/legacy-write controls
+retained; final V2 summary/source metadata explicitly asserted. Model/provider
+responses synthetic; no financial/VI editorial or live-provider proof. The340
+native resume/message-boundary cases remain UNVERIFIED on this new candidate,
+not skipped into acceptance. Default causal regression now supplies explicit
+fake-model citations while retaining original refusal/conditional assertions and
+requiring the external-cause error; legacy input/output escape is separately
+refused with exactly2calls. Legacy CLI/report schemas/history stay unchanged.
+This source is side-only; integration, exact new-candidate full/native resume,
+browser/source readback/live finance/VI/UX/operator acceptance remain open.
+Primary full73101 separately terminal0 on cfd31da:3248PASS,88subtestsPASS,
+2optional skipsUNVERIFIED,502warnings,3234.25s. It is uninstrumented but does NOT
+include staged R07/R14 changes; helper reports owned PostgreSQL cleanup. No
+restart, paid/provider/risk/allowance/history/deploy change. Whole R01–R14 ACTIVE.
+
 **R07 clean activation component gate + native red · 2026-10-08:** frozen clean
 `fa82a1552a283437d167f1b00f90968329a2b116`, side96748 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_source_coverage.py tests/test_summary_review_v2.py tests/test_summary_result_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_snapshot_macro_facts.py tests/test_social_review_parity.py tests/test_snapshot_analysis.py tests/test_macro_full_graph.py tests/test_snapshot_decision_worker.py tests/test_claim_local_causal_coverage.py --tb=short`.
