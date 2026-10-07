@@ -882,6 +882,14 @@ from the preserved R08 branch. It is not installed or accepted in the user's
 runtime; full regression currently has an unresolved consent idempotency failure.
 Default polling remains off.
 
+Financial validation reviews both draft and legacy canonical research, even when
+numeric/provenance checks pass. Those checks alone do not establish qualitative
+financial entailment. The existing source-context review and one optional JSON
+format repair remain bounded by the original execution allowance; failed review
+withholds the structured decision. The draft path has no extra call. A legacy
+canonical input now normally uses one review call instead of skipping this stage.
+This is not a guarantee of model accuracy or a substitute for human review.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See

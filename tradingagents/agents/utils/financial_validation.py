@@ -1,4 +1,4 @@
-"""Bounded publication repair over canonical research, without rerunning debates."""
+"""Bounded financial review over draft/canonical research, without rerunning debates."""
 
 import json
 
@@ -49,8 +49,9 @@ def create_financial_validation(llm, reports):
         try:
             compiled = compile_report(raw, facts) if is_draft else candidate
             validate_canonical_report(compiled, facts, snapshot_ids)
-            if not is_draft:
-                return {}
+            # Numeric/provenance validity is not financial entailment. Legacy
+            # canonical reports need the same bounded semantic review as drafts;
+            # neither representation may bypass this original graph stage.
         except PublicationValidationError as error:
             checks = error.issues
             failure = _safe_diagnostic("Financial validation", error, "publication")

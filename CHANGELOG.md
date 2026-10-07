@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Remove the canonical-report shortcut around Financial validation. Mechanically
+  valid legacy reports now receive the same bounded source-context review as
+  drafts; failed review cannot retain a publishable canonical decision. Preserve
+  all graph roles, report schema, source/authority checks and original caps. Draft
+  call count is unchanged; legacy canonical inputs normally add one review call,
+  with only the existing optional format repair. Live quality remains unverified.
+
 - Validate leased execution timestamps against a fresh clock after owner locks
   rather than the pre-lock timestamp. A legitimate concurrent lease update no
   longer looks future-dated. Preserve true-future, clock rollback, expiry, token

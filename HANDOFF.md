@@ -2,6 +2,36 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 canonical review bypass removed; recovery exact gate PASS (2026-10-07):**
+clean source `51be8f1e259bd0a5cc147038e355d0e525d4889e` recovery matrix90991
+terminal0:94PASS/24warnings/467.29s, Python3.14.7, Ruff/pip/diff PASS. Covers
+lease/publication and all default stopped/resumed EN/VI/bilingual × SQLite/PG ×
+manual/worker, exact full trace/output/accounting/history/reaping plus authenticated
+linked discovery/report IDs/events. Helper-owned PG removed. Synthetic SDK/model
+only; this focused gate does not replace the earlier full6f consent FAIL or prove
+live finance/editorial quality, combined actual browser runtime, or underlying
+native heartbeat cause. Candidate source was unchanged until this gate ended.
+
+Next R07 slice removes the legacy canonical early-return after mechanical checks.
+Both canonical and draft reports now receive the existing Financial validation
+review with complete immutable source context, strict same report schema and the
+same bounded repair. No graph role/round/schema/evidence/source or risk limit is
+removed; no history/checkpoint is rewritten. Default draft path has no added
+call. A legacy canonical input formerly made zero review calls: now normally one
+logical review, at most the existing second JSON-format repair, within original
+caps. Transport/auth errors still propagate rather than funding format retries.
+No paid run is authorized by this change; current provider/model unchanged.
+
+Focused79319 on dirty51+R07 terminal0:418PASS/191.24s (financial validation,
+compiler/localization and supervised full-graph fixtures). Cases prove that a
+mechanically valid cited tax-causality claim cannot bypass review, invalid review
+output cannot retain a ready canonical decision, and missing input stays missing.
+The corrected review is a fixture response, NOT an actual model/editorial verdict.
+Initial fixture FAILs were an extra nonmaterial evidence claim and a raw dict
+standing in for schema-parsed SDK output; tests were corrected to obey existing
+contracts, not by weakening publication checks. Full regression of the next clean
+candidate remains UNVERIFIED until its exact gate ends. Goal ACTIVE.
+
 **R08 lease lock-time race; verification incomplete (2026-10-07):** source base
 `a33f19d7d0ed068fb76ba04b09509a0503bc6338`, owned dirty candidate. Integrated
 native/API matrix83942:9PASS/1FAIL/436.07s, stopped early on PostgreSQL/VI/worker

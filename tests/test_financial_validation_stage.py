@@ -17,13 +17,76 @@ def candidate(snapshot_id, *, incorrect=False):
         "observed_numbers":[{"snapshot_id":snapshot_id,"fact_id":"latest.close","value":499,"decimal_places":2}]}
 
 
-def test_valid_canonical_report_does_not_spend_an_extra_model_call():
+def test_valid_canonical_report_receives_one_bounded_financial_review():
     data = source()
+    original = candidate(data["snapshot_id"])
+    prompts = []
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt:
+                prompts.append(prompt) or schema.model_validate(original))
+    result = create_financial_validation(Model(), {"market":json.dumps([data])})({
+        "structured_decision": original})
+    assert result["structured_decision"]["rating"] == original["rating"]
+    assert result["rejected_structured_decision"] == original
+    assert len(prompts) == 1
+    assert "Review financial meaning even if mechanical checks passed" in prompts[0]
+    retained = json.loads(prompts[0].split("<immutable_source_records_untrusted>\n", 1)[1].split(
+        "\n</immutable_source_records_untrusted>", 1)[0])
+    assert retained == [data]
+
+
+def test_numeric_validity_does_not_bypass_review_of_unsupported_causality():
+    from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
+    from tradingagents.platform.analysis.market_facts import SnapshotMarketFacts
+    from tradingagents.platform.analysis.research_validation import validate_canonical_report
+
+    data = source()
+    original = candidate(data["snapshot_id"])
+    claim = "Tax-loss selling explains the latest decline."
+    original["investment_thesis"] += " " + claim
+    original["evidence_claims"][0]["claim"] = original["investment_thesis"]
+    # This proves only the mechanical gate's limitation, not model quality.
+    validate_canonical_report(CanonicalSnapshotDecision.model_validate(original),
+        {data["snapshot_id"]: SnapshotMarketFacts(data)}, {data["snapshot_id"]})
+    reviewed = candidate(data["snapshot_id"])
+    prompts = []
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt:
+                prompts.append(prompt) or schema.model_validate(reviewed))
+    result = create_financial_validation(Model(), {"market": json.dumps([data])})({
+        "structured_decision": original})
+    assert len(prompts) == 1 and claim in prompts[0]
+    assert "tax motivations" in prompts[0]
+    assert result["structured_decision"]["investment_thesis"] == reviewed["investment_thesis"]
+    assert result["rejected_structured_decision"] == original
+
+
+def test_valid_canonical_report_is_withheld_when_financial_review_fails():
+    data = source()
+    original = candidate(data["snapshot_id"])
+    calls = []
+    class Model:
+        def with_structured_output(self, schema):
+            return SimpleNamespace(invoke=lambda prompt:
+                calls.append(prompt) or schema.model_validate({"verdict": "valid"}))
+        def invoke(self, prompt):
+            calls.append(prompt)
+            return AIMessage(content='{"verdict":"valid"}')
+    result = create_financial_validation(Model(), {"market": json.dumps([data])})({
+        "structured_decision": original})
+    assert result["structured_decision"] is None
+    assert result["rejected_structured_decision"] == original
+    assert result["final_trade_decision"].startswith("UNVALIDATED RESEARCH")
+    assert len(calls) == 2  # Existing structured/freetext bound, no added loop.
+
+
+def test_missing_report_does_not_invent_review_input():
     class NoCalls:
         def with_structured_output(self, _):
-            pytest.fail("valid research must not invoke a repair")
-    node = create_financial_validation(NoCalls(), {"market":json.dumps([data])})
-    assert node({"structured_decision":candidate(data["snapshot_id"])}) == {}
+            pytest.fail("missing report must not invoke a model")
+    assert create_financial_validation(NoCalls(), {})({}) == {}
 
 
 def test_financial_repair_preserves_rejected_candidate_and_uses_exact_evidence():
