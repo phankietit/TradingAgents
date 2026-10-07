@@ -9,7 +9,7 @@ recorded in GitHub history.
 
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
-| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization remediation, operational UX, live BTC/AAPL/NQ acceptance; Draft PR #7 | in-progress | 2026-10-03 |
+| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization remediation, operational UX, live BTC/AAPL/NQ acceptance; Draft PR #7 | in-progress | 2026-10-07 |
 
 Rules:
 

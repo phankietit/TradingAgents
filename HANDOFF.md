@@ -15,6 +15,16 @@ PG/native/full proof remains UNVERIFIED, prior full2c is not promoted. Remaining
 financial/translation/default-owner/live/R01–R14 gates stay open. No paid AI,
 provider/risk/graph change, history rewrite, CI, merge or deployment.
 
+**Social count exact-source PostgreSQL/native proof:** clean frozen code
+`b2aea55bfc3328e9ce4227df4bc6546cc4e7db61`, focused82885 terminal0:
+250 PASS/40 deselected/50warnings/187.18s, Ruff/pip-check PASS. Ten focused
+validation/source/translation/macro files plus original native_postgresql matrix;
+all11 earlier PG prerequisite skips run here, selected native10 pass with original
+trace assertions. Source/HEAD stayed fixed, only helper-owned PG removed. Other40
+native cases and new full baseline are not proven by this selection. R01–R14
+financial/VI semantic, default-owner recovery and live acceptance stay open; NQ
+owner BLOCKED. See receipt20261007 for exact selection and limitations.
+
 **2026-10-07 full corrective baseline:** clean frozen
 `2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, full local PG12988 terminal0:
 3,002 tests+88 subtests PASS,2 optional-provider skips UNVERIFIED,443warnings,

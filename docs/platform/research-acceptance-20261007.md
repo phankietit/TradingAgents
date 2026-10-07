@@ -85,6 +85,17 @@ new implementation. Additional tests cover source-owned count translation,
 wrong-money reattachment, canonical scalar collision, unknown labels, zero
 label counts and bounded localization refusal.
 
+Clean frozen implementation `b2aea55bfc3328e9ce4227df4bc6546cc4e7db61`, focused
+disposable PostgreSQL82885 terminal exit0: **250 PASS,40 deselected,50 warnings,
+187.18s**, Ruff/pip-check PASS. Same ten focused files above plus
+test_native_recorder_spawn.py, selection `not test_native_recorder_spawn or
+native_postgresql`. All eleven earlier PostgreSQL prerequisite skips execute
+and pass here; ten original native PostgreSQL cases pass, with original trace
+assertions unchanged. Forty other native cases were intentionally not selected;
+this is not full regression. Source/HEAD stayed unchanged, and only the labelled
+helper-owned container was removed. No paid provider/model call. Full regression,
+live financial/VI quality and default-owner recovery remain UNVERIFIED/incomplete.
+
 ### Exact native PostgreSQL corrective gate
 
 Clean frozen code candidate `f64984db8338eb0eed69c820ab503bc65818159c`.
