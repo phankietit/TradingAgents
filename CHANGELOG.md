@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Canonicalize role and JSON-object key order in the complete financial-review
+  source context so PostgreSQL durable reload does not change model prompts.
+  Preserve source record ordering and original values; no trace assertion,
+  checkpoint fingerprint, source admission or human-approval gate is weakened.
+
 - Supply complete selected immutable source records to the existing financial
   review prompt, alongside fact bindings and the draft. Review instructions now
   distinguish source facts, sampled opinions and unverified causal/predictive

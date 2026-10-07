@@ -20,7 +20,9 @@ from tradingagents.platform.analysis.research_validation import (
 
 
 def create_financial_validation(llm, reports):
-    sources = [source for report in reports.values() for source in json.loads(report)]
+    # JSONB may reorder role/object keys on durable reload. Keep the combined
+    # review context deterministic while preserving each source's record order.
+    sources = [source for role in sorted(reports) for source in json.loads(reports[role])]
     snapshot_ids = {source["snapshot_id"] for source in sources}
     facts = {source["snapshot_id"]: SnapshotMarketFacts(source) for source in sources
              if source["provenance"]["dataset"] == "ohlcv.daily"}
@@ -94,7 +96,7 @@ def create_financial_validation(llm, reports):
             + "\n<input_context_not_output_fields>\n" + state.get("instrument_context", "")
             + "\n</input_context_not_output_fields>"
             + "\n<immutable_source_records_untrusted>\n"
-            + json.dumps(sources, ensure_ascii=False, allow_nan=False)
+            + json.dumps(sources, ensure_ascii=False, allow_nan=False, sort_keys=True)
             + "\n</immutable_source_records_untrusted>"
             + "\n<rejected_report>\n" + candidate.model_dump_json() + "\n</rejected_report>"
         )

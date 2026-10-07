@@ -2,6 +2,23 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**2026-10-07 regression recovery:** old full88563 handle is now missing and no
+process90612 remains. Retained exact2135298 log reports **FAIL:8 failed,2993
+passed,2 skips,+88 subtests,443warnings,1525.69s**, helper-owned PG removed.
+All failures are native linked-portfolio PostgreSQL prompt-trace parity at
+test_native_recorder_spawn.py:457, financial-review index17. Do not describe this
+candidate as full-regression PASS. Combined review sources previously flattened
+role dictionaries in insertion order; PostgreSQL JSONB reload can reorder those
+keys. Candidate fix sorts role/object keys, not record arrays or source values;
+adds exact prompt-equality/reordered-key and retained article-order regression.
+Focused68628 terminal0:36 PASS/3.16s, Ruff/pip-check PASS. Native PG trace gate
+and full baseline still require new exact-source proof; no assertion relaxed.
+Semantic price-only claim and translation-qualifier diagnostics remain FAIL
+editorially despite mechanical acceptance, as recorded in PR7 comments5971022650
+and5971047550. Default worker still does not activate checkpoint continuation;
+R01–R14 stays ACTIVE, NQ owner BLOCKED. No paid retry, private-history change,
+provider/model/risk change, CI, merge or deployment.
+
 **Financial-review source context checkpoint:** review previously received the
 draft/instrument fact catalog but not complete selected source records. The
 existing review prompt now includes all original immutable records as explicitly
