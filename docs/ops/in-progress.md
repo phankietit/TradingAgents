@@ -10,7 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | V2/operator/session sidec32662f integrated after uninstrumented full73101 PASS on cfd31da and owned cleanup; integrated native resume/full/browser/live/UX/operator acceptance pending; Draft PR7; whole goal incomplete | in-progress | 2026-10-08 |
-| R08 | current thread isolated UI | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Mobile289de45 PASS retained; saved-report/status completion guard EN/VI seven-state and transition tests WIP; side-only pending frozen primaryfull51929, new exact frontend/rendered and broader UI-process/decision/live/operator acceptance | in-progress | 2026-10-08 |
+| R08 | current thread isolated UI | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Mobile289de45 PASS retained; saved-report/status +single-current-phase5d455ec build/lint/default208 and synthetic/mocked EN/VI rendered guard PASS; red/timeout/fixture404 receipts retained; side-only pending primaryfull51929 and broader operational/decision/live/operator acceptance | in-progress | 2026-10-08 |
 
 Rules:
 

@@ -1,5 +1,39 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 processing/report truth clean acceptance · 2026-10-08:** frozen clean
+`5d455ecda3348f3d017478a69ac8e5b793cff2cd`, owned side worktree/branch.
+80759 terminal0 `npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
+TypeScript/Vite299modules/lint PASS, default29files208tests PASS23.02s,
+Node26.8.1/npm11.19.0 existingdeps. Dirty54325 workflow27PASS3.10s beforefreeze;
+clean32f19ff defaultFAIL and serial205PASS remain prior receipts below.
+New UI state derived from props (no extra effects/requests): artifact presence
+does not prove job succeeded; retained report cannot mark ownerreview current
+alongside actualprocessing phase. Activefinancial phase wins over retained
+report state. EN/VI seven-status, transition and single-phase controls retain
+original cancellation/no-percentage/long-timeline/actual-stage assertions.
+Browser75430 terminal0 on same5d: synthetic durable worker published report,
+read-only intercepted running run/job responses exercised saved-report warning
+and exactlyonecurrentphase EN/VI, then unroute/reload to real succeeded status
+exercises completion wording. These mockedrunning responses do not prove live
+processing or change persisted job/run/report. Desktop1440x1000/mobile390x844
+screenshots reviewed; no documentoverflow/pageerror/blank/frameworkoverlay.
+Console-instrumented66245/17910 FAIL: initialAnalysis seedrun had nojob404,
+confirmed web_fixture only saves that deliberate REVIEW run/decision, notjob.
+No new-run processing error inferred; failed diagnostic retained. InitialAPI
+catalog probe77180 ran before auth completed; externalQA TypeError preserved,
+not productPASS. MarketAnalyze/config locator8543 was wrong; corrected to actual
+form combobox/selectedoption without changing processing/state assertions.
+Final20777 terminal0 enters Markets→actualAnalyze link→AAPLconfiguration→saved
+source→explicitconsent→real durable syntheticworker→guard/locale/restore readback;
+only initialauth/me401, no later HTTPerror/consolewarning/pageerror. Browser
+plugin not available; bundledPlaywright/Chromium/Node24.19.0, managedTMPDIR,
+externalQA scripts/screenshots/runtime only. Ownedfixture52822/19922 shutdown
+confirmed;75014/20975 shutdown requested after finalreadback, confirmterminal.
+Primaryfb38391 remains clean/frozen withfull51929 live/latest30%; no restart,
+integration, paid/provider/model/risk/allowance/history/main/deploy change.
+Scoped UI acceptance only, wholeR01–R14 ACTIVE: broader operational/decision/
+financial/VI/live/operator/matrix gates remain open andNQownerBLOCKED.
+
 **R08 single-current-phase WIP · 2026-10-08:** saved-report guard source32f19ff
 build/lint PASS,63773 default1FAIL204PASS38.63s (headline-first5s timeout),
 33549 full selected-web serial205PASS92.52s; defaultFAIL retained, no relaxation.
