@@ -2,6 +2,44 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Full integrated regression FAIL (2026-10-08):** clean frozen
+`e3b837b2e905268215f2ab5fa868b4fd9d94f817`, session3309 terminal1:
+3231PASS/88 subtests PASS/1FAIL/2 optional skips UNVERIFIED/500 warnings,
+3465.29s (57m45s), Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp TA_TEST_PREFLIGHT_TRACE=1 PYTEST_ADDOPTS=--tb=short TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`
+Ruff/pip startup PASS; source remained clean/frozen. Only the owned disposable
+PostgreSQL container was removed. Failure:
+`tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[postgresql-vi-manual]`.
+InitializedPreflightError at initialized_preflight.py:266, process.join boundary
+after receipt of identity, before the linked engine was constructed. Opt-in
+watchdog emitted two ten-second stack dumps with `<no Python frame>`; this
+does not identify a native-library shutdown cause. Earlier full11461 failure
+and this failure are retained; selected recovery matrix13PASS does not erase
+them. Native preflight reliability remains UNVERIFIED. No deadline, allowance,
+source completeness, SDK-close or exit/reaping assertion was weakened.
+Optional langchain_aws is missing; DeepSeek live key was absent, no paid call.
+
+After full3309 terminal and cleanup, primary fast-forwarded to the already
+verified API side `d1a242499ffb3727ca6a5a3bc252651b2dcf7f25` (source6cdaab5,
+exact50-test and installed-console receipts below). origin/main remains
+7dfec4d; no main merge, release or deployment. Older "live/frozen" statements
+below describe their historical gate, not a currently running process.
+Next: collect stronger native shutdown evidence for the actual failing case,
+verify API integration, then full candidate regression; live financial/EN-VI,
+professional browser journey and release/restore acceptance remain open.
+
+**Exact e3b837b installed package diagnostic:** archive-only wheel build33253,
+install61352 and installed-import/qualifier smoke57120 terminal0. Wheel535519
+bytes, SHA256 `242dc69ad6db113ec541c33fecc7221b0852a0237ffe88d9df60f444b7ecf58b`.
+Build used isolated setuptools, `pip wheel --no-deps`, then `pip install
+--no-deps --target`; installed module paths verified beneath target for CLI,
+API/worker runtimes, semantic guards and financial/localization modules.
+Archive names excluded env, DB/SQLite, Git/venv and root runtime directories,
+not a complete secret-content audit. Dependencies were reused: NOT the fresh
+dependency clean-install or supported-version release gate. Installed CLI/worker
+help PASS; installed original API help FAIL triggered the separately verified
+R14 admission fix below. No private DB, model request or owner-history change.
+
 **Exact R14 API acceptance:** clean frozen side
 `6cdaab50e344d4d5f5dca653550fe53e5d621c2e`, focused80448 terminal0:
 50PASS/44.57s, Python3.14.7, same three-file command below; scoped Ruff/diff PASS.

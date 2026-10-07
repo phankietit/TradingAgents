@@ -12,15 +12,19 @@ platform, with human decision review. No broker or public deployment.
 - CI remains disabled by owner preference. Verification runs locally.
 - Existing run/snapshot artifacts are immutable; fixes produce new runs.
 
-Current local acceptance (2026-10-07): full frozen c1308ef gate11461 is FAIL,
-3203 tests and 88 subtests PASS, one SQLite factory preflight setup ERROR,
-two optional-provider skips UNVERIFIED, 2356.97s. Selected factory retry PASS
-at1ff58d4 and five-case SQLite diagnostic PASS atdfb14bf do not supersede that
-full failure or establish its cause. Native preflight reliability remains
-UNVERIFIED; the 45s boundary, original allowance and reaping/client-close checks
-are unchanged. Side semantic branch is not yet integrated and its full recovery
-matrix is still running. HANDOFF contains exact commands and receipts. Historical
-full9c evidence below is not current-candidate full acceptance.
+Current local acceptance (2026-10-08): full frozen e3b837b gate3309 is FAIL,
+3231 tests and 88 subtests PASS, one PostgreSQL/VI/manual default-resume
+preflight failure, two optional-provider skips UNVERIFIED, 3465.29s. The child
+returned identity but exit wait crossed the preflight boundary; watchdog
+reported no Python frame, not an identified shutdown cause. Earlier c1308ef
+full11461 FAIL and focused retries are retained. Semantic side integrated;
+its exact recovery matrix13PASS does not supersede full failures. Native
+preflight reliability remains UNVERIFIED; the 45s boundary, original allowance
+and reaping/client-close checks are unchanged. API admission side d1a2424 was
+fast-forwarded only after full3309 terminal/owned PostgreSQL cleanup; its
+source50-test and installed-console PASS are scoped, not a new full gate.
+HANDOFF contains exact commands and receipts. Historical full9c evidence below
+is not current-candidate full acceptance.
 
 ## Tickets and acceptance
 
