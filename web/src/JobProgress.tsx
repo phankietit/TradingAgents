@@ -18,11 +18,13 @@ function validate(value: JobState): JobState {
   return value;
 }
 
-export default function JobProgress({runId, version, onStatus}: {runId: string; version: number; onStatus?: (status: string) => void}) {
+export default function JobProgress({runId, version, onStatus}: {runId: string; version: number; onStatus?: (status: string | null) => void}) {
   useLocale();
   const job = useResource<JobState>(`/runs/${encodeURIComponent(runId)}/job`, version, validate, true);
   const currentStatus = job.data?.run_id === runId ? job.data.status : undefined;
-  useEffect(() => { if (currentStatus) onStatus?.(currentStatus); }, [currentStatus, onStatus]);
+  // A failed or identity-mismatched refresh must also withdraw the parent's
+  // previous observation, not just hide this component's status label.
+  useEffect(() => { onStatus?.(currentStatus ?? null); }, [currentStatus, onStatus]);
   if (job.loading) return <p role="status">{t("Checking processing status…")}</p>;
   if (job.error || !job.data || job.data.run_id !== runId) return <p className="warning">{t("Processing details unavailable.")} {job.error instanceof ApiError && job.error.status === 404 ? t("No processing record was found for this research.") : t(errorMessage(job.error))}  {t("This does not confirm that research is running.")}</p>;
   const data = job.data;

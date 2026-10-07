@@ -5,6 +5,36 @@ import Analysis from './Analysis';
 
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
 
+it('falls back to separately fetched run status when the previously successful job read fails', async () => {
+  const date = '2026-09-26T00:00:00Z';
+  const run = {run_id:'refresh-run',instrument_id:'apple',status:'running',created_at:date,
+    analysis_as_of:date,selected_analysts:['market'],snapshot_ids:['source']};
+  const listeners = new Map<string, (event: MessageEvent) => void>();
+  vi.stubGlobal('EventSource', vi.fn(function () {
+    return {addEventListener:(name:string, listener:(event:MessageEvent)=>void)=>listeners.set(name,listener),close:vi.fn()};
+  }));
+  let unavailable = false;
+  vi.stubGlobal('fetch', vi.fn(async (url:string) => {
+    if (url.endsWith('/job')) return unavailable ? new Response('{}',{status:503})
+      : new Response(JSON.stringify({job_id:'job',run_id:run.run_id,status:'succeeded',attempt:1,
+        max_attempts:3,available_at:date,updated_at:date,completed_at:date}));
+    return new Response(JSON.stringify(url.includes('/instruments?') || url.includes('/artifacts?') ? []
+      : url.includes('/continuations?') ? {items:[],has_more:false}
+        : url.includes('/runs?') ? [run] : run));
+  }));
+  render(<Analysis />);
+  const history = screen.getByRole('region',{name:'Analysis history'});
+  await within(history).findByText('Processing complete');
+  unavailable = true;
+  act(() => listeners.get('stage.started')!(new MessageEvent('stage.started', {
+    data:JSON.stringify({sequence:1,event_type:'stage.started',occurred_at:date,payload:{stage:'Market Analyst'}}),
+  })));
+  await screen.findByText(/Processing details unavailable/);
+  await within(history).findByText('In progress');
+  expect(within(history).queryByText('Processing complete')).toBeNull();
+  expect(screen.getByRole('button',{name:'Cancel run'})).toBeTruthy();
+});
+
 it('reloads a verified continuation report without rewriting the failed original run', async () => {
   const runId = '11111111-1111-4111-8111-111111111111';
   const reportId = '22222222-2222-4222-8222-222222222222';

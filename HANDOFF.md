@@ -1,5 +1,16 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 failed-job-refresh observation WIP · 2026-10-08:** side-only fix withdraws
+the parent's old job status when a refresh fails or returns another run identity.
+The separate run response remains authoritative for run status; no completion,
+retry, approval or paid call is invented. Dirty84556 red3FAIL5PASS8.33s proves
+404/503/mismatched refresh left old callback observation. Dirty21211 twofiles
+14PASS9.04s after fix; dirty1055 twofiles15PASS14.47s additionally verifies actual
+Analysis history fallback after SSE-triggered failed job refresh. Existing data
+retention, cancellation, role and approval contracts unchanged. Clean fullweb
+and rendered refresh/failure/restoration evidence pending. Primaryfb38391 full
+51929 remains live/frozen; no integration/restart/provider/private-history change.
+
 **R08 processing/report truth clean acceptance · 2026-10-08:** frozen clean
 `5d455ecda3348f3d017478a69ac8e5b793cff2cd`, owned side worktree/branch.
 80759 terminal0 `npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:

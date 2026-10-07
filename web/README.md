@@ -56,6 +56,10 @@ only a `succeeded` status can show the finished-processing message. A retained
 report during queued, running, retry, cancellation, review or failure states
 instead asks the owner to verify processing status and report validation.
 Neither message grants financial validity or human approval.
+If a processing-status refresh fails or returns another run's identity, its
+previous observation is withdrawn from the workflow and history row. The
+separately fetched run status remains available; the warning does not invent
+job completion, a retry, or a new paid request.
 When a report is retained during active processing, only the observed processing
 phase is marked current. Report availability does not simultaneously mark owner
 review as the current phase; a queued job cannot invent a current phase.
