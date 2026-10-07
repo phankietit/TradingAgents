@@ -2,6 +2,30 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Native-observed recovery matrix diagnostic PASS (2026-10-08):** clean frozen
+`a2a5b04ba3d53d846240a1c033eb58bf5365805a`, session26493 terminal0:
+13PASS/24 warnings/441.83s, Python3.14.7. Entire
+tests/test_default_prepared_resume.py: all twelve SQLite/PostgreSQL ×
+EN/VI/bilingual × manual/worker cases, plus exception-redaction test.
+Command: `TMPDIR=<managed-run>/Tmp TA_TEST_PREFLIGHT_TRACE=1 TA_ALLOW_TEST_DB_RESET=1 .venv/bin/python <managed-run>/Logs/observe_native_preflight.py`.
+External read-only observer SHA256
+`15dad5134eee53d5a462cc14bcee5e94ad60f16023a6ca384a3a327345caa604`.
+It runs the unchanged disposable helper with `--focused tests/test_default_prepared_resume.py --tb=short -rP`,
+follows only its descendant Python processes, revalidates parentage/liveness,
+and samples survivors after ten seconds (one second/sample, max16). It reads
+executable basenames, not environment values or argv; no process/test/deadline
+or original allowance mutation. Seven successful native samples: one confirmed
+resource_tracker and six research-parent-guard/IPC/threadpool graph children,
+not a failed preflight exit. Worker preflight timings:3.363/3.303/4.060/4.432/
+6.080/3.585s; source checks35/34/36/28/34/26, respective seconds0.460/0.453/
+1.020/2.320/3.333/1.627. Owned PostgreSQL cleanup confirmed, primary remained
+clean/frozen until terminal. These are instrumented synthetic/local diagnostics,
+not uninstrumented full acceptance, live investment quality or a shutdown fix.
+Full3309/11461 FAIL and native preflight cause/reliability remain open. No
+automatic repeat of a passing selected matrix to erase a full failure; next
+work targets outstanding professional browser and fresh-install/restore gates,
+with native observation available for the eventual integrated full candidate.
+
 **Integrated API + exact failed-case diagnostic PASS:** clean frozen
 `6cb69ea6b8a542dcc19a8a7f3256dccbc1befcda`, focused session67249 terminal0:
 51PASS/2 warnings/60.41s, Python3.14.7. Command:

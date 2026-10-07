@@ -26,6 +26,12 @@ source50-test and installed-console PASS are scoped, not a new full gate.
 HANDOFF contains exact commands and receipts. Historical full9c evidence below
 is not current-candidate full acceptance.
 
+At frozen a2a5b04, the full twelve-case default-recovery matrix plus redaction
+test passed13/441.83s under an external read-only native observer. Samples
+captured a resource_tracker and normal graph children, not a failed preflight
+exit; the root cause is still UNVERIFIED. This instrumented selected diagnostic
+does not replace the failed full baseline or live/professional UX acceptance.
+
 ## Tickets and acceptance
 
 Every ticket carries one type, area and priority below. Statuses distinguish
