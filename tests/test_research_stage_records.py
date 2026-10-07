@@ -5,6 +5,7 @@ from uuid import uuid4, uuid5
 
 import pytest
 
+from tests.summary_fixtures import summary_response
 from tests.test_durable_jobs import _database
 from tests.test_risk_engine import NOW
 from tests.test_risk_provenance import setup_risk
@@ -192,6 +193,7 @@ def test_real_worker_retains_private_stage_but_does_not_promote_failed_research(
                 "confidence": .5, "risks": ["Risk"], "invalidation_conditions": ["Invalidation"],
                 "evidence_claims": [{"claim": text, "snapshot_ids": [str(source)]}
                     for text in ("Thesis", "Risk", "Invalidation")]}
+            payload = summary_response(payload, [str(source)])
             return {"final_trade_decision": "Research", "structured_decision": payload}, "Hold"
 
     handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=Graph))

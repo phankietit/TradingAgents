@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_financial_validation_stage import candidate
 from tests.test_report_localization import decision, translated_blocks
 from tests.test_snapshot_market_facts import source
@@ -43,17 +44,18 @@ def reviewed_report(*, unsupported):
         report["investment_thesis"] += " Tax-loss selling explains the latest decline."
         report["evidence_claims"][0]["claim"] = report["investment_thesis"]
     calls = []
+    response = summary_response(report, [data["snapshot_id"]])
 
     class Model:
         def with_structured_output(self, schema):
             def invoke(prompt):
                 calls.append(prompt)
-                return schema.model_validate(report)
+                return schema.model_validate(response)
             return SimpleNamespace(invoke=invoke)
 
         def invoke(self, prompt):
             calls.append(prompt)
-            return AIMessage(content=json.dumps(report))
+            return AIMessage(content=json.dumps(response))
 
     result = create_financial_validation(Model(), {"market":json.dumps([data])})({"structured_decision":report})
     assert 1 <= len(calls) <= 2  # Original bounded structured + repair, no new call loop.
@@ -89,11 +91,16 @@ def translated_report(english, vietnamese):
 
 
 def test_price_only_evidence_cannot_publish_an_unsupported_factual_cause():
-    assert reviewed_report(unsupported=True)["structured_decision"] is None
+    result = reviewed_report(unsupported=True)
+    assert result["structured_decision"] is None
+    assert any('external_cause_requires_nonprice_evidence' in item.get('checks', [])
+               for item in result['structured_diagnostics'])
 
 
 def test_source_bound_observation_remains_eligible_for_financial_review():
-    assert reviewed_report(unsupported=False)["structured_decision"] is not None
+    result = reviewed_report(unsupported=False)
+    assert result["structured_decision"] is not None
+    assert result["structured_decision"]["report_contract_version"] == "2.0"
 
 
 @pytest.mark.parametrize("english,incorrect,correct", CASES)
@@ -204,21 +211,25 @@ def test_unsupported_cause_repair_preserves_the_rejected_complete_report():
     original["investment_thesis"] += " Tax-loss selling explains the decline."
     original["evidence_claims"][0]["claim"] = original["investment_thesis"]
     corrected = candidate(data["snapshot_id"])
+    original_response = summary_response(original, [data["snapshot_id"]])
+    corrected_response = summary_response(corrected, [data["snapshot_id"]])
     calls = []
 
     class Model:
         def with_structured_output(self, schema):
             def invoke(prompt):
                 calls.append(prompt)
-                return schema.model_validate(original)
+                return schema.model_validate(original_response)
             return SimpleNamespace(invoke=invoke)
 
         def invoke(self, prompt):
             calls.append(prompt)
             assert "external_cause_requires_nonprice_evidence" in prompt
-            return AIMessage(content=json.dumps(corrected))
+            return AIMessage(content=json.dumps(corrected_response))
 
     result = create_financial_validation(Model(), {"market":json.dumps([data])})({"structured_decision":original})
     assert result["structured_decision"]["investment_thesis"] == corrected["investment_thesis"]
+    assert result["structured_decision"]["report_contract_version"] == "2.0"
+    assert result["structured_decision"]["summary_evidence"] == corrected_response["summary_evidence"]
     assert result["rejected_structured_decision"] == original
     assert len(calls) == 2

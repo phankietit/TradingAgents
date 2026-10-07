@@ -1,5 +1,31 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 terminal full FAIL + fixture repair · 2026-10-08:** primary frozen
+`fb38391a0ed45ba06acd0295c81cb478819352c3`, default uninstrumented PostgreSQL
+51929 terminal1:4FAIL3302PASS/88subtestsPASS/2optionalskipsUNVERIFIED/502warnings,
+3824.31s(63m44s). Same verify-postgres-local.sh default command/managedTMPDIR/
+Python3.14.7 existingvenv; no restart/source edits until terminal. Helper removed
+its own disposablePG; parent10637/helper10639/pytest10770 absent, no container
+ending10639; unrelated43615 and other runtimes preserved. Failures:
+research_stage_records realworker[success,limits] expected two artifacts but
+legacy fake output was correctly withheld; semantic_qualifier_regressions
+source_bound_observation and unsupported_cause_repair fake models still emitted
+legacy structured output. Side fixes only those synthetic model responses to
+explicitV2/actualknownsourceIDs via summary_response, never runtime citation
+inference/fallback. Existing stage privacy/failure/cancel/deadline/lease/count/
+rejected-report/call assertions kept; unsupported-cause negative additionally
+requires the causal guard diagnostic, positive/repair require V2summary metadata.
+Dirty83382:61testsPASS8.19s, lintFAIL solely new unsorted import; corrected order,
+new clean focused/full acceptance pending. Full FAIL retained, not erased by
+prior selected/native/web PASS. Primary source remains untouched until integration.
+
+**R13 clean installed3.12 native14 · 2026-10-08:** same archivedf0c607e installed
+environment as receipt below,19978 terminal0 `python -I installed_native.py`:
+8PASS340deselected29.46s. Spawn-safe external runner exposes only archivedtests
+namespace; no archive root sys.path, parentloadedpackageprefix assertions PASS.
+Original14stage EN/VI/checkpoint fixture controls kept; synthetic models/no vendor
+credentials. Not full installed3.12/resume/Postgres/live finance/VI acceptance.
+
 **R13 primary full live failure observation · 2026-10-08:** frozen primary
 `fb38391a0ed45ba06acd0295c81cb478819352c3`, default uninstrumented PostgreSQL
 full51929 is still live (pytestPID10770 revalidated), latest86%. Output contains
