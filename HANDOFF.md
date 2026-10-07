@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean V2 review/transport gate · 2026-10-08:** frozen clean source
+`ac3a3105e867cad4a271df902cc203c8d5e4ff16`, side98936 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_snapshot_checkpoint_codec.py tests/test_report_localization.py tests/test_claim_local_causal_coverage.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.
+211selected PASS26.53s; Ruff/dependency/diff PASS, Python3.14.7 existing venv;
+source remained clean/unchanged until terminal. New controls cover exact saved
+locale/source transport, canonical/presentation separation, draft/final/rejected
+checkpoint state and pending-write parity, malformed version/source refusal,
+actual V2 financial-node no-downgrade and known price-cited cause refusal despite
+unrelated news, conditional preservation and original one-attempt/one-repair.
+Presentation stub tests isolate transport, not translator quality; existing
+translation/original-role graph fixtures remain synthetic, not paid/live proof.
+Same clean source1044 terminal1: unchanged default red test
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS5.01s. Default generation/publication activation still required; do not
+claim the legacy uncited-summary defect fixed from staged V2 PASS. Full73101
+polled same live handle; parent88944 confirmed running at38m46s, no restart or
+integration. Whole R01–R14, native/full/live/editorial/UX/operator gates remain
+incomplete. No owner data, paid call, provider/model/risk/allowance/deploy change.
+
 **R07 V2 review/transport WIP · 2026-10-08:** isolated summary branch adds
 explicit V2 financial-node schema/compiler selection, strict output/no-downgrade
 and source-binding prompt, retaining rejected candidate and one attempt/one repair.
