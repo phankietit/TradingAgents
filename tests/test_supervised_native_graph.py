@@ -13,6 +13,7 @@ from langchain_core.messages import AIMessage, RemoveMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from sqlalchemy import select
 
+from tests.summary_fixtures import summary_response
 from tests.test_analysis_engine import _instrument
 from tests.test_durable_jobs import _database, _enqueue
 from tests.test_risk_engine import NOW
@@ -183,6 +184,8 @@ class NativeFixtureEngine:
                     payload.pop("evidence_claims")
                     payload.update(investment_thesis=[claims[0]], risks=[claims[1]],
                                    invalidation_conditions=[claims[2]])
+                if "report_contract_version" in schema.model_fields:
+                    values["PortfolioDecision"] = summary_response(values["PortfolioDecision"], [source_id])
                 def structured(prompt):
                     trace(schema.__name__, prompt)
                     return schema.model_validate(values[schema.__name__])
@@ -314,6 +317,9 @@ def test_all_fourteen_native_stages_survive_spawn_bridge_and_original_gates(tmp_
     assert observer.completed == expected and set(expected) == STAGES
     assert [payload["stage"] for kind, payload in events if kind == "stage.completed"] == expected
     assert result.selected_analysts == analysts
+    assert result.final_state["structured_decision"]["report_contract_version"] == "2.0"
+    assert result.final_state["structured_decision"]["summary_evidence"] == {
+        "claim": "Research only", "snapshot_ids": [str(inputs.by_analyst["market"][0].manifest.snapshot_id)]}
     if invalid:
         assert result.decision_payload is None
         assert "report_translation_unavailable" in result.validation_issues

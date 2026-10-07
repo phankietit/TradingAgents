@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 clean activation component gate + native red · 2026-10-08:** frozen clean
+`fa82a1552a283437d167f1b00f90968329a2b116`, side96748 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_source_coverage.py tests/test_summary_review_v2.py tests/test_summary_result_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_snapshot_macro_facts.py tests/test_social_review_parity.py tests/test_snapshot_analysis.py tests/test_macro_full_graph.py tests/test_snapshot_decision_worker.py tests/test_claim_local_causal_coverage.py --tb=short`.
+227selected PASS29.85s, Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same clean source70286 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_supervised_native_graph.py -k all_fourteen --tb=short`:
+8FAIL340deselected21.22s; fake child model still returned legacy PM schema, repair
+then failed before downstream completion. This is native FAIL, not hidden by
+component PASS or expected skip. No source edits until both handles terminal.
+Native synthetic model fixture now explicitly supplies the actual known source
+ID for V2; original14-stage/spawn/checkpoint/translation/retry assertions retained,
+new final version/source assertions added. This fixture migration is UNVERIFIED
+until the next frozen gate. No runtime fallback, source guessing or provider call.
+Main full73101 remains on primarycfd31da/latest88%, does not cover this activation.
+SSD status verified available/writable334.9GiB; no owner-runtime mutation. Goal ACTIVE.
+
 **R07 V2 activation WIP · 2026-10-08:** isolated summary branch requires V2
 in snapshot Portfolio Manager and snapshot adapter output. Financial review may
 read legacy input, but every newly reviewed output (structured and sole repair)
