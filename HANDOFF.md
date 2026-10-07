@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 installed API entrypoint finding (2026-10-08):** exact e3b837b wheel
+build/install/import and qualifier smoke PASS outside source with reused runtime
+dependencies. Installed CLI30659 and worker1631 `--help` terminal0; API34626
+`--help` terminal1, called load_api_settings instead of showing help and refused
+missing TRADINGAGENTS_DATABASE_URL. No service/database/provider started.
+API main currently ignores argv, so configured operators could accidentally
+launch a service when requesting help. New owned side fix/TA-R14-api-startup
+from e3b837b in reused clean side worktree; prior semantic branch preserved,
+integrated receipts cloud-reachable through primary3365844. Primary full3309
+remains clean/frozen. Add red help/unknown-argument admission regressions first;
+preserve normal env configuration, loopback binding and original flow.
+No new provider, host/credential/deployment change or private data mutation.
+
 **Exact integrated focused PASS:** clean frozen
 `336584420dc4af1254599f2686d80f9b644b45ce`, session30737 terminal0:
 135PASS/14.62s, Python3.14.7. Command:

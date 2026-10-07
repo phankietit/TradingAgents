@@ -10,7 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization remediation, operational UX, live BTC/AAPL/NQ acceptance; Draft PR #7 | in-progress | 2026-10-07 |
-| R07/R12 | current thread, isolated semantic regressions | fix/TA-R12-semantic-parity | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Red-baseline semantic/translation cases and fixes; primary c1308ef frozen under full gate11461, no integration until terminal | in-progress | 2026-10-07 |
+| R14 | current thread, isolated API entrypoint | fix/TA-R14-api-startup | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Fix installed API help/argument admission before environment/service startup; primary e3b837b frozen under full3309, no integration until terminal | in-progress | 2026-10-07 |
 
 Rules:
 
