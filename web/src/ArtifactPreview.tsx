@@ -35,11 +35,11 @@ type Preview = { type: 'report'; decisionId: string; profile: string; referenceO
   | { type: 'evidence'; asOf: string; claims: { id: string; claim: string; sources: Source[] }[] }
   | { type: 'stage'; note: ResearchStage };
 
-function parse(value: unknown, artifact: Artifact, runId: string): Preview {
+function parse(value: unknown, kind: string, artifactId: string, runId: string): Preview {
   const data = object(value);
   if (data.run_id !== runId) throw new ApiError(502);
-  if (artifact.kind === 'research_stage') return { type: 'stage', note: researchStage(data, runId) };
-  if (artifact.kind === 'analysis_report') {
+  if (kind === 'research_stage') return { type: 'stage', note: researchStage(data, runId) };
+  if (kind === 'analysis_report') {
     const decisionId = text(data.decision_id);
     if (!uuid.test(decisionId) || typeof data.reference_only !== 'boolean') throw new ApiError(502);
     const localized = data.localized_report ? object(data.localized_report) : null;
@@ -61,7 +61,7 @@ function parse(value: unknown, artifact: Artifact, runId: string): Preview {
       issues: data.validation_issues === undefined ? [] : list(data.validation_issues).map(text),
       usage: data.execution ? object(object(data.execution).usage) : null, sections };
   }
-  if (artifact.kind !== 'decision_evidence' || data.graph_id !== artifact.artifact_id) throw new ApiError(502);
+  if (kind !== 'decision_evidence' || data.graph_id !== artifactId) throw new ApiError(502);
   const sources = list(data.evidence).map(value => {
     const row = object(value);
     return { id: text(row.evidence_id), snapshot: text(row.snapshot_id), name: text(row.source_name),
@@ -87,10 +87,14 @@ export default function ArtifactPreview({ artifact, runId, defaultOpen = false, 
   const [open, setOpen] = useState(defaultOpen);
   const supported = artifact.media_type === 'application/json' && ['analysis_report', 'decision_evidence', 'research_stage'].includes(artifact.kind)
     && Number.isSafeInteger(artifact.byte_size) && artifact.byte_size > 0 && artifact.byte_size <= MAX_PREVIEW_BYTES;
+  // Equal manifest copies keep one immutable read. Any changed manifest field
+  // remounts the reader, withdrawing old contents before the next response.
+  const identity = JSON.stringify([runId, artifact.artifact_id, artifact.kind, artifact.media_type,
+    artifact.content_hash, artifact.byte_size, artifact.created_at]);
   return <>
     {supported ? !embedded && <button onClick={() => setOpen(value => !value)} aria-expanded={open}>{open ? t("Close") : t("Inspect")} {t(artifact.kind.replaceAll('_', ' '))}</button>
       : <p className="muted caption">{t("Inline preview unavailable for this format or size; use the integrity-checked download.")}</p>}
-    {(open || embedded) && supported ? <PreviewBody key={`${runId}:${artifact.artifact_id}`} artifact={artifact} runId={runId} showDecisionLink={showDecisionLink} /> : null}
+    {(open || embedded) && supported ? <PreviewBody key={identity} artifact={artifact} runId={runId} showDecisionLink={showDecisionLink} /> : null}
   </>;
 }
 
@@ -98,14 +102,15 @@ function PreviewBody({ artifact, runId, showDecisionLink }: { artifact: Artifact
   const locale = useLocale();
   const [state, setState] = useState<{ data?: Preview; error?: unknown }>({});
   const [section, setSection] = useState('summary');
+  const { artifact_id: artifactId, kind } = artifact;
   useEffect(() => {
     const controller = new AbortController();
-    request<unknown>(`/artifacts/${encodeURIComponent(artifact.artifact_id)}`, { signal: controller.signal }, MAX_PREVIEW_BYTES)
-      .then(value => parse(value, artifact, runId))
+    request<unknown>(`/artifacts/${encodeURIComponent(artifactId)}`, { signal: controller.signal }, MAX_PREVIEW_BYTES)
+      .then(value => parse(value, kind, artifactId, runId))
       .then(data => { if (!controller.signal.aborted) setState({ data }); })
       .catch(error => { if (!controller.signal.aborted) setState({ error }); });
     return () => controller.abort();
-  }, [artifact, runId]);
+  }, [artifactId, kind, runId]);
   if (state.error) return <p role="alert" className="danger">{t("Preview unavailable.")} {t(errorMessage(state.error))}  {t("No report contents are shown.")}</p>;
   if (!state.data) return <p role="status">{t("Loading saved report…")}</p>;
   const data = state.data;

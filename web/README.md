@@ -65,6 +65,13 @@ one follow-up refresh. A slow request is not cancelled every five seconds.
 Changing the resource or leaving the screen still aborts it and ignores late
 responses. Decision/approval refreshes retain their default clear-and-cancel
 behavior; this does not cache approvals or authorize any retry of analysis.
+Artifact previews bind their read state to the complete run/manifest identity.
+Equal metadata copies from polling do not restart a pending immutable read.
+Changed hash, size, kind, media type, creation time, artifact or run withdraws
+previous contents immediately; late responses cannot restore the old preview.
+Failed reads show no report contents. This is display isolation, not a new
+integrity attestation, financial validity or approval authority; server-side
+artifact and decision checks remain required.
 When a report is retained during active processing, only the observed processing
 phase is marked current. Report availability does not simultaneously mark owner
 review as the current phase; a queued job cannot invent a current phase.

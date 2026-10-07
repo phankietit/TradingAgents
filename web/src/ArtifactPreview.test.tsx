@@ -12,6 +12,59 @@ const artifact: Artifact = { artifact_id: 'artifact-fixture', kind: 'analysis_re
 const report = { run_id: 'run-fixture', decision_id: '12345678-1234-1234-1234-123456789abc', profile: 'equity',
   reference_only: false, selected_analysts: ['market'], snapshot_attestation: 'PASS', narrative: '<img src=x onerror=alert(1)>', structured_narrative: { thesis: '<script>not executable</script>' } };
 
+it.each([
+  {content_hash:'sha256:changed'}, {byte_size:501},
+  {created_at:'2026-09-02T00:00:00Z'}, {kind:'decision_evidence'},
+])('withdraws the old preview immediately when manifest identity changes %j', async patch => {
+  setLocale('en');
+  let resolve!: (response:Response)=>void;
+  const pending=new Promise<Response>(done=>{resolve=done;});
+  const fetch=vi.fn().mockResolvedValueOnce(new Response(JSON.stringify({...report,narrative:'Previous saved content'})))
+    .mockReturnValueOnce(pending);
+  vi.stubGlobal('fetch',fetch);
+  const view=render(<ArtifactPreview artifact={artifact} runId="run-fixture" defaultOpen />);
+  await screen.findByText('Previous saved content');
+  view.rerender(<ArtifactPreview artifact={{...artifact,...patch}} runId="run-fixture" defaultOpen />);
+  expect(screen.queryByText('Previous saved content')).toBeNull();
+  expect(screen.queryByRole('link')).toBeNull();
+  expect(screen.getByRole('status').textContent).toContain('Loading saved report');
+  await act(async()=>resolve(new Response('{}',{status:409})));
+  expect((await screen.findByRole('alert')).textContent).toContain('No report contents are shown');
+});
+
+it('keeps an in-flight immutable preview across identical metadata object copies', async()=>{
+  setLocale('en');
+  let resolve!:(response:Response)=>void;
+  const pending=new Promise<Response>(done=>{resolve=done;});
+  const fetch=vi.fn(()=>pending);vi.stubGlobal('fetch',fetch);
+  const view=render(<ArtifactPreview artifact={artifact} runId="run-fixture" defaultOpen />);
+  const signal=(fetch.mock.calls[0] as unknown as [string,RequestInit])[1].signal!;
+  for(let index=0;index<4;index++)view.rerender(<ArtifactPreview artifact={{...artifact}} runId="run-fixture" defaultOpen />);
+  expect(signal.aborted).toBe(false);
+  expect(fetch).toHaveBeenCalledTimes(1);
+  await act(async()=>resolve(new Response(JSON.stringify({...report,narrative:'Immutable saved content'}))));
+  await screen.findByText('Immutable saved content');
+  view.rerender(<ArtifactPreview artifact={{...artifact}} runId="run-fixture" defaultOpen />);
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
+it('ignores late bytes from the previous manifest after the new preview succeeds', async()=>{
+  setLocale('en');
+  let resolve!:(response:Response)=>void;
+  const pending=new Promise<Response>(done=>{resolve=done;});
+  const fetch=vi.fn().mockReturnValueOnce(pending)
+    .mockResolvedValueOnce(new Response(JSON.stringify({...report,narrative:'Current saved content'})));
+  vi.stubGlobal('fetch',fetch);
+  const view=render(<ArtifactPreview artifact={artifact} runId="run-fixture" defaultOpen />);
+  const signal=fetch.mock.calls[0][1].signal;
+  view.rerender(<ArtifactPreview artifact={{...artifact,content_hash:'sha256:next'}} runId="run-fixture" defaultOpen />);
+  expect(signal.aborted).toBe(true);
+  await screen.findByText('Current saved content');
+  await act(async()=>resolve(new Response(JSON.stringify({...report,narrative:'Late old content'}))));
+  expect(screen.queryByText('Late old content')).toBeNull();
+  expect(screen.getByText('Current saved content')).toBeTruthy();
+});
+
 const note = { schema_version: '1.0', run_id: 'run-fixture', stage: 'Market Analyst', attempt: 1,
   sequence: 1, analysis_as_of: '2026-09-01T00:00:00Z', research_quality: 'unvalidated',
   approval_eligible: false, sections: {market_report: 'Saved **-22.94%** <img src=x onerror=alert(1)>'} };
