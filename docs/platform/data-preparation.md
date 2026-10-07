@@ -1,9 +1,11 @@
 # Current-data preparation in the web
 
-The analysis form provides **Prepare latest prices** and an independent optional
-**Add recent headlines** action before paid AI consent. Neither action needs a
-Yahoo API key or AI call. They are current-vintage evidence workflows, not a
-full fundamental, social, macro or historical replay.
+The analysis form provides price preparation and independent optional headlines,
+AAPL SEC fundamentals, FRED indicators and original public social-feed actions
+before paid AI consent. No preparation action calls AI. Yahoo and public social
+feeds need no API key; SEC needs a contact user agent and FRED needs the existing
+server-side key. Implemented acquisition is not proof of full CLI source parity,
+financial quality, historical replay or live acceptance.
 
 ## Flow and boundaries
 
@@ -54,11 +56,11 @@ The v4 acquisition contract writes v1.1 bars with `session_date`; `timestamp`
 remains the close instant. Old v1.0 payloads remain readable and labels remain
 unknown rather than inferred for an unrecognized source. No historical bytes
 are rewritten. Financials, social and macro still require eligible
-snapshots; automatic acquisition of those feeds is not implemented here. Never describe a
+snapshots from their separate optional preparation workflows below. Never describe a
 price-only report as a full replication of the original multi-source pipeline.
 Completeness must follow each source's original contract, not an arbitrary
 uniform lookback or a speed/token-driven reduction. Preserve point-in-time and
-quality checks when integrating the remaining capabilities.
+quality checks when verifying the remaining acceptance gates.
 
 ## Supported identities
 
@@ -69,8 +71,8 @@ reference-only. New catalog entries require an adapter contract update.
 
 NQ/ES preparation is explicitly unsupported: continuous Yahoo symbols alone
 do not provide the governed contract/roll evidence. No ETF/index substitution.
-Fundamentals, sentiment and FRED evidence still require separately governed
-ingestion. Missing research areas are not invented or auto-selected.
+Fundamentals, sentiment and FRED evidence use separately governed ingestion,
+not the price action. Missing research areas are not invented or auto-selected.
 
 ## Optional current headlines
 
@@ -130,7 +132,40 @@ history through a read-only tool. Quantities used in the final conclusion have
 fact IDs with deterministic USD-millions or USD-per-share units; claims still
 require source links and human financial review. The report carries an
 application-owned bilingual warning that SEC tags are not the complete company
-profile or live valuation. Social/macro and full-source parity remain open.
+profile or live valuation. Full-source parity and financial/editorial acceptance
+remain separate open gates.
+
+## Optional FRED indicators and public discussions
+
+Authenticated, CSRF-protected `prepare-macro` accepts one explicit FRED series
+and a 1–36,525-day window (default 365), not a client URL or analysis cutoff.
+The existing `FRED_API_KEY` stays on the server. Metadata and observations pin
+the last fully elapsed Chicago-day vintage; retrieval, not an observation date,
+sets snapshot availability. Every returned observation is retained, including
+explicit missing values, with native units and frequency. Frequency-specific
+freshness and full identity/window/pagination checks reject invalid coverage.
+Eligible macro evidence belongs to the news analyst, distinct from headlines.
+
+Authenticated, CSRF-protected `prepare-social` accepts only `reddit` or
+`stocktwits`, using the original public RSS/search or symbol-stream adapters.
+The seven-day feed is a non-exhaustive recent sample. All eligible returned text
+is retained; publication/edit times are checked and retrieval sets availability.
+Missing posts or unlabeled StockTwits opinions are not neutral sentiment; sample
+counts are not market probabilities. Each feed's failure remains independently
+auditable and cannot be hidden by the other feed's success.
+
+Both workflows validate immutable owner-scoped bytes and manifest identity;
+only `OK` collections can be selected. Exact eligible evidence can be reused
+for 15 minutes (FRED also requires the same series/window/current vintage).
+They share the process-local acquisition lock and have 60-second scoped
+cooldowns. Success updates research time, preserves other selected sources,
+replaces only the same macro series/social vendor, and resets paid consent.
+At the 16-source limit, newly saved evidence requires explicit selection review.
+These actions are unavailable during portfolio evaluation and for NQ/ES; no
+fallback, backdating or AI job is introduced. See the full
+[data integrity contract](../ops/data-integrity.md) for payload, availability,
+freshness and tool/report rules. Implemented controls do not establish live
+reachability, qualitative entailment or bilingual financial acceptance.
 
 ## Failure, concurrency and cost
 
@@ -139,10 +174,13 @@ The response distinguishes `ready`, `no_data`, `stale`, `coverage_gap`,
 requests publish no snapshot and submit no analysis. Ambiguous Yahoo
 missing-price exceptions count as unavailable, not proof of no data.
 
-Each acquisition runs in an isolated subprocess with a 45-second total deadline
-and 10-second Yahoo request timeout, one instrument/request. The private API
+Price/news acquisition runs in an isolated subprocess with a 45-second total
+deadline and 10-second Yahoo request timeout. SEC has a 75-second child timeout;
+FRED/social supervise a 75-second acquisition deadline, including parsing and
+validation, with cleanup afterward. FRED HTTP reads use 30 seconds and social
+reads 15 seconds. Each action addresses one instrument/request. The private API
 allows one acquisition at a time and a 60-second owner/instrument retry delay.
-The web performs at most three checks after one owner click, with visible
+Price preparation performs at most three checks after one owner click, with visible
 attempt progress and a countdown: 60 seconds before check 2, 120 before check 3,
 or the server's longer bounded retry hint. A local cooldown or busy response
 counts as a check, not a provider download. Transient source failures, missing
@@ -154,7 +192,9 @@ reason across cooldown responses. No infinite polling or automatic AI call.
 Cancel or unmount aborts the client request and clears retry timers. An already
 received server acquisition may still publish a valid snapshot; cancellation
 does not delete it or falsely promise a server-side stop. Each browser request
-has a 60-second timeout. Closing/reloading the page stops the sequence; this
+has a 60-second timeout for price/news and 90 seconds for SEC/FRED/social.
+The optional actions are single requests, not the price retry sequence.
+Closing/reloading the page stops the sequence; this
 short, bounded preparation is not a durable background backfill.
 There is no automatic scheduler, fallback provider or bulk backfill.
 Disconnects may leave a successfully verified snapshot but never an AI job;

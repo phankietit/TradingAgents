@@ -1,5 +1,18 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R01/R14 ingestion-guide reconciliation · 2026-10-08:** documentation-only
+continuation from clean side39983fb. `docs/platform/data-preparation.md` and
+`web/README.md` now distinguish implemented optional AAPL SEC, FRED and original
+public social preparation from still-open full-source/live/financial acceptance.
+Checked API routes, RunForm controls, collectors, synthetic fixture refusal and
+data-integrity contract: price/news45s server/60s client; SEC child75s, FRED/social
+supervised75s, those three90s client. Optional actions are single requests, not
+the three-check price sequence. No runtime/provider/env/risk/history changes or
+new provider/model calls. Diff whitespace and referenced local paths checked;
+no new runtime gate claimed for prose. Primary37c1a42 full88556 verified live via
+same handle/PID33387, latest observed40%; frozen/no restart/integration. SEC
+contact still awaits owner value; whole R01–R14 ACTIVE, unresolved gates retained.
+
 **R08/R11 artifact preview identity isolation · 2026-10-08:** frozen side
 `0d1dbc26f96ae41d9d813bfb3894426b642468d2`. Dirty37388 red5FAIL22PASS2.68s:
 changed hash/size/creation/kind kept old report while a new read was pending;

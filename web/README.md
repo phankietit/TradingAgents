@@ -80,8 +80,12 @@ The analysis setup now has an independent **Add recent headlines** action
 beside price preparation. It saves owner-scoped Yahoo news only when the
 current-vintage feed passes identity, content and cutoff checks. The action is
 optional, does not start AI, clears prior paid-call consent, and never presents
-the recent feed as exhaustive or historically replayable. Social,
-fundamentals and macro acquisition remain unimplemented; see
+the recent feed as exhaustive or historically replayable. Separate optional
+AAPL SEC fundamentals, FRED indicator and original Reddit/StockTwits actions
+also save validated owner-scoped snapshots without AI calls. SEC needs the
+server contact user agent; FRED needs the existing server key. Their distinct
+coverage, vintage, freshness and failure rules do not imply full-source or
+financial/editorial acceptance; see
 [data preparation](../docs/platform/data-preparation.md).
 
 ## Development
@@ -151,9 +155,9 @@ This creates a new ignored database/store and uses labelled synthetic graph
 output; it does not load owner records or call models/vendors. Never point the
 fixture script at an owner database. Stop with Ctrl-C; fixture data is retained
 for inspection. This is not a populated investment product or live-data demo.
-The synthetic app explicitly refuses both price and news vendor acquisition;
-the news button can be used to verify its unavailable state without a Yahoo
-request.
+The synthetic app explicitly refuses price, news, SEC, FRED and social vendor
+acquisition; their controls can verify unavailable states without provider
+requests.
 Add `--all-assets` only for cross-asset QA: it seeds labelled synthetic daily
 series for SPY/QQQ, BTC/ETH and NQ/ES, in addition to AAPL. Values are scaled
 fixtures, not real market returns, calendar-session coverage or futures roll
