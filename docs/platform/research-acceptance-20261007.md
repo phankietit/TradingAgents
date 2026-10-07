@@ -32,6 +32,21 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Exact native PostgreSQL corrective gate
+
+Clean frozen code candidate `f64984db8338eb0eed69c820ab503bc65818159c`.
+Focused helper46431 terminal exit0: **10 PASS,40 deselected,50 warnings,196.91s**,
+Python3.14.7, Ruff/pip-check PASS. Selection:
+`tests/test_native_recorder_spawn.py -k native_postgresql --tb=short -x`.
+No skips in this selection; deselected cases are not a pass for the whole suite.
+Exact original-prefix + restored-suffix model trace assertion remains unchanged.
+Cases cover native separately restored child, linked portfolio and policy-fail
+EN/VI/bilingual valid/invalid output plus cancel/expiry. Original immutable run,
+accounting, approval gates and source array ordering are retained. The helper
+removed only its labelled disposable PostgreSQL container; process89300 absent.
+This confirms the ordering correction in the selected native matrix, not full
+baseline, default-worker/browser recovery, live semantic or financial acceptance.
+
 The existing qualitative evidence and translation-intensity diagnostics remain
 unresolved. Full source input, numeric correctness and citation identity do not
 prove semantic entailment or faithful translation. Default worker does not yet

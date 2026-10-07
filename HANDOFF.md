@@ -2,6 +2,15 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**2026-10-07 corrective native proof:** clean frozen
+`f64984db8338eb0eed69c820ab503bc65818159c`, focused PG46431 terminal0,
+10 PASS/40 deselected/50warnings/196.91s; Ruff/pip-check PASS. Exact model-trace
+parity assertions were not changed. EN/VI/bilingual linked portfolio/policy-fail
+and cancel/expiry cases pass; only owned QA container removed. Old full2135298
+FAIL is preserved below. Full baseline for the corrected candidate remains
+UNVERIFIED until a new default full gate finishes; no promotion to default-owner,
+financial, translation or live acceptance. See dated receipt20261007.
+
 **2026-10-07 regression recovery:** old full88563 handle is now missing and no
 process90612 remains. Retained exact2135298 log reports **FAIL:8 failed,2993
 passed,2 skips,+88 subtests,443warnings,1525.69s**, helper-owned PG removed.
