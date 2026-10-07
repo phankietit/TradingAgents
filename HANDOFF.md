@@ -2,6 +2,18 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R11 clean staged-web acceptance (2026-10-08):** clean frozen source
+`2a8d73993b420acd708aa7cf6664a733374b4b71`, side branch
+`fix/TA-R11-staged-workspace`, remote SHA verified identical after push.
+Command `cd web && npm run typecheck && npm run lint && npm test && npm run build`,
+session28210 terminal0:28files179tests PASS21.36s, TypeScript/ESLint/Vite PASS;
+Node26.8.1/npm11.19.0/macOS. Worktree clean before/after, diff whitespace PASS.
+PR7 receipt comment6045435711 records the exact source and rendered synthetic
+QA below. Earlier16124 FAIL and dirty7859 PASS remain separate receipts.
+The source has not been integrated into primary while full18967 remains live.
+This is local web acceptance only; whole R01-R14, financial/editorial/live and
+operational release gates remain incomplete, NQ remains owner-BLOCKED.
+
 **R11 staged tests continuation (2026-10-08):** all original24 RunForm tests
 now navigate the visible scope/data/review controls and open source inspection
 through its button. All source, consent-reset, allowance, language, UTC,
