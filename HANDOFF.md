@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact preflight timing receipt:** clean frozen
+`40bfc62c0aeff918aac2505eddd6363c9f537dca`, session91432 terminal0:
+1PASS/2 synthetic SDK warnings/33.45s, Python3.14.7; selected helper command
+above with `-rP`. Real preflight took 3.070s against unchanged 45s limit;
+26 source/lease checks took 1.153s total. Original full graph and continuation
+assertions PASS, owned disposable PostgreSQL removed. These successful-run
+numbers do not explain the earlier failure; no causal claim or automatic
+budget increase. Next: full SQLite/PostgreSQL/language/manual-worker recovery
+matrix on the diagnostic candidate, retaining failure timing if it recurs.
+Primary full11461 still running and untouched, no integration or full PASS.
+
 **Selected PostgreSQL retry PASS, cause still UNVERIFIED:** frozen
 `733480ae1637df3d7c172ddabddfcc1012d97cde`, session75025 terminal0:
 1PASS/2 synthetic SDK warnings/52.37s, Python3.14.7; same focused helper
