@@ -1,5 +1,32 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08/R13 primary integration after terminal full PASS · 2026-10-08:** frozen
+primary `37c1a423ef20e53b6fab692021fdd440279f4ade`, session88556 terminal0:
+3306tests +88subtests PASS,2optional skips UNVERIFIED,502warnings,3355.28s
+(55m55s). Command: managed external TMPDIR, existing PYTHON_BIN=.venv/bin/python,
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`, output through
+the existing credential-URL redactor. Ruff/pip check and default full pytest
+included. Python3.14.7. Missing langchain_aws and unset/placeholder live DeepSeek
+key remain UNVERIFIED, not zero-risk passes. Prior51929 4FAIL receipt retained;
+this renewed baseline includes the V2 fixture repair, not an explanation for
+unrelated historical failures. Ownedhelper33248/parent33345/pytest33387 and
+ta-research-qa-1791411206-33248 absent after terminal/helper-owned cleanup.
+
+Only afterward primary fast-forwarded eleven ownedside commits to clean
+`cf37fde9aa2c2e2400854c14d5525eb7b8ab1878`, including coalesced read-only polling,
+manifest-bound report previews and scoped PG/browser/consent/docs receipts.
+`git diff --exit-code 37c1a42 cf37fde -- tradingagents tests scripts pyproject.toml uv.lock`
+PASS: backend/test/script/package source unchanged; exact full proof stays at
+37c1a42, not a newly executed full gate at cf37fde. Primary12766 terminal0 at
+frozen clean cf37fde: `npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`,
+build299modules/lint/221tests29files PASS14.30s,Node26.8.1/npm11.19.0. Diffcheck
+PASS; no tracked runtime/secrets. Side browser evidence below remains scoped;
+no owner runtime restart/provider/model/risk/history/main/deploy change.
+Whole R01–R14 ACTIVE: semantic entailment/live financial/VI acceptance,
+professional full live journey, wider operational/version matrix and owner
+backup/transfer/restore gates still open; NQ owner-BLOCKED, SEC contact awaits
+owner value. Local full PASS does not establish production or release readiness.
+
 **R08 new-attempt consent after cancel · 2026-10-08:** frozen clean side
 `1ee5eb8162e5d4be2fb9154c9f7a09b870750eb5`, unchanged app0d1dbc2.
 Extended external ui-cancel-real.cjs with TA_QA_NEW_ATTEMPT=1, real PG/auth/CSRF/

@@ -5,6 +5,20 @@ platform, with human decision review. No broker or public deployment.
 
 ## Baseline
 
+Latest 2026-10-08 checkpoint: primary full PostgreSQL/default regression on
+frozen `37c1a423ef20e53b6fab692021fdd440279f4ade` ended terminal0,
+3306 tests +88 subtests PASS/3355.28s; two optional-provider skips remain
+UNVERIFIED. After owned cleanup, isolated polling/preview fixes and scoped
+browser receipts fast-forwarded to `cf37fde9aa2c2e2400854c14d5525eb7b8ab1878`.
+Backend/Python tests/scripts/package files are unchanged between these SHAs;
+full evidence is pinned to 37c1a42, not relabeled as an executed cf37fde full.
+Clean integrated cf37fde build/lint/221 web tests PASS14.30s. Ordinary real-PG
+two-tab completion, cooperative cancellation and new-attempt fresh-consent
+browser gates have separate synthetic-graph receipts, not live/native/recovery
+acceptance. See HANDOFF for exact commands, earlier FAILs and cleanup proof.
+The dated checkpoints below remain historical. Full R01–R14, semantic/financial/
+Vietnamese/live/operator acceptance remain incomplete; no release is approved.
+
 - Base: origin/main `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
 - Prerequisite: PRs #5/#6, through `0a81d479b1b150573a8854a94ee5d2900f0c0550`.
 - Branch: `fix/TA-R01-research-quality`; existing managed worktree reused.
