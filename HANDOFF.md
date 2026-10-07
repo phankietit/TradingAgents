@@ -2,6 +2,23 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact93 recovery matrix PASS (2026-10-07):** clean frozen
+`93cc6eab7f2a83b63770383de314a2cac33be9fc`, gate68162:
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x`
+terminal0:13PASS/24warnings/288.73s, Python3.14.7; Ruff/pip/diff PASS, no skips.
+Covers the default stopped graph through explicit authenticated consent and
+manual/worker continuation, EN/VI/bilingual × SQLite/PostgreSQL, exact full
+trace/output/accounting/checkpoint/history/reaping plus linked authenticated
+discovery/report IDs/events, and safe diagnostic redaction. Original deadlines,
+source bindings, guards and human REVIEW remain. Only labelled helper-owned
+disposable PostgreSQL was removed. TMP/logs stayed in the external managed run;
+no live/paid model call or user history change. Source/HEAD unchanged throughout.
+Full5894 remains FAIL and its preparation cause UNVERIFIED: the isolated/matrix
+success is not proof of resolution. The next full clean candidate includes the
+corrected canonical social review assertions and bounded preparation diagnostics.
+Do not infer financial/editorial, actual browser/backend, live or release
+acceptance from this synthetic native integration gate. Goal ACTIVE.
+
 **Full5894 follow-up diagnostics (2026-10-07):** owned dirty candidate on
 `5894be8295992040b9d761f4d70767f19f0dd771`; no production changes.
 `python -m pytest -q tests/test_social_review_parity.py tests/test_financial_validation_stage.py --tb=short -x`
