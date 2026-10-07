@@ -2,6 +2,28 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Default runtime native proof (2026-10-07):** source
+`939b5868886f90464c2f5d45d1891f097fc39576` plus new
+`tests/test_default_recording_native.py`, otherwise unchanged during QA.
+Corrective disposable-PG helper74047 terminal0:61PASS/377.27s; Ruff/pip-check/
+diff PASS; only its labelled container removed. Actual default run_worker,
+canonical original job payload, original handler/factory/graph and real parent
+checkpoint DB/ACK run in EN/VI/bilingual on both SQLite/PostgreSQL. All required
+STAGES complete, checkpoint rows bind original job/attempt, sources/limits/roles
+stay bound, report saved and owned children reaped. SDK replies are synthetic;
+no provider/network invocation, engine injection or continuation grant.
+Initial helper28720 failed at Ruff import ordering before pytest; corrected
+test imports, no runtime/assertion/timeout relaxation. Full current baseline,
+owner recovery and financial/VI/live acceptance remain UNVERIFIED.
+
+Timeout investigation on clean939b: instrumented5935 terminal0,48PASS/7PG
+prerequisite skips/75.27s; exact uninstrumented94109 terminal0,48PASS/7skips/
+66.73s. Six child imports5.076–12.692s, graph0.228–0.644s,
+fingerprint0.122–0.560s, cleanup0.018–0.064s. No previous45s refusal reproduced;
+import dominated these samples but earlier timeout causality remains unknown.
+Retain original77978 FAIL; no deadline increase, caching bypass or partial-flow
+claim. External diagnostic/logs remain private, not Git. See dated receipt.
+
 **Default recording integration candidate (2026-10-07):** after full17294
 terminal0, integrate staged original source loader/factory and tests into repo.
 Default runtime enables recording for snapshot jobs; explicit engine injection

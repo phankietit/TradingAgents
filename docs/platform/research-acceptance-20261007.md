@@ -32,6 +32,45 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Default runtime native recording and bounded phase diagnosis
+
+Clean source `939b5868886f90464c2f5d45d1891f097fc39576`:
+external phase-only plugin5935 terminal0,48PASS/7PG prerequisite skips/75.27s.
+Exact original four-file selection without plugin94109 terminal0,
+48PASS/7skips/66.73s. Both use task-owned external TMPDIR and
+`.venv/bin/python -m pytest -q tests/test_worker_runtime.py
+tests/test_recording_factory.py tests/test_recording_sources.py
+tests/test_recording_factory_lease.py --tb=short`; plugin additionally `-p
+preflight_timing -s` and external Results on PYTHONPATH. Six measured child
+imports5.076–12.692s, graph initialization0.228–0.644s,
+fingerprint0.122–0.560s, SDK cleanup0.018–0.064s; clean target returns.
+These samples identify import as dominant locally, not the cause of earlier
+45-second failures. Original77978 FAIL is retained; limits/fences unchanged.
+
+New `tests/test_default_recording_native.py` exercises actual default
+`run_worker` with no engine injection, canonical immutable job payload,
+original authenticated handler/source loading/per-run factory, original graph
+and real parent checkpoint commits. Synthetic reviewed SDK responses forbid
+HTTP; all required STAGES, saved report, original role/source/limit bindings,
+original job/attempt checkpoint rows and child reaping are asserted. EN/VI/
+bilingual each run on SQLite/PostgreSQL. This is ordinary recording only,
+not owner continuation, a real portfolio approval or financial/VI semantics.
+
+Source939b plus that new test, no other source changes during gate:
+corrective helper74047 terminal0, **61PASS/377.27s**, Python3.14.7;
+Ruff/pip-check/diff PASS, no skips; only labelled helper-owned DB removed.
+Command: task-owned external TMPDIR, `TA_ALLOW_TEST_DB_RESET=1 bash
+scripts/verify-postgres-local.sh --focused tests/test_default_recording_native.py
+tests/test_worker_runtime.py tests/test_recording_factory.py
+tests/test_recording_sources.py tests/test_recording_factory_lease.py`.
+Initial helper28720 terminal1 failed Ruff test-import ordering before pytest;
+correct only import order. Staged external SQLite precursor32108 terminal0:
+3PASS/32warnings/75.19s, without later full-stage assertions or PG matrix.
+Do not substitute either focused result for the new exact-SHA full baseline.
+No owner runtime restart, paid run, provider/risk change, history mutation,
+CI/main merge or deployment. NQ stays owner BLOCKED; AAPL SEC awaits actual
+owner name/email, no placeholder contact used. Goal R01–R14 remains ACTIVE.
+
 ### Default recording integration after the exact preflight baseline
 
 After full17294 finished, move original source loader and per-run factory into
