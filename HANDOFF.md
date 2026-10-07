@@ -2,6 +2,39 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Isolated semantic repair implementation (2026-10-07):** owned side dirty source
+on 3db025c3e477047a78e97a5fefb95f2562a7b9a0; primary c1308ef/full11461 stays
+clean/frozen. New semantic_qualifiers guards recognized action intensity,
+exclusivity/time/condition, epistemic polarity/possibility and opposing-case
+retention within financial sentences; unrelated nonfinancial sentences cannot
+carry the required marker. Count per source sentence, not a guessed score;
+decimal points and explicit May calendar contexts handled, negative ability and
+natural Vietnamese paraphrases covered. Source-owned complete blocks/quantities
+and canonical decision remain unchanged. No translation rewriting or new call.
+Price-only source coverage rejects known external causal motive/flow assertions
+but admits explicitly unverified hypotheses and missing-evidence disclosures.
+It does not prove general causality or entailment with mixed sources.
+Checks run before and after existing financial review, and after translation
+quantity/terminology/editorial validation; failures use the SAME bounded repair.
+New fixed diagnostics admitted to publication-code allowlist, no raw error text.
+
+Gate73251 terminal0:135PASS/4.46s, Python3.14.7, Ruff/diff PASS. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_social_review_parity.py --tb=short -x`
+Original red14 cases plus natural positive paraphrases, unrelated-sentence
+qualifier movement, repeated conditions/decimal boundary/calendar ambiguity and
+successful one-repair translation/financial cases. Existing compiler/social
+review tests retained. Earlier focused76575 61PASS,78507 66PASS,69050 130PASS,
+9582 132PASS; final current gate135 supersedes those narrow local claims only.
+No skips or provider/paid calls, no risk/provider/history change. No graph role,
+source or analysis truncation. Strict checks can increase repair frequency within
+the unchanged allowance; success path adds no model invocation.
+
+Known lexical families are NOT full semantic proof: unknown paraphrases/actors,
+cross-clause cause alignment and mixed-source factual entailment remain unfinished;
+independent actual-report finance/editorial EN/VI and live acceptance still needed.
+Next: freeze side, exact focused gate and native bilingual continuation/graph
+parity; no primary integration until its full gate is terminal. Goal ACTIVE.
+
 **Exact semantic red-baseline receipt:** clean frozen side
 `019b527d05b9dec8fd96d1f43aa1f7e2c8cbca1c`, gate36100 terminal1:
 7FAIL/7PASS/1.38s, no skips, Python3.14.7, same side command below. Ruff and

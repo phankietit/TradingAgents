@@ -903,7 +903,9 @@ and selection changes abort in-flight reads. It does not persist private progres
 or silently cap the timeline. Native/backend combined acceptance is pending.
 The recovery candidate is now integrated into `fix/TA-R01-research-quality`
 from the preserved R08 branch. It is not installed or accepted in the user's
-runtime; full regression currently has an unresolved consent idempotency failure.
+runtime; current and earlier regression receipts are recorded separately in
+HANDOFF.md. Earlier consent failure causes remain unverified even after the
+separate full9c gate passed; the new integrated full candidate is still pending.
 Default polling remains off.
 
 Financial validation reviews both draft and legacy canonical research, even when
@@ -913,6 +915,16 @@ format repair remain bounded by the original execution allowance; failed review
 withholds the structured decision. The draft path has no extra call. A legacy
 canonical input now normally uses one review call instead of skipping this stage.
 This is not a guarantee of model accuracy or a substitute for human review.
+The isolated semantic candidate also rejects known factual external cause/flow
+assertions from price-only sources and known EN/VI qualifier losses. Explicit
+unverified hypotheses remain research; valid recognized paraphrases remain
+eligible. Action intensity, conditions, uncertainty and opposing cases must not
+be dropped or moved into unrelated sentences to pass. Failed checks use the
+existing single repair, not additional analysis calls or silently edited prose.
+Original reports, source records, quantities, graph roles and human authority
+are preserved. These known-case guards do not prove general financial entailment,
+cross-language actor/object alignment or actual MiniMax output quality; see the
+exact scoped receipts and remaining gates in HANDOFF.md.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the

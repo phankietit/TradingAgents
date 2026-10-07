@@ -27,6 +27,7 @@ PUBLICATION_CODES = frozenset({"numeric_claim_not_supported", "financial_number_
     "percentage_statement_unsupported", "quantity_binding_unit_mismatch",
     "translation_block_mismatch", "translation_block_structure_mismatch",
     "translation_editorial_requires_review", "fundamental_statement_requires_standalone_anchor",
+    "translation_qualifier_requires_review", "external_cause_requires_nonprice_evidence",
     "fundamental_statement_unsupported", "translation_statement_requires_standalone_anchor",
     "macro_statement_requires_standalone_anchor", "macro_statement_unsupported",
     "macro_statement_source_unavailable", "social_statement_requires_standalone_anchor",
