@@ -1,5 +1,27 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 new-attempt consent after cancel · 2026-10-08:** frozen clean side
+`1ee5eb8162e5d4be2fb9154c9f7a09b870750eb5`, unchanged app0d1dbc2.
+Extended external ui-cancel-real.cjs with TA_QA_NEW_ATTEMPT=1, real PG/auth/CSRF/
+API/queue/worker and slow syntheticgraph20s; no response mocks/provider calls.
+16909 terminal1 FAIL: external locator required desktop EN English text while
+mobile CSS hides the language-name span. Corrected selector to existing
+LanguageSwitch button lang=en, no app/timeout edit. 82264 terminal0 PASS:
+same actual running/cancel-requested/cancelled/empty-artifact/reload checks,
+Configure new attempt preserves AAPL, source/review navigation does not submit,
+fresh consent unchecked and Queue analysis disabled in EN/VI; exactly one
+POST /runs from the original explicit submission, no second job/consent inherited.
+Identity/nonblank/nooverlay/interaction/screens/mobile overflow PASS, only initial
+auth/me401 console/HTTP, no pageerrors. EN1440x1000/VI390x844 inspected external
+r08-new-attempt-consent-en.png/vi.png. Browser plugin absent; existing
+Playwright1.62.1/Chromium/bundledNode24.19.0. Fixture4568/PID62047 normal shutdown
+terminal0, two deliberate synthetic jobs/graph calls; only labelverified
+ta-browser-pg-1791414207-62047 removed, process/container absence confirmed.
+No owner data/history mutation. New-attempt setup gate only: no new live run,
+automatic retry/resume/native kill/recovery/expiry/financial acceptance implied.
+Earlier FAILs retained. Primary37c1a42 full88556 live/latest66%, same handle,
+no restart/source edit/integration. Whole R01–R14 ACTIVE, open gates preserved.
+
 **R08 real PG cooperative-cancel browser gate · 2026-10-08:** unchanged clean
 side `d2a0d63817771cc32f80ce5d331ab53885b7b6b6` (app0d1dbc2).
 External ui-cancel-real.cjs, original owned PG fixture/slow syntheticgraph20s;
