@@ -2,6 +2,15 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 clean operator-runbook docs gate · 2026-10-08:** clean frozen
+`8683688e1e4e6099ee824a3a3c9a805af549b863`, terminal0 docs gate:
+`git diff --check`; issue-template YAML via Ruby `YAML.load_file`;
+relative Markdown target existence via Ruby Pathname for the new runbook,
+persistence and startup docs. All PASS; source unchanged/clean. These commands
+only validate documentation structure/links, NOT encryption, session fencing,
+backup correctness, active-job safety or operational rehearsal. Branch awaits
+integration after primary full73101 terminal; no package/runtime/test change.
+
 **R14 operator restore contract · 2026-10-08:** isolated docs-only
 `docs/TA-R14-operator-restore`, base cfd31da. New
 `docs/platform/operator-backup-restore.md` defines approved private paired
