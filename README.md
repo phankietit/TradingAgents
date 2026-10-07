@@ -536,6 +536,11 @@ Authenticated `GET /api/v1/runs/{id}/continuations/{execution_id}` reads validat
 state without SDK construction; the corresponding `POST .../cancel` requires
 CSRF/Origin and cancels a reservation or requests an active attempt's stop.
 Completed status requires the full completion/report reader, not a database flag.
+Candidate `GET /api/v1/runs/{id}/continuations` discovers owner-scoped attempts
+after browser refresh, with descending attempt pagination (`limit` up to 50,
+`before_attempt`) and explicit `has_more`. State includes attempt and report/
+evidence/decision IDs only after the full completion reader verifies them. These
+IDs are read links, not approval authority. The browser journey is still pending.
 Migration `0018_preparation_refusals` is additive and requires an explicit operator
 migration with a consistent private DB/artifact backup; worker startup never
 migrates. Downgrading removes refusal receipts and must not be used to enable a

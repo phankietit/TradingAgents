@@ -10,6 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization remediation, operational UX, live BTC/AAPL/NQ acceptance; Draft PR #7 | in-progress | 2026-10-07 |
+| R08 | current thread, isolated preparation | fix/TA-R08-continuation-ui | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Owner continuation discovery/read projection and recovery UI; not integrated while original 6f60429 regression is frozen | in-progress | 2026-10-07 |
 
 Rules:
 

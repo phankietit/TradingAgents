@@ -5,8 +5,8 @@ from secrets import compare_digest
 from threading import Lock
 from uuid import UUID
 
-from fastapi import HTTPException, Request
-from sqlalchemy import text
+from fastapi import HTTPException, Query, Request
+from sqlalchemy import select, text
 
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.platform.analysis.continuation import _db_utc, _digest, _payload
@@ -19,11 +19,13 @@ from tradingagents.platform.persistence import PlatformRepository
 from tradingagents.platform.persistence.models import (
     ResearchContinuationRow,
     ResearchExecutionCompletionRow,
+    ResearchExecutionRow,
     ResearchPreparationRefusalRow,
 )
 
 from .schemas import (
     ContinuationConsentRequest,
+    ContinuationDiscoveryResponse,
     ContinuationPreparationResponse,
     ContinuationReservationResponse,
     ContinuationStateResponse,
@@ -70,7 +72,11 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
         return ContinuationStateResponse(run_id=execution.source_run_id, execution_id=execution.execution_id,
             status="completed" if completed is not None else execution.status,
             preparation_requires_review=refusal is not None,
-            lease_expired=execution.lease_expires_at is not None and _db_utc(execution.lease_expires_at) <= now)
+            lease_expired=execution.lease_expires_at is not None and _db_utc(execution.lease_expires_at) <= now,
+            attempt=execution.attempt,
+            report_artifact_id=completed.report_artifact_id if completed is not None else None,
+            evidence_artifact_id=completed.evidence_artifact_id if completed is not None else None,
+            decision_id=completed.decision_id if completed is not None else None)
 
     def load_control(session, run_id, execution_id, token, csrf):
         now = settings.clock()
@@ -83,6 +89,32 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
         if execution is None:
             raise HTTPException(404, "continuation not found")
         return execution, now
+
+    @app.get("/api/v1/runs/{run_id}/continuations", response_model=ContinuationDiscoveryResponse,
+             tags=["runs"])
+    def discover_continuations(run_id: UUID, request: Request,
+                               limit: int = Query(default=20, ge=1, le=50),
+                               before_attempt: int | None = Query(default=None, ge=2, le=1_000_000)):
+        token, csrf = credentials(request, run_id, mutating=False)
+        try:
+            with database.session(lock_timeout_seconds=5.0) as session:
+                now = settings.clock()
+                owner = OwnerAuth(session).lock_authenticated_consent(token, csrf, now=now)
+                query = select(ResearchExecutionRow.execution_id).where(
+                    ResearchExecutionRow.owner_id == owner.owner_id,
+                    ResearchExecutionRow.source_run_id == run_id)
+                if before_attempt is not None:
+                    query = query.where(ResearchExecutionRow.attempt < before_attempt)
+                identities = session.scalars(query.order_by(ResearchExecutionRow.attempt.desc()).limit(limit + 1)).all()
+                items = []
+                for identity in identities[:limit]:
+                    execution, observed_at = load_control(session, run_id, identity, token, csrf)
+                    items.append(state(session, execution, observed_at))
+                return ContinuationDiscoveryResponse(items=tuple(items), has_more=len(identities) > limit)
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(409, "continuation requires review") from None
 
     @app.get("/api/v1/runs/{run_id}/continuations/{execution_id}",
              response_model=ContinuationStateResponse, tags=["runs"])

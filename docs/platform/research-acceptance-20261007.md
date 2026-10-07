@@ -2,6 +2,28 @@
 
 Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
+## Isolated recovery UI groundwork — not integrated
+
+While the full original `6f60429d701fb076104447ee82e0cd4f41e32fdc` gate remains
+source-frozen and has emitted FAIL markers, a separate owned worktree/branch
+`fix/TA-R08-continuation-ui` prepares the browser foundation without changing that
+checkout. Added bounded owner continuation discovery (descending attempt cursor,
+limit <=50, has_more), and attempt/report/evidence/decision IDs to the existing
+validated state projection. Completion IDs come only from the existing full
+completion/report reader. No SDK/model/consent/history mutation or runtime change.
+
+Source base 6f60429 plus api/continuation_routes.py, api/schemas.py,
+test_continuation_polling_control.py; matching README/CHANGELOG updated. Focused
+SQLite55287 terminal0:1PASS/4deselected/25.99s; command:
+`python -m pytest -q tests/test_continuation_polling_control.py -k 'owner_state and False' --tb=short -x`.
+Ruff/diff PASS. Explicit module-path diagnostic confirms imports came from the
+isolated worktree, not the frozen checkout. This is one synthetic SQLite control
+case, not PG/native/full/browser/financial proof. Full original gate failure
+tracebacks/totals are still pending; no assertion/deadline weakening or restart.
+Discovery auth/error/refusal/completion pagination matrix, linked event projection,
+professional UI and rendered journey remain UNVERIFIED. Do not integrate or enable
+this candidate until the original frozen gate is terminal and its failures audited.
+
 ## Opt-in durable polling and authenticated control
 
 Source base `0bcd76d39c4e9c2e0a2b2276bb7f3fb4562c095e` plus

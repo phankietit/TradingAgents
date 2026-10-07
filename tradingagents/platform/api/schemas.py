@@ -67,6 +67,15 @@ class ContinuationStateResponse(ApiModel):
     status: Literal["reserved", "leased", "cancel_requested", "cancelled", "review_required", "completed"]
     preparation_requires_review: bool
     lease_expired: bool
+    attempt: int = Field(ge=2, le=1_000_000)
+    report_artifact_id: UUID | None = None
+    evidence_artifact_id: UUID | None = None
+    decision_id: UUID | None = None
+
+
+class ContinuationDiscoveryResponse(ApiModel):
+    items: tuple[ContinuationStateResponse, ...]
+    has_more: bool
 
 
 class PrepareDataResponse(ApiModel):

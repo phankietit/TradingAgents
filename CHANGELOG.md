@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add bounded owner continuation discovery and validated completed-report IDs
+  for browser recovery groundwork. Discovery never derives an SDK identity,
+  starts a model or changes original history; pagination cannot silently claim
+  full history. Recovery UI/event projection and integrated acceptance are pending.
+
 - Add explicit `--continuations` worker polling, durable preclaim refusal receipts
   and authenticated continuation status/cancel APIs. Ordinary jobs take priority;
   refused reservations stay excluded across restart. Completed status validates

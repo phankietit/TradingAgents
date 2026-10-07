@@ -65,6 +65,16 @@ def test_owner_state_and_idempotent_cancel_need_no_sdk(prepared, tmp_path, monke
         assert response.status_code == 200, response.text
         assert response.json()["status"] == "reserved"
         assert response.json()["preparation_requires_review"] is False
+        assert response.json()["report_artifact_id"] is None
+        discovery = f"/api/v1/runs/{reservation.source_run_id}/continuations"
+        found = client.get(discovery)
+        assert found.status_code == 200
+        assert found.json()["has_more"] is False
+        assert [item["execution_id"] for item in found.json()["items"]] == [str(reservation.execution_id)]
+        assert found.json()["items"][0]["attempt"] == reservation.attempt
+        assert client.get(discovery + f"?before_attempt={reservation.attempt}").json()["items"] == []
+        assert client.get(discovery + "?limit=51").status_code == 422
+        assert client.get(discovery.replace(str(reservation.source_run_id), str(uuid4()))).status_code == 404
         assert client.get(path.replace(str(reservation.execution_id), str(uuid4()))).status_code == 404
         assert client.post(path + "/cancel", headers={"Origin": "http://testserver"}).status_code == 403
         headers = {"Origin": "http://testserver", "X-CSRF-Token": params["csrf_token"]}
