@@ -11,7 +11,9 @@ from sqlalchemy import select, text
 from tradingagents.default_config import DEFAULT_CONFIG
 from tradingagents.platform.analysis.continuation import _db_utc, _digest, _payload
 from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
+from tradingagents.platform.analysis.linked_publication import validate_entry
 from tradingagents.platform.analysis.linked_results import read_linked_completion
+from tradingagents.platform.analysis.observer import STAGES
 from tradingagents.platform.analysis.preparation_refusals import validate_refusal
 from tradingagents.platform.analysis.terminal_preparation import prepare_terminal_continuation
 from tradingagents.platform.auth import OwnerAuth
@@ -19,14 +21,18 @@ from tradingagents.platform.persistence import PlatformRepository
 from tradingagents.platform.persistence.models import (
     ResearchContinuationRow,
     ResearchExecutionCompletionRow,
+    ResearchExecutionEventRow,
     ResearchExecutionRow,
     ResearchPreparationRefusalRow,
+    RunEventRow,
 )
 
 from .schemas import (
     ContinuationConsentRequest,
     ContinuationDiscoveryResponse,
+    ContinuationEventResponse,
     ContinuationPreparationResponse,
+    ContinuationProgressResponse,
     ContinuationReservationResponse,
     ContinuationStateResponse,
 )
@@ -124,6 +130,44 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
             with database.session(lock_timeout_seconds=5.0) as session:
                 execution, now = load_control(session, run_id, execution_id, token, csrf)
                 return state(session, execution, now)
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(409, "continuation requires review") from None
+
+    @app.get("/api/v1/runs/{run_id}/continuations/{execution_id}/events",
+             response_model=ContinuationProgressResponse, tags=["runs"])
+    def continuation_events(run_id: UUID, execution_id: UUID, request: Request,
+                            after_sequence: int = Query(default=0, ge=0),
+                            limit: int = Query(default=100, ge=1, le=100)):
+        token, csrf = credentials(request, run_id, mutating=False)
+        try:
+            with database.session(lock_timeout_seconds=5.0) as session:
+                execution, now = load_control(session, run_id, execution_id, token, csrf)
+                rows = session.scalars(select(RunEventRow).join(ResearchExecutionEventRow,
+                    ResearchExecutionEventRow.event_id == RunEventRow.event_id)
+                    .where(ResearchExecutionEventRow.execution_id == execution_id,
+                           RunEventRow.sequence > after_sequence)
+                    .order_by(RunEventRow.sequence).limit(limit + 1)).all()
+                if rows:
+                    validate_entry(session, execution)
+                events = []
+                for row in rows[:limit]:
+                    if (row.owner_id != execution.owner_id or row.run_id != run_id
+                            or row.payload.get("attempt") != execution.attempt
+                            or type(row.payload.get("attempt")) is not int
+                            or not _db_utc(execution.started_at) <= _db_utc(row.occurred_at) <= now):
+                        raise ValueError("invalid continuation event")
+                    stage = row.payload.get("stage")
+                    if row.event_type in {"stage.started", "stage.completed"}:
+                        if stage not in STAGES:
+                            raise ValueError("invalid continuation stage")
+                    else:
+                        stage = None
+                    events.append(ContinuationEventResponse(sequence=row.sequence,
+                        event_type=row.event_type, occurred_at=_db_utc(row.occurred_at),
+                        attempt=execution.attempt, stage=stage))
+                return ContinuationProgressResponse(events=tuple(events), has_more=len(rows) > limit)
         except HTTPException:
             raise
         except Exception:

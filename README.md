@@ -541,6 +541,11 @@ after browser refresh, with descending attempt pagination (`limit` up to 50,
 `before_attempt`) and explicit `has_more`. State includes attempt and report/
 evidence/decision IDs only after the full completion reader verifies them. These
 IDs are read links, not approval authority. The browser journey is still pending.
+The corresponding `GET .../{execution_id}/events` provides cursor-paginated,
+actor-linked progress (`after_sequence`, `limit` up to 100, `has_more`). It
+validates entry provenance and owner/run/attempt/time bindings and returns only
+sequence/type/time/attempt/stage, never arbitrary payloads. Progress remains
+non-approval evidence and does not change the original terminal SSE lifecycle.
 Migration `0018_preparation_refusals` is additive and requires an explicit operator
 migration with a consistent private DB/artifact backup; worker startup never
 migrates. Downgrading removes refusal receipts and must not be used to enable a

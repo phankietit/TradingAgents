@@ -4,6 +4,22 @@ Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
 ## Isolated recovery UI groundwork — not integrated
 
+Additional isolated source base `0a24c70c7dc3af203cdd1fcf2120f8462c85fc0a`:
+execution-linked bounded progress route/schema and expanded control tests.
+Reads validate actual parent entry linkage plus owner/run/attempt/time, sanitize
+to sequence/type/time/attempt/stage, preserve cursor/has_more and expose no raw
+payload. Explicit `approval_eligible:false`; original terminal SSE is unchanged.
+Local55728 terminal0:4PASS/2PG prerequisite skips UNVERIFIED/20.27s, command:
+`python -m pytest -q tests/test_continuation_polling_control.py --tb=short -x`.
+Ruff/diff PASS. Includes pagination/no original-attempt replay, unauthenticated/
+unknown execution refusal, no preparation call, no read mutation, and corruption
+of disposable entry actor rejected with sanitized409. First37286 terminal1:
+1FAIL/5deselected/11.99s due newly inserted test capturing the old migration
+test's restore lines (`url` undefined/F821). Restore lines returned unchanged
+to their original test; no runtime guard/assertion weakened. This is synthetic
+SQLite control evidence only; no PG/native/browser/live proof. Entire original
+6f60429 full gate remains running with failures and fixed source.
+
 While the full original `6f60429d701fb076104447ee82e0cd4f41e32fdc` gate remains
 source-frozen and has emitted FAIL markers, a separate owned worktree/branch
 `fix/TA-R08-continuation-ui` prepares the browser foundation without changing that

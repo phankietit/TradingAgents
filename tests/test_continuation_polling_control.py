@@ -8,13 +8,18 @@ from sqlalchemy import inspect, select
 
 from tests.test_continuation_consent import history, prepared as prepared
 from tests.test_linked_execution import setup
+from tests.test_linked_publication import entered
 from tradingagents.platform.analysis.linked_execution import LinkedExecutionError
 from tradingagents.platform.analysis.preparation_refusals import next_reserved_execution
 from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.artifacts import LocalArtifactStore
 from tradingagents.platform.jobs import linked_worker
 from tradingagents.platform.persistence import Database, downgrade_database, upgrade_database
-from tradingagents.platform.persistence.models import ResearchPreparationRefusalRow
+from tradingagents.platform.persistence.models import (
+    ResearchExecutionEntryRow,
+    ResearchExecutionEventRow,
+    ResearchPreparationRefusalRow,
+)
 
 
 @pytest.mark.parametrize("prepared", [False, "postgres_failed"], indirect=True)
@@ -96,3 +101,48 @@ def test_empty_additive_migration_preserves_original_history(prepared):
     upgrade_database(url)
     assert "research_preparation_refusals" in inspect(database.engine).get_table_names()
     assert history(database) == before
+
+
+def test_linked_progress_is_owner_scoped_bounded_and_does_not_replay_original_events(prepared, tmp_path, monkeypatch):
+    from tradingagents.platform.api import continuation_routes
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("Read-only progress must not prepare an SDK or model")
+
+    monkeypatch.setattr(continuation_routes, "prepare_terminal_continuation", forbidden)
+    database, _, params, clock, context, _ = entered(prepared)
+    stage_run = uuid4()
+    context.observer.on_chain_start({}, {}, run_id=stage_run, name="Market Analyst")
+    context.observer.on_chain_end({"market_report": "Unvalidated fixture"}, run_id=stage_run)
+    before = history(database)
+    app = create_app(ApiSettings(database_url=database.engine.url.render_as_string(hide_password=False),
+        artifact_root=tmp_path / "artifacts", allowed_origin="http://testserver", secure_cookies=False,
+        clock=lambda: clock[0]))
+    with TestClient(app) as client:
+        path = f"/api/v1/runs/{context.run_id}/continuations/{context.execution_id}/events"
+        assert client.get(path).status_code == 401
+        client.cookies.set("ta_session", params["session_token"])
+        client.cookies.set("ta_csrf", params["csrf_token"])
+        assert client.get(path.replace(str(context.execution_id), str(uuid4()))).status_code == 404
+        assert client.get(path + "?after_sequence=-1").status_code == 422
+        assert client.get(path + "?limit=101").status_code == 422
+        first = client.get(path + "?limit=1")
+        assert first.status_code == 200, first.text
+        assert first.json()["has_more"] is True
+        assert first.json()["approval_eligible"] is False
+        after = first.json()["events"][0]["sequence"]
+        rest = client.get(path + f"?after_sequence={after}").json()
+        events = [*first.json()["events"], *rest["events"]]
+        assert rest["has_more"] is False
+        assert all(event["attempt"] == 2 and "payload" not in event for event in events)
+        assert {event["event_type"] for event in events} >= {"research.execution_started", "stage.started", "stage.completed"}
+        assert [event["sequence"] for event in events] == sorted({event["sequence"] for event in events})
+        assert history(database) == before
+        # Disposable fixture corruption: missing actual parent entry provenance
+        # must refuse, not render unbound progress or relay database diagnostics.
+        with database.session() as session:
+            entry = session.get(ResearchExecutionEntryRow, context.execution_id)
+            session.delete(session.get(ResearchExecutionEventRow, entry.event_id))
+        response = client.get(path)
+        assert response.status_code == 409
+        assert response.json() == {"detail": "continuation requires review"}

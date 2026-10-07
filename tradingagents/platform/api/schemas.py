@@ -78,6 +78,21 @@ class ContinuationDiscoveryResponse(ApiModel):
     has_more: bool
 
 
+class ContinuationEventResponse(ApiModel):
+    sequence: int = Field(ge=1)
+    event_type: Literal["research.execution_started", "stage.started", "stage.completed",
+                        "model.usage", "artifact.created", "decision.ready"]
+    occurred_at: AwareDatetime
+    attempt: int = Field(ge=2, le=1_000_000)
+    stage: str | None = None
+
+
+class ContinuationProgressResponse(ApiModel):
+    events: tuple[ContinuationEventResponse, ...]
+    has_more: bool
+    approval_eligible: Literal[False] = False
+
+
 class PrepareDataResponse(ApiModel):
     status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
                     "rate_limited", "unavailable", "busy", "cooldown"]

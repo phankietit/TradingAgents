@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add bounded execution-linked progress reading for recovery UI groundwork.
+  Validate entry provenance and owner/run/attempt/time; return sanitized display
+  fields only, with explicit pagination and nonapproval status. Original terminal
+  events/history remain intact; browser integration and broader acceptance pending.
+
 - Add bounded owner continuation discovery and validated completed-report IDs
   for browser recovery groundwork. Discovery never derives an SDK identity,
   starts a model or changes original history; pagination cannot silently claim
