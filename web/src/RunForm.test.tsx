@@ -134,6 +134,54 @@ function setup(stale = false) {
   });
   vi.stubGlobal('fetch', fetch); return fetch;
 }
+it('shows exact current request context and all selected sources before paid consent', async () => {
+  const fetch = setup(); const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  const group = await screen.findByRole('group',{name:'Price & trend'});
+  const summary = screen.getByRole('region',{name:'Analysis request summary'});
+  expect(within(summary).getByText('AAPL — Apple')).toBeTruthy();
+  expect(within(summary).getByText('English + Vietnamese')).toBeTruthy();
+  expect(within(summary).getByText('Asset research only')).toBeTruthy();
+  await user.click(within(group).getByRole('checkbox'));
+  expect(within(summary).getByText(/Daily prices & volume · TEST FIXTURE/)).toBeTruthy();
+  expect(within(summary).getByText(/Source data through: 2026-09-01/)).toBeTruthy();
+  expect(within(summary).getByText('Not included')).toBeTruthy();
+  expect(summary.compareDocumentPosition(screen.getByRole('checkbox',{name:/I authorize/})) & Node.DOCUMENT_POSITION_CONTAINED_BY).toBeTruthy();
+  await user.click(screen.getByRole('checkbox',{name:/I authorize/}));
+  await user.selectOptions(screen.getByLabelText('Report language'),'vi');
+  expect(within(summary).getByText('Vietnamese')).toBeTruthy();
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs'))).toBe(false);
+});
+it('moves focus to review without changing consent, collecting sources or starting AI', async () => {
+  const fetch = setup(); const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await screen.findByRole('group',{name:'Price & trend'});
+  const summary = screen.getByRole('region',{name:'Analysis request summary'});
+  const scroll = vi.fn(); summary.scrollIntoView = scroll;
+  await user.click(screen.getByRole('button',{name:'Review & authorize'}));
+  expect(scroll).toHaveBeenCalledWith({block:'start'});
+  expect(document.activeElement).toBe(summary);
+  expect((screen.getByRole('checkbox',{name:/I authorize/}) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs') || /\/prepare-/.test(url))).toBe(false);
+});
+it('shows selected portfolio, governed policy and owner allocation in the consent brief', async () => {
+  setup(); const user = userEvent.setup();
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()}/>);
+  await screen.findByRole('group',{name:'Price & trend'});
+  await user.click(screen.getByRole('checkbox',{name:/Evaluate against my portfolio/}));
+  await user.selectOptions(screen.getByLabelText('Portfolio snapshot'),'portfolio1');
+  await user.selectOptions(screen.getByLabelText('Risk policy version'),'policy1:1');
+  await user.type(screen.getByLabelText('Owner target weight (0–1)'),'0.2');
+  const summary = screen.getByRole('region',{name:'Analysis request summary'});
+  expect(within(summary).getByText('Portfolio policy evaluation')).toBeTruthy();
+  expect(within(summary).getByText(/USD · 2026-09-01/)).toBeTruthy();
+  expect(within(summary).getByText('Fixture policy · v1')).toBeTruthy();
+  expect(within(summary).getByText('20.00%')).toBeTruthy();
+  expect((screen.getByRole('button',{name:'Queue analysis'}) as HTMLButtonElement).disabled).toBe(true);
+});
 it.each([false,true])('opens saved-source review without collecting, selecting or authorizing anything (stale=%s)', async stale => {
   const fetch=setup(stale); const user=userEvent.setup();
   const original=Object.getOwnPropertyDescriptor(HTMLElement.prototype,'scrollIntoView');

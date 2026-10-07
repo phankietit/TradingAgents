@@ -2,7 +2,7 @@ import { t, useLocale } from './i18n';
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { errorMessage, mutate } from './api';
-import { timestamp, useResource } from './data';
+import { percent, timestamp, useResource } from './data';
 import type { Instrument, Snapshot } from './data';
 import type { Policy, PortfolioSnapshot } from './Portfolio';
 import ResearchSetup from './ResearchSetup';
@@ -78,6 +78,9 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const macroController = useRef<AbortController | null>(null);
   const socialController = useRef<AbortController | null>(null);
   const sourceInspector = useRef<HTMLDetailsElement | null>(null);
+  const scopeSection = useRef<HTMLElement>(null);
+  const preparationSection = useRef<HTMLElement>(null);
+  const confirmationSection = useRef<HTMLElement>(null);
   useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); macroController.current?.abort(); socialController.current?.abort(); }, []);
   const [preparationNote, setPreparationNote] = useState('');
   const [preparationExhausted, setPreparationExhausted] = useState(false);
@@ -288,15 +291,25 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
+  function visit(section: HTMLElement | null) {
+    section?.scrollIntoView({block:'start'});
+    section?.focus({preventScroll:true});
+  }
   return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || dataPending}>
     <h2>{t("Configure analysis")}</h2>
+    <nav className="setup-navigation" aria-label={t('Analysis setup sections')}>
+      <button type="button" onClick={() => visit(scopeSection.current)}>{t('Research scope')}</button>
+      <button type="button" onClick={() => visit(preparationSection.current)}>{t('Prepare market data')}</button>
+      <button type="button" onClick={() => visit(confirmationSection.current)}>{t('Review & authorize')}</button>
+    </nav>
     {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
       <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
       <progress max={3} value={preparationProgress.waiting ? preparationProgress.attempt : preparationProgress.attempt - 1} aria-label={t('Completed checks')} />
       {preparationProgress.waiting ? <p>{t(preparationProgress.reason === 'cooldown' ? 'Waiting for the local download cooldown.' : preparationProgress.reason === 'rate_limited' ? 'Yahoo is limiting requests.' : 'Data is not ready yet. Retrying automatically.')} {t('Next check in')} {preparationProgress.remaining} {t('seconds')}.</p> : <p>{t('Downloading and checking prices…')}</p>}
       <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
     </section> : null}
-    <fieldset disabled={pending || dataPending}><div className="form-grid">
+    <fieldset disabled={pending || dataPending}>
+    <section ref={scopeSection} tabIndex={-1} aria-label={t('Research scope')}><div className="form-grid">
       <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setMacroNote(''); setSocialNotes({}); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
       <label>{t('Report language')}<select value={reportLanguage} onChange={event => {
@@ -304,7 +317,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       }}><option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option></select></label>
     </div>
     <p className="muted caption">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
-    <section className="preparation-workspace" aria-label={t('Prepare market data')}>
+    </section>
+    <section ref={preparationSection} tabIndex={-1} className="preparation-workspace" aria-label={t('Prepare market data')}>
       <div className="preparation-heading"><h3>{t('1. Prepare market data')}</h3><div className="section-actions">
         <button type="button" className="primary" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
         <button type="button" onClick={() => {
@@ -408,7 +422,30 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
     </details>
+    <section ref={confirmationSection} tabIndex={-1} className="analysis-confirmation" aria-label={t('Analysis request summary')}>
     <h3>{t('2. Review sources and authorize AI')}</h3>
+    <p className="muted">{t('Review these exact inputs before authorizing. Changing an input requires your authorization again; navigation alone never starts AI.')}</p>
+    <dl className="request-summary">
+      <dt>{t('Instrument')}</dt><dd>{asset ? `${asset.canonical_symbol} — ${asset.display_name}` : t('Unavailable')}</dd>
+      <dt>{t('Research date & time (UTC)')}</dt><dd>{dateValid ? timestamp(asOf) : t('Unavailable')}</dd>
+      <dt>{t('Report language')}</dt><dd>{t(reportLanguage === 'en-vi' ? 'English + Vietnamese' : reportLanguage === 'vi' ? 'Vietnamese' : 'English')}</dd>
+      <dt>{t('Research mode')}</dt><dd>{t(riskEnabled ? 'Portfolio policy evaluation' : profile.data?.investable === false ? 'Reference research only' : 'Asset research only')}</dd>
+      {riskEnabled ? <><dt>{t('Portfolio snapshot')}</dt><dd>{portfolio ? `${portfolio.base_currency} · ${timestamp(portfolio.as_of)}` : t('Unavailable')}</dd>
+      <dt>{t('Risk policy version')}</dt><dd>{policy ? `${policy.name} · v${policy.policy_version}` : t('Unavailable')}</dd>
+      <dt>{t('Owner target')}</dt><dd>{target.trim() && Number.isFinite(Number(target)) && Number(target) >= 0 && Number(target) <= 1 ? percent(Number(target)) : t('Unavailable')}</dd></> : null}
+    </dl>
+    {riskEnabled && correlationInstruments.length ? <details><summary>{t('Correlation evidence')}</summary><ul>{correlationInstruments.map(id => <li key={id}>{catalog.find(item => item.instrument_id === id)?.canonical_symbol ?? t('Instrument')} · {riskSources[id] || t('No correlation source selected')}</li>)}</ul></details> : null}
+    <div className="confirmation-sources">{profile.data?.allowed_analysts.map(role => <section key={role}>
+      <h4>{researchLabel(role)}</h4>
+      {!sources[role]?.length ? <p className="muted">{t('Not included')}</p> : <ul>{sources[role].map(id => {
+        const item = discoveredSources.find(row => row.snapshot.snapshot_id === id);
+        return <li key={id}>{item ? <><strong>{datasetLabel(item.snapshot.dataset)} · {item.snapshot.vendor}{item.snapshot.dataset === 'macro' ? ` · ${item.snapshot.metadata?.series_id ?? t('Economic indicator')}` : ''}</strong>
+          <span>{t('Source data through:')} {timestamp(item.snapshot.source_end)}</span>
+          {!item.metadata_eligible || !item.supported_analysts.includes(role) ? <span className="warning">{t('Selected source is not eligible. Research remains blocked.')}</span> : <span className="muted">{t('Selected for content checks before research, not yet a validated conclusion.')}</span>}
+          {item.snapshot.metadata?.freshness === 'delayed' ? <span className="warning">{t('Delayed source; no missing candle is inferred.')}</span> : null}
+        </> : <span className="warning">{t('Selected source is unavailable for review. Research remains blocked.')}</span>}</li>;
+      })}</ul>}
+    </section>)}</div>
     <ResearchAllowance seconds={allowanceSeconds} disabled={pending || dataPending}
       onChange={seconds => { setAllowanceSeconds(seconds); setConfirmed(false); }} />
     {!selectedRoles.length ? <p className="warning">{t('To continue, prepare latest prices above or select an eligible saved source. No AI analysis has been submitted.')}</p> : null}
@@ -419,6 +456,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     {error ? <p role="alert" className="notice danger">{t(error)}  {t("Retrying unchanged inputs reuses the same request key.")}</p> : null}
     <div className="section-actions"><button className="primary" disabled={!ready}>{pending ? t("Submitting…") : t("Queue analysis")}</button><button type="button" onClick={onClose}>{t("Close configuration")}</button></div>
     <details><summary>{t('Processing setup')}</summary><ResearchSetup /></details>
+    </section>
     </fieldset>
   </form>;
 }

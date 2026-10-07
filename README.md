@@ -951,6 +951,12 @@ Decision review presents the selected research before history (including on
 mobile), with the saved report and portfolio context ahead of owner actions.
 Evidence and policy details remain accessible; this presentation order changes
 no review eligibility, backend revalidation or approval requirement.
+Analysis setup provides focusable scope/data/authorization sections. Before
+paid consent, the request summary shows the selected asset, UTC time, report
+language, research mode, every selected source/cutoff and absent research areas;
+portfolio mode also shows the selected valuation, policy version and owner
+target. This is a view of current form inputs, not a source-quality waiver or a
+cost quote. Existing source, allowance, consent and backend checks still apply.
 No portfolio simulator, broker connection, order execution,
 or autonomous trading path is included. See `docs/platform/api.md` and
 the contracts under `docs/platform/` for the current runtime and data

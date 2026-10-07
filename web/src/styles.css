@@ -109,6 +109,16 @@ h2 { font-size: 18px; font-weight: 550; }
 .review-readiness-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .review-readiness-heading h3, .review-readiness-heading .section-actions { margin: 0; }
 .review-readiness > p { margin: 10px 0 0; }
+.setup-navigation { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 28px; }
+.setup-navigation button { background: none; }
+.analysis-confirmation { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+.request-summary { margin: 24px 0; }
+.confirmation-sources { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 16px; margin-bottom: 24px; }
+.confirmation-sources > section { border-top: 1px solid var(--border); padding-top: 12px; min-width: 0; }
+.confirmation-sources h4 { font-size: 13px; margin: 0 0 8px; }
+.confirmation-sources ul { list-style: none; margin: 0; padding: 0; }
+.confirmation-sources li { margin: 12px 0; overflow-wrap: anywhere; }
+.confirmation-sources li > span, .confirmation-sources li > strong { display: block; font-size: 12px; }
 .artifact-preview .action-link { color: #0b0e13; margin-top: 16px; }
 .market-query, .benchmark-panel { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
 .screening-panel { margin-top: 24px; border: 1px solid var(--border); padding: 20px; min-width: 0; }
