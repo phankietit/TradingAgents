@@ -28,12 +28,14 @@ it('renders narrative as text and disables approval for REVIEW', async () => {
   expect(document.querySelector('script')).toBeNull();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
 });
-it('keeps review readiness visible ahead of the research without opening technical details', async () => {
+it('presents research and portfolio checks before review, with selected details before history', async () => {
   const fetch = setup(); render(<Decisions />);
   await screen.findByText(candidate.thesis);
   const review = screen.getByRole('region', {name:'Owner review'});
   expect(review.closest('details')).toBeNull();
-  expect(review.compareDocumentPosition(screen.getByText(candidate.thesis)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByText(candidate.thesis).compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByText('Portfolio checks & human approval').compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('region', {name:'Decision details'}).compareDocumentPosition(screen.getByRole('region', {name:'Decision history'})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
   expect(screen.getAllByRole('button', {name:'Reject decision'})).toHaveLength(1);
   expect(fetch.mock.calls.some(([url]) => url.endsWith('/transitions'))).toBe(false);
@@ -44,6 +46,17 @@ it('explains unusable output while preserving original validation detail collaps
   expect(await screen.findByText('No usable investment conclusion was produced. Manual review is required.')).toBeTruthy();
   expect(screen.getByText('Schema validation failed: ValidationError').closest('details')?.open).toBe(false);
   expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+});
+it('offers direct keyboard-accessible navigation to retained decision history', async () => {
+  const scroll = vi.fn();
+  const fetch = setup(); const user = userEvent.setup(); render(<Decisions />);
+  await screen.findByText(candidate.thesis);
+  const history = screen.getByRole('region', {name:'Decision history'});
+  history.scrollIntoView = scroll;
+  await user.click(screen.getByRole('button', {name:'Decision history'}));
+  expect(scroll).toHaveBeenCalledWith({block:'start'});
+  expect(document.activeElement).toBe(history);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/transitions'))).toBe(false);
 });
 it('presents financial risk percentages without changing review eligibility',async()=>{
   const value={...candidate,policy_checks:[{check_id:'max_position_weight',policy_id:'p',policy_version:'1',result:'PASS',blocking:true,reason:'Within allocation limit',observed_value:0.2,limit_value:0.3}]};

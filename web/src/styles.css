@@ -147,6 +147,12 @@ select { display: block; width: 100%; margin-top: 8px; background: #10151c; bord
 .instrument-row .caption, .instrument-name { color: var(--muted); }
 .instrument-name { display: block; font-size: 12px; margin-top: 4px; }
 .instrument-detail { min-width: 0; padding-top: 24px; }
+.decision-workspace { grid-template-columns: minmax(0, 1fr) 230px; }
+.decision-workspace > .instrument-list { border-right: 0; border-left: 1px solid var(--border); padding: 20px 0 0 16px; }
+@media (max-width: 900px) {
+  .decision-workspace { grid-template-columns: minmax(0, 1fr); }
+  .decision-workspace > .instrument-list { border-left: 0; border-top: 1px solid var(--border); padding: 20px 0; }
+}
 .detail-heading { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .detail-heading h2 { margin-bottom: 8px; }
 .detail-heading h2 .muted { display: block; margin-top: 4px; font-size: 14px; font-weight: 400; }

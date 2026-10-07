@@ -947,6 +947,10 @@ The UI supports saved watchlists, price/benchmark charts, screening history,
 queued research, reports and evidence, persisted portfolio valuations, and
 explicit decision review. Reloading data does not ingest new prices or call a
 model. A completed research run is not a valid or approved investment conclusion.
+Decision review presents the selected research before history (including on
+mobile), with the saved report and portfolio context ahead of owner actions.
+Evidence and policy details remain accessible; this presentation order changes
+no review eligibility, backend revalidation or approval requirement.
 No portfolio simulator, broker connection, order execution,
 or autonomous trading path is included. See `docs/platform/api.md` and
 the contracts under `docs/platform/` for the current runtime and data

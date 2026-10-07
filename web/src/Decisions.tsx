@@ -36,6 +36,7 @@ function safeSourceUrl(value: string | null): string | undefined {
 export default function Decisions() {
   useLocale();
   const [version, setVersion] = useState(0);
+  const history = useRef<HTMLElement>(null);
   const list = useResource<Decision[]>('/decisions?limit=200', version);
   const catalog = useResource<Instrument[]>('/instruments?limit=500', 0, instruments);
   const [selected, setSelected] = useState(() => new URLSearchParams(window.location.hash.split('?')[1]).get('decision') ?? '');
@@ -48,14 +49,16 @@ export default function Decisions() {
   // Never silently substitute the first candidate for a missing/unauthorized ID.
   const currentId = selected || list.data?.[0]?.decision_id;
   return <>
-    <div className="section-actions"><p className="muted">{t("Research candidates and human review · No order execution.")}</p><button onClick={() => setVersion(value => value + 1)}>{t("Refresh decisions")}</button></div>
-    <div className="market-layout"><section className="instrument-list" aria-label={t("Decision history")}><div className="list-heading">{t("Research candidates")}</div>
+    <div className="section-actions"><p className="muted">{t("Research candidates and human review · No order execution.")}</p><button onClick={() => { history.current?.scrollIntoView({ block: 'start' }); history.current?.focus({ preventScroll: true }); }}>{t("Decision history")}</button><button onClick={() => setVersion(value => value + 1)}>{t("Refresh decisions")}</button></div>
+    <div className="market-layout decision-workspace">
+    {currentId ? <DecisionDetail key={currentId} id={currentId} version={version} catalog={catalog.data ?? []} /> : <section className="empty-state"><h2>{t("Select a candidate")}</h2><p>{t("Evidence, risk checks and the current review state appear here. A research rating is not an approval.")}</p></section>}
+    <section ref={history} tabIndex={-1} className="instrument-list" aria-label={t("Decision history")}><div className="list-heading">{t("Research candidates")}</div>
       {list.loading ? <p role="status">{t("Loading decisions…")}</p> : list.error ? <p role="alert" className="danger">{t(errorMessage(list.error))}</p> : !list.data?.length ? <p className="muted">{t("No decision candidates have been published.")}</p>
         : <ul>{list.data.map(item => <li key={item.decision_id}><button aria-pressed={currentId === item.decision_id} onClick={() => { setSelected(item.decision_id); window.history.replaceState(null, '', `#/decisions?decision=${encodeURIComponent(item.decision_id)}`); }}>
           <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t("Instrument")}</strong><span>{t(item.rating)}</span></span>
           <span className="instrument-name">{timestamp(item.as_of)}</span><span className="caption">{t("At publication:")} {reviewStatus(item.status)}</span>
         </button></li>)}</ul>}
-    </section>{currentId ? <DecisionDetail key={currentId} id={currentId} version={version} catalog={catalog.data ?? []} /> : <section className="empty-state"><h2>{t("Select a candidate")}</h2><p>{t("Evidence, risk checks and the current review state appear here. A research rating is not an approval.")}</p></section>}</div>
+    </section></div>
   </>;
 }
 
@@ -84,27 +87,27 @@ function DecisionDetail({ id, version, catalog }: { id: string; version: number;
   return <section className="instrument-detail" aria-label={t("Decision details")}>
     <div className="research-heading"><div><p className="eyebrow">{t("Research outlook")}</p><h2>{instrumentName}</h2><p className="muted">{t("As of")} {timestamp(candidate.as_of)}</p></div><span className={`outlook-badge ${invalidNarrative ? 'unvalidated' : ''}`}>{invalidNarrative ? t("Needs validation") : t(candidate.rating)}</span></div>
     <div className="status-strip"><span>{t("Your review:")} <strong>{reviewStatus(current)}</strong></span><span>{invalidNarrative ? t("Research output needs validation; this does not establish a source-data failure.") : `${t("Evidence quality:")} ${qualityLabel(candidate.data_quality)}`}</span></div>
-    <section className="review-readiness" aria-label={t('Owner review')}>
-      <div className="review-readiness-heading"><h3>{t('Owner review')}</h3><div className="section-actions"><button className="primary" disabled={!canApprove} onClick={() => setAction('approve')}>{t("Approve decision")}</button><button disabled={!['review', 'ready_for_approval'].includes(current)} onClick={() => setAction('reject')}>{t("Reject decision")}</button></div></div>
-      <p className="muted caption">{t("This records a decision; it does not place an order. The backend revalidates run, policy and evidence on approval.")}</p>
-      {run.error || run.data && !runMatches ? <p className="warning">{t("Matching research status unavailable. Approval remains disabled.")}</p> : <p className="muted caption">{t(run.data && ['failed', 'cancelled'].includes(run.data.status) ? 'Original attempt processing:' : 'Research processing:')} {run.data ? t(processingLabels[run.data.status] ?? 'Status unavailable') : t("Loading…")}</p>}
-      {!candidate.policy_checks.length ? <p className="warning">{t("No risk checks. Approval is unavailable.")}</p> : !canApprove && ['review', 'ready_for_approval'].includes(current) ? <p className="warning">{t("Approval is unavailable until the candidate is ready, its run succeeds and blocking checks pass.")}</p> : null}
-    </section>
     {!hasReport ? <><h3>{t("Investment thesis")}</h3><ResearchMarkdown text={invalidNarrative ? t("No usable investment conclusion was produced. Manual review is required.") : candidate.thesis} /></> : null}
     {invalidNarrative ? <p className="warning">{t("The research output did not pass validation. Do not use it to make an investment decision. Start a new analysis only after the underlying issue is resolved.")}</p> : !hasReport ? <div className="review-columns"><section><h3>{t("Key risks")}</h3><ul>{candidate.risks.map((text, i) => <li key={i}>{text}</li>)}</ul></section><section><h3>{t("What would invalidate this thesis?")}</h3><ul>{candidate.invalidation_conditions.map((text, i) => <li key={i}>{text}</li>)}</ul></section></div> : null}
     {invalidNarrative ? <details><summary>{t("Validation details")}</summary><p>{candidate.thesis}</p><ul>{candidate.risks.map((text,i)=><li key={i}>{text}</li>)}</ul><ul>{candidate.invalidation_conditions.map((text,i)=><li key={i}>{text}</li>)}</ul></details> : null}
     <details><summary>{t("Research context & audit")}</summary><p>{t("At publication:")} {reviewStatus(candidate.status)}{t(". Your review status may have changed since then.")}</p><p>{t("Model confidence:")} {invalidNarrative ? t('Unavailable') : percent(candidate.confidence)}  {t("· Uncalibrated, not a probability of profit.")}</p><dl><dt>{t("Decision ID")}</dt><dd className="mono">{candidate.decision_id}</dd><dt>{t("Research ID")}</dt><dd className="mono">{candidate.run_id}</dd></dl></details>
+    {artifacts.data?.filter(item => item.kind === 'analysis_report').map(item => <ArtifactPreview key={item.artifact_id} artifact={item} runId={candidate.run_id} embedded showDecisionLink={false} />)}
+    {artifacts.error ? <p className="warning">{t("Report unavailable. Decision review state is shown separately.")}</p> : null}
     <section className="portfolio-impact"><h3>{t("Portfolio impact")}</h3>
     {candidate.portfolio_snapshot_id ? <div className="metrics"><div><span>{t("Current weight")}</span><strong>{weight(candidate.current_weight)}</strong></div><div><span>{t("Owner target")}</span><strong>{weight(candidate.target_weight)}</strong></div><div><span>{t("Maximum allowed")}</span><strong>{weight(candidate.max_allowed_weight)}</strong></div></div> : <p className="muted">{t("Research only. No portfolio was supplied, so allocation and portfolio impact have not been calculated.")}</p>}
     </section>
-    {artifacts.data?.filter(item => item.kind === 'analysis_report').map(item => <ArtifactPreview key={item.artifact_id} artifact={item} runId={candidate.run_id} embedded showDecisionLink={false} />)}
-    {artifacts.error ? <p className="warning">{t("Report unavailable. Decision review state is shown separately.")}</p> : null}
     <details className="review-controls"><summary>{t("Portfolio checks & human approval")}</summary>
     <h3>{t("Portfolio risk checks")}</h3>
     {!candidate.policy_checks.length ? <p className="warning">{t("No risk checks. Approval is unavailable.")}</p> : <div className="table-scroll" role="region" aria-label={t("Policy checks")} tabIndex={0}><table><thead><tr><th>{t("Check")}</th><th>{t("Result")}</th><th>{t("Observed")}</th><th>{t("Limit")}</th><th>{t("Reason")}</th></tr></thead><tbody>{candidate.policy_checks.map(check => <tr key={check.check_id}><th scope="row">{riskLabel(check.check_id)}<small>{check.blocking ? t("Required for approval") : t("Informational")}</small></th><td className={check.result === 'PASS' ? '' : 'warning'}>{check.result === 'PASS' ? t("Passed") : check.result === 'FAIL' ? t("Not passed") : t("Needs review")}</td><td>{riskValue(check.check_id,check.observed_value)}</td><td>{riskValue(check.check_id,check.limit_value)}</td><td className="wrap-cell">{riskReason(check.check_id,check.result,check.reason)}</td></tr>)}</tbody></table></div>}
     {candidate.policy_checks.some(check=>check.check_id==='max_correlation') ? <p className="muted">{t("Correlation is a coefficient, not a percentage. The saved risk engine also uses −1 when no other holdings require comparison; this value alone does not establish diversification.")}</p> : null}
     <h3>{t("Evidence")}</h3>{!candidate.evidence.length ? <p className="warning">{t("No cited evidence.")}</p> : candidate.evidence.map(item => <details className="provenance" key={item.evidence_id}><summary>{item.source_name} · {item.claim}</summary><p>{t("Source:")} {timestamp(item.source_at)}  {t("· Observed:")} {timestamp(item.observed_at)}</p><p className="mono">{t("Snapshot")} {item.snapshot_id}</p><p className="mono">{item.content_hash}</p>{safeSourceUrl(item.source_url) ? <a href={safeSourceUrl(item.source_url)} target="_blank" rel="noopener noreferrer">{t("Open external source")}</a> : null}</details>)}
     </details>
+    <section className="review-readiness" aria-label={t('Owner review')}>
+      <div className="review-readiness-heading"><h3>{t('Owner review')}</h3><div className="section-actions"><button className="primary" disabled={!canApprove} onClick={() => setAction('approve')}>{t("Approve decision")}</button><button disabled={!['review', 'ready_for_approval'].includes(current)} onClick={() => setAction('reject')}>{t("Reject decision")}</button></div></div>
+      <p className="muted caption">{t("This records a decision; it does not place an order. The backend revalidates run, policy and evidence on approval.")}</p>
+      {run.error || run.data && !runMatches ? <p className="warning">{t("Matching research status unavailable. Approval remains disabled.")}</p> : <p className="muted caption">{t(run.data && ['failed', 'cancelled'].includes(run.data.status) ? 'Original attempt processing:' : 'Research processing:')} {run.data ? t(processingLabels[run.data.status] ?? 'Status unavailable') : t("Loading…")}</p>}
+      {!candidate.policy_checks.length ? <p className="warning">{t("No risk checks. Approval is unavailable.")}</p> : !canApprove && ['review', 'ready_for_approval'].includes(current) ? <p className="warning">{t("Approval is unavailable until the candidate is ready, its run succeeds and blocking checks pass.")}</p> : null}
+    </section>
     <h3>{t("Review history")}</h3>{!state.data.events.length ? <p className="muted">{t("No review recorded yet.")}</p> : <ol className="event-list">{state.data.events.map(event => <li key={event.event_id}><strong>{reviewStatus(event.from_status)} → {reviewStatus(event.to_status)}</strong><time>{timestamp(event.occurred_at)} · {event.actor_type}</time><p>{event.reason}</p></li>)}</ol>}
     {action ? <ReviewDialog instrumentName={instrumentName} action={action} state={state.data} onClose={() => setAction(null)} onSaved={() => { setAction(null); setTick(value => value + 1); }} /> : null}
   </section>;
