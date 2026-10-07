@@ -517,16 +517,30 @@ checkpoint identity and remaining allowance without calling a model. Reservation
 requires its current observation hash, an idempotency UUID, literal confirmation
 and acknowledgment of retained allowance, unknown provider cost and unvalidated
 prior research. No client codec/config is accepted. Both responses explicitly
-state `dispatch_enabled: false`: default linked worker and browser controls are
-not integrated yet. Reservation does not approve a decision or rewrite history.
+state `dispatch_enabled: false`: HTTP does not directly dispatch a model and
+ordinary worker startup does not enable continuation polling. An operator can
+explicitly enable polling with `tradingagents-worker --continuations`; ordinary
+queued jobs take priority. Browser continuation controls are not integrated yet.
+Reservation does not approve a decision or rewrite history.
 Local/native API and full-candidate acceptance are recorded separately in HANDOFF.
 
 The trusted worker operation can rebuild a reserved continuation's actual SDK
 identity without browser credentials, claim once, retain original allowance,
 restore the original graph and publish a separately fenced report. Uncertain
 lease renewal blocks callbacks/publication; uncertain ACKs are not automatically
-retried. This operation is not yet connected to default durable polling or the
-browser controls. Synthetic native parity is not live financial/editorial proof.
+retried. Opt-in polling consumes durable reservations without stored browser
+credentials. A preclaim preparation refusal is recorded separately and excluded
+from subsequent polls across restart; it cannot grant a claim or retry. After a
+claim, uncertainty never requeues or replenishes the original allowance.
+Authenticated `GET /api/v1/runs/{id}/continuations/{execution_id}` reads validated
+state without SDK construction; the corresponding `POST .../cancel` requires
+CSRF/Origin and cancels a reservation or requests an active attempt's stop.
+Completed status requires the full completion/report reader, not a database flag.
+Migration `0018_preparation_refusals` is additive and requires an explicit operator
+migration with a consistent private DB/artifact backup; worker startup never
+migrates. Downgrading removes refusal receipts and must not be used to enable a
+retry. Browser controls and live operational acceptance remain unfinished.
+Synthetic native parity is not live financial/editorial proof.
 
 Durable snapshot jobs retain private, immutable working notes when each graph
 role returns reader text. Notes bind to the run, snapshots and declared config,

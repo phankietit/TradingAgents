@@ -2,6 +2,30 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Opt-in polling and owner status/cancel (2026-10-07):** source base
+`0bcd76d39c4e9c2e0a2b2276bb7f3fb4562c095e` plus polling/control/refusal changes
+listed in `docs/platform/research-acceptance-20261007.md`. Explicit operator
+`--continuations` uses the original trusted worker after ordinary queue priority;
+default startup remains ordinary-only. Durable preclaim refusal prevents repeated
+polling/claim across restart. Owner status/cancel requires authentication, mutation
+CSRF/Origin; no SDK for control. Completed status requires full separate report/
+receipt validation; cancel cannot change a completed result. Original history,
+accounting, graph and human approval remain unchanged. Migration 0018 is additive,
+explicit, and not applied to the user's runtime here.
+
+Local59166 terminal0:10PASS/2PG prerequisite skips UNVERIFIED/3.66s.
+PG1060 terminal0:76PASS/6manual cases deselected/12warnings/218.35s, no skips.
+Final PG1797 terminal0:6PASS/6manual cases deselected/12warnings/207.17s;
+actual default runtime polling and post-completion authenticated API assertions
+run EN/VI/bilingual on SQLite/PostgreSQL. Python3.14.7/Ruff/pip-check/diff PASS,
+source frozen during each native gate, only helper-owned PG removed. This is
+dirty-source focused evidence, not full current regression, live financial/VI,
+browser journey, release or operational acceptance. Prior fullc166 not promoted.
+No paid AI, user runtime restart/history mutation, CI/provider/risk/main/deploy.
+Next professional browser recovery controls/status/layout and original-terminal
+versus linked-active event projection, then combined/full/native/browser gates.
+Goal R01–R14 ACTIVE; NQ owner BLOCKED.
+
 **Trusted single-execution worker continuation (2026-10-07):** base
 `ff4d67b4a79340d11d5840485ff1f3019c38f6c0` plus reserved_preparation.py,
 jobs/linked_worker.py, shared original terminal input loader, renewal guards and

@@ -13,6 +13,7 @@ from tradingagents.platform.persistence.models import (
     OwnerRow,
     ResearchContinuationRow,
     ResearchExecutionRow,
+    ResearchPreparationRefusalRow,
 )
 
 from .allowance import build_retained_observer, load_remaining_allowance
@@ -36,7 +37,7 @@ def prepare_reserved_continuation(*, database, artifact_store, execution_id,
 
     def load(session):
         consent = session.get(ResearchContinuationRow, execution_id)
-        if consent is None:
+        if consent is None or session.get(ResearchPreparationRefusalRow, execution_id) is not None:
             reject()
         owner = session.scalar(select(OwnerRow).where(OwnerRow.owner_id == consent.owner_id)
             .with_for_update().execution_options(populate_existing=True))

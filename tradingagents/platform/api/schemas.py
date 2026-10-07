@@ -61,6 +61,14 @@ class ContinuationReservationResponse(ApiModel):
     dispatch_enabled: Literal[False] = False
 
 
+class ContinuationStateResponse(ApiModel):
+    run_id: UUID
+    execution_id: UUID
+    status: Literal["reserved", "leased", "cancel_requested", "cancelled", "review_required", "completed"]
+    preparation_requires_review: bool
+    lease_expired: bool
+
+
 class PrepareDataResponse(ApiModel):
     status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
                     "rate_limited", "unavailable", "busy", "cooldown"]

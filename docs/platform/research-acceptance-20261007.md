@@ -2,6 +2,54 @@
 
 Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
+## Opt-in durable polling and authenticated control
+
+Source base `0bcd76d39c4e9c2e0a2b2276bb7f3fb4562c095e` plus
+analysis/linked_execution.py, reserved_preparation.py, preparation_refusals.py,
+jobs/linked_worker.py, jobs/runtime.py, api/continuation_routes.py, api/schemas.py,
+persistence/models.py, migration 0018, test_continuation_polling_control.py and
+test_default_prepared_resume.py. Matching README/CHANGELOG/Product Contract updated.
+
+Explicit `--continuations` consumes a reserved original continuation when ordinary
+queue is idle. Default startup does not enable it. Original graph, identity,
+allowance, source binding, entry/lease/renewal/ACK/report gates remain intact.
+Preclaim refusal has a separate hashed durable receipt and is excluded across
+reopen/restart; claimed uncertainty is never relabelled/refunded/requeued. HTTP
+prepare/reserve `dispatch_enabled:false` means no direct HTTP model dispatch, not
+a promise that an explicitly enabled worker cannot consume the reservation.
+
+Owner status/cancel revalidates consent/run/execution without SDK construction.
+Cancel serializes SQLite writes, cancels reserved attempts or requests leased
+attempt cancellation; it cannot cancel completion or rewrite original history.
+Completed status uses the existing full completion/report reader. Missing/corrupt
+facts are review failures, not successful completion. Migration 0018 is additive
+and explicit; rollback loses refusal receipts and must not enable retry. Only
+disposable test DBs were migrated; real runtime remains unchanged.
+
+Commands (same owned external TMPDIR as below):
+
+```sh
+bash scripts/verify-local.sh local --focused tests/test_continuation_polling_control.py tests/test_worker_runtime.py --tb=short -x
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_continuation_polling_control.py tests/test_worker_runtime.py tests/test_linked_execution.py tests/test_continuation_api_contract.py tests/test_default_prepared_resume.py -k 'not manual' --tb=short -x
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py -k worker --tb=short -x
+```
+
+Local59166 terminal0:10PASS/2PG prerequisite skips UNVERIFIED/3.66s.
+PG1060 terminal0:76PASS/6manual deselected/12warnings/218.35s, no skips.
+Final PG1797 terminal0:6PASS/6manual deselected/12warnings/207.17s, no skips.
+The final selection adds authenticated completed-state and cancel-refusal checks
+after real original runtime polling, all three languages/both dialects. Exact
+original trace/output, retained accounting/history and review authority assertions
+remain. Poison-reservation tests use an injected preparation failure (control
+proof, not SDK failure proof). Empty migration reversal test is SQLite only.
+Python3.14.7/Ruff/pip-check/diff PASS; source frozen during native gates; only
+labelled helper-owned PG removed. No paid model/provider/user DB/CI activity.
+
+**UNVERIFIED:** full current regression, rendered recovery controls/SSE journey,
+leased-cancel races/all crash/ACK boundaries, semantic financial/VI, live BTC/AAPL,
+release. **BLOCKED:** NQ owner contract/roll source. This is not a production-ready
+claim. Old failed receipts remain below.
+
 ## Trusted worker operation and renewal/stop separation
 
 Dirty source base `ff4d67b4a79340d11d5840485ff1f3019c38f6c0`:

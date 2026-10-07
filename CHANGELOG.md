@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add explicit `--continuations` worker polling, durable preclaim refusal receipts
+  and authenticated continuation status/cancel APIs. Ordinary jobs take priority;
+  refused reservations stay excluded across restart. Completed status validates
+  the separate receipt/report; cancellation does not rewrite original history or
+  replenish allowance. Additive migration 0018 is operator-managed. Default
+  startup remains ordinary-only; browser controls/live acceptance remain pending.
+
 - Add trusted reserved-continuation preparation and a single-execution linked
   worker operation without stored browser credentials. Rebuild actual original
   identity before separate one-time claim, keep retained accounting, heartbeat,

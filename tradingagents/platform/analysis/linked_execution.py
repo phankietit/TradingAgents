@@ -27,6 +27,7 @@ from tradingagents.platform.persistence.models import (
     ResearchContinuationRow,
     ResearchExecutionCompletionRow,
     ResearchExecutionRow,
+    ResearchPreparationRefusalRow,
     RunRow,
 )
 
@@ -116,7 +117,8 @@ class LinkedExecutionStore:
         except (ValueError, TypeError, AttributeError, KeyError, OverflowError, SQLAlchemyError):
             _reject()
 
-    def _source(self, session, execution_id, now, *, owner_id=None, recheck=False, active=True):
+    @staticmethod
+    def _control_source(session, execution_id, now, *, owner_id=None, active=True):
         if type(execution_id) is not UUID:
             _reject()
         row = session.get(ResearchContinuationRow, execution_id)
@@ -147,14 +149,19 @@ class LinkedExecutionStore:
                 or _digest(run.model_dump(mode="json")) != observation["source_run_hash"]
                 or _digest(job.model_dump(mode="json")) != observation["source_job_hash"]):
             _reject()
+        return row, observation
+
+    def _source(self, session, execution_id, now, *, owner_id=None, recheck=False, active=True):
+        row, observation = self._control_source(session, execution_id, now, owner_id=owner_id, active=active)
         current = None
         if recheck:
             current = self.consents.observe(session=session, owner_id=row.owner_id, run_id=row.source_run_id)
-            if _canonical(payload) != _canonical(_payload(current)):
+            if _canonical(row.payload) != _canonical(_payload(current)):
                 _reject()
         return row, observation, current
 
-    def _execution(self, session, consent, observation, now):
+    @staticmethod
+    def _execution(session, consent, observation, now):
         row = session.scalar(select(ResearchExecutionRow).where(
             ResearchExecutionRow.execution_id == consent.execution_id).with_for_update()
             .execution_options(populate_existing=True))
@@ -209,7 +216,8 @@ class LinkedExecutionStore:
         with self._transaction() as (session, now):
             consent, observation, current = self._source(session, execution_id, now, recheck=True)
             row = self._execution(session, consent, observation, now)
-            if row is None or row.status != "reserved":
+            if (row is None or row.status != "reserved"
+                    or session.get(ResearchPreparationRefusalRow, execution_id) is not None):
                 _reject()
             accounting = current.accounting
             remaining = accounting.original_wall_seconds - accounting.elapsed_upper_bound

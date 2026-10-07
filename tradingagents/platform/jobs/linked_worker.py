@@ -10,6 +10,10 @@ from tradingagents.platform.analysis.linked_factory import build_linked_recorded
 from tradingagents.platform.analysis.linked_publication import LinkedPublicationContext
 from tradingagents.platform.analysis.linked_recording import LinkedOriginalResearch
 from tradingagents.platform.analysis.linked_results import LinkedResultPublisher
+from tradingagents.platform.analysis.preparation_refusals import (
+    next_reserved_execution,
+    record_preparation_refusal,
+)
 from tradingagents.platform.analysis.reserved_preparation import prepare_reserved_continuation
 from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
 
@@ -60,3 +64,19 @@ def execute_reserved_continuation(*, database, artifact_store, execution_id, bas
             return engine.analyze(original.request)
     except Exception:
         raise ValueError('linked worker execution requires review') from None
+
+
+def poll_reserved_continuation(*, database, artifact_store, base_config, worker_id,
+                               clock=lambda: datetime.now(UTC)):
+    """At most one reservation. Failures never become automatic paid retries."""
+    execution_id = next_reserved_execution(database)
+    if execution_id is None:
+        return None
+    try:
+        return execute_reserved_continuation(database=database, artifact_store=artifact_store,
+            execution_id=execution_id, base_config=base_config, worker_id=worker_id, clock=clock)
+    except ValueError:
+        # Before claim: append one refusal so restart cannot loop the same item.
+        # After claim: no relabel/requeue; its private lease/stop/receipt governs.
+        record_preparation_refusal(database=database, execution_id=execution_id, worker_id=worker_id, clock=clock)
+        return execution_id

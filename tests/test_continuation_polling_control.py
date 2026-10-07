@@ -1,0 +1,88 @@
+"""Durable preclaim refusal, migration and owner control; no SDK/model calls."""
+
+from uuid import uuid4
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import inspect, select
+
+from tests.test_continuation_consent import history, prepared as prepared
+from tests.test_linked_execution import setup
+from tradingagents.platform.analysis.linked_execution import LinkedExecutionError
+from tradingagents.platform.analysis.preparation_refusals import next_reserved_execution
+from tradingagents.platform.api import ApiSettings, create_app
+from tradingagents.platform.artifacts import LocalArtifactStore
+from tradingagents.platform.jobs import linked_worker
+from tradingagents.platform.persistence import Database, downgrade_database, upgrade_database
+from tradingagents.platform.persistence.models import ResearchPreparationRefusalRow
+
+
+@pytest.mark.parametrize("prepared", [False, "postgres_failed"], indirect=True)
+def test_poison_reservation_is_durable_without_claim_or_original_mutation(prepared, tmp_path, monkeypatch):
+    database, executions, params, clock = setup(prepared)
+    reservation = executions.allocate(**params)
+    before = history(database)
+    calls = []
+
+    def refused(**kwargs):
+        calls.append(kwargs["execution_id"])
+        raise ValueError("synthetic private diagnostic")
+
+    monkeypatch.setattr(linked_worker, "execute_reserved_continuation", refused)
+    values = {"database": database, "artifact_store": LocalArtifactStore(tmp_path / "artifacts"),
+              "base_config": {}, "worker_id": "control-worker", "clock": lambda: clock[0]}
+    assert linked_worker.poll_reserved_continuation(**values) == reservation.execution_id
+    assert calls == [reservation.execution_id]
+    assert next_reserved_execution(database) is None
+    reopened = Database(database.engine.url.render_as_string(hide_password=False))
+    try:
+        assert next_reserved_execution(reopened) is None
+        assert linked_worker.poll_reserved_continuation(**{**values, "database": reopened}) is None
+    finally:
+        reopened.dispose()
+    assert calls == [reservation.execution_id]
+    with pytest.raises(LinkedExecutionError):
+        executions.claim(execution_id=reservation.execution_id, worker_id="another-worker")
+    assert history(database) == before
+    with database.session() as session:
+        assert len(session.scalars(select(ResearchPreparationRefusalRow)).all()) == 1
+
+
+@pytest.mark.parametrize("prepared", [False, "postgres_failed"], indirect=True)
+def test_owner_state_and_idempotent_cancel_need_no_sdk(prepared, tmp_path, monkeypatch):
+    database, executions, params, clock = setup(prepared)
+    reservation = executions.allocate(**params)
+    before = history(database)
+    app = create_app(ApiSettings(database_url=database.engine.url.render_as_string(hide_password=False),
+        artifact_root=tmp_path / "artifacts", allowed_origin="http://testserver", secure_cookies=False,
+        clock=lambda: clock[0]))
+    with TestClient(app) as client:
+        path = f"/api/v1/runs/{reservation.source_run_id}/continuations/{reservation.execution_id}"
+        assert client.get(path).status_code == 401
+        client.cookies.set("ta_session", params["session_token"])
+        client.cookies.set("ta_csrf", params["csrf_token"])
+        response = client.get(path)
+        assert response.status_code == 200, response.text
+        assert response.json()["status"] == "reserved"
+        assert response.json()["preparation_requires_review"] is False
+        assert client.get(path.replace(str(reservation.execution_id), str(uuid4()))).status_code == 404
+        assert client.post(path + "/cancel", headers={"Origin": "http://testserver"}).status_code == 403
+        headers = {"Origin": "http://testserver", "X-CSRF-Token": params["csrf_token"]}
+        for _ in range(2):
+            assert client.post(path + "/cancel", headers=headers).json()["status"] == "cancelled"
+    assert history(database) == before
+    assert next_reserved_execution(database) is None
+    with pytest.raises(LinkedExecutionError):
+        executions.claim(execution_id=reservation.execution_id, worker_id="cancelled-worker")
+
+
+def test_empty_additive_migration_preserves_original_history(prepared):
+    database = prepared[0]
+    before = history(database)
+    url = database.engine.url.render_as_string(hide_password=False)
+    downgrade_database(url, "0017_linked_stops")
+    assert "research_preparation_refusals" not in inspect(database.engine).get_table_names()
+    assert history(database) == before
+    upgrade_database(url)
+    assert "research_preparation_refusals" in inspect(database.engine).get_table_names()
+    assert history(database) == before

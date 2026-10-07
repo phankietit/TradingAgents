@@ -6,18 +6,27 @@ from threading import Lock
 from uuid import UUID
 
 from fastapi import HTTPException, Request
+from sqlalchemy import text
 
 from tradingagents.default_config import DEFAULT_CONFIG
-from tradingagents.platform.analysis.continuation import _digest, _payload
+from tradingagents.platform.analysis.continuation import _db_utc, _digest, _payload
 from tradingagents.platform.analysis.linked_execution import LinkedExecutionStore
+from tradingagents.platform.analysis.linked_results import read_linked_completion
+from tradingagents.platform.analysis.preparation_refusals import validate_refusal
 from tradingagents.platform.analysis.terminal_preparation import prepare_terminal_continuation
 from tradingagents.platform.auth import OwnerAuth
 from tradingagents.platform.persistence import PlatformRepository
+from tradingagents.platform.persistence.models import (
+    ResearchContinuationRow,
+    ResearchExecutionCompletionRow,
+    ResearchPreparationRefusalRow,
+)
 
 from .schemas import (
     ContinuationConsentRequest,
     ContinuationPreparationResponse,
     ContinuationReservationResponse,
+    ContinuationStateResponse,
 )
 
 
@@ -30,12 +39,14 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
     """
     preparation_lock = Lock()
 
-    def credentials(request, run_id):
+    def credentials(request, run_id, *, mutating=True):
         token = request.cookies.get("ta_session")
         if not token:
             raise HTTPException(401, "authentication required")
         csrf = request.headers.get("X-CSRF-Token")
         cookie = request.cookies.get("ta_csrf")
+        if not mutating and csrf is None:
+            csrf = cookie
         if not csrf or not cookie or not compare_digest(csrf.encode(), cookie.encode()):
             raise HTTPException(403, "CSRF validation failed")
         try:
@@ -49,6 +60,65 @@ def mount_continuation_routes(app, *, settings, database, artifact_store):
         except Exception:
             raise HTTPException(401, "authentication required") from None
         return token, csrf
+
+    def state(session, execution, now):
+        refusal = session.get(ResearchPreparationRefusalRow, execution.execution_id)
+        if refusal is not None:
+            validate_refusal(refusal, execution=execution, now=now)
+        completed = read_linked_completion(session=session, artifact_store=artifact_store,
+            owner_id=execution.owner_id, execution_id=execution.execution_id)
+        return ContinuationStateResponse(run_id=execution.source_run_id, execution_id=execution.execution_id,
+            status="completed" if completed is not None else execution.status,
+            preparation_requires_review=refusal is not None,
+            lease_expired=execution.lease_expires_at is not None and _db_utc(execution.lease_expires_at) <= now)
+
+    def load_control(session, run_id, execution_id, token, csrf):
+        now = settings.clock()
+        owner = OwnerAuth(session).lock_authenticated_consent(token, csrf, now=now)
+        row = session.get(ResearchContinuationRow, execution_id)
+        if row is None or row.owner_id != owner.owner_id or row.source_run_id != run_id:
+            raise HTTPException(404, "continuation not found")
+        consent, observation = LinkedExecutionStore._control_source(session, execution_id, now, owner_id=owner.owner_id)
+        execution = LinkedExecutionStore._execution(session, consent, observation, now)
+        if execution is None:
+            raise HTTPException(404, "continuation not found")
+        return execution, now
+
+    @app.get("/api/v1/runs/{run_id}/continuations/{execution_id}",
+             response_model=ContinuationStateResponse, tags=["runs"])
+    def get_continuation(run_id: UUID, execution_id: UUID, request: Request):
+        token, csrf = credentials(request, run_id, mutating=False)
+        try:
+            with database.session(lock_timeout_seconds=5.0) as session:
+                execution, now = load_control(session, run_id, execution_id, token, csrf)
+                return state(session, execution, now)
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(409, "continuation requires review") from None
+
+    @app.post("/api/v1/runs/{run_id}/continuations/{execution_id}/cancel",
+              response_model=ContinuationStateResponse, tags=["runs"])
+    def cancel_continuation(run_id: UUID, execution_id: UUID, request: Request):
+        token, csrf = credentials(request, run_id)
+        try:
+            with database.session(lock_timeout_seconds=5.0) as session:
+                if session.bind.dialect.name == "sqlite":
+                    session.execute(text("BEGIN IMMEDIATE"))
+                execution, now = load_control(session, run_id, execution_id, token, csrf)
+                if session.get(ResearchExecutionCompletionRow, execution_id) is not None:
+                    raise ValueError("completion cannot be cancelled")
+                if execution.status == "reserved":
+                    execution.status = "cancelled"
+                elif execution.status == "leased":
+                    execution.status = "cancel_requested"
+                execution.updated_at = now
+                session.flush()
+                return state(session, execution, now)
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(409, "continuation requires review") from None
 
     def prepare(run_id, token, csrf):
         config = deepcopy(DEFAULT_CONFIG)

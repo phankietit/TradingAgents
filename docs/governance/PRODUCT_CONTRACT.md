@@ -148,8 +148,10 @@ digest and original remaining allowance; reservation rederives identity and
 requires literal consent and all three disclosure acknowledgments. Original
 owner/session/CSRF checks close before SDK work and are rechecked at commit.
 A process-local lock bounds simultaneous preparation, not distributed/public
-deployment. Responses keep dispatch_enabled false; no default linked worker or
-browser control is enabled yet. API/native/full and live/semantic acceptance
+deployment. Responses keep dispatch_enabled false (no direct HTTP model dispatch).
+Ordinary startup remains ordinary-only; explicit operator `--continuations`
+polling may consume a consented reservation. No browser control is enabled yet.
+API/native/full and live/semantic acceptance
 remain separately evidenced. No original-history rewrite or fresh allowance is granted.
 
 Trusted reserved preparation rechecks durable consent, active owner, immutable
@@ -161,6 +163,17 @@ publisher/factory, heartbeat, original graph restore and separate completion.
 Renewal uncertainty refuses callback/publication; ACK uncertainty cannot reset
 the attempt. This is not default polling/browser dispatch, a fresh allowance,
 rewritten terminal history, financial/translation acceptance or human approval.
+
+Opt-in durable polling gives ordinary jobs priority. A separately hashed preclaim
+preparation refusal excludes the reservation across restart and from claim; it
+does not grant retry, lease, model entry or fresh budget. Claimed uncertainty is
+never automatically requeued. Owner-authenticated status and CSRF/Origin-protected
+cancel operate without SDK construction. Completion is reported only after the
+full separate completion/report reader validates it; active cancellation is a
+request, not proof of provider termination. Migration 0018 is explicit/additive;
+rollback removes control receipts and must not authorize retry or alter history.
+Professional browser controls, full current regression and live acceptance remain
+separate unfinished gates.
 
 ## 4. Asset-Specific Contracts
 

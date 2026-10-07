@@ -186,6 +186,17 @@ class ResearchExecutionRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ResearchPreparationRefusalRow(Base):
+    """Append-only preclaim refusal, never model or continuation authority."""
+
+    __tablename__ = "research_preparation_refusals"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    worker_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    refused_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
 class ResearchExecutionEntryRow(Base):
     """One actual parent entry marker; never re-enter after a lost ACK."""
 

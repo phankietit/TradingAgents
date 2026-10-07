@@ -213,8 +213,8 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
         expected = baseline.analyze(baseline_request, fixture_execution=lambda options:
             AnalysisEngine(base_config=options).analyze(baseline_request))
         monkeypatch.setattr(supervision, "_child", restored_default_child)
-        result = execute_reserved_continuation(database=database, artifact_store=store,
-            execution_id=consent.execution_id, base_config=baseline_config, worker_id="native-linked-worker")
+        result = runtime.run_worker(runtime.WorkerSettings(url, store.root), once=True,
+                                    continuations=True, worker_id="native-linked-worker")
         suffix = json.loads((store.root / "worker-runtime" / "reports.fixture-trace.json").read_text())
         assert trace["trace"] + suffix["trace"] == json.loads(json.dumps(baseline.model_trace))
         assert suffix["pid"] != trace["pid"] and suffix["closed_clients"] == 2
@@ -227,6 +227,24 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
         for key in ("investment_debate_state", "risk_debate_state"):
             expected_data["final_state"][key] = {"history": expected_data["final_state"][key].get("history", "")}
         assert result.model_dump() == expected_data
+        from fastapi.testclient import TestClient
+
+        from tradingagents.platform.api import ApiSettings, create_app
+
+        with database.session() as session:
+            new_login = OwnerAuth(session).login("stopped-default@example.test", "synthetic fixture password")
+        app = create_app(ApiSettings(database_url=url, artifact_root=store.root,
+                                    allowed_origin="http://testserver", secure_cookies=False))
+        with TestClient(app) as client:
+            client.cookies.set("ta_session", new_login.token)
+            client.cookies.set("ta_csrf", new_login.csrf_token)
+            path = f"/api/v1/runs/{run.run_id}/continuations/{consent.execution_id}"
+            state = client.get(path)
+            assert state.status_code == 200, state.text
+            assert state.json()["status"] == "completed"
+            assert state.json()["preparation_requires_review"] is False
+            headers = {"Origin": "http://testserver", "X-CSRF-Token": new_login.csrf_token}
+            assert client.post(path + "/cancel", headers=headers).status_code == 409
         with database.session() as session:
             aggregate = load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id)
             assert aggregate.attempts == (1, 2)
