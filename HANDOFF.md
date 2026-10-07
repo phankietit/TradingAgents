@@ -2,6 +2,34 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact pending-stop UI acceptance (2026-10-07):** clean frozen
+`888e28f85075b141781c84b296e691e5e0a23c51`. Web16763 terminal0:
+`npm --prefix web run typecheck && npm --prefix web run lint && npm --prefix web test && npm --prefix web run build && git diff --check`
+PASS170tests/27files/12.19s/build299. External active-cancel44015 terminal0:
+1PASS/5synthetic warnings/12.31s, Python3.14.7. Command is the same external
+bridge below with `--basetemp=<managed-run>/active-cancel-888e28f-b`.
+Real mobile browser login/Stop200 while the actual native child still awaits
+checkpoint ACK; EN/VI continuation progress says shutdown is not yet verified,
+never stopped/completed/Read report. Original native assertions preserve child
+reaping, reader closure, verified local stop/no provider cost/continuation grant,
+no publication and unchanged original history. Fresh browser readback after local
+shutdown still shows pending: that separate projection gap is NOT fixed by this
+patch. Only cancellation/login writes; no model/provider/private-history call.
+No page exceptions or mobile overflow. Visually inspected fresh external
+Logs/active-cancel-pending-fix-request-mobile-vi.png (first viewport); text/state
+assertions cover the progress step below it. Both browser contexts closed,
+Uvicorn27500 joined/shutdown complete; no8018 listener, worktree stayed clean.
+
+Initial corrected-source QA52752 FAIL/22.25s: unscoped `Processing stopped`
+locator also matched the legitimate failed ORIGINAL attempt. Scope only the
+absence assertion to the actual continuation region, preserve previous fixture,
+rerun in a new isolated database; no product source/guard changed to get PASS.
+These receipts are exact888e28f, not the subsequent docs-only checkpoint or
+full regression/live financial/translation/release proof. Goal ACTIVE;
+next: integrity-validated readonly stop projection with cancellation/publication
+race coverage, preserving successful leased completion polling and all admission
+fences. Fresh paid BTC/AAPL approval pending, NQ owner-BLOCKED.
+
 **Active browser/native cancellation and pending-text correction (2026-10-07):**
 clean frozen `8ef88b012400c963aa6186eba7b784a3822ce04b`, external QA74601
 terminal0:1PASS/5warnings/24.80s, Python3.14.7. Command:
