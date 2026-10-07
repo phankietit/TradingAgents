@@ -32,6 +32,71 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Full default-recording baseline and original stopped-job consent
+
+Clean frozen SHA `6fff558d6666fc365a6bfdc1bc20a1e5d1c73f84`:
+full helper46603 terminal0, **3,127 tests+88 subtests PASS**,2 skips,
+443warnings,3005.82s; Python3.14.7, Ruff/pip-check/diff PASS. Exact command:
+`TMPDIR=<owned-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash
+scripts/verify-postgres-local.sh`, log `<owned-run>/Logs/full-default-recording-6fff558.log`.
+Owned run: `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163`.
+Source/HEAD stayed unchanged, and only labelled helper-owned PostgreSQL removed.
+Skips: Bedrock optional langchain_aws absent; DeepSeek live key unset/placeholder
+(local helper deliberately unsets it). Both remain UNVERIFIED.
+Full local evidence is not authenticated default continuation, financial/VI
+semantic, current provider/data or release proof. Earlier timeout FAIL retained.
+
+External staged `Results/test_default_stopped_consent.py` at this package SHA:
+SQLite62224 terminal0,3PASS/3deselected/32warnings/36.06s; command
+`PYTHONPATH=<owned-run>/Results:. TMPDIR=<owned-run>/Tmp .venv/bin/python -m
+pytest -q <owned-run>/Results/test_default_stopped_consent.py -k sqlite --tb=short`.
+Disposable-PG68953 terminal0,6PASS/32warnings/124.77s; same paths plus
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused
+<owned-run>/Results/test_default_stopped_consent.py`. Both SQLite/PostgreSQL and
+EN/VI/bilingual pass. Real canonical default job, original graph/DB checkpoint
+and codec, synthetic SDK with callbacks and simulated committed ACK loss.
+Original stopped job has exactly1 call/15 reported tokens and a conservative
+elapsed upper bound. Session/CSRF/literal-confirmation/idempotency enforce consent;
+original run/job/checkpoint/event/accounting remain unchanged. Child reaped,
+unknown remote cleanup remains unknown. No reservation/claim/dispatch/resume,
+default web journey or actual model invocation is proved.
+
+Retained staged FAILs:84362 terminal1,3FAIL/3deselected/19.47s from callback-off
+fixture accounting0 rather than1; existing callback fixture fixes setup without
+relaxing1call/15tokens assertion. PG10289 terminal1,2FAIL/4PASS/75.66s because
+shared test DB correctly refuses second singleton-owner bootstrap. Per-case
+explicit disposable DB isolation fixes fixture, not production auth. Source
+now adds this test and strengthens successful-default accounting; integrated
+and new full gates remain UNVERIFIED until separately run.
+
+Presence-only SEC check corrects earlier worktree-only statements: root ignored
+`.env` has email-shaped SEC_EDGAR_USER_AGENT, active worktree `.env` absent.
+No actual contact/key printed, copied or changed. Explicit dotenv-path startup
+is already documented; configuration presence is not current live SEC proof.
+NQ=F remains owner BLOCKED; broader R01–R14 acceptance is incomplete.
+
+Integrated candidate at6fff plus only two tests/these receipts:81182 terminal0,
+**12PASS/115.03s**, no skips; Ruff/pip-check/diff PASS. Exact command:
+`TMPDIR=<owned-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash
+scripts/verify-postgres-local.sh --focused tests/test_default_stopped_consent.py
+tests/test_default_recording_native.py`. Source unchanged during QA; only own
+labelled PG removed. Successful graph now compares full native model trace with
+started calls and15 tokens per call, with no unreported starts and retained
+elapsed upper bound. Original stage/checkpoint/report assertions remain intact.
+This focused gate is not the new candidate's full suite or default dispatch.
+
+Live read-only SEC80481 terminal0: `PYTHONPATH=. TMPDIR=<owned-run>/Tmp
+.venv/bin/python <owned-run>/Results/check_sec_existing_env.py`, log
+`<owned-run>/Logs/sec-current-existing-env.log`. The script uses python-dotenv
+explicit existing root env before import and sets TRADINGAGENTS_CACHE_DIR to
+`<owned-run>/Results/sec-current-cache`; uses approved fetch_current_sec_facts
+bounded adapter and catalog AAPL, no monkeypatch/fallback/model/private DB.
+Package6fff unchanged; only two tests/docs dirty. Actual requested
+2026-10-07T08:37:50.333234Z/retrieved08:37:51.571954Z: **PASS** current acquisition,
+OK/eligible_filed_facts,1,159 facts/0 invalid/latest filed2026-07-31. No raw contact,
+keys or payload printed/committed; cache stays private. This is not authenticated
+web/API storage, historical SEC vintage, AAPL full analysis or editorial proof.
+
 ### Default runtime native recording and bounded phase diagnosis
 
 Clean source `939b5868886f90464c2f5d45d1891f097fc39576`:

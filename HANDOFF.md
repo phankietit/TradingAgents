@@ -2,6 +2,50 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Full default recording baseline and stopped-consent bridge (2026-10-07):**
+clean frozen `6fff558d6666fc365a6bfdc1bc20a1e5d1c73f84`, full disposable-PG
+helper46603 terminal0: 3,127 tests+88 subtests PASS,2 optional-provider skips
+UNVERIFIED,443warnings/3005.82s; Python3.14.7, Ruff/pip-check/diff PASS.
+Source/HEAD unchanged throughout; only helper-owned labelled PG removed.
+This proves the full local baseline, not financial/VI semantics, live providers
+or default owner continuation. Earlier77978 timeout FAIL remains retained.
+
+External actual default stopped-job candidate at that SHA: corrected
+SQLite62224 terminal0,3PASS/3deselected/32warnings/36.06s; isolated PG68953
+terminal0,6PASS/32warnings/124.77s, both dialects/all three languages.
+Real original graph/checkpoint commits, synthetic SDK and post-commit ACK loss;
+accounting retains exactly1 started call/15 tokens, terminal history/checkpoint
+bytes unchanged by explicit authenticated/idempotent consent. Invalid CSRF and
+false confirmation refuse. No allocation/claim/dispatch/resume or paid grant.
+Initial84362 FAIL3: callback-disabled synthetic fixture reported0 calls; use
+existing callback fixture, retaining1/15 assertions. Initial PG10289 FAIL2/
+4PASS/75.66s: shared QA DB correctly refused a second owner bootstrap; isolate
+explicit disposable DB between cases, no auth relaxation. Candidate now added
+as `tests/test_default_stopped_consent.py`; successful default graph test now
+adds callback/trace/accounting equality. New integrated/full evidence pending.
+
+Integrated two-file disposable-PG81182 terminal0:12PASS/115.03s, no skips;
+Ruff/pip-check/diff PASS, source6fff plus only these two tests and receipts,
+unchanged throughout QA. Successful default graph accounting matches complete
+native trace/15 tokens per callback in all languages/dialects; original stages
+and checkpoint/report assertions retained. New candidate full gate still pending.
+
+SEC configuration correction: presence-only inspection on2026-10-07 finds an
+email-shaped SEC_EDGAR_USER_AGENT in the root checkout's ignored `.env`, while
+the active worktree has no `.env`. Earlier worktree-only absence is not evidence
+the owner never supplied contact. Existing explicit dotenv-path startup procedure
+in `docs/platform/local-web-startup.md` applies; no populated env copied, raw value
+printed, runtime restarted or current live SEC access established. R01–R14 stays
+ACTIVE; NQ remains owner BLOCKED. No paid run/provider/risk/CI/main/deploy change.
+
+Read-only live SEC80481 terminal0 subsequently used the existing explicit root
+dotenv path and isolated external QA cache through the approved bounded adapter:
+2026-10-07T08:37:50.333234Z–08:37:51.571954Z, AAPL OK/eligible_filed_facts,
+1,159 facts/0 invalid/latest filed2026-07-31. No mock, fallback, AI invocation,
+owner DB/snapshot mutation or raw contact/key output. Package source remains6fff;
+only tests/docs dirty. This proves current SEC acquisition, NOT authenticated
+web preparation, AAPL full graph/output, historical vintage or semantic quality.
+
 **Default runtime native proof (2026-10-07):** source
 `939b5868886f90464c2f5d45d1891f097fc39576` plus new
 `tests/test_default_recording_native.py`, otherwise unchanged during QA.

@@ -7,10 +7,11 @@ import pytest
 from sqlalchemy import select
 
 from tests.test_initialized_preflight import _assert_reaped, _NativeContext
-from tests.test_native_recorder_spawn import fixture_child
+from tests.test_native_recorder_spawn import callback_fixture_child
 from tests.test_recovery_fingerprint import inputs
 from tradingagents.contracts import ArtifactKind, JobStatus
 from tradingagents.platform.analysis import initialized_preflight, supervision
+from tradingagents.platform.analysis.accounting import load_accounting_evidence
 from tradingagents.platform.analysis.observer import STAGES
 from tradingagents.platform.analysis.snapshots import AnalysisSnapshot
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
@@ -71,7 +72,7 @@ def test_default_runtime_records_original_full_graph_without_engine_injection(tm
     monkeypatch.setattr(runtime, "DEFAULT_CONFIG", args["base_config"])
     native = _NativeContext("success")
     monkeypatch.setattr(initialized_preflight, "get_context", lambda mode: native)
-    monkeypatch.setattr(supervision, "_child", fixture_child)
+    monkeypatch.setattr(supervision, "_child", callback_fixture_child)
     # No injected engine: the actual default runtime/handler/factory owns setup.
     completed = runtime.run_worker(runtime.WorkerSettings(url, store.root), once=True,
                                    worker_id="default-native-worker")
@@ -83,6 +84,10 @@ def test_default_runtime_records_original_full_graph_without_engine_injection(tm
         assert retained.decision_inputs == run.decision_inputs
         assert retained.selected_analysts == roles
         assert retained.execution_limits == run.execution_limits
+        accounting = load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id)
+        assert accounting.evidence_status == "PASS"
+        assert accounting.unreported_started_calls == 0
+        assert accounting.elapsed_upper_bound is not None
         rows = session.scalars(select(ResearchCheckpointRow).where(
             ResearchCheckpointRow.run_id == run.run_id)).all()
         stages = session.scalars(select(RunEventRow).where(
@@ -99,5 +104,7 @@ def test_default_runtime_records_original_full_graph_without_engine_injection(tm
     with pytest.raises(ProcessLookupError):
         os.kill(trace["pid"], 0)
     assert len(trace["trace"]) > 10
+    assert accounting.started_calls == len(trace["trace"])
+    assert accounting.reported_total_tokens == len(trace["trace"]) * 15
     _assert_reaped(native)
     database.dispose()
