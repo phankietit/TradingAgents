@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Initialized identity implementation (2026-10-07):** internal
+`analysis/initialized_preflight.py` now stages the actual graph/client identity
+in a spawn-only child, bounded JSON4MB/reply8KB, 45-second preparation ceiling
+within the original observer allowance, cancellation/lease checks and reaping.
+Cleanup and clean exit must precede acceptance; no SDK crosses to/gets closed
+in the parent. Parent-loss guard and fixed errors; no model call/paid grant.
+Default per-run recording/owner dispatch are NOT integrated. First expanded
+focused77211 FAIL:1/115PASS, caught nonfinite config normalization; corrected
+pre-serialization finite/JSON refusal. Focused15551 terminal0:116PASS/28warnings/
+31.01s, Ruff/pip-check PASS, dirty source at6d41fc1. Final6141 terminal0:
+119PASS/28warnings/44.86s; repository Ruff/pip-check/diff PASS. Includes native
+original-book Decimal precision and parent observer preservation, codec-node,
+event-loop, input-cap, deadline/cancel/parent-loss/IPC and SDK cleanup controls.
+One intermediate88216 FAIL was a test fixture assigning Decimal to tuple cash;
+corrected the actual CashBalance.amount, retaining exact precision assertion.
+This remains dirty-source focused evidence until a new clean full gate;
+older full6db3053 is not promoted. Source baseline/local native/default
+owner/financial/VI/live acceptance remain separate and incomplete.
+
 **Social count full baseline:** clean frozen
 `6db21f2577e22e72081cea001542b24f183a8538`, full PG61745 terminal0:
 3,053 tests+88 subtests PASS/2 optional-provider skips UNVERIFIED/443warnings/

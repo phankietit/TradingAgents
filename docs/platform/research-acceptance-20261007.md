@@ -95,6 +95,49 @@ UNVERIFIED. Existing full6db3053 receipt is unchanged and not promoted to them.
 
 ### Exact full corrective regression
 
+#### Initialized preflight implementation after the isolation diagnostic
+
+New internal `analysis/initialized_preflight.py` uses actual original graph/SDK
+construction and existing fingerprint validation in a spawned child. Input is
+bounded private JSON (4MB), not SDK/callback/DB/pickle; response is bounded JSON
+(8KB), only fingerprint and validated node list. Parent validates exact observer
+identity (request observer absent or the same object), keeps it out of the child,
+and enforces its original time/cancellation/lease boundary plus a 45-second probe
+ceiling. No model reservation/call, checkpoint/consent/continuation authority,
+parent SDK cleanup or global-cache mutation. Parent-loss guard exits the child;
+constructor/cleanup failures withhold identity, clean child exit and reaping are
+required before return. Async event-loop callers and unreviewed providers refuse.
+Full original immutable book/policy/source values bind after JSON reconstruction,
+without converting book Decimal values through the lightweight LLM portfolio.
+This prerequisite is not wired to the default handler/runtime or owner routes.
+
+Dirty-source focused77211 terminal1:115PASS/1FAIL/28warnings/71.01s. Nonfinite
+config control found Pydantic serializing NaN to null; pre-serialization JSON
+validation now refuses the original value. Corrected15551 terminal0:
+116PASS/28warnings/31.01s. After additional controls,88216 terminal1:
+117PASS/1FAIL/28warnings/29.13s; Decimal fixture incorrectly replaced tuple cash
+instead of CashBalance.amount. Fix the field, not its precision assertion.
+
+Final6141 terminal0: **119PASS/28warnings/44.86s**, Python3.14.7, dirty source at
+`6d41fc18b40d89e99f863dd62e9b0037992d81af`. Exact command, task-owned external
+TMPDIR: `.venv/bin/python -m pytest -q tests/test_initialized_preflight.py
+tests/test_initialized_graph_fingerprint.py tests/test_recording_context.py
+tests/test_recovery_fingerprint.py --tb=short`. Repository Ruff/pip-check and
+diff check PASS. Native cases exercise actual SDK/graph, with send/invoke forbidden,
+two sequential identities and open matching parent SDKs, original book Decimal
+amount changes below a float ULP, partial SDK initialization, injected close
+failure, oversize/duplicate JSON, original observer budget/startup deadline,
+owner cancellation after spawn, and child parent-loss guard with simulated dead
+parent liveness. The latter is not proof of an OS-killed worker journey.
+Invalid parent config, credentials, descriptors, source/observer, nonfinite values,
+input cap and event loop refuse before spawn. No paid AI or private runtime change.
+
+New clean-candidate full local/PostgreSQL proof remains UNVERIFIED until the
+default full helper finishes. Previous6db3053 proof does not cover this module.
+Default per-run recording, authenticated owner consent/linked dispatch, actual
+worker-loss browser journey, financial/editorial/VI and live acceptance remain
+unfinished. No default activation may skip those existing authority boundaries.
+
 Clean frozen `2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, session12988 terminal
 exit0: **3,002 PASS,88 subtests PASS,2 optional-provider skips,443 warnings,
 1470.92s**, Python3.14.7. Command: `TA_ALLOW_TEST_DB_RESET=1 bash

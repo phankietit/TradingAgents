@@ -577,6 +577,16 @@ invoking models or reading SDK authentication headers. It rejects declared custo
 headers/query/transports and unreviewed classes. This is not a complete transport
 attestation: worker-controlled construction, SDK mutation protection, other SDK
 adapters and durable recovery remain unverified and are not enabled.
+An internal initialized-identity preflight now constructs the original graph
+and reviewed SDKs in a separate spawned process. LangChain default HTTP pools
+can be shared between fresh SDK roots, so it never closes clients in the worker
+or clears its transport caches. It uses bounded JSON inputs/replies, the original
+observer's wall-time/cancellation/lease checks, a separate 45-second preparation
+ceiling and child reaping. Only a sanitized fingerprint/node list is returned
+after SDK cleanup and clean child exit; no model call or continuation permission
+is granted. Parent credentials are not serialized and no supplied client/factory
+is accepted. Default per-run recording, owner continuation and live acceptance
+remain unfinished; this prerequisite is not wired into default workers yet.
 Private checkpoint persistence now has an internal append-only database store
 and migration `0011_research_checkpoints`, separate from report artifacts. It
 validates restricted JSON, binds owner/run/job, commits under the existing

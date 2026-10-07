@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add an internal spawn-isolated initialized SDK/graph identity prerequisite
+  for durable research recording. Bound JSON transfer and preparation lifetime,
+  preserve the original observer budget/cancellation/lease fence, reap owned
+  children and refuse cleanup/exit/transport failures. Do not close cached
+  HTTP pools in the worker. No model invocation, default worker activation,
+  CLI change, new provider or continuation authority is introduced.
+
 - Reuse the validated original social fact resolver during financial review.
   Social quantities render source-owned EN/VI sample-count statements, preserving
   user-label limitations and forbidding attached currency, probability or neutral
