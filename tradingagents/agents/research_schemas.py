@@ -121,11 +121,16 @@ def _summary_evidence_matches(self):
 # Staged V2 contract. Default graph generation still uses the legacy classes
 # until all review/read/publication consumers and native gates are migrated.
 # No default version/citations: a model must explicitly provide both fields.
-CanonicalSnapshotDecisionV2 = create_model(
-    "PortfolioDecision", __base__=CanonicalSnapshotDecision,
+SnapshotPortfolioDecisionV2 = create_model(
+    "PortfolioDecision", __base__=SnapshotPortfolioDecision,
     __validators__={"summary_parity": model_validator(mode="after")(_summary_evidence_matches)},
     report_contract_version=(Literal["2.0"], Field(description="Required explicit web report contract version 2.0.")),
     summary_evidence=(DecisionEvidenceClaim, Field(description="Exact complete executive_summary text with its actual supplied snapshot IDs. Unrelated available sources are not support.")),
+)
+CanonicalSnapshotDecisionV2 = create_model(
+    "PortfolioDecision", __base__=SnapshotPortfolioDecisionV2,
+    localized_report=(Literal[None], Field(default=None,
+        description="Must be null. A separate protected translation stage handles presentation.")),
 )
 SnapshotReportDraftV2 = create_model(
     "PortfolioDecision", __base__=SnapshotReportDraft,
@@ -142,6 +147,12 @@ def read_canonical_snapshot_report(raw):
     summary support. Review/publication activation must enforce V2 separately.
     """
     schema = CanonicalSnapshotDecisionV2 if raw.get("report_contract_version") == "2.0" else CanonicalSnapshotDecision
+    return schema.model_validate(raw)
+
+
+def read_snapshot_report(raw):
+    """Read saved/presented reports without changing their contract or sources."""
+    schema = SnapshotPortfolioDecisionV2 if raw.get("report_contract_version") == "2.0" else SnapshotPortfolioDecision
     return schema.model_validate(raw)
 
 

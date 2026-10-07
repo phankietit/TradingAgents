@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 V2 review/transport WIP · 2026-10-08:** isolated summary branch adds
+explicit V2 financial-node schema/compiler selection, strict output/no-downgrade
+and source-binding prompt, retaining rejected candidate and one attempt/one repair.
+Saved/presented V2 reader permits separate locales; canonical review still
+requires null localization. Presentation and restricted checkpoint codec preserve
+summary references without source guessing or legacy fallback for malformed V2.
+Safe diagnostics allow new schema field names, not values. Default generation,
+engine/result evidence/publication/approval migration remains unfinished; legacy
+behavior/CLI/history unchanged and default summary red test still authoritative.
+Dirty14595 terminal1:1FAIL101PASS7.36s: draft transport fixture omitted schema
+defaults unlike actual generated model_dump; corrected input normalization, not
+weakened transport assertions. Dirty72421 terminal0:102PASS5.88s.
+Dirty78472 terminal0:119PASS5.83s with actual bounded-node V2 controls added:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_snapshot_checkpoint_codec.py tests/test_report_localization.py --tb=short`.
+Ruff PASS after import formatting. These are synthetic component/reader tests,
+not clean-SHA/native/all-role integration/full/live/editorial acceptance. Full73101
+still live on unchanged primarycfd31da; no integration or paid call. Goal ACTIVE.
+
 **R07 clean staged V2 gate · 2026-10-08:** frozen clean source
 `2f16dfd02e9f8ae10c1ad02162e9896c796f683e`, side97397 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_provenance_v2.py tests/test_report_compiler.py tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py --tb=short`.

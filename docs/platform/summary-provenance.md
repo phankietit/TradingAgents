@@ -1,7 +1,7 @@
 # R07 summary provenance — implementation design
 
 Status: staged V2 schema/compiler components; default-flow regression remains
-FAIL. Not activated in generation/review/read/publication, not release acceptance.
+FAIL. Default generation/publication activation pending, not release acceptance.
 `tests/test_summary_source_coverage.py` proves the current canonical summary can
 assert an uncited external cause when unrelated news is available, even after
 the claim-local thesis guard. See exact receipts in [HANDOFF](../../HANDOFF.md).
@@ -27,11 +27,19 @@ The version-aware reader accepts explicit V2 or separately identified legacy
 reports, rejecting unknown explicit versions; legacy reading is not permission
 for new output to downgrade. Canonical validation checks supplied summary IDs,
 and the known price-only motive guard uses the summary's actual citations.
-Component fixtures cover these boundaries, not default graph activation or
-general semantic entailment. Generation, bounded financial review, checkpoint
-codec, localization, result/publication and approval readers must be migrated and
-verified together before activation; retain rejected original inputs and immutable
-legacy history. The uncited-summary default-flow red test remains authoritative.
+The bounded financial node now accepts explicit V2 input without allowing its
+output to drop version/source fields; it retains the original rejected candidate
+and original structured-attempt/one-repair bound. Presentation and checkpoint
+transport understand explicit V2, including a separately localized saved report,
+and retain exact summary sources. Canonical review input still requires null
+localization. Unknown explicit versions or invalid metadata refuse checkpoint
+decoding rather than downgrade. Safe diagnostic fields include the schema names,
+never supplied private values. These are component/transport capabilities, not
+default graph activation or general semantic/translation proof. Generation,
+result/publication and approval readers plus original-role integrated/native
+gates must migrate and verify together before activation; retain rejected original
+inputs and immutable legacy history. The uncited-summary default-flow red test
+remains authoritative.
 
 The model supplies summary prose and citations. The deterministic compiler
 projects prose and references losslessly into canonical text plus versioned
