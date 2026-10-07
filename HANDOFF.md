@@ -2,6 +2,24 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07 V2 result/evidence WIP · 2026-10-08:** isolated summary branch now reads
+explicit V2 graph results, rechecks canonical/source/known price-only motive
+publication guards, retains audit quantities on publication failure and carries
+actual summary refs into existing evidence storage. Identical summary/thesis
+text merges only their supplied IDs, never infers citations from availability.
+Worker independently validates V2 metadata/narrative/material-source parity;
+tampered output stays INVALID/REVIEW, existing risk and owner approval unchanged.
+Graph/adaptor/evidence fixtures cover missing/unknown/version/parity refusal and
+exact summary source linkage without modifying input; isolated worker fixtures
+exercise saved canonical/evidence readback, risk and ordinary approval, plus
+post-adapter metadata tampering. Legacy/CLI/history remain unchanged; default
+generator activation and comprehensive native/full/live/UI acceptance pending.
+Dirty74524 terminal0:39PASS6.17s before final safe publication diagnostics;
+dirty73935 terminal0:39PASS5.65s afterward. Dirty22569 terminal0:18PASS11.35s
+selected summary-result and worker tests before post-adapter tamper control.
+No paid/provider/model/risk/allowance/history/deployment change; full73101 still
+live on frozen primarycfd31da, no integration. Whole R01–R14 remains ACTIVE.
+
 **R07 clean V2 review/transport gate · 2026-10-08:** frozen clean source
 `ac3a3105e867cad4a271df902cc203c8d5e4ff16`, side98936 terminal0:
 `TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_snapshot_checkpoint_codec.py tests/test_report_localization.py tests/test_claim_local_causal_coverage.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.

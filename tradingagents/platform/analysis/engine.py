@@ -16,7 +16,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from tradingagents.agents.research_schemas import ObservedNumber, SnapshotPortfolioDecision
+from tradingagents.agents.research_schemas import ObservedNumber, read_snapshot_report
 from tradingagents.agents.schemas import PortfolioDecision
 from tradingagents.agents.utils.agent_utils import build_instrument_context
 from tradingagents.contracts import InstrumentContract
@@ -30,8 +30,10 @@ from .macro_facts import SnapshotMacroFacts
 from .market_facts import SnapshotMarketFacts
 from .profiles import resolve_analysis_profile, select_analysts
 from .research_validation import (
+    PublicationValidationError,
     scope_issues,
     unsupported_financial_numbers,
+    validate_canonical_report,
     validate_numeric_claims,
 )
 from .snapshots import SnapshotAnalysisContext
@@ -165,9 +167,22 @@ class AnalysisEngine:
         raw_decision = final_state.get("structured_decision")
         if raw_decision is not None:
             try:
-                schema = SnapshotPortfolioDecision if request.snapshot_context is not None else PortfolioDecision
-                parsed = schema.model_validate(raw_decision)
+                parsed = read_snapshot_report(raw_decision) if request.snapshot_context is not None else PortfolioDecision.model_validate(raw_decision)
                 if request.snapshot_context is not None:
+                    # Invalid publication can retain schema-valid quantities
+                    # for audit; they never grant decision authority.
+                    quantitative_references = parsed.observed_numbers
+                    if getattr(parsed, "report_contract_version", None) == "2.0":
+                        # Recheck explicit V2 at the output boundary; a graph
+                        # result must not lose summary sources before evidence
+                        # storage, or bypass checks via an injected adapter.
+                        sources = [source for report in snapshot_options["snapshot_reports"].values()
+                                   for source in json.loads(report)]
+                        validate_canonical_report(parsed, fact_sources, {source["snapshot_id"] for source in sources})
+                        from tradingagents.agents.utils.semantic_qualifiers import (
+                            validate_price_only_attributions,
+                        )
+                        validate_price_only_attributions(parsed, sources)
                     if any(item.get("phase") == "repair" and item.get("agent") in {
                         "Research Manager", "Trader", "Sentiment Analyst"
                     } for item in final_state.get("structured_diagnostics", [])):
@@ -200,6 +215,13 @@ class AnalysisEngine:
                 })
                 if len({item.claim for item in parsed.evidence_claims}) == len(parsed.evidence_claims):
                     material_claims = {item.claim: item.snapshot_ids for item in parsed.evidence_claims}
+                    summary = getattr(parsed, "summary_evidence", None)
+                    if summary is not None:
+                        material_claims[summary.claim] = tuple(dict.fromkeys(
+                            (*material_claims.get(summary.claim, ()), *summary.snapshot_ids)))
+            except PublicationValidationError as error:
+                decision_payload = None
+                validation_issues.extend(error.issues)
             except (ValueError, TypeError):
                 # Never parse prose or invent missing confidence/risk fields.
                 decision_payload = None
@@ -210,7 +232,7 @@ class AnalysisEngine:
             rejected = final_state.get("rejected_structured_decision")
             if rejected is not None:
                 with suppress(ValueError, TypeError):
-                    quantitative_references = SnapshotPortfolioDecision.model_validate(rejected).observed_numbers
+                    quantitative_references = read_snapshot_report(rejected).observed_numbers
         return AnalysisResult(
             instrument=request.instrument,
             analysis_date=request.analysis_date,

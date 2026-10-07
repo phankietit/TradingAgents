@@ -15,7 +15,7 @@ from tradingagents.platform.jobs.analysis import AnalysisJobHandler
 from tradingagents.platform.persistence import PlatformRepository
 
 
-@pytest.mark.parametrize("case", ["valid", "fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
+@pytest.mark.parametrize("case", ["valid", "valid_v2", "unknown_summary_v2", "missing_summary_v2", "tampered_summary_v2", "fixture_graph", "bilingual_fixture_graph", "invalid_fixture_graph", "missing_citation", "unknown_citation", "model_weight", "invalid_number", "cancel_after_publish"])
 def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypatch, case):
     database, store, seeded = setup_risk(tmp_path)
     with database.session() as session:
@@ -65,6 +65,13 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             payload = {"rating": "Buy", "executive_summary": "Research", "investment_thesis": "Thesis",
                 "confidence": .7, "risks": ["Risk"], "invalidation_conditions": ["Invalidation"],
                 "evidence_claims": claims}
+            if case in {"valid_v2", "unknown_summary_v2", "missing_summary_v2", "tampered_summary_v2"}:
+                payload["report_contract_version"] = "2.0"
+                payload["summary_evidence"] = {"claim": "Research", "snapshot_ids": [str(source)]}
+                if case == "unknown_summary_v2":
+                    payload["summary_evidence"]["snapshot_ids"] = [str(uuid4())]
+                elif case == "missing_summary_v2":
+                    payload.pop("summary_evidence")
             if case == "model_weight":
                 payload["target_weight"] = .99
             if case == "invalid_number":
@@ -83,6 +90,19 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
         assert not hasattr(graph_factory, "propagate")  # No live-tool fallback.
     else:
         graph_factory = Graph
+    if case == "tampered_summary_v2":
+        analyze = AnalysisEngine.analyze
+
+        def tamper_after_adapter(self, request):
+            result = analyze(self, request)
+            assert result.decision_payload is not None
+            canonical = result.final_state["structured_decision"]
+            altered = {**canonical, "summary_evidence": {
+                "claim": "A different conclusion.", "snapshot_ids": [str(source)]}}
+            return result.model_copy(update={"final_state": {
+                **result.final_state, "structured_decision": altered}})
+
+        monkeypatch.setattr(AnalysisEngine, "analyze", tamper_after_adapter)
     handler = AnalysisJobHandler(database, store, engine=AnalysisEngine(graph_factory=graph_factory))
     if case == "cancel_after_publish":
         complete = DurableJobQueue.complete
@@ -103,17 +123,28 @@ def test_snapshot_worker_evidence_risk_and_approval_pipeline(tmp_path, monkeypat
             with pytest.raises(ValueError, match="successfully completed"):
                 repo.add_decision_event(_approval(decision))
             assert repo.list_decision_events(decision.decision_id, run.owner_id) == ()
-        elif case in {"valid", "fixture_graph", "bilingual_fixture_graph"}:
+        elif case in {"valid", "valid_v2", "fixture_graph", "bilingual_fixture_graph"}:
             assert decision.status is DecisionStatus.READY_FOR_APPROVAL
             assert decision.target_weight == .3  # Owner input, not model output.
             assert len(job.output_artifact_ids) == 2
             evidence = EvidenceGraphService(ArtifactService(store, repo)).read(job.output_artifact_ids[1], run.owner_id)
-            if case == "valid":
-                assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation"}
+            if case in {"valid", "valid_v2"}:
+                assert {claim.claim for claim in evidence.claims} == {"Thesis", "Risk", "Invalidation"} | (
+                    {"Research"} if case == "valid_v2" else set())
             else:
                 assert "SYNTHETIC LOCAL QA" in decision.thesis
                 assert len(evidence.claims) == 3
             assert all(ref.snapshot_id == source for ref in evidence.evidence)
+            if case == "valid_v2":
+                import json
+
+                _, content = ArtifactService(store, repo).read(job.output_artifact_ids[0], run.owner_id)
+                report = json.loads(content)
+                assert report["canonical_research"]["report_contract_version"] == "2.0"
+                assert report["canonical_research"]["summary_evidence"] == {
+                    "claim": "Research", "snapshot_ids": [str(source)]}
+                assert report["validation_issues"] == []
+                assert report["evidence_artifact_id"] == str(job.output_artifact_ids[1])
             if case == "bilingual_fixture_graph":
                 import json
 

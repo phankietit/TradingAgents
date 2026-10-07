@@ -35,9 +35,16 @@ and retain exact summary sources. Canonical review input still requires null
 localization. Unknown explicit versions or invalid metadata refuse checkpoint
 decoding rather than downgrade. Safe diagnostic fields include the schema names,
 never supplied private values. These are component/transport capabilities, not
-default graph activation or general semantic/translation proof. Generation,
-result/publication and approval readers plus original-role integrated/native
-gates must migrate and verify together before activation; retain rejected original
+default graph activation or general semantic/translation proof. Explicit V2 graph
+results now recheck canonical references/known price-only attributions at the
+adapter boundary and carry summary support into the existing evidence graph.
+The worker evidence boundary independently compares V2 metadata, narrative and
+actual claim/source mappings; inconsistent/tampered metadata cannot grant data
+quality or decision readiness. Existing risk and owner approval stay authoritative.
+Worker fixtures verify V2 report/evidence readback and ordinary human approval,
+not native full-role/live/browser acceptance. Generation and full publication/
+approval integrity review plus original-role integrated/native gates must verify
+together before activation; retain rejected original
 inputs and immutable legacy history. The uncited-summary default-flow red test
 remains authoritative.
 

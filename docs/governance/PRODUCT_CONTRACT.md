@@ -26,7 +26,10 @@ active in default web generation/publication; the default uncited-summary
 regression remains FAIL. Explicit V2 input is now supported by bounded financial
 review, localization and checkpoint transport, with original repair bounds and
 rejected input retained. This staged support does not certify active full-flow
-publication, native recovery or translation quality. Original CLI and legacy report schemas
+publication, native recovery or translation quality. Explicit V2 results also
+retain summary citations in the evidence graph, with adapter publication checks
+and independent worker metadata/narrative/source parity before readiness. Existing
+deterministic risk and human approval are unchanged. Original CLI and legacy report schemas
 are unchanged. Component validation is provenance evidence, not proof of causal
 entailment, live financial quality or permission to publish new legacy-format
 output. See [summary provenance](../platform/summary-provenance.md).
