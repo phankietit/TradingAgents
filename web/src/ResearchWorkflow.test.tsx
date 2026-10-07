@@ -64,6 +64,18 @@ it('updates completion wording only after authoritative status changes to succee
   expect(screen.getByText('Processing is finished. Check the report validation status before using its conclusions.')).toBeTruthy();
   expect(screen.queryByText('Approved')).toBeNull();
 });
+it.each(['Bear Researcher', 'Financial validation'])('has only one current processing phase when a report is retained during %s', stage => {
+  render(<ResearchWorkflow events={[event(1,'run.started'),event(2,'stage.started',stage)]} status="running" hasSources hasReport />);
+  const active = screen.getByRole('region',{name:'Research workflow'}).querySelectorAll('[aria-current="step"]');
+  expect(active).toHaveLength(1);
+  expect(active[0].textContent).toContain(stage);
+  expect(screen.getByText('Your decision').closest('li')?.getAttribute('aria-current')).toBeNull();
+});
+it('does not assign a current processing phase to a queued job with a retained report', () => {
+  render(<ResearchWorkflow events={[]} status="queued" hasSources hasReport />);
+  expect(screen.getByRole('region',{name:'Research workflow'}).querySelectorAll('[aria-current="step"]')).toHaveLength(0);
+  expect(screen.getByText('Saved report available')).toBeTruthy();
+});
 it('reads a long linked timeline without an argument-spread limit or discarding the latest stage', () => {
   const events = Array.from({length:150_000},(_,index)=>({...event(index+1,'model.usage'),attempt:2}));
   events.push({...event(150_001,'stage.started','Financial validation'),attempt:2});

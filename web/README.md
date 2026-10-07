@@ -56,6 +56,9 @@ only a `succeeded` status can show the finished-processing message. A retained
 report during queued, running, retry, cancellation, review or failure states
 instead asks the owner to verify processing status and report validation.
 Neither message grants financial validity or human approval.
+When a report is retained during active processing, only the observed processing
+phase is marked current. Report availability does not simultaneously mark owner
+review as the current phase; a queued job cannot invent a current phase.
 
 The analysis setup now has an independent **Add recent headlines** action
 beside price preparation. It saves owner-scoped Yahoo news only when the

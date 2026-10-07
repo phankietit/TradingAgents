@@ -1,5 +1,21 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 single-current-phase WIP · 2026-10-08:** saved-report guard source32f19ff
+build/lint PASS,63773 default1FAIL204PASS38.63s (headline-first5s timeout),
+33549 full selected-web serial205PASS92.52s; defaultFAIL retained, no relaxation.
+Browser8469 terminal0 synthetic real durable worker/report, read-only mocked
+running run/job responses +savedreport EN/VI, then unroute/reload to actual
+succeeded job: warning/finished wording switches correctly, no storedmutation,
+no pageerror, desktop/mobile viewed. This is counterfactual rendered guard
+evidence, not actual running-provider acceptance. Ownedfixture96866/18780
+normalshutdown confirmed. Screenshot reveals simultaneous current research and
+owner-review steps. Dirtyred59252:3FAIL24PASS2.66s (two active phases/wrong
+Financialvalidation phase/queued invented phase). Current phase now follows
+actualrunning stage; retained report only available, owner review current only
+on succeeded. Original role/percentage/cancel/retry/long-timeline assertions kept;
+new27-test workflow matrix covers these cases. Exactnewcandidate fullweb/browser
+gates pending. Primaryfull51929 remains live/frozenfb38391; no restart/integration.
+
 **R08 saved-report/status truth WIP · 2026-10-08:** ResearchWorkflow previously
 said processing finished whenever an artifact existed, even while job status
 queued/running/retry/cancel/review/failed. Dirtyred89397:7FAIL9PASS3.36s

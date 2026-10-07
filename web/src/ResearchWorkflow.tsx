@@ -19,8 +19,8 @@ export default function ResearchWorkflow({events, status, hasSources, hasReport}
   const steps = [
     {title:'Evidence prepared', detail:hasSources ? 'Saved sources selected' : 'No sources selected', state:hasSources ? 'done' : 'waiting'},
     {title:'Research & challenge', detail:status === 'locally_stopped' ? 'Local processing stopped' : status === 'review_required' ? 'Processing state needs review' : stopping ? 'Stop requested; shutdown not yet verified' : running && !presentation && latest?.stage ? latest.stage : stopped ? 'Processing stopped' : 'Analysts, opposing views and risk review', state:running && !presentation ? 'active' : stages.some(event => event.stage === 'Portfolio Manager' && event.event_type === 'stage.completed') ? 'done' : 'waiting'},
-    {title:'Report preparation', detail:hasReport ? 'Saved report available' : presentation ? latest!.stage! : 'Financial checks and presentation', state:hasReport ? 'done' : running && presentation ? 'active' : 'waiting'},
-    {title:'Your decision', detail:'Read the findings and limitations', state:hasReport ? 'active' : 'waiting'},
+    {title:'Report preparation', detail:running && presentation ? latest!.stage! : hasReport ? 'Saved report available' : 'Financial checks and presentation', state:running && presentation ? 'active' : hasReport ? 'done' : 'waiting'},
+    {title:'Your decision', detail:'Read the findings and limitations', state:hasReport ? status === 'succeeded' ? 'active' : 'available' : 'waiting'},
   ];
   return <section className="research-workflow" aria-label={t('Research workflow')}>
     <ol>{steps.map((step, index) => <li key={step.title} className={step.state} aria-current={step.state === 'active' ? 'step' : undefined}>
