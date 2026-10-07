@@ -32,6 +32,37 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Exact full corrective regression
+
+Clean frozen `2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, session12988 terminal
+exit0: **3,002 PASS,88 subtests PASS,2 optional-provider skips,443 warnings,
+1470.92s**, Python3.14.7. Command: `TA_ALLOW_TEST_DB_RESET=1 bash
+scripts/verify-postgres-local.sh` with TMPDIR in the task-owned external run.
+Ruff/pip-check PASS. The helper removed only its labelled disposable PostgreSQL
+container; process90750 is absent. No tracked bytes or HEAD changed during the
+gate. Skipped Bedrock dependency and live DeepSeek checks remain UNVERIFIED.
+This closes the corrected candidate's local full regression, not financial,
+translation, default-owner recovery, live-provider or release acceptance.
+
+### Social fact and word-percentage remediation still pending
+
+At the same exact source, eligible original synthetic StockTwits/Reddit sample
+counts compile and validate directly but financial review loses their resolver.
+Ten valid draft/canonical count cases fail; two altered payload/manifest cases
+are ignored by the review factory rather than reconstructed and refused.
+Six unreferenced percent/per cent variants bypass the existing financial-number
+lexer; eight date/period/qualitative and existing currency/% controls pass.
+All diagnostics use local model/transport stubs, no vendor or paid AI calls.
+
+External staged resolver/lexer modules plus a real eligible context fixture
+pass62 focused assertions (36 existing+26 new), but are **not integrated** and
+not normal clean-repository/native/full/live proof. Another original compiler
+diagnostic accepts a social count as `The price is ${{QA}}.` while refusing `%`.
+Therefore resolver parity must be paired with source-owned count meaning/units,
+standalone/canonical checks and EN-VI preservation before integration. No
+sentence blacklist, assertion relaxation, source/debate truncation or extra
+review call. Original source and private history remain unchanged.
+
 ### Exact native PostgreSQL corrective gate
 
 Clean frozen code candidate `f64984db8338eb0eed69c820ab503bc65818159c`.

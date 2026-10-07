@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**2026-10-07 full corrective baseline:** clean frozen
+`2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, full local PG12988 terminal0:
+3,002 tests+88 subtests PASS,2 optional-provider skips UNVERIFIED,443warnings,
+1470.92s; Ruff/pip-check PASS. Only labelled helper-owned PG removed, process90750
+absent; source/HEAD unchanged throughout. This closes the ordering correction's
+full local regression, not financial/translation/live/default-owner acceptance.
+New synthetic diagnostics: review omits admitted SocialFacts resolver (10 valid
+count cases rejected;2 malformed-source controls ignored);6 percent/per cent
+spellings evade raw-number gate (8 controls pass). External staged modules pass
+62 focused assertions but are not integrated. Compiler also permits a social
+count as a price amount: do not integrate resolver-only correction. Next pair
+validated resolver parity with source-owned social count statements, canonical
+and EN-VI preservation, plus word-percent lexer/tests; then normal source gates.
+Remaining R01–R14 is ACTIVE, NQ owner BLOCKED. No paid AI, provider/risk/graph cut,
+history rewrite, CI, merge or deployment. See receipt20261007 and PR7 comments.
+
 **2026-10-07 corrective native proof:** clean frozen
 `f64984db8338eb0eed69c820ab503bc65818159c`, focused PG46431 terminal0,
 10 PASS/40 deselected/50warnings/196.91s; Ruff/pip-check PASS. Exact model-trace
