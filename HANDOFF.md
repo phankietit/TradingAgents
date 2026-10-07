@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Full c1308ef local gate FAIL (2026-10-07):** clean frozen
+`c1308ef2e460899d7d99a47106b946565830b523`, session11461 terminal1:
+3203PASS/88 subtests PASS/2 optional skips UNVERIFIED/502 warnings/1 setup
+ERROR in 2356.97s (39m16s), Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp PYTEST_ADDOPTS=--tb=short TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`
+Ruff/pip startup PASS; source stayed clean/frozen throughout. Failure:
+`tests/test_recording_factory_lease.py::test_real_factory_checkpoint_refuses_lost_fence_without_ack_or_row[sqlite-heartbeat_failure]`.
+InitializedPreflightError at `process.join(timeout=min(0.1, boundary()))`,
+before test body: identity reply received but process-reaping wait crossed the
+preflight boundary. Cause remains UNVERIFIED; do not call it a lease assertion
+failure or count the suite PASS. Optional langchain_aws unavailable and live
+DeepSeek key absent, no paid call. Helper removed only owned disposable PG.
+Next: selected native factory diagnostic without clock/deadline/budget changes;
+side semantic branch remains separate under its recovery matrix, no integration.
+
 **Exact final local-stop display gate (2026-10-07):** clean frozen
 `c314913b2e866f5084fbfcf240ba5b78d9b08180`, web52663 terminal0:
 type/lint/173tests(27files)/9.22s/build299/diff PASS. External browser/native31637
