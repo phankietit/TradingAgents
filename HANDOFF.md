@@ -2,6 +2,29 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 dependency finding fixed locally · 2026-10-08:** exact clean source
+`e741ca03099c22cd672c6e1cca429cc381cfa22b`. After independent investigation and
+one fresh read-only review, side20949 terminal0: typecheck/lint/29files190tests
+PASS9.63s/build/audit/installed-tree PASS. Primary then fast-forwarded to the
+same source;50061 terminal0 freshly ran
+`cd web && npm ci --ignore-scripts && npm run typecheck && npm run lint && npm test && npm run build && npm audit --json && npm ls source-map-js --all`:
+284packages installed,29files190tests PASS9.55s,type/lint/build PASS,audit0
+findings,both parent paths resolve1.2.2 only. Clean state/diff PASS. Separate
+JSON-string probes refuse oversized/nested/string/fraction offsets and preserve
+mapping; normal generator serialization/consumer roundtrip PASS. The bounded
+constructor acceptance seen on1.2.1 no longer reproduces. No unbounded resource
+exhaustion invoked and no claim of deployed/app network exploitability.
+Lock diff is exactly three fields of one package; all other dependency records,
+versions,package.json,Python/CLI/LangGraph/provider/risk/API/UI code unchanged.
+Tests and docs are additive. The skill influenced the bounded before/after
+probes, independent boundary review and single-finding patch; no broad upgrade.
+
+Outcome is fixed for this dependency finding, not whole-product or security
+certification. Previous audit and test-scaffold failures below remain historical.
+No main merge,CI,public deployment,paid call or owner-history mutation. Goal
+ACTIVE; actual financial/editorial/live,recovery/full UX and matrix gates remain
+open. NQ owner-BLOCKED; fresh paid BTC/AAPL approval still pending.
+
 **R14 bounded dependency remediation WIP · 2026-10-08:** isolated owned side
 `fix/TA-R14-source-map-patch`, base dc66744. Lock entry source-map-js1.2.1 ->
 1.2.2 updates only version/resolved/integrity; JSON structural comparison proves
