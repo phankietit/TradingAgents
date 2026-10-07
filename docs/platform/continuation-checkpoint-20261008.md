@@ -5,6 +5,15 @@ release verdict or timeless statement of current Git/runtime state. Refresh
 the remote branches, PR and [HANDOFF](../../HANDOFF.md) before continuing.
 Read [AGENTS](../../AGENTS.md) and the [routing map](../ops/agent-map.md) first.
 
+**Later same-day update:** session41168 reached terminal0 at frozen796c417:
+3,306 tests +88 subtests PASS,2 optional skips UNVERIFIED,502 warnings,2,068.46s.
+Owned helpers/container cleanup was confirmed before primary fast-forward to
+faf290a. Integrated web build/lint/225 tests PASS atfaf290a (session44374).
+Backend source remains unchanged from796c417; web source remains unchanged from
+the rendered-tested a6917d3. These comparisons are not new full/backend/browser
+executions atfaf290a. The tables below preserve the earlier checkpoint; use the
+newer [HANDOFF receipt](../../HANDOFF.md) for terminal/integration detail.
+
 ## Source and integration boundary
 
 | Source | Verified checkpoint at this writing | Meaning |

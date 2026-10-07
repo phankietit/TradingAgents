@@ -1,5 +1,30 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 full Python3.12 / primary integration · 2026-10-08:** frozen clean
+`796c4178c3c710fba32eb20651c5ace7d46e71a7`, full session41168 terminal0:
+3306tests +88subtests PASS,2optional skips UNVERIFIED,502warnings,2068.46s
+(34m28s). Python3.12.14 from the fresh noneditable archive environment below;
+tests executed against this source checkout, not the full installed-wheel suite.
+Command: managed external TMPDIR, PYTHON_BIN=current-python312-cefHp4/venv/bin/python,
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`, existing
+credential-URL redactor. Ruff/pip check included. Missing langchain_aws and
+unset/placeholder live DeepSeek key remain UNVERIFIED. Helpers66643/66693 and
+pytest66756 absent after terminal; only owned ta-research-qa-1791414838-66643
+container removed by helper, absence independently confirmed. No restart.
+
+After terminal and cleanup primary fast-forwarded three owned side commits to
+`faf290a19265c3fb65e51e5def3567b6a5dd191d`: pending-cancel UX, its scoped browser
+receipt, and dated continuation navigation. Backend source comparison
+`git diff --exit-code 796c417 faf290a -- tradingagents tests scripts pyproject.toml uv.lock`
+PASS; web source/package comparison with rendered-tested a6917d3 PASS.
+Exact full Python proof remains at796c417, not a newly executed suite atfaf290a.
+Clean integrated44374 terminal0 atfaf290a: `npm run build`, `npm run lint`,
+`npm test` PASS,299modules/225tests29files/14.79s,Node26.8.1/npm11.19.0.
+No new rendered browser run atfaf290a; unchanged source retains the scoped
+a6917d3 receipt, not broader UX/live acceptance. No code/provider/model/risk/env
+change in this receipt. R01–R14 remains ACTIVE; financial/semantic/VI/live,
+broader recovery/operator/runtime gates stay unfinished; NQ owner-BLOCKED.
+
 For a short machine/task continuation entry point, read the dated
 [2026-10-08 checkpoint](docs/platform/continuation-checkpoint-20261008.md).
 Refresh Git/runtime state before relying on that snapshot; the receipts below
