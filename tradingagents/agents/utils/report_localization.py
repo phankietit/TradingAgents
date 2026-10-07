@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from tradingagents.agents.research_schemas import LocalizedResearchReport
 from tradingagents.agents.utils.fundamental_statements import fundamental_statement
 from tradingagents.agents.utils.quantitative_statements import percentage_statement
+from tradingagents.agents.utils.semantic_qualifiers import validate_translation_qualifiers
 from tradingagents.agents.utils.statement_anchors import non_standalone_anchors
 from tradingagents.agents.utils.structured import bind_structured, invoke_structured_or_freetext
 from tradingagents.platform.analysis.research_validation import (
@@ -192,6 +193,7 @@ def localize_report(llm, decision, diagnostics, *, fact_sources=None):
                 standalone_anchors=[key for key, value in block_values.items() if value in statements.values()])
             validate_financial_terms(original, value)
             validate_editorial_quality(value)
+            validate_translation_qualifiers(original, value)
             LocalizedResearchReport(en=original, vi=value)
             translated[block.block_id] = value
         vietnamese = "\n\n".join(item if isinstance(item, str) else item[1] + translated[item[0]] for item in layout)

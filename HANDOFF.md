@@ -2,6 +2,14 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Integrated continuation (2026-10-08):** merge the known-semantic side only
+after primary full11461 and side matrix16132 were terminal. Preserve both
+branches' exact receipts below; chronological running statements are historical,
+not current state. Side matrix13PASS, primary fullFAIL; neither is an exact
+integrated-candidate full acceptance. No deadline/budget/source truncation,
+provider/risk/history change or main merge. Next: clean integrated focused and
+full local gates; live financial/editorial and broad semantic acceptance open.
+
 **Read-only resource observation during side matrix16132:** host has16GiB
 physical memory; memory_pressure reported28% free, encrypted swap usage
 19780.69MiB of20480MiB, verified external SSD390GiB available. These are
@@ -58,6 +66,154 @@ failure or count the suite PASS. Optional langchain_aws unavailable and live
 DeepSeek key absent, no paid call. Helper removed only owned disposable PG.
 Next: selected native factory diagnostic without clock/deadline/budget changes;
 side semantic branch remains separate under its recovery matrix, no integration.
+
+**Exact side recovery matrix PASS (2026-10-07):** clean frozen
+`67c421387087615d398b53c2559e06757f549ceb`, session16132 terminal0:
+13PASS/24 synthetic SDK warnings/1224.02s (20m24s), Python3.14.7. Command:
+`PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x -rP`
+Ruff/pip PASS, no skips; helper removed only owned disposable PostgreSQL.
+All SQLite/PostgreSQL x EN/VI/bilingual x manual/worker original graph/consent,
+history/accounting/publication/reaping assertions retained, plus diagnostic
+redaction test. Six worker preflights took2.930/11.818/5.312/13.916/17.873/6.999s,
+all below unchanged45s. Full-run and earlier matrix timeout causes remain
+UNVERIFIED; earlier FAIL receipts preserved. No actual model/provider request,
+allowance increase, graph/source cut or owner-history change. Source remained
+frozen until terminal. This is not full baseline or live/editorial/semantic proof.
+Next: integrate known-semantic guards into primary, preserving both branches'
+receipts, then verify exact integrated candidate. No main merge/public release.
+
+**Exact preflight timing receipt:** clean frozen
+`40bfc62c0aeff918aac2505eddd6363c9f537dca`, session91432 terminal0:
+1PASS/2 synthetic SDK warnings/33.45s, Python3.14.7; selected helper command
+above with `-rP`. Real preflight took 3.070s against unchanged 45s limit;
+26 source/lease checks took 1.153s total. Original full graph and continuation
+assertions PASS, owned disposable PostgreSQL removed. These successful-run
+numbers do not explain the earlier failure; no causal claim or automatic
+budget increase. Next: full SQLite/PostgreSQL/language/manual-worker recovery
+matrix on the diagnostic candidate, retaining failure timing if it recurs.
+Primary full11461 still running and untouched, no integration or full PASS.
+
+**Selected PostgreSQL retry PASS, cause still UNVERIFIED:** frozen
+`733480ae1637df3d7c172ddabddfcc1012d97cde`, session75025 terminal0:
+1PASS/2 synthetic SDK warnings/52.37s, Python3.14.7; same focused helper
+command as matrix below, selecting only
+`tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[postgresql-en-worker]`.
+Ruff/pip PASS; owned disposable PostgreSQL removed. Full original graph/consent,
+checkpoint/accounting/history/reaping assertions retained. This does not erase
+matrix23564 FAIL or establish its cause. Numeric timing was available only in
+the failure assertion, so emit the same bounded timing on success for comparison;
+no product timing, allowance, lease or provider semantics change.
+
+**Side recovery matrix FAIL (2026-10-07):** clean frozen
+`91d3c4f1abd8054eeea3d65268927f5aadb5bd75`, session23564 terminal1:
+8PASS/1FAIL/16 synthetic SDK warnings/217.65s. Command:
+`PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x`
+Ruff/pip startup PASS; helper removed only its labelled disposable PostgreSQL
+container. PostgreSQL/en/worker returned a reservation UUID, no analysis child,
+with InitializedPreflightError at the final preflight boundary after cleanup.
+The 45-second preflight limit and original research/lease fences remain intact;
+root cause is not yet established. Add numeric elapsed/source-check diagnostics
+only, then retry that selected case to locate time spent. No budget increase,
+clock substitution, skipped assertion, extra model/provider call or replay of
+owner history. This FAIL is not superseded by the earlier single SQLite PASS.
+Primary c1308ef full11461 remains live, frozen and separate; no integration.
+
+**Exact known-semantic guard acceptance:** clean frozen side
+`3e2a91c4ab3083db69ec344d8dbefa077b39c515`, focused10526 terminal0:
+135PASS/2.02s, Python3.14.7; scoped Ruff/diff PASS, command below unchanged.
+Native68071 terminal0:1PASS/2synthetic SDK warnings/18.17s. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q 'tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[sqlite-en-vi-worker]' --basetemp=<managed-run>/semantic-side-native-source --tb=short -x`
+Original stopped graph/consent/default worker/bilingual publication, full trace,
+checkpoint/accounting/history integrity and reaping assertions remain; only
+SDK/model output is synthetic. No provider/paid call, new loop, source cut,
+policy/approval/history change. Source/HEAD stayed unchanged until both terminal.
+Not a full suite, full matrix, general semantic/MT proof or actual-report quality.
+
+These receipts belong to exact3e2a91c, not the following docs-only checkpoint.
+Next: side native recovery matrix with existing disposable PostgreSQL helper
+and shared dependency interpreter only; primary remains frozen c1308ef under
+full11461. No integration until primary terminal and changed candidate verified.
+Remaining actor/object alignment, broad mixed-source causality, semantic/editorial
+and live acceptance stay UNVERIFIED. NQ owner-BLOCKED, paid BTC/AAPL approval
+pending, goal ACTIVE. No CI/public deploy/provider change or private data in Git.
+
+**Isolated semantic repair implementation (2026-10-07):** owned side dirty source
+on 3db025c3e477047a78e97a5fefb95f2562a7b9a0; primary c1308ef/full11461 stays
+clean/frozen. New semantic_qualifiers guards recognized action intensity,
+exclusivity/time/condition, epistemic polarity/possibility and opposing-case
+retention within financial sentences; unrelated nonfinancial sentences cannot
+carry the required marker. Count per source sentence, not a guessed score;
+decimal points and explicit May calendar contexts handled, negative ability and
+natural Vietnamese paraphrases covered. Source-owned complete blocks/quantities
+and canonical decision remain unchanged. No translation rewriting or new call.
+Price-only source coverage rejects known external causal motive/flow assertions
+but admits explicitly unverified hypotheses and missing-evidence disclosures.
+It does not prove general causality or entailment with mixed sources.
+Checks run before and after existing financial review, and after translation
+quantity/terminology/editorial validation; failures use the SAME bounded repair.
+New fixed diagnostics admitted to publication-code allowlist, no raw error text.
+
+Gate73251 terminal0:135PASS/4.46s, Python3.14.7, Ruff/diff PASS. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_social_review_parity.py --tb=short -x`
+Original red14 cases plus natural positive paraphrases, unrelated-sentence
+qualifier movement, repeated conditions/decimal boundary/calendar ambiguity and
+successful one-repair translation/financial cases. Existing compiler/social
+review tests retained. Earlier focused76575 61PASS,78507 66PASS,69050 130PASS,
+9582 132PASS; final current gate135 supersedes those narrow local claims only.
+No skips or provider/paid calls, no risk/provider/history change. No graph role,
+source or analysis truncation. Strict checks can increase repair frequency within
+the unchanged allowance; success path adds no model invocation.
+
+Known lexical families are NOT full semantic proof: unknown paraphrases/actors,
+cross-clause cause alignment and mixed-source factual entailment remain unfinished;
+independent actual-report finance/editorial EN/VI and live acceptance still needed.
+Next: freeze side, exact focused gate and native bilingual continuation/graph
+parity; no primary integration until its full gate is terminal. Goal ACTIVE.
+
+**Exact semantic red-baseline receipt:** clean frozen side
+`019b527d05b9dec8fd96d1f43aa1f7e2c8cbca1c`, gate36100 terminal1:
+7FAIL/7PASS/1.38s, no skips, Python3.14.7, same side command below. Ruff and
+diff PASS; module paths verified side. These are intentionally unsatisfied
+regressions requiring fixes, NOT accepted product behavior. Ordinary side push
+confirmed019b527; primary still clean c1308ef/full11461 running, no integration.
+This following docs-only SHA is a receipt checkpoint, not relabelled test source.
+
+**Isolated semantic red baseline (2026-10-07):** reuse the existing task-owned
+clean side worktree `/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`
+on new `fix/TA-R12-semantic-parity` from c1308ef2e460899d7d99a47106b946565830b523.
+The previous clean/pushed R08 branch d4dc2e1 is preserved, no files/artifacts
+deleted. Primary remains clean/frozen c1308ef under full session11461; neither
+HEAD/source nor its database/config is touched. No subagent/provider/paid call.
+Scoped ownership recorded in docs/ops/in-progress.md on this side only.
+
+Add tracked candidate regressions before implementing the repair, no xfail/skip
+or weakened expectation. Synthetic stubs retain the entire report/blocks and
+original existing maximum two structured/repair calls; canonical localization
+input must remain unchanged. One unsupported price-only factual cause plus six
+EN/VI negative mutations: intensity/condition, negation, certainty, gradual vs
+immediate action, only/after constraint, opposing case. Seven valid counterparts
+remain accepted. These cases do not prove general semantic entailment, whole
+Vietnamese editorial quality, or actual MiniMax behavior; other blocks reuse the
+original fixture's English strings to isolate the challenged thesis relation.
+
+Dirty side baseline75887 terminal1:7FAIL/7PASS/2.74s, Python3.14.7; Ruff/diff PASS.
+Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q tests/test_semantic_qualifier_regressions.py --tb=no`
+Shared virtualenv used only as interpreter/dependencies; module __file__ paths
+verified SIDE worktree for both financial_validation and report_localization.
+Initial external6case baseline97399 3FAIL/3PASS/2.34s; expanded external25180
+7FAIL/7PASS/1.27s. Those diagnostics remain external in the owned managed run,
+not separate product/runtime functionality. No private inputs or source history.
+
+This red test branch is NOT an integrated candidate and must not merge into the
+primary while full11461 runs or before negative and positive cases are resolved
+and verified. Next: implement source-bound financial inference and translation
+relation preservation using the existing bounded stages; preserve all roles,
+source records, conditions/negation/uncertainty, canonical content and human
+approval. Never label a phrase-pattern guard general semantic proof or turn
+unsupported factual conclusions into apparent verified evidence. Exact clean-SHA
+red receipt follows the source commit. Goal ACTIVE; all original live/release
+gates and owner-BLOCKED NQ remain, fresh paid BTC/AAPL approval pending.
 
 **Exact final local-stop display gate (2026-10-07):** clean frozen
 `c314913b2e866f5084fbfcf240ba5b78d9b08180`, web52663 terminal0:

@@ -184,6 +184,21 @@ rollback removes control receipts and must not authorize retry or alter history.
 Professional browser controls, full current regression and live acceptance remain
 separate unfinished gates.
 
+The draft financial/presentation stages additionally guard known semantic-loss
+families. Price-only evidence cannot publish a known external motive/flow as a
+factual cause; an explicit unverified hypothesis or coverage disclosure remains
+research. Mixed-source causal entailment is not established by this guard.
+EN/VI action intensity, time/condition, epistemic negation/uncertainty and retained
+opposing-case markers are checked in their financial sentence domains. Counts
+prevent one marker covering two separate conditions; decimal points and explicit
+calendar-month references are not sentence/modal markers. Natural recognized
+paraphrases remain eligible. This is a conservative known-case guard, not general
+actor/object alignment, causal entailment, translation fidelity or editorial proof.
+Failed checks use the existing one structured attempt/one repair and withhold
+invalid output without deleting source blocks, claims or original rejected reports.
+Graph/CLI roles, provider/model, budget, risk and human authority do not change.
+More outputs may consume the existing repair allowance; no extra model loop is added.
+
 ## 4. Asset-Specific Contracts
 
 ### Equities

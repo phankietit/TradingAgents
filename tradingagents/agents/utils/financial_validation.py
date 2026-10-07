@@ -5,6 +5,7 @@ import json
 from tradingagents.agents.research_schemas import CanonicalSnapshotDecision, SnapshotReportDraft
 from tradingagents.agents.utils.report_compiler import BINDING_INSTRUCTIONS, compile_report
 from tradingagents.agents.utils.report_localization import reader_report
+from tradingagents.agents.utils.semantic_qualifiers import validate_price_only_attributions
 from tradingagents.agents.utils.structured import (
     _safe_diagnostic,
     bind_structured,
@@ -49,6 +50,7 @@ def create_financial_validation(llm, reports):
         try:
             compiled = compile_report(raw, facts) if is_draft else candidate
             validate_canonical_report(compiled, facts, snapshot_ids)
+            validate_price_only_attributions(compiled, sources)
             # Numeric/provenance validity is not financial entailment. Legacy
             # canonical reports need the same bounded semantic review as drafts;
             # neither representation may bypass this original graph stage.
@@ -63,6 +65,7 @@ def create_financial_validation(llm, reports):
             nonlocal accepted
             compiled = compile_report(value.model_dump(), facts) if is_draft else value
             validate_canonical_report(compiled, facts, snapshot_ids)
+            validate_price_only_attributions(compiled, sources)
             accepted = compiled.model_dump(mode="json")
 
         prompt = (
