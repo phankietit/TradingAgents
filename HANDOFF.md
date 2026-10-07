@@ -2,6 +2,21 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact side recovery matrix PASS (2026-10-07):** clean frozen
+`67c421387087615d398b53c2559e06757f549ceb`, session16132 terminal0:
+13PASS/24 synthetic SDK warnings/1224.02s (20m24s), Python3.14.7. Command:
+`PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_default_prepared_resume.py --tb=short -x -rP`
+Ruff/pip PASS, no skips; helper removed only owned disposable PostgreSQL.
+All SQLite/PostgreSQL x EN/VI/bilingual x manual/worker original graph/consent,
+history/accounting/publication/reaping assertions retained, plus diagnostic
+redaction test. Six worker preflights took2.930/11.818/5.312/13.916/17.873/6.999s,
+all below unchanged45s. Full-run and earlier matrix timeout causes remain
+UNVERIFIED; earlier FAIL receipts preserved. No actual model/provider request,
+allowance increase, graph/source cut or owner-history change. Source remained
+frozen until terminal. This is not full baseline or live/editorial/semantic proof.
+Next: integrate known-semantic guards into primary, preserving both branches'
+receipts, then verify exact integrated candidate. No main merge/public release.
+
 **Exact preflight timing receipt:** clean frozen
 `40bfc62c0aeff918aac2505eddd6363c9f537dca`, session91432 terminal0:
 1PASS/2 synthetic SDK warnings/33.45s, Python3.14.7; selected helper command
