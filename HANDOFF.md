@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Selected factory retry PASS, full acceptance still FAIL:** clean frozen
+`1ff58d41d51ddce007034b1ff96af1886634748e`, session75936 terminal0:
+1PASS/11.52s, Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q 'tests/test_recording_factory_lease.py::test_real_factory_checkpoint_refuses_lost_fence_without_ack_or_row[sqlite-heartbeat_failure]' --tb=short -x`
+Real SDK construction with synthetic credentials/no model invocation, original
+identity/reaping and lost-fence no-ACK/no-row assertions retained. This retry
+does NOT erase full11461 setup ERROR or establish why its child exit exceeded
+45s; unresolved native preflight reliability remains UNVERIFIED. No deadline,
+clock, budget or assertions changed. Side full recovery matrix still running;
+do not integrate under its source fingerprint gate.
+
 **Full c1308ef local gate FAIL (2026-10-07):** clean frozen
 `c1308ef2e460899d7d99a47106b946565830b523`, session11461 terminal1:
 3203PASS/88 subtests PASS/2 optional skips UNVERIFIED/502 warnings/1 setup
