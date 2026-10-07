@@ -10,6 +10,10 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Label failed/cancelled processing on decision review as the original attempt,
+  avoiding confusion when a separate continuation report exists. Preserve the
+  stored status and all approval/risk checks; the label grants no completion.
+
 - Offer an EN/VI reading shortcut only when a completed continuation's verified
   report artifact is present. Move scroll/focus to the reading region without
   route changes, new research requests or approval; tighten mobile analysis

@@ -542,7 +542,9 @@ after browser refresh, with descending attempt pagination (`limit` up to 50,
 `before_attempt`) and explicit `has_more`. State includes attempt and report/
 evidence/decision IDs only after the full completion reader verifies them. These
 IDs are read links, not approval authority. The browser has explicit continuation
-controls; combined real backend/browser/native acceptance remains pending.
+controls; saved native-worker-to-API-to-browser readback has a disposable SQLite
+EN/VI fixture receipt in HANDOFF. Browser-driven native dispatch, live quality
+and full operational acceptance remain pending.
 After verified completion, its nonapproval warning stays visible while operational
 details, attempt selection and refresh use an expandable EN/VI section. Active
 processing and explicit consent remain fully visible; a compact completed panel
@@ -551,6 +553,9 @@ When the verified report artifact is available, `Read report` moves scroll and
 keyboard focus to its reading region without changing the route, fetching new
 research or approving a decision. On mobile the analysis picker/status area uses
 tighter spacing; absent reports cannot offer this shortcut.
+Decision review labels failed/cancelled processing as the original attempt:
+retaining its status does not negate a separate continuation report or approve
+its conclusion. Risk and approval eligibility are unchanged.
 The corresponding `GET .../{execution_id}/events` provides cursor-paginated,
 actor-linked progress (`after_sequence`, `limit` up to 100, `has_more`). It
 validates entry provenance and owner/run/attempt/time bindings and returns only

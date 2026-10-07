@@ -2,6 +2,44 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Integrated native/API/browser fixture acceptance (2026-10-07):** clean frozen
+`ab13fe0d163b7fb03930f06ae9263fe66df9b432`, web33326 terminal0:
+`npm --prefix web run typecheck && npm --prefix web run lint && npm --prefix web test && npm --prefix web run build && git diff --check`
+PASS:164tests/27files/10.68s,299module build. Focused native53863:
+`TMPDIR=<managed-run>/Tmp .venv/bin/python -m pytest -q 'tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[sqlite-en-vi-worker]' --basetemp=<managed-run>/native-browser-ab13fe0 --tb=short -x`
+terminal0:1PASS/2synthetic-model warnings/25.34s. Actual default worker preserves
+the failed original and restored full graph, bilingual publication, accounting,
+checkpoint/history integrity and explicit consent; no paid/provider call.
+
+Serve that test's retained disposable SQLite/artifacts via actual create_app and
+Uvicorn on loopback8017 with the built web, not owner8000 or private DB. Existing
+Playwright (Browser plugin absent), browser16937 terminal0: real HTTP login,
+continuation discovery/events/artifact readback, EN/VI saved report, accessible
+Read report focus/no URL change, linked decision and disabled approval without
+risk checks PASS on1440x1000/390x844. No API route mocks; only the native model
+output remains synthetic. No research/approval write: login is the only POST.
+All authenticated API responses200; initial auth/me401 is expected before login,
+the only console network diagnostic. No page exception/overflow/framework overlay.
+Screenshots/scripts remain outside Git in the managed run Logs/native-api-*.
+Initial script assumptions used the wrong page title and VI region label;
+corrected fixture locators to actual source, no product guard was weakened.
+This proves saved native-to-API-to-browser readback, not browser-driven dispatch,
+PostgreSQL rendered runtime, live finance/editorial or professional full journey.
+
+Finding: Decisions labels the immutable failed original as overall research
+processing even beside a completed linked report. UI-only slice now qualifies
+failed/cancelled status as original attempt, without asserting linked completion
+or changing approval eligibility/history. Owned dirty ab13fe0+label source:
+web88609 terminal0:type/lint/166tests/27files/11.67s/build299/diff PASS;
+browser48874 terminal0:actual API/saved native fixture desktop/mobile EN/VI
+readback, original-attempt label and disabled approval PASS, no research/approval
+POST. The React review retained primitive derived rendering, hooks order and
+existing fetch/authorization boundaries; no new state/provider/dependency.
+Goal ACTIVE. Cloud synchronization of
+ab13fe0 was rejected twice by GitHub Internal Server Error; verified remote/PR7
+still9c891f5 at that check. A third ordinary push succeeded to ab13fe0; latest
+UI-label source/receipt still needs its own commit/push. No force/main merge/deploy.
+
 **Full9c terminal PASS; UI integrated after freeze (2026-10-07):** clean frozen
 `9c891f5a4c4b2af398d30d2b90f624db2cbacb5f`, local full gate25685, Python3.14.7:
 3200PASS/88subtestsPASS/482warnings/3057.96s (50m57s), terminal0. Ruff/pip/diff

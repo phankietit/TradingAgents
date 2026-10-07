@@ -110,3 +110,18 @@ it('does not substitute another candidate when the deep link is missing or forbi
   expect(screen.queryByText(candidate.thesis)).toBeNull();
   expect(screen.queryByRole('button', {name:'Approve decision'})).toBeNull();
 });
+
+it.each(['failed', 'cancelled'])('labels retained original processing without granting approval: %s', async status => {
+  const run = {run_id:candidate.run_id,instrument_id:candidate.instrument_id,analysis_as_of:candidate.as_of,status};
+  const fetch = vi.fn(async (url:string) => new Response(JSON.stringify(url.endsWith('/state')
+    ? {candidate,current_status:'review',events:[]}
+    : url.includes('/decisions?') ? [candidate]
+    : url.includes('/artifacts?') ? []
+    : url.includes('/runs/') ? run : [])));
+  vi.stubGlobal('fetch', fetch);
+  render(<Decisions />);
+  expect(await screen.findByText(/^Original attempt processing:/)).toBeTruthy();
+  expect(screen.queryByText(/^Research processing:/)).toBeNull();
+  expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/transitions'))).toBe(false);
+});
