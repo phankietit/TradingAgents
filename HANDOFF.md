@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 copied-session acceptance WIP · 2026-10-08:** isolated owned
+`fix/TA-R14-restored-session-fence`, base af3ed86 carrying the staged operator
+runbook. New synthetic actual PG16 dump/restore copies active/revoked/expired
+sessions and a preserved report, then simulates logout on source after capture.
+It demonstrates the old backup's token revival, then uses the existing public
+`OwnerAuth.change_password` on the new target only. Invalid short password rolls
+back; old cookies/artifact reads/CSRF-protected logout refuse, old password fails,
+new login reads exact original bytes/hash, and a fresh API context retains the
+revocation. Every copied session/account identity and non-auth table is checked;
+source SQL/rows/blobs stay unchanged after target rotation. No operator command,
+new provider/model, paid call, owner data or runtime behavior change.
+Dirty85060 terminal0:18selected PG restore/auth tests PASS16.57s,
+Ruff/dependency/diff PASS; helper removed only its owned container. Extra
+per-session/account/source-logout assertions were added afterward, still
+UNVERIFIED pending clean gate. Full73101 continues on primary frozen cfd31da;
+do not integrate this side source until terminal and owned cleanup confirmed.
+Whole goal ACTIVE; operational encryption/target validation, active jobs,
+browser and financial/live acceptance remain incomplete.
+
 **R14 clean operator-runbook docs gate · 2026-10-08:** clean frozen
 `8683688e1e4e6099ee824a3a3c9a805af549b863`, terminal0 docs gate:
 `git diff --check`; issue-template YAML via Ruby `YAML.load_file`;

@@ -80,8 +80,12 @@ restart needs its own recorded approval, not an automatic post-backup action.
    history; revoke authentication on the **new copy only**, in a reviewed
    transaction, then require fresh login. Existing `OwnerAuth.change_password`
    revokes all unrevoked owner sessions, but no audited operator restore command
-   exists yet. Do not call private helpers or mutate an existing owner DB to
-   simulate acceptance. Test this fence before approving an owner restoration.
+   exists yet. A synthetic PG16 test in `tests/test_postgres_paired_restore.py`
+   exercises post-backup logout revival, target-only password rotation, durable
+   old-cookie/CSRF refusal, fresh login and source/history preservation. Test
+   presence is not execution evidence; consult exact receipts. It does not prove
+   operator target selection, browser rollout or encrypted restore. Do not call
+   private helpers or mutate an existing owner DB to simulate acceptance.
 5. Start only restored API on reviewed loopback settings: no worker, acquisition,
    public exposure, automatic migration or model job. Verify old cookies fail,
    fresh owner login succeeds, foreign-owner data is denied and saved EN/VI
