@@ -10,12 +10,20 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add internal authenticated terminal checkpoint preparation and a retained
+  linked recording factory. Derive codec from original owner inputs and bounded
+  actual SDK identity, recheck authentication/source/accounting/private lease
+  and require a bound result publisher. No session last-seen/history/allowance
+  rewrite, automatic consent/model/dispatch, CLI or provider change. Default
+  continuation API/worker/UI remain off pending integration and acceptance.
+
 - Wire the draft default snapshot worker to original owner-scoped recording
   inputs and a fresh per-run recording supervisor. Preserve exact Decimal
   book/policy, full declared risk bytes, original observer/uncertainty fence and
   parent lease/ACK boundaries. No silent recording fallback, CLI change or
-  automatic continuation. Integration is not accepted: current QA includes
-  preparation-deadline errors and needs new native/default/full gates.
+  automatic continuation. Full local recording baseline has passed; prior
+  preparation-deadline failures remain in dated receipts. Default owner
+  continuation and live/financial/editorial acceptance remain incomplete.
 
 - Add an internal spawn-isolated initialized SDK/graph identity prerequisite
   for durable research recording. Bound JSON transfer and preparation lifetime,

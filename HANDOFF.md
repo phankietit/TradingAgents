@@ -2,6 +2,48 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Terminal preparation / linked factory integration (2026-10-07):** clean frozen
+`c16620264c0da3e4877511e27c4dfb27d62debfe`, full PG1098 terminal0:
+3,133 tests+88 subtests PASS/2 optional-provider skips UNVERIFIED/443warnings/
+1536.90s; Python3.14.7, Ruff/pip-check/diff PASS. Source/HEAD unchanged, only
+labelled helper-owned PG removed. This is full local baseline, not default owner
+continuation, financial/VI/live or release proof. After terminal, integrate
+analysis/terminal_preparation.py, analysis/linked_factory.py and actual default
+native tests. Original authenticated inputs/actual SDK-derived codec, no last_seen
+update/DB locks across SDK work, source/accounting/auth recheck; linked factory
+requires retained observer/private lease/exact identity/bound result publisher.
+No default API/linked worker/UI route yet. New integrated/full gates pending.
+
+Staged c166: setup38842 SQLite3PASS/3deselected/32warnings/40.14s; native resume
+95733 SQLite3PASS/3deselected/38warnings/134.46s; guarded PG30138 terminal0,
+6PASS/44warnings/326.73s (both dialects/all languages, only own PG removed).
+Complete prefix+suffix trace/result match uninterrupted original graph, original
+terminal run/job/checkpoint prefix preserved, exact accounting and separate
+completion/report; REVIEW/human approval retained. Initial52894 wrong fixture
+import collection FAIL exit2/4.70s; corrected actual import, no assertion relaxation.
+Initial external Ruff import-order FAIL corrected mechanically.
+Terminal preparation41847 SQLite3PASS/3deselected/32warnings/24.45s; guarded
+PG2924 terminal0,6PASS/32warnings/144.57s (auth/CSRF/unknown-run refusal before
+SDK, unchanged last_seen/no consent/execution, changed-config refusal). Initial
+Ruff C408 style FAIL corrected without assertion change. Composed87270 SQLite
+3PASS/3deselected/38warnings/57.09s: no fixture-supplied continuation codec,
+actual default stop -> preparation -> consent/claim -> native full resume/report.
+All SDK responses synthetic/network forbidden. Package unchanged during staging;
+new integrated proof pending. No paid AI/provider/risk/CI/private-history/main/
+deploy change. R01–R14 ACTIVE, NQ owner BLOCKED. Next integrated PG/source gate,
+trusted API observation/consent, durable linked worker/status/cancel and owner UX.
+
+Integrated corrective source gate54068 terminal0:85PASS/12warnings/560.65s,
+no skips; Python3.14.7, Ruff/pip-check/diff PASS, only own labelled PG removed.
+Exact source: c166 plus new linked_factory/terminal_preparation, two default
+native tests and these four docs; unchanged throughout. Selection: default
+terminal preparation, default prepared full resume, initialized preflight,
+default ordinary recording and continuation consent. Both DBs/all languages
+run in new native tests; full trace/output equality and original authority/
+history/accounting assertions retained. New clean candidate full suite remains
+UNVERIFIED; old fullc166 is not promoted. Continue API/worker integration next,
+then its candidate/native/browser/full gates before owner/live acceptance.
+
 **Full default recording baseline and stopped-consent bridge (2026-10-07):**
 clean frozen `6fff558d6666fc365a6bfdc1bc20a1e5d1c73f84`, full disposable-PG
 helper46603 terminal0: 3,127 tests+88 subtests PASS,2 optional-provider skips

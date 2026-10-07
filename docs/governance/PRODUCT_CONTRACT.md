@@ -133,6 +133,18 @@ It cannot publish a report/checkpoint/decision, rewrite terminal history, claim
 remote provider termination/cost, replenish allowance or authorize continuation.
 Missing or corrupt stop evidence stays unknown; default continuation stays off.
 
+Internal terminal preparation derives a trusted checkpoint codec from original
+owner-readable inputs and bounded actual SDK initialization. Existing locked
+owner/session/CSRF validation avoids session last-seen updates; DB locks do not
+span SDK construction. Original inputs/accounting/authentication are rechecked
+after preparation. It records no consent, entry, execution, model use or dispatch.
+The internal linked factory requires the existing retained observer, original
+terminal source binding, exact initialized fingerprint/nodes, private lease and
+bound result publisher; changed configuration refuses. Its returned supervisor
+still requires separate one-time durable dispatch/child verification/publication.
+These services are not browser endpoints or default worker continuation, nor
+live/semantic acceptance. No original-history rewrite or fresh allowance is granted.
+
 ## 4. Asset-Specific Contracts
 
 ### Equities

@@ -32,6 +32,64 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Terminal preparation and retained linked factory integration candidate
+
+Full clean frozen `c16620264c0da3e4877511e27c4dfb27d62debfe`, helper1098 exit0:
+**3,133 tests+88 subtests PASS**,2 optional-provider skips UNVERIFIED,443warnings,
+1536.90s/Python3.14.7; Ruff/pip-check/diff PASS, source/HEAD unchanged, only
+own labelled PG removed. Command `TMPDIR=<owned-run>/Tmp TA_ALLOW_TEST_DB_RESET=1
+bash scripts/verify-postgres-local.sh`, log
+`<owned-run>/Logs/full-default-consent-accounting-c166202.log`. Same Bedrock extra
+absent/DeepSeek live key skips as below. Local baseline is not default owner,
+live or financial/VI semantic proof. After terminal integrate terminal preparation,
+linked factory and tests. New integrated/source full evidence is pending.
+
+External staged package c166, SDK replies synthetic/network forbidden:
+38842 SQLite3PASS/3deselected/32warnings/40.14s for setup;95733 resume3PASS/
+3deselected/38warnings/134.46s; guarded PG30138 exit0,6PASS/44warnings/326.73s,
+both DBs/all languages, own PG cleanup and Ruff/pip-check/diff PASS. Original
+default canonical stopped job -> explicit consent/allocation/claim -> staged
+factory -> native full restore/completion. Full prefix+suffix model trace and
+normalized output match uninterrupted graph. Old terminal run/job/checkpoint
+prefix unchanged, exact accounting, separate completion/report and REVIEW/human
+approval retained. Wrong context/missing publisher/changed config refuse before
+dispatch. Initial52894 collection FAIL exit2/4.70s from wrong fixture import;
+correct actual import, no trace/result/history assertion relaxation. Initial
+external Ruff import-order FAIL fixed mechanically. Command: external Results
+on PYTHONPATH, owned TMPDIR, disposable helper `--focused
+<owned-run>/Results/test_default_linked_resume.py`.
+
+Preparation41847 SQLite3PASS/3deselected/32warnings/24.45s; PG2924 exit0,
+6PASS/32warnings/144.57s, own labelled PG removed, both dialects/languages;
+helper `--focused <owned-run>/Results/test_default_terminal_preparation.py`.
+Actual original owner inputs/SDK identity derive codec, not caller hash/codec.
+Locked owner/session/CSRF validation changes no last_seen, DB locks released
+before SDK work, original source/accounting/authentication rechecked afterwards.
+Invalid auth/CSRF/unknown run refuse before SDK, no consent/execution/history
+write, incompatible configuration refuses checkpoint. Initial Ruff C408 style
+FAIL corrected without assertion changes. Composed87270 SQLite exit0,
+3PASS/3deselected/38warnings/57.09s; external Results on PYTHONPATH/owned TMPDIR,
+`.venv/bin/python -m pytest -q <owned-run>/Results/test_default_prepared_resume.py
+-k sqlite --tb=short`. No fixture-supplied continuation codec, actual canonical
+default stop through preparation/consent/claim/factory/full native resume/report.
+These results do not prove new integrated source, default API/browser/worker,
+portfolio readiness, paid/live or financial/editorial acceptance.
+
+Integrated gate54068 terminal0: **85PASS/12warnings/560.65s**, no skips,
+Python3.14.7; Ruff/pip-check/diff PASS, source/HEAD unchanged during QA and only
+own labelled PG removed. c166 plus the two new package modules/two new tests
+and four matching docs. Exact command `TMPDIR=<owned-run>/Tmp
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused
+tests/test_default_terminal_preparation.py tests/test_default_prepared_resume.py
+tests/test_initialized_preflight.py tests/test_default_recording_native.py
+tests/test_continuation_consent.py`, log `<owned-run>/Logs/terminal-linked-integrated-pg.log`.
+Actual default canonical stop through trusted preparation/consent/claim/factory/
+full native restore/completion on both DBs/all languages; original full trace,
+normalized result, old history, exact debit and human-approval assertions intact.
+No paid/network request or enabled default API/worker/UI. New candidate full
+suite UNVERIFIED; c166 full proof is not transferred. Continue default owner
+integration, then corresponding exact candidate/native/browser/full gates.
+
 ### Full default-recording baseline and original stopped-job consent
 
 Clean frozen SHA `6fff558d6666fc365a6bfdc1bc20a1e5d1c73f84`:
