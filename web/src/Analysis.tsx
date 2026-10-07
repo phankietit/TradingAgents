@@ -11,6 +11,7 @@ import JobProgress, { processingLabels } from './JobProgress';
 import { eventLabel } from './financialLabels';
 import { researchLabel } from './researchLabels';
 import ResearchWorkflow, { type ResearchEvent } from './ResearchWorkflow';
+import ContinuationPanel from './ContinuationPanel';
 
 const terminal = (status: string) => ['succeeded', 'failed', 'cancelled'].includes(status);
 
@@ -81,6 +82,11 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
+  const [continuationReports, setContinuationReports] = useState<string[]>([]);
+  const observeReports = useCallback((ids: string[]) => {
+    setContinuationReports(previous => previous.join('|') === ids.join('|') ? previous : ids);
+    setTick(value => value + 1);
+  }, []);
   const isTerminal = run.data ? terminal(run.data.status) : false;
   const observedStatus = jobStatus ?? run.data?.status;
   useEffect(() => {
@@ -115,7 +121,9 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  const savedReport = run.data?.status === 'succeeded' && artifacts.data?.some(item => item.kind === 'analysis_report');
+  const stoppedRun = !!run.data && ['failed', 'cancelled'].includes(run.data.status);
+  const savedReport = artifacts.data?.some(item => item.kind === 'analysis_report'
+    && (run.data?.status === 'succeeded' || continuationReports.includes(item.artifact_id)));
   const processing = <>
     <h2>{t("Research progress")}</h2>
     {run.error ? <p role="alert" className="danger">{t(errorMessage(run.error))}</p> : run.data ? <>
@@ -129,7 +137,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
       <JobProgress runId={runId} version={version + tick} onStatus={setJobStatus} />
       {run.data.error_code ? <><p className="notice danger">{t("Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.")}</p><details><summary>{t("Failure details")}</summary><p className="mono">{run.data.error_code}</p></details></> : null}
       <p className="muted caption">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>
-      {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? t("Requesting cancellation…") : t("Cancel run")}</button> : ['failed', 'cancelled'].includes(run.data.status) ? <button onClick={() => onRetry(run.data!)}>{t("Configure new attempt")}</button> : null}
+      {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? t("Requesting cancellation…") : t("Cancel run")}</button> : null}
     </> : <p role="status">{t("Loading run…")}</p>}
     {error ? <p role="alert" className="danger">{t(error)}</p> : null}
     {streamError ? <p className="warning">{t("Event connection interrupted; active run status refreshes every 5 seconds.")}</p> : null}
@@ -138,7 +146,8 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     </details>
   </>;
   const stageNotes = artifacts.data?.filter(item => item.kind === 'research_stage') ?? [];
-  const finalArtifacts = artifacts.data?.filter(item => item.kind !== 'research_stage') ?? [];
+  const finalArtifacts = artifacts.data?.filter(item => item.kind !== 'research_stage'
+    && (!stoppedRun || item.kind !== 'analysis_report' || continuationReports.includes(item.artifact_id))) ?? [];
   const reports = <>
     {!savedReport ? <h3>{t("Reports & evidence")}</h3> : null}
     {artifacts.error ? <p role="alert" className="danger">{t(errorMessage(artifacts.error))}</p> : finalArtifacts.length ? <ul className="artifact-list">{[...finalArtifacts].sort((a, b) => Number(b.kind === 'analysis_report') - Number(a.kind === 'analysis_report')).map(item => <li key={item.artifact_id}>
@@ -154,10 +163,11 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
   </>;
   return <section className="instrument-detail" aria-label={t("Run details")}>
+    {stoppedRun ? <ContinuationPanel runId={runId} version={version} onReports={observeReports} onNewAttempt={() => onRetry(run.data!)} /> : null}
     {savedReport ? <>
       <p className="muted caption">{t("As of")} {timestamp(run.data!.analysis_as_of)}</p>
       {reports}
       <details className="completed-processing"><summary>{t('Completed analysis · View processing details')}</summary>{processing}</details>
-    </> : <>{processing}{reports}</>}
+    </> : stoppedRun ? <><details className="completed-processing"><summary>{t('Original attempt · View processing details')}</summary>{processing}</details>{reports}</> : <>{processing}{reports}</>}
   </section>;
 }

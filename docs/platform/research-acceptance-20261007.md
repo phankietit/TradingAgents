@@ -4,6 +4,51 @@ Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
 ## Isolated recovery UI groundwork — not integrated
 
+### Owner recovery controls and report projection
+
+Source base `9e74a0ed497540c55842976d7c6d847217df2e7a` plus
+`web/src/{Analysis,ContinuationPanel,continuationData}` source/tests,
+`messages.ts` and `styles.css`; isolated branch `fix/TA-R08-continuation-ui`.
+No preparation/reservation on mount. Explicit prepare, literal three-checkbox
+consent, one reservation, authenticated discovery/progress/cancel, full linked
+completion IDs before report projection. Retain original failed history and
+invalid structured-report warning. Do not infer worker activity from a queued
+reservation or financial approval from completion. No browser persistence of
+consent, report bytes or secrets; existing language preference only.
+
+Web26231 terminal0:26files/158PASS/78.83s:
+`npm test -- --maxWorkers=1 --no-file-parallelism`.
+Web4916 terminal0:typecheck/lint/build PASS, Vite8.3.1,298modules.
+Both use existing shared installed dependencies, not clean-install proof.
+Earlier failures are retained:84907/20636 duplicate new-attempt control (remove
+duplicate app control, not query relaxation);83607 2FAIL/156PASS (integration
+initial loading and untranslated Back);97426 7FAIL/151PASS (integration and
+unchanged-module timeouts; no global cause established);69801 serial
+1FAIL/157PASS, same new integration assertion while run loading.98063 focused
+1PASS/5excluded did not prove full stability.26231 uses async React act for the
+integration initial render; original 1s query deadline and assertions unchanged.
+All retained fixture status remains failed, the new verified report is separate.
+
+Browser94871 terminal0:loopback5174,1440x1000 desktop and390x844 mobile; original
+failed run -> explicit prepare -> consent disabled until all three disclosures
+acknowledged -> exactly one reservation -> linked active status -> cancellation
+request -> verified completed report -> unchanged failed history -> VI.
+Identity/nonblank/no framework overlay/console/overflow/interaction PASS.
+Browser plugin not available; bundled regular Playwright fallback. All API and
+EventSource are intercepted synthetic fixtures, no real backend/SDK/provider or
+paid AI. Screenshots are private local QA artifacts, not cloud financial output.
+First browser7182 failed on hidden unvalidated narrative: reader intentionally
+keeps it behind explicit inspection. Correct the synthetic script to test the
+warning, hidden text, and opening/closing disclosure; no validation gate relaxed.
+
+Remaining before acceptance: complete event-page cursor consumption (current
+has_more warning withholds a false partial stage summary), polish VI allowance
+terminology and original-attempt labels, owner/refusal/completion/cursor matrix,
+combined native/browser/PG and live financial/translation gates. Original full
+5639 remains running on frozen clean6f60429 with failure markers; no side-source
+integration while live. User8000/private runtime/history/provider/risk untouched.
+R01–R14 ACTIVE, NQ owner BLOCKED; no release/main merge.
+
 Additional isolated source base `0a24c70c7dc3af203cdd1fcf2120f8462c85fc0a`:
 execution-linked bounded progress route/schema and expanded control tests.
 Reads validate actual parent entry linkage plus owner/run/attempt/time, sanitize

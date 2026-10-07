@@ -864,6 +864,19 @@ remains off; missing/corrupt stop facts remain unknown. Multi-continuation,
 all late-stop/crash/expiry boundaries and the default continuation API/UI journey
 remain unfinished; local API tests are not live/browser acceptance.
 
+The isolated R08 recovery UI candidate now lets the owner inspect saved context,
+explicitly acknowledge retained allowance, unknown provider cost and unvalidated
+working notes, then reserve a continuation. It shows authenticated linked status,
+supports cancellation requests and displays a linked report only after verified
+report IDs are returned. The original failed/cancelled history stays unchanged;
+completion does not approve a decision. No preparation or reservation occurs on
+page load. Desktop/mobile EN/VI synthetic browser tests and 158 web unit tests
+pass, not real worker/provider acceptance. The current progress reader explicitly
+warns and withholds a stage summary when additional event pages exist; full cursor
+consumption is still required before that reader is complete. The candidate is on
+`fix/TA-R08-continuation-ui`, not yet integrated into the frozen R01 regression
+candidate or installed in the user's runtime. Default polling remains off.
+
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
 same private database and artifact root as the API. See

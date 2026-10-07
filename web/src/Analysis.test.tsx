@@ -5,6 +5,44 @@ import Analysis from './Analysis';
 
 afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
 
+it('reloads a verified continuation report without rewriting the failed original run', async () => {
+  const runId = '11111111-1111-4111-8111-111111111111';
+  const reportId = '22222222-2222-4222-8222-222222222222';
+  const decisionId = '33333333-3333-4333-8333-333333333333';
+  const run = {run_id:runId,instrument_id:'apple',status:'failed',created_at:'2026-10-07T00:00:00Z',
+    analysis_as_of:'2026-10-07T00:00:00Z',selected_analysts:['market'],snapshot_ids:['saved-source']};
+  let published = false;
+  let artifactReads = 0;
+  vi.stubGlobal('EventSource',vi.fn(function(){return {addEventListener:vi.fn(),close:vi.fn()};}));
+  vi.stubGlobal('fetch',vi.fn(async(url:string) => {
+    let value: unknown = run;
+    if (url.includes('/instruments?')) value = [];
+    else if (url.includes('/runs?')) value = [run];
+    else if (url.includes('/continuations?')) {
+      published = true;
+      value = {items:[{run_id:runId,execution_id:'44444444-4444-4444-8444-444444444444',attempt:2,status:'completed',
+        preparation_requires_review:false,lease_expired:true,report_artifact_id:reportId,evidence_artifact_id:null,decision_id:decisionId}],has_more:false};
+    } else if (url.endsWith('/events')) value = {events:[],has_more:false,approval_eligible:false};
+    else if (url.includes('/artifacts?')) {
+      artifactReads++;
+      value = published ? [{artifact_id:reportId,kind:'analysis_report',media_type:'application/json',
+        byte_size:500,content_hash:'sha256:fixture',created_at:run.created_at}] : [];
+    } else if (url.endsWith(`/artifacts/${reportId}`)) value = {run_id:runId,decision_id:decisionId,
+      profile:'equity',reference_only:false,selected_analysts:['market'],snapshot_attestation:'PASS',
+      narrative:'Verified continuation fixture',structured_narrative:null,validation_issues:['structured_output_missing']};
+    return new Response(JSON.stringify(value));
+  }));
+  // Flush the initial history/detail/continuation promise chain inside React's
+  // async boundary before asserting the rendered result. Do not extend the
+  // assertion deadline or substitute a successful original-run status.
+  await act(async () => { render(<Analysis />); });
+  await screen.findByRole('heading',{name:'Continuation report available'});
+  await screen.findByText('Verified continuation fixture');
+  expect(artifactReads).toBeGreaterThan(1);
+  expect(within(screen.getByRole('region',{name:'Analysis history'})).getByText('Research failed')).toBeTruthy();
+  expect(screen.getByText(/The model response did not pass/)).toBeTruthy();
+});
+
 it('separates failed-run working notes from completed reports and fetches only on reader request', async () => {
   const date = '2026-09-26T00:00:00Z';
   const run = {run_id:'failed-run',instrument_id:'apple',status:'failed',created_at:date,

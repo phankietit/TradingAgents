@@ -10,6 +10,14 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add explicit owner recovery controls to the web analysis reader: inspect saved
+  context, acknowledge all three retained-budget/cost/review disclosures, reserve
+  once, inspect linked status, request cancellation and display only verified
+  linked report IDs without rewriting failed original history. Original process
+  detail is collapsed. EN/VI desktop/mobile synthetic browser QA and all 158 web
+  tests pass; complete event-page consumption and native combined acceptance
+  remain unfinished. No automatic retry, provider call or default worker enablement.
+
 - Add bounded execution-linked progress reading for recovery UI groundwork.
   Validate entry provenance and owner/run/attempt/time; return sanitized display
   fields only, with explicit pagination and nonapproval status. Original terminal

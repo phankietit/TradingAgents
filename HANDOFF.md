@@ -2,6 +2,23 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Isolated recovery UI checkpoint (2026-10-07):** side branch
+`fix/TA-R08-continuation-ui`, base `9e74a0ed497540c55842976d7c6d847217df2e7a`
+plus the UI changes in the dated acceptance receipt. Explicit owner consent,
+linked status/cancel and verified report projection preserve original failed
+history and invalid-report warnings. Serial web26231 terminal0:158PASS/26files,
+78.83s. Prior full serial69801 terminal1:157PASS/1FAIL; the new integration test
+asserted before the history/detail/continuation promise chain settled. Use async
+React act around its initial render, without deadline/assertion/fixture status
+relaxation; browser94871 terminal0 both desktop/mobile synthetic EN/VI journeys.
+All API/EventSource intercepted: no real SDK, paid AI or provider/worker evidence.
+Original full5639 is still live on frozen clean6f60429, with earlier failure
+markers, not a PASS. Do not integrate this side branch while that gate is live.
+Remaining: consume all progress cursor pages (current warning is honest but
+incomplete), polish VI allowance terminology/original-attempt labels, combined
+native authenticated browser/PG tests and full original failure diagnosis.
+R01–R14 remains ACTIVE; no main merge/deploy/runtime restart/history mutation.
+
 **Opt-in polling and owner status/cancel (2026-10-07):** source base
 `0bcd76d39c4e9c2e0a2b2276bb7f3fb4562c095e` plus polling/control/refusal changes
 listed in `docs/platform/research-acceptance-20261007.md`. Explicit operator
