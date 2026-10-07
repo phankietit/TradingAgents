@@ -2,6 +2,49 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R11 exact pre-consent research brief (2026-10-08 local):** clean frozen
+source `66e61fac1de7bd2e9ca1227dbb90c0fd9824bfb9`. Command
+`cd web && npm run typecheck && npm run lint && npm test && npm run build`,
+session94770 terminal0:27 files/177 tests PASS,25.86s; type/lint/Vite PASS,
+Node26.8.1/npm11.19.0/macOS. Diff PASS. Dirty gate97919/30.96s is separate.
+Scope/data/authorization navigation transfers scroll and focus only. All
+existing acquisition controls, full source inspection, source/portfolio gates,
+allowance warnings and consent remain mounted; no source/role/API/payload or
+request-key change. At authorization, current asset/name, exact UTC time,
+generation language, research mode, each selected source/vendor/cutoff and
+absent areas are visible. Portfolio mode also discloses valuation time/currency,
+policy name/version, owner percentage and selected correlation IDs in disclosure.
+This is current-form context, not an immutable published artifact, validation
+waiver, risk recommendation or price quote. Content checks/backend remain
+authoritative. Missing/ineligible/delayed selections are not manufactured data.
+Tests cover context/read order, language-change consent reset, navigation focus
+without acquisition/AI, and portfolio/policy/target presentation; existing
+177-test consent, source, payload/idempotency and review tests retained.
+
+Fresh CUA tab3 localhost analysis, isolated original QA server48660/PID4563,
+source66e61fa:New analysis -> saved-source disclosure -> explicit synthetic
+AAPL price selection -> review shortcut PASS. Focus reaches summary; selected
+cutoff2026-10-06 18:16:54UTC and three absent analyst areas remain explicit.
+Consent alone enables submit; changing report generation from bilingual toVI
+resets consent/disables submit and updates brief PASS. EN interface shows the
+same asset/time/cutoff and Vietnamese generation choice without AI; UI restoredVI.
+No submission or provider/preparation button clicked, no model/vendor/portfolio
+write. An exact getByLabel locator found no match; fresh DOM's named combobox
+was used successfully (interaction locator issue, not a claimed input failure).
+1280x720 and390x844 screenshot/meaningful page/no overlay/console[] PASS;
+mobile scrollWidth390 and review focus PASS. Resizing required using the review
+shortcut again because reflow changes scroll position. Accepted saved/reopened
+qa-13-desktop-consent-66e61fa.jpg and qa-15-mobile-consent-66e61fa.jpg under
+managed-run/Logs; qa-14 captures source preparation, not the consent brief.
+Viewport reset; QA tab marked for continuation. No private screenshot entersGit.
+
+Setup now has direct navigation and exact confirmation context, but it is not
+yet a staged exclusive wizard or complete professional UX acceptance. Mobile
+chrome/report fold, source preparation density, long-running progress and broad
+keyboard/screen-reader/contrast remain open. Full3309 FAIL/native preflight cause,
+actual financial/translation and fresh-install/restore gates stay open; NQ
+owner-BLOCKED, no new provider/paid authorization. Goal ACTIVE, Draft PR7.
+
 **R11 fresh browser audit and decision reading order (2026-10-08 local):**
 clean frozen source `40b32c62fdf30a703bc7a52edc2ef931168a19aa`.
 `cd web && npm run typecheck && npm run lint && npm test && npm run build`

@@ -43,6 +43,16 @@ Mobile chrome/first-viewport summary, staged setup and full professional
 long-running journey remain incomplete. See HANDOFF for commands/private
 evidence boundaries; no current full baseline or live PASS is implied.
 
+At66e61fa, scope/data/review focus navigation and a complete pre-consent
+current-input brief add asset/time/language/mode, each selected analysis source
+and absent area; portfolio/policy/owner target and correlation disclosure are
+retained. Exact177 web tests/type/lint/build PASS. Synthetic browser selection
+-> brief -> consent enables submit -> language change resets consent PASS;
+EN/VI display and desktop/mobile review focus/overflow/console PASS. No new
+submission, acquisition, model request or payload/gate mutation. This is not
+source-quality, original native graph, live financial or full staged UX proof;
+the remaining journey and earlier FAIL/BLOCKED/UNVERIFIED gates are retained.
+
 ## Tickets and acceptance
 
 Every ticket carries one type, area and priority below. Statuses distinguish
