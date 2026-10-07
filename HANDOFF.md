@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 API entrypoint implementation:** isolated side dirty source on b4176d2.
+Argparse admits help before environment/logging/app/server construction; unknown
+arguments refuse with fixed text and no echoed values. Explicit argv supports
+embedded callers; console entrypoint uses system argv. Normal launch keeps the
+existing env settings, validated port/origin and127.0.0.1 binding. No new SDK,
+dependency, provider, model, risk or web source change. Built-web tests pass
+explicit [] instead of inheriting pytest arguments; original assertions intact.
+README documents actual help and safe argument behavior.
+
+Pre-implementation selected gate14165:2FAIL/6.76s (main lacked argv admission),
+Ruff/diff PASS; combined diagnostic wrapper ended0 after Ruff, not pytest PASS.
+Installed original API --help34626 separately terminal1 before configuration.
+Dirty implementation90051:17PASS/25.85s; expanded system/explicit-argv and
+existing platform API99033:50PASS/43.37s, terminal0, Python3.14.7. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q tests/test_api_entrypoint.py tests/test_built_web.py tests/test_platform_api.py --tb=short -x`
+Scoped Ruff/diff PASS. No source change until expanded gate terminal. Next:
+freeze side exact SHA, rerun focused gate and installed console smoke. These
+dirty tests are not an exact full baseline/release proof. Primary e3b837b remains
+clean/frozen under full3309; no integration until terminal. Goal ACTIVE.
+
 **R14 installed API entrypoint finding (2026-10-08):** exact e3b837b wheel
 build/install/import and qualifier smoke PASS outside source with reused runtime
 dependencies. Installed CLI30659 and worker1631 `--help` terminal0; API34626

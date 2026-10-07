@@ -115,11 +115,11 @@ def test_web_runtime_settings_and_port_guard(built_settings, monkeypatch):
     for key, value in values.items():
         monkeypatch.setenv(key, value)
     with pytest.raises(RuntimeError, match="origin port must equal"):
-        runtime.main()
+        runtime.main([])
     monkeypatch.setenv("TRADINGAGENTS_API_PORT", "8000")
     calls = []
     monkeypatch.setattr(runtime.uvicorn, "run", lambda app, **kwargs: calls.append(kwargs))
-    runtime.main()
+    runtime.main([])
     assert calls[0]["host"] == "127.0.0.1"
     assert calls[0]["port"] == 8000
     assert calls[0]["access_log"] is False

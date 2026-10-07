@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -55,7 +56,21 @@ def load_api_settings(environ: Mapping[str, str] | None = None) -> ApiSettings:
     )
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        prog="tradingagents-api",
+        description="Serve the private TradingAgents API on local loopback only.",
+        epilog=("Configure TRADINGAGENTS_DATABASE_URL, TRADINGAGENTS_ARTIFACT_ROOT and "
+                "TRADINGAGENTS_ALLOWED_ORIGIN before starting. Optional settings include "
+                "TRADINGAGENTS_API_PORT, TRADINGAGENTS_SECURE_COOKIES and TRADINGAGENTS_WEB_ROOT. "
+                "Credentials remain in server environment variables, never command-line options."),
+        allow_abbrev=False,
+    )
+    _, unknown = parser.parse_known_args(argv)
+    if unknown:
+        # Refuse before configuration/DB/logging/server admission. Do not echo
+        # argument values: an operator may have pasted a private value here.
+        parser.error("unrecognized command-line options; use --help")
     settings = load_api_settings()
     configure_platform_logging()
     try:

@@ -380,6 +380,10 @@ The optional `platform` extra now includes a private, authenticated FastAPI
 foundation for durable analysis jobs and owner-scoped results. The `web/`
 application provides Markets, Analysis, Portfolio and Decisions workspaces,
 served locally through `tradingagents-api` after a separate frontend build.
+`tradingagents-api --help` shows setup variable names without loading private
+configuration or starting a service. Unknown command-line options are refused
+before startup without echoing supplied values; runtime configuration stays in
+the server environment and binding remains local-only.
 It uses saved evidence, not a live trading feed. See the
 [local startup guide](docs/platform/local-web-startup.md) and
 [web build and verification guide](web/README.md).
