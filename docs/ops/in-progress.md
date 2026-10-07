@@ -10,7 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | V2/operator/session sidec32662f integrated after uninstrumented full73101 PASS on cfd31da and owned cleanup; integrated native resume/full/browser/live/UX/operator acceptance pending; Draft PR7; whole goal incomplete | in-progress | 2026-10-08 |
-| R08 | current thread isolated UI | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Mobile289de45/state5d455ec PASS retained; failed-job-refresh351bc0b build/lint/default212 +synthetic/mocked EN/VI error/restoration browser PASS; red/timeout/fixture/locator receipts retained; side-only pending primaryfull51929 and broader operational/decision/live/operator acceptance | in-progress | 2026-10-08 |
+| R08/R13 | current thread isolated UI and regression repair | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Mobile/state/refresh UI212 +rendered scoped PASS; clean installed3.12 selected154/native14x8 PASS; full51929 terminal4FAIL3302PASS retained/ownedcleanup confirmed; remaining V2fixture repair6699775 focused103PASS; ready for owned integration/newfull; broader live/operational/decision/operator gates open | in-progress | 2026-10-08 |
 
 Rules:
 

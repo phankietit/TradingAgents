@@ -1,5 +1,14 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 clean fixture repair gate · 2026-10-08:** side frozen
+`6699775c6f1d0fd71bab6e6db4f2905d133d1e62`,59775 terminal0:
+`TMPDIR=<managed>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_research_stage_records.py tests/test_semantic_qualifier_regressions.py tests/test_summary_source_coverage.py tests/test_summary_review_v2.py tests/test_summary_result_v2.py tests/test_claim_local_causal_coverage.py tests/test_summary_provenance_v2.py --tb=short`.
+103PASS16.16s, Ruff/dependency/diff PASS,Python3.14.7 existingvenv, clean unchanged
+source. Full51929 FAIL remains prior authoritative evidence, not overwritten.
+This fixes fake model V2 responses only, with causal refusal/positive V2 checks
+strengthened; no runtime fallback/provider/model/risk/history change. Next is
+owned branch integration after confirmed terminal/cleanup, then new full gate.
+
 **R13 terminal full FAIL + fixture repair · 2026-10-08:** primary frozen
 `fb38391a0ed45ba06acd0295c81cb478819352c3`, default uninstrumented PostgreSQL
 51929 terminal1:4FAIL3302PASS/88subtestsPASS/2optionalskipsUNVERIFIED/502warnings,
