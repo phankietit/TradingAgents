@@ -2,8 +2,31 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import Analysis from './Analysis';
+import {setLocale} from './i18n';
 
-afterEach(() => { vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
+afterEach(() => { setLocale('en'); vi.unstubAllGlobals(); window.history.replaceState(null, '', '#/analysis'); });
+
+it.each([
+  ['en', 'cancel_requested', 'running'], ['vi', 'cancel_requested', 'running'],
+  ['en', 'running', 'cancel_requested'], ['vi', 'running', 'cancel_requested'],
+] as const)('disables repeat cancellation in %s when run=%s job=%s', async (locale, runStatus, jobStatus) => {
+  setLocale(locale);
+  const date='2026-10-08T00:00:00Z';
+  const run={run_id:'cancel-run',instrument_id:'apple',status:runStatus,created_at:date,
+    analysis_as_of:date,selected_analysts:['market'],snapshot_ids:['source']};
+  vi.stubGlobal('EventSource',vi.fn(function(){return {addEventListener:vi.fn(),close:vi.fn()};}));
+  const fetch=vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/job')
+    ? {job_id:'job',run_id:run.run_id,status:jobStatus,attempt:1,max_attempts:3,available_at:date,updated_at:date,completed_at:null}
+    : url.includes('/instruments?') || url.includes('/artifacts?') ? [] : url.includes('/runs?') ? [run] : run)));
+  vi.stubGlobal('fetch',fetch);
+  await act(async()=>{render(<Analysis />);});
+  const button=await screen.findByRole('button',{name:locale==='en'?'Cancellation requested':'Đã yêu cầu hủy'});
+  expect((button as HTMLButtonElement).disabled).toBe(true);
+  const calls=fetch.mock.calls.length;
+  await userEvent.setup().click(button);
+  expect(fetch.mock.calls).toHaveLength(calls);
+  expect(screen.queryByText(locale==='en'?'Processing stopped':'Đã dừng xử lý')).toBeNull();
+});
 
 it('falls back to separately fetched run status when the previously successful job read fails', async () => {
   const date = '2026-09-26T00:00:00Z';

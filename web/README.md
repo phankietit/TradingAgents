@@ -75,6 +75,9 @@ artifact and decision checks remain required.
 When a report is retained during active processing, only the observed processing
 phase is marked current. Report availability does not simultaneously mark owner
 review as the current phase; a queued job cannot invent a current phase.
+When either the run or the verified job read reports cancellation requested,
+the cancellation button is disabled and labelled accordingly. This avoids repeat
+requests while waiting; it does not confirm shutdown or invent terminal status.
 
 The analysis setup now has an independent **Add recent headlines** action
 beside price preparation. It saves owner-scoped Yahoo news only when the

@@ -89,6 +89,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     setTick(value => value + 1);
   }, []);
   const isTerminal = run.data ? terminal(run.data.status) : false;
+  const cancellationRequested = run.data?.status === 'cancel_requested' || jobStatus === 'cancel_requested';
   const observedStatus = jobStatus ?? run.data?.status;
   useEffect(() => {
     if (observedStatus) onStatus(runId, observedStatus);
@@ -117,6 +118,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     return () => window.clearInterval(timer);
   }, [isTerminal]);
   async function cancel() {
+    if (pending || isTerminal || cancellationRequested) return;
     setPending(true); setError('');
     try { await mutate(`/runs/${encodeURIComponent(runId)}/cancel`); setTick(value => value + 1); onChanged(); }
     catch (cause) { setError(errorMessage(cause)); }
@@ -138,7 +140,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
       <JobProgress runId={runId} version={version + tick} onStatus={setJobStatus} />
       {run.data.error_code ? <><p className="notice danger">{t("Research could not be completed. No investment conclusion is available from this run. Check the research service before configuring a new attempt.")}</p><details><summary>{t("Failure details")}</summary><p className="mono">{run.data.error_code}</p></details></> : null}
       <p className="muted caption">{t("Research coverage:")} {run.data.selected_analysts.map(researchLabel).join(', ')} · {run.data.snapshot_ids.length}  {t("saved sources")}</p>
-      {!isTerminal ? <button disabled={pending} onClick={cancel}>{pending ? t("Requesting cancellation…") : t("Cancel run")}</button> : null}
+      {!isTerminal ? <button disabled={pending || cancellationRequested} onClick={cancel}>{cancellationRequested ? t('Cancellation requested') : pending ? t("Requesting cancellation…") : t("Cancel run")}</button> : null}
     </> : <p role="status">{t("Loading run…")}</p>}
     {error ? <p role="alert" className="danger">{t(error)}</p> : null}
     {streamError ? <p className="warning">{t("Event connection interrupted; active run status refreshes every 5 seconds.")}</p> : null}
