@@ -344,6 +344,7 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
         monkeypatch.setattr(linked_worker, "execute_reserved_continuation", observed_execute)
         result = runtime.run_worker(runtime.WorkerSettings(url, store.root), once=True,
                                     continuations=True, worker_id="native-linked-worker")
+        print("Preflight boundary timing: " + json.dumps(preflight_timings, sort_keys=True))
         suffix = json.loads((store.root / "worker-runtime" / "reports.fixture-trace.json").read_text())
         # Polling returns the reservation UUID on a failed execution, not a
         # report. Diagnose that boundary before comparing a stale/partial trace

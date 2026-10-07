@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Selected PostgreSQL retry PASS, cause still UNVERIFIED:** frozen
+`733480ae1637df3d7c172ddabddfcc1012d97cde`, session75025 terminal0:
+1PASS/2 synthetic SDK warnings/52.37s, Python3.14.7; same focused helper
+command as matrix below, selecting only
+`tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[postgresql-en-worker]`.
+Ruff/pip PASS; owned disposable PostgreSQL removed. Full original graph/consent,
+checkpoint/accounting/history/reaping assertions retained. This does not erase
+matrix23564 FAIL or establish its cause. Numeric timing was available only in
+the failure assertion, so emit the same bounded timing on success for comparison;
+no product timing, allowance, lease or provider semantics change.
+
 **Side recovery matrix FAIL (2026-10-07):** clean frozen
 `91d3c4f1abd8054eeea3d65268927f5aadb5bd75`, session23564 terminal1:
 8PASS/1FAIL/16 synthetic SDK warnings/217.65s. Command:
