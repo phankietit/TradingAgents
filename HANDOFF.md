@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 clean copied-session gate · 2026-10-08:** frozen clean isolated source
+`5d7d51e40d69c6dba8cf189cb3b91267318d4dd1`, side87438 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_postgres_paired_restore.py tests/test_owner_auth.py tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py tests/test_local_verification_cli.py --tb=short`.
+75selected PASS46.08s; Ruff/dependency/diff PASS,Python3.14.7; source clean/
+unchanged during gate; helper confirmed removal of only its owned container.
+Source post-backup logout refusal and independent active token are verified;
+target backup initially revives the old token, proving the operator fence is
+required. Target-only existing password rotation revokes every copied session
+(active/expired, prior revocation preserved), rejects old API cookies and CSRF,
+accepts new credentials/readback across fresh API contexts, preserves non-auth
+tables/account identity and source SQL/rows/blobs. Invalid short password rolls
+back without table changes. This is synthetic PostgreSQL/auth acceptance, not
+automatic safe restore or an operator CLI, encrypted transfer, browser rollout,
+active-job recovery or an owner-runtime operation. Runtime/package/CLI/scripts/
+provider/risk behavior unchanged. Side also carries staged operator docs.
+Keep primary frozen cfd31da until full73101 terminal and owned cleanup; that
+full gate does not include this later side test. Goal ACTIVE; all remaining
+financial/live/UX/operational requirements retain their previous status.
+
 **R14 copied-session acceptance WIP · 2026-10-08:** isolated owned
 `fix/TA-R14-restored-session-fence`, base af3ed86 carrying the staged operator
 runbook. New synthetic actual PG16 dump/restore copies active/revoked/expired
