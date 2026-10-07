@@ -2,6 +2,22 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Owner recovery reader contract (2026-10-07):** base
+`43eada49b9d2cc58d85c86b88c0a1649b3b0a513` plus new
+`tests/test_continuation_reader_contract.py`; no production source changes.
+Foreign run hidden on discovery/state/events; expired/revoked/disabled auth
+refused before SDK preparation; valid refusal visible, corrupt refusal sanitized
+409; completion IDs require full report/decision/actor integrity. Original
+run/job/events/checkpoint history unchanged by reads. Writer stop fixtures are
+fabricated unit-only, not native or live evidence.
+31915 terminal0:5PASS/4PG prerequisite skips UNVERIFIED/33.28s before adding auth
+matrix.30565 terminal0:21PASS/114.66s, no skips, reader contract plus polling/control
+on SQLite/PostgreSQL using labelled disposable helper DB. Python3.14.7/Ruff/pip
+check/diff PASS; source frozen throughout; only helper-owned PG removed.
+Original full5639 remains live/frozen6f with earlier failure markers. Combined
+native/browser, wider corruption/race/restart coverage and live financial/VI
+acceptance still pending; do not integrate while original gate is live. ACTIVE.
+
 **Complete cursor UI reader (2026-10-07):** isolated base
 `e1e1985d0ae93ec7804cc734271da3a2244d1e96`, not integrated into frozen R01.
 Read all event pages; validate monotonic cross-page sequence/attempt and bounded

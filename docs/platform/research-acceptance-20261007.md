@@ -4,6 +4,29 @@ Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
 ## Isolated recovery UI groundwork — not integrated
 
+### Owner recovery reader contract
+
+Base `43eada49b9d2cc58d85c86b88c0a1649b3b0a513` plus
+`tests/test_continuation_reader_contract.py`. No production runtime source changed.
+Actual authenticated TestClient routes: discovery/state/events hide foreign run;
+expired/revoked/disabled auth returns sanitized401 before SDK; valid preclaim
+refusal is visible without report IDs, corrupt refusal returns sanitized409;
+report hash, decision payload or report actor corruption refuses completion IDs
+from discovery and state. Snapshot original run/job/event/checkpoint history
+unchanged by reads. All data/identity changes are disposable synthetic fixtures;
+writer stop fixture is fabricated unit evidence, not actual process supervision.
+
+31915 terminal0:5PASS/4PG prerequisites skipped UNVERIFIED/33.28s before adding
+auth matrix.30565 terminal0:21PASS/114.66s, no skips, full selected reader and
+polling-control tests on SQLite/PostgreSQL; Python3.14.7/Ruff/pip check/diff PASS.
+Command: `TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused
+tests/test_continuation_reader_contract.py tests/test_continuation_polling_control.py
+--tb=short -x`, explicit existing Python runtime; TMPDIR in owned external QA run.
+Source/HEAD frozen throughout; helper created and removed only its labelled PG.
+This is focused source-base-plus-test evidence, not full regression, native
+browser, clean install, provider/financial/translation/release acceptance.
+Original full5639 still live/frozen6f60429 with failure markers. Goal ACTIVE.
+
 ### Complete cursor consumption and process labels
 
 Base `e1e1985d0ae93ec7804cc734271da3a2244d1e96` plus continuationData,
