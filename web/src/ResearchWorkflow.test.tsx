@@ -20,3 +20,11 @@ it('distinguishes report availability from validated conclusions', () => {
   expect(within(review).getByText('Read the findings and limitations')).toBeTruthy();
   expect(screen.queryByText('Approved')).toBeNull();
 });
+it('reads a long linked timeline without an argument-spread limit or discarding the latest stage', () => {
+  const events = Array.from({length:150_000},(_,index)=>({...event(index+1,'model.usage'),attempt:2}));
+  events.push({...event(150_001,'stage.started','Financial validation'),attempt:2});
+  render(<ResearchWorkflow events={events} status="running" hasSources hasReport={false} />);
+  expect(screen.getByText('Financial validation')).toBeTruthy();
+  expect(screen.getByText('Report preparation').closest('li')?.getAttribute('aria-current')).toBe('step');
+  expect(screen.queryByRole('progressbar')).toBeNull();
+});

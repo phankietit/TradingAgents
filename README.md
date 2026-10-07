@@ -871,9 +871,13 @@ supports cancellation requests and displays a linked report only after verified
 report IDs are returned. The original failed/cancelled history stays unchanged;
 completion does not approve a decision. No preparation or reservation occurs on
 page load. Desktop/mobile EN/VI synthetic browser tests and 158 web unit tests
-pass, not real worker/provider acceptance. The current progress reader explicitly
-warns and withholds a stage summary when additional event pages exist; full cursor
-consumption is still required before that reader is complete. The candidate is on
+pass, not real worker/provider acceptance. The progress reader now consumes all
+cursor pages, validates their sequence/attempt and publishes only a complete
+projection. Later polling uses the validated cursor; overlapping polls coalesce
+rather than aborting a long read. A failed page clears both display and cursor,
+and selection changes abort in-flight reads. It does not persist private progress
+or silently cap the timeline. Native/backend combined acceptance is pending.
+The candidate is on
 `fix/TA-R08-continuation-ui`, not yet integrated into the frozen R01 regression
 candidate or installed in the user's runtime. Default polling remains off.
 

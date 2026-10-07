@@ -1,4 +1,4 @@
-import { ApiError } from './api';
+import { ApiError, request } from './api';
 import type { ResearchEvent } from './ResearchWorkflow';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,7 +24,8 @@ export function continuation(value: Continuation, runId: string): Continuation {
   return value;
 }
 export function discovery(value: Discovery, runId: string): Discovery {
-  if (!value || !Array.isArray(value.items) || value.items.length > 50 || typeof value.has_more !== 'boolean') reject();
+  if (!value || !Array.isArray(value.items) || value.items.length > 50 || typeof value.has_more !== 'boolean'
+    || (value.has_more && !value.items.length)) reject();
   value.items.forEach(item => continuation(item, runId));
   if (new Set(value.items.map(item => item.execution_id)).size !== value.items.length
     || value.items.some((item, index) => index > 0 && item.attempt >= value.items[index - 1].attempt)) reject();
@@ -41,10 +42,29 @@ export function preparation(value: Preparation, runId: string): Preparation {
 export function progress(value: Progress, attempt: number): Progress {
   const types = ['research.execution_started', 'stage.started', 'stage.completed', 'model.usage', 'artifact.created', 'decision.ready'];
   if (!value || value.approval_eligible !== false || typeof value.has_more !== 'boolean'
+    || (value.has_more && !value.events?.length)
     || !Array.isArray(value.events) || value.events.length > 100 || value.events.some((event, index) => !event
       || !Number.isSafeInteger(event.sequence) || event.sequence < 1 || !types.includes(event.event_type)
       || event.attempt !== attempt || !Number.isFinite(Date.parse(event.occurred_at))
       || (event.stage != null && (typeof event.stage !== 'string' || event.stage.length > 80))
       || (index > 0 && event.sequence <= value.events[index - 1].sequence))) reject();
   return value;
+}
+
+/** Consume every page, then publish one complete display projection. Incremental
+ * polling starts after the last validated sequence, never a guessed page count. */
+export async function readProgress(path: string, attempt: number, signal: AbortSignal,
+  previous: readonly ResearchEvent[] = []): Promise<Progress> {
+  const events = [...previous];
+  let cursor = events.at(-1)?.sequence ?? 0;
+  while (true) {
+    signal.throwIfAborted();
+    const page = progress(await request<Progress>(cursor ? `${path}?after_sequence=${cursor}` : path,
+      {signal}, 128 * 1024), attempt);
+    signal.throwIfAborted();
+    if (page.events.some(event => event.sequence <= cursor)) reject();
+    events.push(...page.events);
+    if (!page.has_more) return {events, has_more:false, approval_eligible:false};
+    cursor = events.at(-1)!.sequence;
+  }
 }

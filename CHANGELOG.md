@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Consume complete paginated continuation progress, with incremental validated
+  cursors, coalesced polling, identity-change abort and fail-closed invalid-page
+  behavior. Handle long timelines without JavaScript argument-spread limits.
+  Clarify Vietnamese retained-time/call disclosures and distinguish failed
+  original processing from a completed linked report. Native combined acceptance
+  remains pending; no automatic analysis retry or new allowance.
+
 - Add explicit owner recovery controls to the web analysis reader: inspect saved
   context, acknowledge all three retained-budget/cost/review disclosures, reserve
   once, inspect linked status, request cancellation and display only verified

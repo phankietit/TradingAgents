@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Complete cursor UI reader (2026-10-07):** isolated base
+`e1e1985d0ae93ec7804cc734271da3a2244d1e96`, not integrated into frozen R01.
+Read all event pages; validate monotonic cross-page sequence/attempt and bounded
+individual response bytes; no total-event truncation. Poll after validated cursor,
+coalesce refresh during long reads instead of aborting them every interval. Only
+selection/unmount aborts; error clears display/cache and retry starts from zero.
+No private persistence, model/provider call or original-history change. Replace
+VI allowance jargon with retained time/calls and label completed-linked original
+detail as original attempt, not successful original processing. Long timeline
+summary uses reduce, not unbounded Math.max argument spread.
+Web3520 terminal0:type/lint +163PASS/27files/43.53s. Final68770 terminal0:
+type/lint/build +164PASS/27files/40.26s,299modules. New cases cover101events across
+pages/incremental cursor/repeated page/later failure/abort/coalescing/identity
+isolation/error reset and150001event summary without truncation.
+First type38746 failed new mock tuple typing, corrected signature;86009 lint
+failed unused argument, corrected meaningful request-path assertion, no runtime
+validation/assertion deadline relaxed. Original full5639 still live/frozen6f
+with failure markers; exact terminal failure audit, native owner/browser/PG and
+live financial/VI gates remain. Goal ACTIVE; NQ owner BLOCKED.
+
 **Isolated recovery UI checkpoint (2026-10-07):** side branch
 `fix/TA-R08-continuation-ui`, base `9e74a0ed497540c55842976d7c6d847217df2e7a`
 plus the UI changes in the dated acceptance receipt. Explicit owner consent,

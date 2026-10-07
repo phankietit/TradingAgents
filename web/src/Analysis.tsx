@@ -167,7 +167,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     {savedReport ? <>
       <p className="muted caption">{t("As of")} {timestamp(run.data!.analysis_as_of)}</p>
       {reports}
-      <details className="completed-processing"><summary>{t('Completed analysis · View processing details')}</summary>{processing}</details>
+      <details className="completed-processing"><summary>{t(stoppedRun ? 'Original attempt · View processing details' : 'Completed analysis · View processing details')}</summary>{processing}</details>
     </> : stoppedRun ? <><details className="completed-processing"><summary>{t('Original attempt · View processing details')}</summary>{processing}</details>{reports}</> : <>{processing}{reports}</>}
   </section>;
 }

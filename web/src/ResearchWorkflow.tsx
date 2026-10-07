@@ -8,7 +8,7 @@ export default function ResearchWorkflow({events, status, hasSources, hasReport}
 }) {
   useLocale();
   const start = [...events].reverse().find(event => event.event_type === 'run.started')?.sequence ?? 0;
-  const latestAttempt = Math.max(0, ...events.map(event => event.attempt ?? 0));
+  const latestAttempt = events.reduce((latest, event) => Math.max(latest, event.attempt ?? 0), 0);
   const attempt = events.filter(event => event.sequence >= start && (!latestAttempt || event.attempt === latestAttempt));
   const stages = attempt.filter(event => event.stage && ['stage.started', 'stage.completed'].includes(event.event_type));
   const latest = stages.at(-1);

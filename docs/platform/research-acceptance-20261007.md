@@ -4,6 +4,40 @@ Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
 ## Isolated recovery UI groundwork — not integrated
 
+### Complete cursor consumption and process labels
+
+Base `e1e1985d0ae93ec7804cc734271da3a2244d1e96` plus continuationData,
+useContinuationProgress source/tests, ContinuationPanel, Analysis, ResearchWorkflow
+source/test and messages. Every bounded response page is validated; cross-page
+cursor must advance, no total-event cut. Commit the display only after all pages.
+Subsequent polls request after the last validated event; coalesce overlapping
+polls rather than restarting a long chain. Identity/unmount aborts; validation or
+HTTP failure clears display/cache. Retry rechecks all pages. No persistent cache,
+SDK/model/write/history/risk/approval change. Reject has_more with empty items.
+Vietnamese labels preserve retained original time/calls; completed linked output
+does not relabel original failed processing as completed.
+
+Type38746 failed new test mock tuple signature;86009 lint failed unused argument.
+Correct mock signature/path assertion; runtime guards/deadlines unchanged.
+3520 terminal0:type/lint +163PASS/27files/43.53s.68770 terminal0:type/lint/build
++164PASS/27files/40.26s,299modules. Includes101events/pagination/incremental
+cursor/replay/later409/abort, coalesced in-flight polling, identity isolation,
+failure-reset, and150001event workflow summary without argument-spread overflow
+or trimming. Existing158tests and all assertions remain selected.
+
+Browser59886 passed desktop/mobile101event cursor journey. Expanded58037 failed
+strict locator: original collapsed workflow plus continuation workflow share a
+label. Scope assertion to owner continuation region, not first-match relaxation.
+98894 terminal0: desktop1440x1000/mobile390x844, localhost5174. Assert cursor100
+consumed, actual Financial validation stage and Report preparation active, then
+cancel/completed report/unchanged original failure/VI retained-time text and
+original-attempt label. Identity/nonblank/overlay/console/overflow/interaction
+PASS; all API/EventSource are synthetic. No native/provider/financial acceptance.
+Regular bundled Playwright: Browser plugin not available. Screenshots stay in
+the owned external QA run, not Git. Source/HEAD freeze during all tests retained.
+Original full5639 remains live6f60429 with prior failure markers. Native combined
+owner/corruption/PG/browser and live output gates still pending; goal ACTIVE.
+
 ### Owner recovery controls and report projection
 
 Source base `9e74a0ed497540c55842976d7c6d847217df2e7a` plus

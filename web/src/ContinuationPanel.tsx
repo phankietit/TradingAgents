@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, errorMessage, mutate } from './api';
 import { useResource } from './data';
 import { t, useLocale } from './i18n';
-import { continuation, discovery, preparation, progress } from './continuationData';
-import type { Continuation, Discovery, Preparation, Progress } from './continuationData';
+import { continuation, discovery, preparation } from './continuationData';
+import type { Continuation, Discovery, Preparation } from './continuationData';
+import { useContinuationProgress } from './useContinuationProgress';
 import ResearchWorkflow from './ResearchWorkflow';
 
 const labels: Record<string, string> = { reserved: 'Continuation saved', leased: 'Continuing research',
@@ -35,9 +36,8 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
   const active = !!data.data?.items.some(item => ['reserved', 'leased', 'cancel_requested'].includes(item.status)
     && !item.preparation_requires_review && !item.lease_expired);
   const attempt = current?.attempt ?? 0;
-  const validateProgress = useCallback((value: Progress) => progress(value, attempt), [attempt]);
-  const events = useResource<Progress>(current ? `/runs/${encodeURIComponent(runId)}/continuations/${current.execution_id}/events` : null,
-    version + tick, validateProgress, true);
+  const events = useContinuationProgress(current ? `/runs/${encodeURIComponent(runId)}/continuations/${current.execution_id}/events` : null,
+    attempt, version + tick);
   const reportId = current?.status === 'completed' ? current.report_artifact_id ?? '' : '';
   useEffect(() => { onReports(reportId ? [reportId] : []); }, [reportId, onReports]);
   useEffect(() => {
@@ -87,10 +87,10 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
         : current.status === 'reserved' ? <p className="notice">{t('Your continuation is saved. Processing starts only when the local continuation service is enabled. Do not submit a duplicate request.')}</p>
           : current.status === 'cancel_requested' ? <p className="notice">{t('Stopping has been requested. Provider work and charges may continue until the current step stops.')}</p> : null}
       {current.status === 'completed' ? <p className="notice">{t('Read the new report below. Completion does not mean its conclusions or a portfolio decision have been approved.')}</p> : <ResearchWorkflow
-        events={events.data?.has_more ? [] : events.data?.events ?? []} status={needsReview ? 'failed' : current.status === 'leased' ? 'running' : current.status}
+        events={events.data?.events ?? []} status={needsReview ? 'failed' : current.status === 'leased' ? 'running' : current.status}
         hasSources={true} hasReport={false} />}
       {events.error ? <p className="warning">{t('Continuation progress is unavailable. This does not confirm processing is running.')}</p> : null}
-      {events.data?.has_more ? <p className="warning">{t('More continuation events are available; this view is not the complete timeline.')}</p> : null}
+      {events.loading ? <p role="status" className="muted">{t('Loading continuation progress…')}</p> : null}
       {['reserved', 'leased', 'cancel_requested'].includes(current.status) && !needsReview ? <button disabled={!!pending}
         onClick={() => cancel(current)}>{t(pending === 'cancel' ? 'Requesting cancellation…' : 'Stop continuation')}</button> : null}
     </> : null}
