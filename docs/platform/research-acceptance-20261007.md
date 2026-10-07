@@ -32,6 +32,67 @@ and role reordering while verifying parsed full source and article ordering.
 
 ## Remaining acceptance
 
+### Initialized SDK lifecycle root cause and isolated diagnostic
+
+At clean `9de33344d6b03fc3fd01eff27d3e68a36f8ceef5`, Python3.14.7,
+langchain-openai1.6.6/openai3.19.2, synthetic SDK diagnostic7886 terminal0:
+distinct OpenAI roots share both sync/async underlying transports with the same
+endpoint and timeout600, despite both declared custom transports being absent.
+Closing the first closes the second; a third same-key SDK starts closed.
+Installed `_client_utils.py` caches default transports using `lru_cache` keyed
+by base URL, hashable timeout and socket options. This explains why the staged
+cleanup-error injection passes alone but is never exercised after earlier tests
+have closed the shared pool. Fresh SDK roots are not proof of transport ownership.
+Do not solve this by clearing shared caches, modifying private SDK transports,
+injecting custom transports behind the binding refusal or splitting the suite
+into isolated cases and declaring the original in-process design safe.
+
+Reproducer, in an isolated diagnostic process only, synthetic key, no request:
+
+```python
+import asyncio
+from tradingagents.llm_clients.openai_client import NormalizedChatOpenAI
+models = []
+try:
+    for _ in range(2):
+        models.append(NormalizedChatOpenAI(model="synthetic", api_key="synthetic-only",
+            base_url="https://example.test/v1", timeout=600, max_retries=1))
+    assert models[0].root_client is not models[1].root_client
+    assert models[0].root_client._client is models[1].root_client._client
+    assert models[0].root_async_client._client is models[1].root_async_client._client
+    models[0].root_client.close()
+    assert models[1].root_client.is_closed()
+finally:
+    for model in models:
+        model.root_client.close()
+        asyncio.run(model.root_async_client.close())
+```
+
+External staged spawn diagnostic21995 terminal0: two sequential actual original
+TradingAgentsGraph constructors plus existing initialized fingerprint binder
+produce identical identities from identical synthetic original inputs. Partial
+second SDK initialization refuses and disposes the reachable first pair; injected
+first synchronous close failure refuses and attempts the other SDKs. Every child
+exits0 and is joined; an actual parent SDK pair using the same endpoint/timeout
+stays open throughout all four cases. HTTP sends and model invoke are forbidden.
+Only test-owned resources are closed; no user runtime or private history changes.
+Dummy quick/deep warnings are expected, not evidence of model capability.
+
+Command: `PYTHONPATH=. .venv/bin/python <owned-run>/Results/check_isolated_sdk_preflight.py`.
+Owned run: `/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163`;
+candidate remains external at `Candidates/initialized_preflight.py` and is not
+integrated. First harness75955 exit1 had an incorrect injection counter (counted
+wrapper creation rather than get_llm); corrected harness counts actual SDK get
+attempts, retains the model-count and cleanup-error assertions, then21995 passes.
+Ruff PASS. No paid AI, provider/account check, source/code/runtime change.
+
+Next: a bounded spawn-isolated production preflight retaining sanitized actual
+identity only, original authenticated input binding, parent-loss handling,
+startup/deadline/cancel/cleanup refusal, bounded IPC and child reaping. Then
+default per-run recording and explicit owner continuation. The current staged
+process test does not cover those integration/control-plane gates; they remain
+UNVERIFIED. Existing full6db3053 receipt is unchanged and not promoted to them.
+
 ### Exact full corrective regression
 
 Clean frozen `2c80692b2b278f6272c67cfcb4a8ea7acf3a10d1`, session12988 terminal

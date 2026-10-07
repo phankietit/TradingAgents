@@ -10,9 +10,16 @@ Social/word-percent code now has full local baseline; no promotion to broader
 semantic financial/VI, default-owner recovery or live acceptance. Default worker
 still lacks per-run recording configuration. A real synthetic partial SDK-init
 diagnostic leaves reachable sync/async clients open; diagnostic cleans its own
-resources. External owned-preflight candidate is not integrated and still fails
-its injected cleanup-error test (8 other cases pass); do not promote it or wire
-paid continuation. Next resolve lifecycle/error refusal, integrate per-run
+resources. External owned-preflight candidate is not integrated: its failing
+cleanup case exposed cached shared HTTP transports in langchain-openai1.6.6.
+Fresh SDK roots do not own independent pools; closing one closes another and
+the next same-endpoint/timeout SDK starts closed. Never close a parent probe's
+default pools or clear global caches to hide this. Spawn diagnostic21995 exit0
+uses actual graph/client binding: two sequential identities match, partial-init
+and cleanup-error paths refuse, each child is reaped and a parent borrowed
+sync/async SDK stays open. This is local diagnostic evidence, not integrated
+worker, cancellation/deadline/IPC/consent or live acceptance. Next implement
+bounded isolated initialized preflight, integrate per-run
 authenticated recording and preserve consent/lease/ACK/usage/history boundaries.
 NQ owner BLOCKED; no paid AI/provider/risk/CI/history/main/deploy action.
 
