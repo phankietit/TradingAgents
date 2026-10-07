@@ -2,6 +2,25 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact known-semantic guard acceptance:** clean frozen side
+`3e2a91c4ab3083db69ec344d8dbefa077b39c515`, focused10526 terminal0:
+135PASS/2.02s, Python3.14.7; scoped Ruff/diff PASS, command below unchanged.
+Native68071 terminal0:1PASS/2synthetic SDK warnings/18.17s. Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q 'tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[sqlite-en-vi-worker]' --basetemp=<managed-run>/semantic-side-native-source --tb=short -x`
+Original stopped graph/consent/default worker/bilingual publication, full trace,
+checkpoint/accounting/history integrity and reaping assertions remain; only
+SDK/model output is synthetic. No provider/paid call, new loop, source cut,
+policy/approval/history change. Source/HEAD stayed unchanged until both terminal.
+Not a full suite, full matrix, general semantic/MT proof or actual-report quality.
+
+These receipts belong to exact3e2a91c, not the following docs-only checkpoint.
+Next: side native recovery matrix with existing disposable PostgreSQL helper
+and shared dependency interpreter only; primary remains frozen c1308ef under
+full11461. No integration until primary terminal and changed candidate verified.
+Remaining actor/object alignment, broad mixed-source causality, semantic/editorial
+and live acceptance stay UNVERIFIED. NQ owner-BLOCKED, paid BTC/AAPL approval
+pending, goal ACTIVE. No CI/public deploy/provider change or private data in Git.
+
 **Isolated semantic repair implementation (2026-10-07):** owned side dirty source
 on 3db025c3e477047a78e97a5fefb95f2562a7b9a0; primary c1308ef/full11461 stays
 clean/frozen. New semantic_qualifiers guards recognized action intensity,
