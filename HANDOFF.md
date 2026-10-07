@@ -2,6 +2,35 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Original continuation API integration (2026-10-07):** source base
+`992c7bec75162545fbc62e0e6670b7a76ff4a022` plus continuation_routes.py,
+strict schemas/app mount, continuation store docstring, native API journey and
+test_continuation_api_contract.py; README/CHANGELOG/Product Contract updated.
+Owner preparation closes read-only auth locks before actual bounded SDK identity;
+reservation rederives identity and requires current digest, idempotency UUID,
+literal confirmation and all three disclosures. Original immutable sources,
+allowance/accounting/history stay unchanged; dispatch_enabled false. No default
+linked worker/browser control or decision approval is enabled.
+
+Local31429 terminal0:34PASS/3PG cases deselected/134.51s. Extra refusal schema
+85929 terminal0:17PASS/3.11s. Initial13603 FAIL1/16PASS/3.21s: fixture attempted
+to change original run owner and immutable-record guard correctly refused;
+corrected by creating a distinct synthetic run, no guard/assertion relaxation.
+Initial Ruff F811 import/fixture naming corrected with explicit pytest fixture
+annotation. PostgreSQL helper66214 terminal0:101PASS/223.88s, no skips,
+Python3.14.7/Ruff/pip-check/diff PASS; source unchanged during gate, only labelled
+helper-owned disposable PG removed. Selection: default_terminal_preparation,
+continuation_api_contract, platform_api, continuation_consent (--tb=short -x).
+Actual original graph/native SDK synthetic replies, both DBs/all languages:
+auth/Origin/CSRF/unknown/foreign run refusal, strict disclosures, stale digest,
+idempotent single reservation, unchanged last_seen/original run/job/checkpoints/
+events/accounting; no paid AI. This is dirty-source focused API/native evidence,
+not clean full-candidate regression, rendered browser recovery, financial/VI
+semantics, live BTC/AAPL or release. Full current candidate UNVERIFIED; previous
+fullc166 not promoted. Next trusted durable linked worker (no stored browser
+session token), status/cancel/report and professional owner UX, then combined
+native/browser/full gates. R01–R14 ACTIVE, NQ owner BLOCKED.
+
 **Terminal preparation / linked factory integration (2026-10-07):** clean frozen
 `c16620264c0da3e4877511e27c4dfb27d62debfe`, full PG1098 terminal0:
 3,133 tests+88 subtests PASS/2 optional-provider skips UNVERIFIED/443warnings/

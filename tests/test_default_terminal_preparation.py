@@ -4,6 +4,7 @@ import os
 from uuid import uuid4
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from tests.test_initialized_preflight import _assert_reaped, _NativeContext
@@ -178,9 +179,57 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
         consents.record(**{**values, "confirm_continue": False})
     with pytest.raises(ContinuationConsentError):
         consents.record(**{**values, "csrf_token": "invalid"})
+    # Actual browser routes derive their own codec; no supplied preparation seam.
+    from tradingagents.platform.api import ApiSettings, continuation_routes, create_app
+
+    monkeypatch.setattr(continuation_routes, "DEFAULT_CONFIG", args["base_config"])
+    app = create_app(ApiSettings(database_url=url, artifact_root=store.root,
+                                allowed_origin="http://testserver", secure_cookies=False))
+    with TestClient(app) as client:
+        path = f"/api/v1/runs/{run.run_id}/continuation/prepare"
+        headers = {"Origin": "http://testserver", "X-CSRF-Token": issued.csrf_token}
+        before = len(native.children)
+        assert client.post(path, headers=headers).status_code == 401
+        client.cookies.set("ta_session", issued.token)
+        client.cookies.set("ta_csrf", issued.csrf_token)
+        assert client.post(path, headers={**headers, "Origin": "http://evil.test"}).status_code == 403
+        assert client.post(path, headers={**headers, "X-CSRF-Token": "invalid"}).status_code == 403
+        assert client.post(f"/api/v1/runs/{uuid4()}/continuation/prepare", headers=headers).status_code == 404
+        assert len(native.children) == before
+        response = client.post(path, headers=headers)
+        assert response.status_code == 200, response.text
+        ready = response.json()
+        assert ready["dispatch_enabled"] is False
+        assert ready["remaining_model_calls"] == accounting.original_model_calls - 1
+        assert ready["remaining_wall_seconds"] == accounting.original_wall_seconds - accounting.elapsed_upper_bound
+        body = {"observation_hash": ready["observation_hash"],
+                "idempotency_key": str(values["idempotency_key"]), "confirm_continue": True,
+                "acknowledge_original_allowance": True, "acknowledge_unknown_provider_cost": True,
+                "acknowledge_unvalidated_prior_research": True}
+        reserve_path = f"/api/v1/runs/{run.run_id}/continuations"
+        before = len(native.children)
+        for changed in ({"confirm_continue": False}, {"confirm_continue": 1},
+                        {"acknowledge_unknown_provider_cost": False}, {"codec": "forbidden"}):
+            assert client.post(reserve_path, headers=headers, json={**body, **changed}).status_code == 422
+        assert len(native.children) == before
+        response = client.post(reserve_path, headers=headers, json={**body, "observation_hash": "0" * 64})
+        assert response.status_code == 409
+        with database.session() as session:
+            assert not session.scalars(select(ResearchContinuationRow)).all()
+            assert not session.scalars(select(ResearchExecutionRow)).all()
+        response = client.post(reserve_path, headers=headers, json=body)
+        assert response.status_code == 200, response.text
+        reserved = response.json()
+        assert reserved["dispatch_enabled"] is False and reserved["status"] == "reserved"
+        assert client.post(reserve_path, headers=headers, json=body).json() == reserved
     consent = consents.record(**values)
+    assert str(consent.execution_id) == reserved["execution_id"]
     assert consents.record(**values) == consent
     with database.session() as session:
+        assert session.scalar(select(OwnerSessionRow.last_seen_at)) == original_seen
+        assert len(session.scalars(select(ResearchContinuationRow)).all()) == 1
+        execution = session.scalars(select(ResearchExecutionRow)).one()
+        assert execution.status == "reserved"
         assert PlatformRepository(session).get_run(run.run_id, run.owner_id) == retained
         assert DurableJobQueue(session).get(completed.job_id, run.owner_id) == completed
         assert load_accounting_evidence(session=session, owner_id=run.owner_id, run_id=run.run_id) == accounting

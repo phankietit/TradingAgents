@@ -510,6 +510,17 @@ lifecycle. Invalid, stale, incomplete, or unattested output remains `REVIEW`.
 LLMs cannot choose portfolio weights or approve decisions. NQ/ES remain
 reference-only; supported crypto analysis is BTC/ETH.
 
+The candidate API provides owner/CSRF-protected
+`POST /api/v1/runs/{id}/continuation/prepare` and
+`POST /api/v1/runs/{id}/continuations`. Preparation derives the original
+checkpoint identity and remaining allowance without calling a model. Reservation
+requires its current observation hash, an idempotency UUID, literal confirmation
+and acknowledgment of retained allowance, unknown provider cost and unvalidated
+prior research. No client codec/config is accepted. Both responses explicitly
+state `dispatch_enabled: false`: default linked worker and browser controls are
+not integrated yet. Reservation does not approve a decision or rewrite history.
+Local/native API and full-candidate acceptance are recorded separately in HANDOFF.
+
 Durable snapshot jobs retain private, immutable working notes when each graph
 role returns reader text. Notes bind to the run, snapshots and declared config,
 are always **unvalidated**, and cannot authorize portfolio approval. Prompts,

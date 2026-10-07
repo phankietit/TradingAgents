@@ -1582,6 +1582,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
             headers={"Content-Disposition": f'attachment; filename="{manifest.artifact_id}"'},
         )
 
+    from .continuation_routes import mount_continuation_routes
+
+    mount_continuation_routes(app, settings=settings, database=database, artifact_store=artifact_store)
     if settings.web_root is not None:
         mount_built_web(app, settings.web_root)
     return app

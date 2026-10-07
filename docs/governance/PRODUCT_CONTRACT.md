@@ -142,8 +142,15 @@ The internal linked factory requires the existing retained observer, original
 terminal source binding, exact initialized fingerprint/nodes, private lease and
 bound result publisher; changed configuration refuses. Its returned supervisor
 still requires separate one-time durable dispatch/child verification/publication.
-These services are not browser endpoints or default worker continuation, nor
-live/semantic acceptance. No original-history rewrite or fresh allowance is granted.
+The candidate mounts authenticated preparation and reservation API endpoints.
+They accept no caller codec/config: preparation returns an opaque observation
+digest and original remaining allowance; reservation rederives identity and
+requires literal consent and all three disclosure acknowledgments. Original
+owner/session/CSRF checks close before SDK work and are rechecked at commit.
+A process-local lock bounds simultaneous preparation, not distributed/public
+deployment. Responses keep dispatch_enabled false; no default linked worker or
+browser control is enabled yet. API/native/full and live/semantic acceptance
+remain separately evidenced. No original-history rewrite or fresh allowance is granted.
 
 ## 4. Asset-Specific Contracts
 

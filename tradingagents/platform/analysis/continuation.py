@@ -101,8 +101,8 @@ def _payload(observation):
 class ContinuationConsentStore:
     """Trusted internal loader and authenticated atomic consent reservation.
 
-    No browser endpoint/default worker calls this store. The reviewed codec
-    is supplied by trusted setup, not a caller-controlled hash. Consent/link
+    The API obtains its reviewed codec through trusted terminal preparation,
+    never a caller-controlled hash. Default worker continuation is not enabled. Consent/link
     recording is not final original-context/client attestation or model entry.
     An execution ID alone is never a bearer authorization token.
     """

@@ -27,6 +27,40 @@ class ApiModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+class ContinuationPreparationResponse(ApiModel):
+    run_id: UUID
+    observation_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+    remaining_wall_seconds: float = Field(ge=0, allow_inf_nan=False)
+    remaining_model_calls: int = Field(ge=0)
+    disclosures: tuple[str, ...] = (
+        "original_allowance_retained", "provider_cost_unknown", "prior_research_unvalidated")
+    dispatch_enabled: Literal[False] = False
+
+
+class ContinuationConsentRequest(ApiModel):
+    observation_hash: str = Field(pattern=r"^[a-f0-9]{64}$", strict=True)
+    idempotency_key: UUID
+    confirm_continue: bool = Field(strict=True)
+    acknowledge_original_allowance: bool = Field(strict=True)
+    acknowledge_unknown_provider_cost: bool = Field(strict=True)
+    acknowledge_unvalidated_prior_research: bool = Field(strict=True)
+
+    @model_validator(mode="after")
+    def require_explicit_confirmation(self):
+        if not all((self.confirm_continue, self.acknowledge_original_allowance,
+                    self.acknowledge_unknown_provider_cost,
+                    self.acknowledge_unvalidated_prior_research)):
+            raise ValueError("explicit continuation confirmation and disclosures required")
+        return self
+
+
+class ContinuationReservationResponse(ApiModel):
+    run_id: UUID
+    execution_id: UUID
+    status: str
+    dispatch_enabled: Literal[False] = False
+
+
 class PrepareDataResponse(ApiModel):
     status: Literal["ready", "unsupported", "invalid", "no_data", "stale", "coverage_gap",
                     "rate_limited", "unavailable", "busy", "cooldown"]

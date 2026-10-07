@@ -10,6 +10,13 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Add owner-authenticated original continuation preparation and explicit
+  disclosure/consent reservation API routes. Derive checkpoint identity on the
+  server, reject stale observations/client codecs, retain original allowance and
+  preserve terminal history. Short read-only authentication avoids holding the
+  ordinary session writer lock across SDK preparation. No default linked worker,
+  model dispatch, browser control or approval is enabled by these routes.
+
 - Add internal authenticated terminal checkpoint preparation and a retained
   linked recording factory. Derive codec from original owner inputs and bounded
   actual SDK identity, recheck authentication/source/accounting/private lease

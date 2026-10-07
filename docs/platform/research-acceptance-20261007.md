@@ -462,3 +462,38 @@ activate owner-authorized durable continuation; internal native tests are not
 default-owner/browser/live-operational proof. NQ=F remains owner BLOCKED without
 contract/roll metadata. No paid AI, new provider, risk-limit change, CI, private
 history rewrite, broker, public deployment or production-readiness claim.
+# Original continuation API gate
+
+Base `992c7bec75162545fbc62e0e6670b7a76ff4a022`, dirty source: new
+`api/continuation_routes.py`, schemas/app mount, continuation store docstring,
+native terminal test expansion and new `test_continuation_api_contract.py`.
+README/CHANGELOG/Product Contract updated. Authenticated server-derived
+preparation and explicit disclosure/consent/idempotent reservation implemented;
+dispatch remains disabled. No model, original history or fresh allowance change.
+
+Exact focused command (owned external run TMPDIR):
+
+```sh
+TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp \
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused \
+tests/test_default_terminal_preparation.py tests/test_continuation_api_contract.py \
+tests/test_platform_api.py tests/test_continuation_consent.py --tb=short -x
+```
+
+Helper66214 terminal exit0: **101 PASS**, no skips,223.88s. Python3.14.7,
+Ruff/pip-check/diff PASS; code unchanged throughout; only helper-owned labelled
+PG removed. Genuine original native graph/SDK with synthetic replies and real
+SQLite/PostgreSQL auth/storage, all EN/VI/bilingual. No supplied browser codec,
+paid SDK invocation or real private data. Original terminal history/accounting
+and auth last_seen preserved; one idempotent reservation, no entry/claim/dispatch.
+Route refusal before probe and fixed-error redaction tested separately.
+Earlier local31429 34PASS/3PG cases deselected/134.51s; corrective85929
+17PASS/3.11s. Initial13603 1FAIL/16PASS/3.21s was an invalid synthetic fixture
+owner rewrite: immutable guard correctly refused. New distinct fixture run
+corrects setup, not application policy. Initial F811 lint annotation corrected.
+
+**UNVERIFIED:** current clean full suite, default linked worker/browser flow,
+financial/VI semantics, live BTC/AAPL and release. **BLOCKED:** owner-selected
+NQ active-contract/roll metadata. Goal remains ACTIVE; previous fullc166 is not
+promoted to this candidate. Next wire trusted durable linked worker, owner
+status/cancel/report and rendered UX, then combined exact-source gates.
