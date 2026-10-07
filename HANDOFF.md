@@ -2,6 +2,43 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Isolated semantic red baseline (2026-10-07):** reuse the existing task-owned
+clean side worktree `/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`
+on new `fix/TA-R12-semantic-parity` from c1308ef2e460899d7d99a47106b946565830b523.
+The previous clean/pushed R08 branch d4dc2e1 is preserved, no files/artifacts
+deleted. Primary remains clean/frozen c1308ef under full session11461; neither
+HEAD/source nor its database/config is touched. No subagent/provider/paid call.
+Scoped ownership recorded in docs/ops/in-progress.md on this side only.
+
+Add tracked candidate regressions before implementing the repair, no xfail/skip
+or weakened expectation. Synthetic stubs retain the entire report/blocks and
+original existing maximum two structured/repair calls; canonical localization
+input must remain unchanged. One unsupported price-only factual cause plus six
+EN/VI negative mutations: intensity/condition, negation, certainty, gradual vs
+immediate action, only/after constraint, opposing case. Seven valid counterparts
+remain accepted. These cases do not prove general semantic entailment, whole
+Vietnamese editorial quality, or actual MiniMax behavior; other blocks reuse the
+original fixture's English strings to isolate the challenged thesis relation.
+
+Dirty side baseline75887 terminal1:7FAIL/7PASS/2.74s, Python3.14.7; Ruff/diff PASS.
+Command:
+`PYTHONPATH=/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents TMPDIR=<managed-run>/Tmp /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python -m pytest -q tests/test_semantic_qualifier_regressions.py --tb=no`
+Shared virtualenv used only as interpreter/dependencies; module __file__ paths
+verified SIDE worktree for both financial_validation and report_localization.
+Initial external6case baseline97399 3FAIL/3PASS/2.34s; expanded external25180
+7FAIL/7PASS/1.27s. Those diagnostics remain external in the owned managed run,
+not separate product/runtime functionality. No private inputs or source history.
+
+This red test branch is NOT an integrated candidate and must not merge into the
+primary while full11461 runs or before negative and positive cases are resolved
+and verified. Next: implement source-bound financial inference and translation
+relation preservation using the existing bounded stages; preserve all roles,
+source records, conditions/negation/uncertainty, canonical content and human
+approval. Never label a phrase-pattern guard general semantic proof or turn
+unsupported factual conclusions into apparent verified evidence. Exact clean-SHA
+red receipt follows the source commit. Goal ACTIVE; all original live/release
+gates and owner-BLOCKED NQ remain, fresh paid BTC/AAPL approval pending.
+
 **Exact final local-stop display gate (2026-10-07):** clean frozen
 `c314913b2e866f5084fbfcf240ba5b78d9b08180`, web52663 terminal0:
 type/lint/173tests(27files)/9.22s/build299/diff PASS. External browser/native31637
