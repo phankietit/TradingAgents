@@ -1,5 +1,38 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 real PostgreSQL/two-tab rendered diagnostic · 2026-10-08:** unchanged
+side app sourcefab4a03, clean docsHEAD `7e8366644fa22545f6104a2f50ee4638ed9c8e82`.
+External wrapper seeded only a new owned disposable PG16 database; migrations,
+database dialect assertions, API/owner auth/CSRF/queue/worker/artifact publication
+are real. Original synthetic bilingual graph delayed20s; no API mocking/vendor/
+model/owner-private data. Browser83221 terminal1 FAIL at desktop-only VI locator
+on390pxmobile after both real running/succeeded reads; external locator corrected
+to visible VI label, no app/timeout edit. Browser88463 terminal1 FAIL at blanket
+no-requestfailed assertion: real EN/VI report and saved reload worked, but explicit
+SSE close/artifact cleanup/reload produced ERR_ABORTED. Browser15332 terminal1
+FAIL after adding observational AbortSignal/EventSource.close traces: mobile job
+request abort at1791412660170 matched actual controller abort1791412660162,
+followed by HTTP200 succeeded read1791412660243; SSE/artifact aborts also match
+application cleanup. Both tabs received >=2 actual running reads, then succeeded
+attempt1 and saved bilingual report; no pageerror/HTTP failure besides initial
+auth/me401. Three deliberate browser submissions -> exactlythree syntheticgraph
+invocations, no duplicate model/provider job. No source/assertion-timeout change.
+Do NOT mark general concurrent gate PASS: external phase was labelled running
+until explicit reload, not bound to actual run terminal observation. Source
+RunDetail moves processing into completed details when saved report appears,
+unmounting/cleaning job/artifact readers; this is a code-supported explanation,
+not yet complete timestamp proof for every failed request. Next diagnostic must
+record actual run terminal response/render boundary, then distinguish healthy
+identity/unmount cleanup from premature running-job starvation. Preserve all
+three FAIL receipts, no blanket abort whitelist/product fix inferred.
+EN1440x1000/VI390x844 screenshots/readback/nooverflow inspected; Browser plugin
+absent, existing Playwright1.62.1/Chromium/bundledNode24.19.0 fallback. Managed
+external scripts/TMPDIR/screens; Python3.14.7 existingvenv. Ownedfixture84343/
+PID47801 normalshutdown terminal0; owner label verified and only container
+ta-browser-pg-1791412444-47801 removed; process/container absence verified. No
+private history/artifact deletion. Primary37c1a42 full88556 live/PID33387/latest30%,
+source frozen/no restart/integration; whole R01–R14 remains ACTIVE.
+
 **R08 polling observation-boundary validation · 2026-10-08:** unchanged app
 source `fab4a034887881009212111fd6df1bab48030fdd`, docsHEAD855b0e6. External QA
 now captures first rendered processing status inside the document, independent
