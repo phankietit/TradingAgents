@@ -2,6 +2,26 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Isolated mobile report access (2026-10-07):** side branch
+`fix/TA-R08-continuation-ui`, owned dirty
+`ecd71b151d34d8460774a4b166faff48c3704d30`; primary full25685 remains frozen9c.
+Add `Read report`/`Đọc báo cáo` only when a completed continuation and its verified
+report artifact are present. It scrolls/focuses the report region, keeps the hash
+route intact and makes no new research/approval request. Failed/no-report and
+completed-without-readable-artifact cases have no shortcut. Narrow mobile-only
+picker/detail spacing; original source, consent, disclosures, graph and history
+unchanged. Unit assertions prove focus/scroll/unchanged URL and no extra fetch.
+Web4483 terminal0:typecheck/lint/164tests(27files)/build299/diff PASS, Vitest17.91s.
+Browser73859 terminal0:synthetic desktop1440×1000/mobile390×844, existing Playwright
+(Browser plugin absent), loopback5174, no owner DB/model/provider requests.
+Consent3/one reservation,101event paging/cancel/completion/unvalidated report
+collapse/VI and page/content/overlay/console/overflow checks PASS. Shortcut visible
+in mobile first viewport (button y695.86–738.66); after click report heading
+y72.84 and focus on report region; desktop heading y233.06. No route or write
+change. Fresh first-viewport screenshots are external Logs/recovery-jump-*.png.
+This improves access, not full product/editorial or actual backend/browser
+acceptance. Prior full FAIL and NQ owner-BLOCKED remain; goal ACTIVE.
+
 **Isolated completed-continuation UI hierarchy (2026-10-07):** side worktree
 `/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`, branch
 `fix/TA-R08-continuation-ui`, dirty source on

@@ -1,5 +1,5 @@
 import { t, useLocale } from './i18n';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { errorMessage, mutate } from './api';
 import { instruments, timestamp, useResource } from './data';
 import type { Instrument } from './data';
@@ -83,6 +83,7 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
   const [pending, setPending] = useState(false);
   const [jobStatus, setJobStatus] = useState<string | null>(null);
   const [continuationReports, setContinuationReports] = useState<string[]>([]);
+  const reportRegion = useRef<HTMLDivElement>(null);
   const observeReports = useCallback((ids: string[]) => {
     setContinuationReports(previous => previous.join('|') === ids.join('|') ? previous : ids);
     setTick(value => value + 1);
@@ -163,10 +164,14 @@ function RunDetail({ runId, version, onStatus, onChanged, onRetry }: { runId: st
     <p className="muted caption">{t("Artifacts download after backend integrity checks. Run success does not imply decision approval.")}</p>
   </>;
   return <section className="instrument-detail" aria-label={t("Run details")}>
-    {stoppedRun ? <ContinuationPanel runId={runId} version={version} onReports={observeReports} onNewAttempt={() => onRetry(run.data!)} /> : null}
+    {stoppedRun ? <ContinuationPanel runId={runId} version={version} onReports={observeReports} onNewAttempt={() => onRetry(run.data!)}
+      onReadReport={savedReport ? () => {
+        reportRegion.current?.scrollIntoView({block: 'start'});
+        reportRegion.current?.focus({preventScroll: true});
+      } : undefined} /> : null}
     {savedReport ? <>
       <p className="muted caption">{t("As of")} {timestamp(run.data!.analysis_as_of)}</p>
-      {reports}
+      <div ref={reportRegion} role="region" aria-label={t('Research report')} tabIndex={-1} className="research-report-region">{reports}</div>
       <details className="completed-processing"><summary>{t(stoppedRun ? 'Original attempt · View processing details' : 'Completed analysis · View processing details')}</summary>{processing}</details>
     </> : stoppedRun ? <><details className="completed-processing"><summary>{t('Original attempt · View processing details')}</summary>{processing}</details>{reports}</> : <>{processing}{reports}</>}
   </section>;

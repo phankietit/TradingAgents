@@ -17,8 +17,9 @@ const acknowledgments = [
 ];
 
 /** Explicit owner consent only; no automatic preparation, reservation or retry. */
-export default function ContinuationPanel({runId, version, onReports, onNewAttempt}: {
+export default function ContinuationPanel({runId, version, onReports, onNewAttempt, onReadReport}: {
   runId: string; version: number; onReports: (ids: string[]) => void; onNewAttempt: () => void;
+  onReadReport?: () => void;
 }) {
   useLocale();
   const [tick, setTick] = useState(0);
@@ -114,6 +115,7 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
     <p className="eyebrow">{t('SAVED RESEARCH')}</p>
     <h2>{t(current ? needsReview ? 'Continuation needs review' : labels[current.status] : 'Research stopped before completion')}</h2>
     {completed ? <>
+      {onReadReport ? <button className="report-jump" onClick={onReadReport}>{t('Read report')}</button> : null}
       <p className="notice">{t('Read the new report below. Completion does not mean its conclusions or a portfolio decision have been approved.')}</p>
       <details className="continuation-details"><summary>{t('Continuation details')}</summary>{controls}</details>
     </> : controls}

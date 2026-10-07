@@ -10,6 +10,11 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ### Fixed
 
+- Offer an EN/VI reading shortcut only when a completed continuation's verified
+  report artifact is present. Move scroll/focus to the reading region without
+  route changes, new research requests or approval; tighten mobile analysis
+  picker/status spacing without hiding consent or evidence.
+
 - Keep a completed continuation's report and nonapproval warning prominent;
   collapse its operational explanation, attempt selector and refresh controls
   into an accessible EN/VI disclosure. Active, stopped and consent states retain

@@ -41,6 +41,17 @@ it('reloads a verified continuation report without rewriting the failed original
   expect(artifactReads).toBeGreaterThan(1);
   expect(within(screen.getByRole('region',{name:'Analysis history'})).getByText('Research failed')).toBeTruthy();
   expect(screen.getByText(/The model response did not pass/)).toBeTruthy();
+  const user = userEvent.setup();
+  const reportRegion = screen.getByRole('region', {name:'Research report'});
+  const scroll = vi.fn();
+  reportRegion.scrollIntoView = scroll;
+  const location = window.location.hash;
+  const calls = vi.mocked(fetch).mock.calls.length;
+  await user.click(screen.getByRole('button', {name:'Read report'}));
+  expect(scroll).toHaveBeenCalledWith({block:'start'});
+  expect(document.activeElement).toBe(reportRegion);
+  expect(window.location.hash).toBe(location);
+  expect(vi.mocked(fetch).mock.calls.length).toBe(calls);
 });
 
 it('separates failed-run working notes from completed reports and fetches only on reader request', async () => {
@@ -124,6 +135,7 @@ it('explains failed research and keeps its diagnostic code collapsed', async () 
   expect(await screen.findByText(/Research could not be completed. No investment conclusion/)).toBeTruthy();
   expect(screen.getByText('HANDLER_ERROR').closest('details')?.open).toBe(false);
   expect(screen.getByRole('button',{name:'Configure new attempt'})).toBeTruthy();
+  expect(screen.queryByRole('button',{name:'Read report'})).toBeNull();
   expect(screen.queryByRole('button',{name:'Cancel run'})).toBeNull();
 });
 

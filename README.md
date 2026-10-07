@@ -547,6 +547,10 @@ After verified completion, its nonapproval warning stays visible while operation
 details, attempt selection and refresh use an expandable EN/VI section. Active
 processing and explicit consent remain fully visible; a compact completed panel
 does not establish the report's financial validity or human approval.
+When the verified report artifact is available, `Read report` moves scroll and
+keyboard focus to its reading region without changing the route, fetching new
+research or approving a decision. On mobile the analysis picker/status area uses
+tighter spacing; absent reports cannot offer this shortcut.
 The corresponding `GET .../{execution_id}/events` provides cursor-paginated,
 actor-linked progress (`after_sequence`, `limit` up to 100, `has_more`). It
 validates entry provenance and owner/run/attempt/time bindings and returns only
