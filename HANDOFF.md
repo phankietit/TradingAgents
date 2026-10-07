@@ -4,14 +4,15 @@
 
 **R14 uninstrumented full candidate gate · 2026-10-08:** frozen clean
 `cfd31da326216e434e94cd68ee5efaf90f5a1366`, primary73101 terminal0:
-`set -o pipefail; TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh 2>&1 | sed -u -E 's#([[:alnum:]+.-]+://[^[:space:]:/@]+:)[^@[:space:]]+(@)#\\1[REDACTED]\\2#g'`.
+`set -o pipefail; TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh 2>&1 | sed -u -E 's#([[:alnum:]+.-]+://[^[:space:]:/@]+:)[^@[:space:]]+(@)#\1[REDACTED]\2#g'`.
 3248PASS/88subtestsPASS,2optional skipsUNVERIFIED,502warnings,3234.25s(53m54s),
 Python3.14.7 existing venv; Ruff/dependency/diff PASS. No external observer or
 test instrumentation, no restart on output silence and source unchanged through
 terminal. Optional langchain_aws missing; DEEPSEEK_API_KEY absent/placeholder
 live check not run. No optional-provider acceptance inferred. Helper confirmed
 removal of its task-owned disposable PostgreSQL; parent88908/helper88910/pytest
-88944 no longer present, no ta-research-qa containers remain at cleanup check.
+88944 no longer present; no container ending in this helper's PID88910 remains.
+An unrelated old exited container1790495819-43615 is preserved, not cleaned.
 This proves this source's local full gate, not supported-version clean install,
 operator encrypted restore, live semantic/VI quality or release readiness.
 Staged R14 operator/session and R07 V2 activation work on
