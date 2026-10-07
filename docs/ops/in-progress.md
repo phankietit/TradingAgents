@@ -10,7 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Full51929 terminal4FAIL3302PASS retained/ownedcleanup confirmed; ownedside2ab3411 fast-forward integrated with UI212 primaryPASS and explicitV2 fixture focused103PASS; new defaultfull pending; DraftPR7/wholegoal incomplete | in-progress | 2026-10-08 |
-| R08/R13 | current thread isolated polling and regression repair | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | fab4a03 web215PASS/controlled observerPASS; real PG/two-tab ordinarycompletion9230 PASS with terminal-before-cleanup trace/ENVI reload,6predicate controlsPASS; prior83221/88463/15332/48817/38957 FAIL retained, historical unmatched artifact causeUNVERIFIED; ownedfixture6805/PG cleanup confirmed; general cancel/retry/native/live/operator acceptance open; primary37c1a42 full88556 live/latest40% | in-progress | 2026-10-08 |
+| R08/R13 | current thread isolated polling and regression repair | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | 0d1dbc2 artifact identity isolation: red5FAIL retained, focused41PASS/cleanbuildlint221PASS/browser73027 equal-refresh/reset409/restorationPASS; original fabPG9230 scopedPASS/earlierFAIL retained; ownedfixture24423 cleanup confirmed; general cancel/retry/native/live/operator gates open; side-only primary37c1a42 full88556 live/latest40% | in-progress | 2026-10-08 |
 
 Rules:
 

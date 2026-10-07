@@ -1,5 +1,32 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08/R11 artifact preview identity isolation · 2026-10-08:** frozen side
+`0d1dbc26f96ae41d9d813bfb3894426b642468d2`. Dirty37388 red5FAIL22PASS2.68s:
+changed hash/size/creation/kind kept old report while a new read was pending;
+equal manifest object copies aborted the current read. Reader now keys state by
+complete run/id/kind/media/hash/size/creation identity; changed fields remount
+and withdraw contents/link immediately, equal copies use primitive effect
+dependencies and keep the immutable read. No cache, client integrity attestation,
+financial validity, provider/risk/approval/history change. Original parser/size/
+run/evidence/HTML/VI protections retained; late old responses cannot restore state.
+React dependency guidance used. Dirty34729 27PASS2.27s/lintPASS; dirty83708
+threefiles41PASS2.29s includes late-response control. Clean16895 terminal0:
+`npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
+build299modules/lint/default29files221PASS16.28s,Node26.8.1/npm11.19.0, source
+unchanged through terminal. Browser73027 terminal0 same frozen source: actual
+synthetic setup/consent/worker/saved report; three read-only equal-manifest refreshes
+cause zero report reads, then controlled changed manifest/pending read withdraws
+old heading/link, mocked409 shows no report contents, unroute/reload restores real
+unchanged saved artifact. EN1440x1000/VI390x844 identity/nonblank/nooverlay/screens/
+interaction/nooverflow PASS. Console only initialauth/me401 and deliberate409;
+no pageerrors, vendor/model/owner data calls. Browser plugin absent, existing
+Playwright1.62.1/Chromium/bundledNode24.19.0; external scripts/screens/managedTMPDIR.
+Ownedfixture24423/PID55949 normalshutdown terminal0/process absent; no history or
+other runtime deletion. Mocked component and controlled rendered display proof,
+NOT live semantics/translation/general concurrency/PG/release acceptance. Side
+not integrated during primary37c1a42 full88556 live/PID33387/latest40%; no restart.
+Whole R01–R14 ACTIVE; previous FAILs and owner/external gates retained.
+
 **R08 two-tab PG ordinary-completion boundary gate · 2026-10-08:** unchanged
 app sourcefab4a03/clean checkout `27c7720fde2f2c5f239918e8ae88f5a6a55b7d2d`.
 External QA now records run JSON status before application consumption, terminal
