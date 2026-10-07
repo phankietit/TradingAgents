@@ -2,6 +2,38 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 bounded dependency remediation WIP · 2026-10-08:** isolated owned side
+`fix/TA-R14-source-map-patch`, base dc66744. Lock entry source-map-js1.2.1 ->
+1.2.2 updates only version/resolved/integrity; JSON structural comparison proves
+every other lock record identical. Both parent constraints ^1.2.1 admit the patch;
+no override/direct dependency, Vite/jsdom/provider/graph/risk change. Registry
+integrity and upstream GHSA-68fv-2mgg-jv7q/cf76580 checked. Vulnerable installed
+parser accepted oversized,nested cumulative,string and fractional offsets;
+serialization deliberately not invoked to avoid resource exhaustion. A benign
+indexed offset2 retained generatedLine3/originalLine1/sourceinput.js. App remote
+exploitability is UNVERIFIED; no direct upload/consumer route established.
+
+Fresh npm ci --ignore-scripts24791 terminal0 installed284packages; npm ls shows
+only1.2.2 in both Vite/PostCSS and jsdom/css-tree paths, npm audit51602 zero
+findings. First21118 test scaffold failed because node environment bypassed the
+existing DOM setup;51602 typecheck failed on indexed-map type declarations,
+so its subsequent audit PASS was not a focused test PASS. Tests corrected to
+the existing jsdom setup and explicit unknown parser boundary. Focused88491
+typecheck/11parser tests PASS0.77s; oversized,nested,signed,fractional,string,
+nonfinite,unsafe offsets refuse,ordinary indexed eachMapping preserved. Separate
+inline JSON-representation probes reject four malicious maps and preserve valid
+mapping. Earlier baseline SourceMapGenerator.fromSourceMap benign probe threw
+sourceRoot undefined; retained as a probe limitation, not a claimed new defect
+or serialization compatibility proof. No unbounded DoS experiment executed.
+
+Dirty full5579 terminal0: typecheck/lint/29files190tests PASS13.96s/build PASS.
+Skill-required fresh investigator and one fresh bypass/regression review complete:
+no concrete surviving bypass/regression found; reviewer independently confirms
+the single installed copy,11focused tests,typecheck,JSON input rejection and
+valid mapping. Exact clean final verification remains next. This patch is not yet
+integrated into primary and not whole-product/release/security certification.
+Financial/editorial/live,recovery and full journey remain open; NQ owner-BLOCKED.
+
 **Integrated clean web gate · 2026-10-08:** frozen clean primary source
 `5dede69f6498ac777a26cdb805e72306edead97a`, full web15357 terminal0:
 `cd web && npm run typecheck && npm run lint && npm test && npm run build`,
