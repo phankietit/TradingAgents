@@ -10,6 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization, native reliability, operational UX and live acceptance; Draft PR7; full18967 terminal PASS instrumented02ed0cc, owned PG cleanup confirmed; staged UX integrated2766a48 afterwards; whole goal incomplete | in-progress | 2026-10-08 |
+| R14 | current thread, isolated restore gate | fix/TA-R14-authenticated-restore | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Synthetic paired SQLite/artifact authenticated API restore gate only; no owner data/operator backup/production mutation; base e215f2c | in-progress | 2026-10-08 |
 
 Rules:
 

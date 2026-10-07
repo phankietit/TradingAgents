@@ -2,6 +2,30 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R14 authenticated paired-restore gate WIP · 2026-10-08:** isolated owned
+`fix/TA-R14-authenticated-restore`, base e215f2c. New test-only SQLite/artifact
+fixture backs up a quiesced newly generated DB with SQLite backup API, copies
+artifact bytes into a fresh root, starts a fresh API context, logs in with the
+restored synthetic account and verifies original run metadata and exact EN/VI
+bytes/hashes. Anonymous401 and foreign-artifact404 remain; missing/tampered
+restored artifacts409 instead of valid output. Source full SQL dump, DB hash
+and blob bytes unchanged after restored login/readback. Connections close
+explicitly; no owner data, worker/provider request or history overwrite.
+
+Dirty37274 terminal0:new3tests PASS3.78s. Ruff initially found nested-with style;
+explicit closing contexts repaired it. Dirty21328 terminal0:Ruff PASS,
+52selected tests PASS18.51s,1PostgreSQL integration skipUNVERIFIED. Selection:
+`tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py --tb=short`,
+Python3.14.7 using primary existing venv, external managed TMPDIR. Not a full
+baseline or fresh installation; package/CLI/LangGraph/backend source unchanged.
+Persistence docs distinguish the gate from an operator backup command. Actual
+PostgreSQL restore,encryption/transfer,writer coordination,retained sessions,
+active jobs/checkpoints,browser restore and owner operational release remain
+UNVERIFIED. Previous full02ed0cc/financial FAIL receipts retained; goal ACTIVE.
+Next: exact clean scoped gate including acknowledged disposable PostgreSQL
+migration regression, then integrate/update PR7. Do not claim PG backup/restore
+from that migration test. NQ owner-BLOCKED, fresh paid BTC/AAPL approval pending.
+
 **R14 dependency finding fixed locally · 2026-10-08:** exact clean source
 `e741ca03099c22cd672c6e1cca429cc381cfa22b`. After independent investigation and
 one fresh read-only review, side20949 terminal0: typecheck/lint/29files190tests

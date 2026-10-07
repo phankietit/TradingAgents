@@ -30,6 +30,27 @@ This ticket does not start PostgreSQL, choose a production host, expose an API,
 or migrate existing local reports. Durable jobs and API wiring are separate
 Milestone 1 tickets.
 
+## Synthetic paired restore acceptance
+
+`tests/test_paired_restore_api.py` is a local SQLite/artifact recovery gate, not
+an operator backup command. It creates a new synthetic account, instrument,
+run and separate EN/VI report blobs, closes writers, uses SQLite's backup API,
+then copies artifacts into a new restore root. A fresh API process context logs
+in with the copied synthetic account and checks unchanged run metadata and
+exact report bytes/hashes. Anonymous reads refuse, foreign-owner artifacts
+remain inaccessible, and missing/tampered restored blobs return integrity errors.
+Full SQL dump, database hash and blob bytes of the original fixture remain
+unchanged after restored authentication/readback. Temporary fixture credentials
+and databases never enter Git.
+
+Test presence is not execution evidence; see HANDOFF for exact receipts. This
+does not prove PostgreSQL dump/restore, encrypted backup/transfer, writer
+coordination, retained session safety, active jobs/checkpoints, restored browser
+UX or an operational owner restore. Those remain required before private
+platform release. Never copy a live owner DB with this test or overwrite its
+history. An actual rollout needs the separately reviewed paired backup/restore
+and session/worker restart runbook described above.
+
 ## Draft research recovery additions
 
 `0011_research_checkpoints` and additive `0012_research_continuations` are private
