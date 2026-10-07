@@ -2,6 +2,20 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Social count full baseline:** clean frozen
+`6db21f2577e22e72081cea001542b24f183a8538`, full PG61745 terminal0:
+3,053 tests+88 subtests PASS/2 optional-provider skips UNVERIFIED/443warnings/
+980.35s; Ruff/pip-check PASS. Source/HEAD unchanged, only helper-owned PG removed.
+Social/word-percent code now has full local baseline; no promotion to broader
+semantic financial/VI, default-owner recovery or live acceptance. Default worker
+still lacks per-run recording configuration. A real synthetic partial SDK-init
+diagnostic leaves reachable sync/async clients open; diagnostic cleans its own
+resources. External owned-preflight candidate is not integrated and still fails
+its injected cleanup-error test (8 other cases pass); do not promote it or wire
+paid continuation. Next resolve lifecycle/error refusal, integrate per-run
+authenticated recording and preserve consent/lease/ACK/usage/history boundaries.
+NQ owner BLOCKED; no paid AI/provider/risk/CI/history/main/deploy action.
+
 **2026-10-07 social count candidate:** compiler/review now share eligible original
 SocialFacts; complete source-owned EN/VI count sentences retain vendor/sample/
 user-label meaning, reject reattached money/probability/neutral meanings and are

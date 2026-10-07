@@ -96,6 +96,15 @@ this is not full regression. Source/HEAD stayed unchanged, and only the labelled
 helper-owned container was removed. No paid provider/model call. Full regression,
 live financial/VI quality and default-owner recovery remain UNVERIFIED/incomplete.
 
+Clean frozen full candidate `6db21f2577e22e72081cea001542b24f183a8538`, default
+disposable PostgreSQL61745 terminal exit0: **3,053 PASS,88 subtests PASS,2 optional
+provider skips,443 warnings,980.35s**, Python3.14.7, Ruff/pip-check PASS.
+`TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`, with TMPDIR in
+the owned external run; source/HEAD unchanged throughout. Only helper-labelled
+PostgreSQL container removed. Bedrock dependency/live DeepSeek skips remain
+UNVERIFIED. This proves the social/word-percent candidate's local full baseline,
+not financial/editorial/live/default-owner or release acceptance.
+
 ### Exact native PostgreSQL corrective gate
 
 Clean frozen code candidate `f64984db8338eb0eed69c820ab503bc65818159c`.
