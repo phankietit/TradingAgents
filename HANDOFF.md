@@ -1,5 +1,31 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08/R11 pending-cancel UI action · 2026-10-08:** side frozen clean
+`a6917d31d5bc650a215c3731cf43f61b9d275a02`, after owned fast-forward to796c417.
+Previous rendered cancel_requested still left Cancel run enabled. Dirty97081
+red4FAIL7PASS8.52s had incomplete new job fixture (missing completed_at); corrected
+fixture35417 still red4FAIL7PASS6.12s with valid run/job status skew EN/VI.
+UI derives cancellationRequested from either current run or verified job,
+labels/disables action and guards handler; no optimistic stopped state, duplicate
+state/effect, backend transition/provider/risk/history/approval/timeout change.
+React derived-state guidance used. Dirty41046 focused11PASS3.25s/lintPASS.
+Clean74705 terminal0: build299modules/lint/full225tests29files PASS20.18s,
+Node26.8.1/npm11.19.0; source unchanged through terminal. Browser41167 terminal0
+same frozen source: actual setup/consent/running/cancel-requested, EN/VI button
+disabled and native disabled-click produces no second POST, exactlyone run and
+one cancel POST, then HTTP200cancelled/empty artifacts/reload; no premature
+stopped or completed-report claim. Real PG/auth/CSRF/queue/worker, original slow
+syntheticgraph20s, no response mocks/model/vendor/owner-data calls.
+Identity/nonblank/nooverlay/console/interaction/screens/mobile overflow PASS,
+EN1440x1000/VI390x844; only initialauth/me401, no pageerrors. External screenshots
+r08-cancel-button-en.png/vi.png/terminal-vi.png; existing Playwright1.62.1/
+Chromium/bundledNode24.19.0, Browser absent. Fixture99760/PID70839 normalshutdown
+terminal0, one deliberate synthetic graph invocation; only labelverified
+ta-browser-pg-1791415211-70839 removed, process/container absence confirmed.
+Scoped UI/cooperative cancellation proof, NOT native/live shutdown/general
+race/recovery/financial/VI/editorial/release acceptance. Primary796c417 full3.12
+41168/PID66756 verified live/latest15%; frozen/no integration/restart. Goal ACTIVE.
+
 **R13/R14 current clean Python3.12 installation · 2026-10-08:** new isolated
 external current-python312-cefHp4 env/source, archive frozen
 `b3779f8bdd9893a301f127a4d4f8812152c6f3df`; no env/private/runtime files copied.

@@ -10,7 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Full88556 at37c1a42 terminal3306PASS/88subtests/2optionalUNVERIFIED, ownedcleanup confirmed; prior4FAIL retained; ownedside fast-forward cf37fde after terminal, backend unchanged, exact integrated build/lint221webPASS; live/financial/VI/operator/version gates open, DraftPR7 wholegoal incomplete | in-progress | 2026-10-08 |
-| R08/R11 | current thread isolated cancellation UX | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Side fast-forwarded primary796c417; observed cancel_requested disables repeat cancel without terminal inference; corrected fixture red35417 fourFAIL retained; focused/fullweb/browser gates pending; primary796c417 full3.12 session41168 remains frozen/live, no integration | in-progress | 2026-10-08 |
+| R08/R11 | current thread isolated cancellation UX | fix/TA-R07-summary-provenance | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | a6917d3 observed cancel_requested disables repeat cancel without terminal inference; red35417 fourFAIL retained; focused11PASS/full225webPASS/browser41167 realPG synthetic cancellationPASS/onePOST; ownedfixture99760 cleanup confirmed; primary796c417 full3.12 session41168 remains frozen/live, no integration | in-progress | 2026-10-08 |
 
 Rules:
 
