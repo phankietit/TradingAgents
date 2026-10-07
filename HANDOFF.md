@@ -1,5 +1,18 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08/R13 primary integration · 2026-10-08:** after full51929 terminalFAIL and
+confirmed ownedPG/process cleanup, primary fast-forwarded fb38391 to ownedside
+`2ab3411ea9a32b73fbc9852ee65fb3f1ca767831`, pushed origin/PR7Draft. Includes
+scoped mobile/processing/refresh UI and remaining explicitV2 syntheticfixture
+repair; no tradingagents/CLI/runtime/provider/model/risk/history files changed.
+Same clean2ab primary78345 terminal0:
+`npm --prefix web run build && npm --prefix web run lint && npm --prefix web run test`:
+build299modules/lint/default29files212tests PASS20.86s,Node26.8.1/npm11.19.0.
+Side6699775 focused103PASS and side351bc0b rendered mocked recovery remain
+separate exact-source evidence; oldfull4FAIL never promoted to PASS. Next frozen
+primary default uninstrumentedPG full must verify the integrated repair. Whole
+goalACTIVE, no main merge/deploy, broader live/operator/version gates open.
+
 **R13 clean fixture repair gate · 2026-10-08:** side frozen
 `6699775c6f1d0fd71bab6e6db4f2905d133d1e62`,59775 terminal0:
 `TMPDIR=<managed>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_research_stage_records.py tests/test_semantic_qualifier_regressions.py tests/test_summary_source_coverage.py tests/test_summary_review_v2.py tests/test_summary_result_v2.py tests/test_claim_local_causal_coverage.py tests/test_summary_provenance_v2.py --tb=short`.
