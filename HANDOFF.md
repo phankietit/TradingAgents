@@ -2,6 +2,44 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Current integration checkpoint · 2026-10-08:** full18967 on clean frozen
+`02ed0ccd633dfcb560ff060da2c8a363872a5bb5` ended terminal0:3236tests and
+88subtests PASS,2optional-provider skips UNVERIFIED,502warnings,3580.84s.
+Ruff/dependency/diff startup and terminal gates PASS. Invocation retained the
+unselected PostgreSQL baseline through the external observer:
+`TMPDIR=<managed-run>/Tmp TA_TEST_PREFLIGHT_TRACE=1 PYTEST_ADDOPTS=--tb=short TA_ALLOW_TEST_DB_RESET=1 .venv/bin/python <managed-run>/Logs/observe_full_candidate.py`.
+Observer SHA256 b6cc1374a51d0da4072261616ca1fe95f7c97d65f1917cde5152d610da8710f5,
+terminal0/61sample attempts. This is instrumented full local evidence, not an
+uninstrumented reliability or native-root-cause proof; earlier full3309 and
+11461 FAIL remain. No deadline/client-close/reaping assertion was weakened.
+Helper printed ownership-safe PostgreSQL removal; process inventory confirmed
+observer/helper/pytest13501/13509/13540/13562 absent and exact owned container
+ta-research-qa-1791398519-13509 absent before integration. Optional langchain_aws
+missing and DeepSeek key withheld; no paid provider call.
+
+Only afterwards primary fast-forwarded the verified owned staged-web branch to
+`2766a480dc58c286c9dbca4349301a1838154d92`. Integration changes only web and docs;
+Python/package/CLI/test backend paths unchanged from02ed0cc. The web receipt
+below belongs to2a8d739; an integrated clean web gate is next. No main merge,
+deployment or owner runtime/history mutation. Older live/frozen statements below
+are historical checkpoints, superseded by this terminal receipt.
+
+R14 fresh non-editable archived02ed0cc `[dev,platform]` environment Python3.14.7:
+isolated prefix assertions,75selected financial/localization/API tests PASS8.98s
+(37203),18persistence/artifact tests PASS8.41s with1PG skipUNVERIFIED (5312).
+These use newly resolved dependencies, not the existing developer environment;
+full fresh-dependency matrix and other Python versions remain UNVERIFIED.
+Synthetic paired SQLite/artifact restore35621 terminal0 PASS using external
+script hash29f95b07e37d53e3cdebd14a95e21d664aa2e4808134c6cd49d0a4322d360dea:
+quiesced writers,SQLite backup API,integrity/full SQL dump and hash equality,
+new restore paths,owner isolation and missing-artifact refusal. No owner data
+opened/copied. Operator backup command,encryption/transfer,PG,active jobs,
+sessions/checkpoints and authenticated restored browser journey UNVERIFIED.
+Neither installed selections nor rehearsal satisfy whole R14 release acceptance.
+Next: integrated web gate, professional full journey and operational recovery;
+actual financial/editorial/live acceptance remains FAIL/UNVERIFIED, paid BTC/AAPL
+approval pending and NQ owner-BLOCKED. Goal ACTIVE, Draft PR7 remains unmerged.
+
 **R11 clean staged-web acceptance (2026-10-08):** clean frozen source
 `2a8d73993b420acd708aa7cf6664a733374b4b71`, side branch
 `fix/TA-R11-staged-workspace`, remote SHA verified identical after push.

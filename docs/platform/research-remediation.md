@@ -12,7 +12,19 @@ platform, with human decision review. No broker or public deployment.
 - CI remains disabled by owner preference. Verification runs locally.
 - Existing run/snapshot artifacts are immutable; fixes produce new runs.
 
-Current local acceptance (2026-10-08): full frozen e3b837b gate3309 is FAIL,
+Current local acceptance (2026-10-08): full frozen02ed0cc gate18967 terminal0:
+3236tests/88subtests PASS,2optional-provider skips UNVERIFIED,502warnings,
+3580.84s. External native observer makes this instrumented full local evidence,
+not native root-cause/reliability or uninstrumented acceptance. Owned PostgreSQL
+cleanup and process termination confirmed before staged web/doc integration to
+2766a48. No Python/package/CLI/backend-test change in that integration; exact
+integrated web gate pending. Exact side2a8d739 web179tests/type/lint/build PASS;
+synthetic mobile/desktop staged navigation, heading clearance, focus, refusal
+and console checks PASS. Fresh installed selected75+18tests and paired synthetic
+SQLite/artifact restore PASS scoped only; full operational restore/matrix,
+financial/editorial/live and whole-product gates remain incomplete. See HANDOFF.
+
+Historical full frozen e3b837b gate3309 is FAIL,
 3231 tests and 88 subtests PASS, one PostgreSQL/VI/manual default-resume
 preflight failure, two optional-provider skips UNVERIFIED, 3465.29s. The child
 returned identity but exit wait crossed the preflight boundary; watchdog
