@@ -82,7 +82,7 @@ export default function ContinuationPanel({runId, version, onReports, onNewAttem
     <p className="muted">{t('The original attempt stays unchanged. A continuation uses its saved context and remaining allowance, not a fresh analysis.')}</p>
     {current ? <>
       <label>{t('Saved continuation')}<select value={current.execution_id} onChange={event => setSelected(event.target.value)}>
-        {data.data!.items.map(item => <option key={item.execution_id} value={item.execution_id}>{t('Attempt')} {item.attempt} · {t(labels[item.status])}</option>)}
+        {data.data!.items.map(item => <option key={item.execution_id} value={item.execution_id}>{t('Attempt')} {item.attempt} · {t(item.local_stop ? 'Local processing stopped' : labels[item.status])}</option>)}
       </select></label>
       {locallyStopped ? <p className="notice">{t('Local processing has stopped. Provider termination and charges are not confirmed. This does not authorize another attempt or approve a decision.')}</p> : null}
       {needsReview ? <p className="notice warning">{t('Processing could not continue safely. Do not assume it is still running or retry it automatically.')}</p>

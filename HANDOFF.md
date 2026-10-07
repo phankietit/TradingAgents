@@ -2,6 +2,27 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact stop-projection browser acceptance (2026-10-07):** clean frozen
+`6788bfab599e91a4002f625f0e2565c751720c7a`, web64031 terminal0:
+type/lint/173tests(27files)/10.36s/build299/diff PASS. Active browser/native64618
+terminal0:1PASS/5synthetic warnings/11.15s. Same external native/browser bridge
+command below, `--basetemp=<managed-run>/active-cancel-stop-projection-source`.
+Actual mobile390x844 Stop200 while native child is alive awaiting ACK -> original
+native cancellation/reaping/no publication/history checks -> fresh authenticated
+EN/VI browser verified local-stop header and unknown provider-charge disclosure.
+No Stop/new-attempt/Read report controls after local stop. No page exceptions,
+overflow or framework overlay; title/content/language/actions checked. Fresh
+full-page external Logs/active-cancel-stop-projection-{request,after-local-stop}-mobile-vi.png
+visually inspected after-stop. All browsers closed, Uvicorn31561 joined/stopped;
+no paid/model/provider/private history or deployment change.
+Visual finding: saved-attempt selector still used raw cancel_requested label
+beside the verified stopped heading. Subsequent UI-only correction uses the
+same validated stop projection for that display label, retains raw API/history
+status and adds an explicit option-label assertion. It needs its own exact gate.
+Focused native tamper/API/race gates below are dirty source evidence, not full
+regression or exact678 native matrix. Goal ACTIVE; final local full gate next,
+live financial/translation/BTC/AAPL approval and owner-BLOCKED NQ unchanged.
+
 **Verified local-stop API/UI implementation (2026-10-07):** owned dirty source
 on `63126fa5fee5d1c4f0de06a0db6c5eaeb559785f`. Reuse the complete internal
 source/entry/dispatch/accounting/hash reader as static validation, expose only

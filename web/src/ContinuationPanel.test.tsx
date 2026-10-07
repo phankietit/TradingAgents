@@ -17,6 +17,7 @@ it('shows verified local stop without completed report, new attempt or repeated 
   const onReports = vi.fn();
   render(<ContinuationPanel runId={runId} version={0} onReports={onReports} onNewAttempt={vi.fn()} />);
   await screen.findByRole('heading',{name:'Local processing stopped'});
+  expect(screen.getByRole('option',{name:'Attempt 2 · Local processing stopped'})).toBeTruthy();
   expect(screen.getByText(/Provider termination and charges are not confirmed/)).toBeTruthy();
   expect(screen.queryByRole('button',{name:'Stop continuation'})).toBeNull();
   expect(screen.queryByRole('button',{name:'Configure new attempt'})).toBeNull();
