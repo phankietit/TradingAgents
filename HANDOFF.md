@@ -2,6 +2,18 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Integrated clean web gate · 2026-10-08:** frozen clean primary source
+`5dede69f6498ac777a26cdb805e72306edead97a`, full web15357 terminal0:
+`cd web && npm run typecheck && npm run lint && npm test && npm run build`,
+28files179tests PASS30.11s, TypeScript/ESLint/Vite PASS. Diff whitespace and
+clean state verified; backend paths unchanged from the full02ed0cc baseline.
+This is exact integrated web proof, not a new exact-SHA Python full execution.
+Read-only npm audit69530 terminal1 confirms one high transitive finding:
+source-map-js1.2.1 / GHSA-68fv-2mgg-jv7q, fix available. npm ls identifies
+jsdom30.1.1 -> css-tree3.2.1 and vite8.3.1 -> postcss8.5.28. No automatic broad
+audit fix, dependency/provider change or readiness waiver. Track and verify a
+bounded dependency remedy separately; whole goal and release remain incomplete.
+
 **Current integration checkpoint · 2026-10-08:** full18967 on clean frozen
 `02ed0ccd633dfcb560ff060da2c8a363872a5bb5` ended terminal0:3236tests and
 88subtests PASS,2optional-provider skips UNVERIFIED,502warnings,3580.84s.
