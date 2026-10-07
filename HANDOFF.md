@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Integrated API + exact failed-case diagnostic PASS:** clean frozen
+`6cb69ea6b8a542dcc19a8a7f3256dccbc1befcda`, focused session67249 terminal0:
+51PASS/2 warnings/60.41s, Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp TA_TEST_PREFLIGHT_TRACE=1 TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_api_entrypoint.py tests/test_built_web.py tests/test_platform_api.py 'tests/test_default_prepared_resume.py::test_default_stopped_job_to_authenticated_consent[postgresql-vi-manual]' --tb=short -x -rP`
+Ruff/pip/diff PASS; owned PostgreSQL cleanup confirmed. Synthetic SDK/HTTP
+refusal retains real graph, preflight, consent, accounting and history checks.
+Observed owned spawned child94238 exited during the diagnostic; no process
+was stopped or restarted and no shutdown stall was reproduced. This verifies
+API integration and that selected case only; it does NOT fix/explain or erase
+full3309/11461 failures, prove native shutdown reliability, or replace a new
+full baseline, actual-provider/financial/translation/browser/release gate.
+Next: native shutdown evidence and outstanding professional/private acceptance.
+
 **Full integrated regression FAIL (2026-10-08):** clean frozen
 `e3b837b2e905268215f2ab5fa868b4fd9d94f817`, session3309 terminal1:
 3231PASS/88 subtests PASS/1FAIL/2 optional skips UNVERIFIED/500 warnings,
