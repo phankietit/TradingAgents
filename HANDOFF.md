@@ -1,5 +1,33 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 isolated mobile context acceptance · 2026-10-08:** frozen clean
+`289de454844e057164c47441f02d20590ac3edc7`, owned side branch/worktree.
+CSS-only compact account/nav/header/report context; decorative tagline omitted
+on<=600px, horizontally scrollable report tabs keep44px touch targets; no owner,
+coverage/source/human-approval controls removed, no JS/Python/provider/risk change.
+45356 `npm --prefix web run build` PASS;10325 fromweb
+`npm run lint && npm run test -- --maxWorkers=1 --no-file-parallelism`
+190PASS/29files72.51s;71256 separately `npm run test` default190PASS/29files20.35s.
+Node26.8.1/npm11.19.0 existingdeps, unchanged source through terminal.
+Preserve prior default timeouts: clean e18305559097 3FAIL187PASS42.68s;
+clean7c1c27817127 2FAIL188PASS34.86s; same7c1c2783171 serial190PASS70.36s.
+No timeout/assertion/config relaxation; timing/contention cause remains inference.
+Browser plugin not available; bundledPlaywright/Chromium/Node24.19.0 used on
+synthetic loopback8001.36849/22430 terminal0: savedEN/VI +mobileEN switching,
+lastVerificationtab/readback, Summaryreturn and exactexecutive-summary source
+expansion; desktop1440x1000/mobile390x844 visually inspected, geometricnooverflow
+320/390/768px. Holdbottom771.90625 passes unchanged<=780 criterion; prior
+7c1c27823449 bottom819.46875 FAILED, CSS refined rather than lower gate.
+Only initialauth/me401; no pageerror/blank/frameworkoverlay. Exactsource asset
+index-B82ZN2Fr.css verified. Synthetic durable worker/source/report evidence,
+not livefinance/translation/role parity. Sourcecoverage/refusal/humanreview kept.
+Ownedfixture62146/15689 and37586/16478 normalshutdown confirmed; original8000
+untouched, QA/runtime artifacts untracked/external. Source still side-only;
+primaryfb38391 full51929 remains live/frozen, no integration/restart yet.
+Primarynative5551 terminal395PASS/13PGskipsUNVERIFIED1349.65s as below.
+WholegoalACTIVE; broader process/decision/live/editorial/operator gates open,
+NQownerBLOCKED, no paid/provider/risk/allowance/history/main/deploy change.
+
 **R08 mobile layout WIP · 2026-10-08:** isolated owned side worktree
 fast-forwarded to integratedfb38391 before CSS-only compact chrome/report
 spacing. Prior integrated synthetic browser journey/readback PASS is recorded
