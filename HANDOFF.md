@@ -1,5 +1,15 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 primary full live failure observation · 2026-10-08:** frozen primary
+`fb38391a0ed45ba06acd0295c81cb478819352c3`, default uninstrumented PostgreSQL
+full51929 is still live (pytestPID10770 revalidated), latest86%. Output contains
+fourF markers at69–73%; no terminal failure names/tracebacks/totals yet. These
+are NOT dismissed by scoped/native/installed/web PASS. Preserve same handle,
+source and helper lifecycle until terminal; no restart/integration while active.
+Sidef49c07d cloud checkpoint adds clean-installed3.12 evidence, not a primaryfull
+fix or release acceptance. WholegoalACTIVE; next mandatory action is terminal
+failure diagnosis/ownedcleanup, then repair and exact-candidate regression.
+
 **R13/R14 clean installed Python3.12 gate · 2026-10-08:** exact archive
 `f0c607ef9cdeabbbe35b4d3dd068f75468c8e15d`, side branch. Managed external
 fresh venv from bundledPython3.12.14; no systemsitepackages/editable/owner.env.
