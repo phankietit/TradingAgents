@@ -1,5 +1,28 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R08 real PG cooperative-cancel browser gate · 2026-10-08:** unchanged clean
+side `d2a0d63817771cc32f80ce5d331ab53885b7b6b6` (app0d1dbc2).
+External ui-cancel-real.cjs, original owned PG fixture/slow syntheticgraph20s;
+real auth/CSRF/API/queue/worker/persistence, no response mocks/vendor/model calls.
+92015 terminal1 FAIL external QA used relative APIRequestContext URL before
+cancel; absolute URL repair. 61214 terminal1 FAIL waited visible terminal text
+inside intentionally collapsed processing details (78 hidden DOM observations);
+external QA now opens actual original-attempt details, no app/timeout change.
+98059 terminal0 PASS: actual HTTP200 running verified, visible cancel requested
+EN/VI never claims stopped, then original-attempt detail/actual HTTP200 cancelled,
+empty artifact list, no completed report, terminal VI persists after reload.
+Page identity/nonblank/nooverlay/interaction/screens/no mobile overflow PASS,
+EN1440x1000/VI390x844. No pageerrors; only initialauth/me401 console/HTTP.
+Screens r08-cancel-requested-en.png and r08-cancelled-vi.png inspected outside
+Git; existing Playwright1.62.1/Chromium/bundledNode24.19.0, Browser plugin absent.
+Fixture9902/PID59729 normal shutdown terminal0; three explicit synthetic jobs/
+graph invocations, only labelverified ta-browser-pg-1791413940-59729 removed,
+process/container absence confirmed. No private history or unrelated runtime
+deletion. This proves ordinary cooperative cancellation around a slow synthetic
+graph, NOT live/native message-boundary kill, general race/retry/expiry/recovery
+or financial/editorial acceptance. Prior FAILs retained. Primary37c1a42 full88556
+same handle still live/no terminal, frozen/no restart/integration. Goal ACTIVE.
+
 **R01/R14 ingestion-guide reconciliation · 2026-10-08:** documentation-only
 continuation from clean side39983fb. `docs/platform/data-preparation.md` and
 `web/README.md` now distinguish implemented optional AAPL SEC, FRED and original
