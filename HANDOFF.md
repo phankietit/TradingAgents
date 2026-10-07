@@ -1,5 +1,10 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+For a short machine/task continuation entry point, read the dated
+[2026-10-08 checkpoint](docs/platform/continuation-checkpoint-20261008.md).
+Refresh Git/runtime state before relying on that snapshot; the receipts below
+retain the exact evidence and unresolved gates.
+
 **R08/R11 pending-cancel UI action · 2026-10-08:** side frozen clean
 `a6917d31d5bc650a215c3731cf43f61b9d275a02`, after owned fast-forward to796c417.
 Previous rendered cancel_requested still left Cancel run enabled. Dirty97081
