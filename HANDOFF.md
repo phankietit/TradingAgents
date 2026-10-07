@@ -2,6 +2,54 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R11 staged workspace WIP (2026-10-08):** isolated side branch
+`fix/TA-R11-staged-workspace` at
+`/Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents`, based exactly
+on02ed0ccd633dfcb560ff060da2c8a363872a5bb5. Not integrated into the frozen
+primary while full18967/helper13509/pytest13562 remains live. Panels are hidden
+rather than unmounted; scope/source/preparation state, all acquisition controls,
+source inspection, risk inputs, allowance/consent and unchanged payload remain.
+Step navigation has current-step semantics, keyboard focus and sticky controls.
+Submission also requires the review step, preventing hidden form Enter from
+starting a previously consented run in scope/data. Actual input changes retain
+the original consent-reset behavior. README and EN/VI labels updated.
+
+Dirty selected gate33915 terminal0: typecheck/lint/new staged tests2PASS3.44s/
+Vite build PASS. Earlier70775 failed with two jsdom scroll errors, retained;
+81370 repaired selected2PASS3.16s/build PASS. Full web16124 terminal1:
+155PASS/24FAIL/26.59s, all failures in original RunForm tests accessing controls
+now in hidden steps. Do not claim full web acceptance: next update each test's
+explicit scope->data->review navigation, retaining all original consent/source/
+payload/idempotency assertions, then rerun the full web gate. Do not expose all
+panels or use hidden queries to turn these failures green. npm ci from unchanged
+lockfile reports one high audit finding; no automatic dependency fix applied.
+
+Synthetic browser tab4 built web8000: sign-in -> New analysis -> data -> saved
+price selection -> review PASS for stage visibility/focus/context/disabled
+unconsented submit; no acquisition, model or new analysis submitted. Desktop
+1280x720 no overlay/console[] and accepted private screenshotqa-17. Mobile
+390x844 scrollWidth390/one active region/console[] PASS, but screenshotqa-18
+revealed sticky navigation clipping the heading. Mobile scroll margin changed
+120->160 afterwards; that final adjustment is UNVERIFIED until fresh build/QA.
+qa-16 before sticky navigation andqa-18 clipped state are not accepted visual
+signoff. No full professional UX, live finance, translation or release PASS.
+
+Only owned synthetic QA server48660/PID4563 was verified by listener/cwd/handle
+and stopped (terminal143, graceful application shutdown). New synthetic-only
+server47514/PID55352 serves the side built web with a fresh fixture DB, same
+loopback origin/host rules and refusing live providers. No owner DB opened,
+no host/origin gate weakened. Temporary viewport reset; QA tabs3/4 marked for
+continuation. Side Vite75302 remains a task-owned dev server5173; it cannot use
+the built fixture API's8000 origin, so do not weaken protection for it.
+
+Primary source02ed0cc remains clean/frozen; original full gate still pending.
+Fresh installed selected75+18PASS (one PG skipUNVERIFIED) and synthetic paired
+SQLite/artifact restore remain scoped external receipts/PR comments, not full
+acceptance. NQ owner-BLOCKED, paid/live gates and whole R01-R14 remain active.
+Next: port the original24 tests, final mobile QA, clean-SHA complete web gate,
+then integrate only after primary full terminal/owned PG cleanup. Keep the
+original LangGraph/CLI, risk and human-approval boundaries unchanged.
+
 **R11 exact pre-consent research brief (2026-10-08 local):** clean frozen
 source `66e61fac1de7bd2e9ca1227dbb90c0fd9824bfb9`. Command
 `cd web && npm run typecheck && npm run lint && npm test && npm run build`,

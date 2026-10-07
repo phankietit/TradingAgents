@@ -1,5 +1,5 @@
 import { t, useLocale } from './i18n';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { errorMessage, mutate } from './api';
 import { percent, timestamp, useResource } from './data';
@@ -22,6 +22,7 @@ export interface Run {
 interface Profile { name: string; allowed_analysts: string[]; investable: boolean }
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
 const FUNDAMENTALS_MAX_AGE_SECONDS = 31_536_000;
+type SetupStep = 'scope' | 'data' | 'review';
 const macroIndicators: Record<string, string> = { DGS10: 'US 10-year Treasury yield',
   CPIAUCSL: 'Consumer price index · level', UNRATE: 'US unemployment rate',
   GDPC1: 'Real gross domestic product', M2SL: 'M2 money supply' };
@@ -41,6 +42,8 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   catalog: Instrument[]; initialInstrument?: string; onClose: () => void; onCreated: (run: Run) => void;
 }) {
   useLocale();
+  const [step, setStep] = useState<SetupStep>('scope');
+  const focusAfterNavigation = useRef(false);
   const [instrumentId, setInstrumentId] = useState(initialInstrument ?? catalog[0]?.instrument_id ?? '');
   const [asOf, setAsOf] = useState(new Date().toISOString());
   const [reportLanguage, setReportLanguage] = useState<'en' | 'vi' | 'en-vi'>('en-vi');
@@ -81,6 +84,14 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   const scopeSection = useRef<HTMLElement>(null);
   const preparationSection = useRef<HTMLElement>(null);
   const confirmationSection = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    if (!focusAfterNavigation.current) return;
+    focusAfterNavigation.current = false;
+    const section = step === 'scope' ? scopeSection.current
+      : step === 'data' ? preparationSection.current : confirmationSection.current;
+    section?.scrollIntoView?.({block:'start'});
+    section?.focus({preventScroll:true});
+  }, [step]);
   useEffect(() => () => { preparationController.current?.abort(); newsController.current?.abort(); fundamentalsController.current?.abort(); macroController.current?.abort(); socialController.current?.abort(); }, []);
   const [preparationNote, setPreparationNote] = useState('');
   const [preparationExhausted, setPreparationExhausted] = useState(false);
@@ -273,7 +284,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     finally { macroController.current = null; setMacroPending(false); }
   }
   async function submit(event: FormEvent) {
-    event.preventDefault(); if (!ready) return;
+    event.preventDefault(); if (!ready || step !== 'review') return;
     const payload = { instrument_id: instrumentId, analysis_as_of: asOf, selected_analysts: selectedRoles, report_language: reportLanguage,
       execution_limits: {wall_seconds: allowanceSeconds, model_calls:128},
       decision_inputs: { snapshots_by_analyst: Object.fromEntries(selectedRoles.map(role => [role, sources[role]])),
@@ -291,16 +302,23 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setPending(false); }
   }
-  function visit(section: HTMLElement | null) {
-    section?.scrollIntoView({block:'start'});
+  function visit(nextStep: SetupStep) {
+    if (nextStep !== step) {
+      focusAfterNavigation.current = true;
+      setStep(nextStep);
+      return;
+    }
+    const section = step === 'scope' ? scopeSection.current
+      : step === 'data' ? preparationSection.current : confirmationSection.current;
+    section?.scrollIntoView?.({block:'start'});
     section?.focus({preventScroll:true});
   }
   return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || dataPending}>
     <h2>{t("Configure analysis")}</h2>
     <nav className="setup-navigation" aria-label={t('Analysis setup sections')}>
-      <button type="button" onClick={() => visit(scopeSection.current)}>{t('Research scope')}</button>
-      <button type="button" onClick={() => visit(preparationSection.current)}>{t('Prepare market data')}</button>
-      <button type="button" onClick={() => visit(confirmationSection.current)}>{t('Review & authorize')}</button>
+      <button type="button" aria-current={step === 'scope' ? 'step' : undefined} onClick={() => visit('scope')}><span aria-hidden="true">01</span>{t('Research scope')}</button>
+      <button type="button" aria-current={step === 'data' ? 'step' : undefined} onClick={() => visit('data')}><span aria-hidden="true">02</span>{t('Prepare market data')}</button>
+      <button type="button" aria-current={step === 'review' ? 'step' : undefined} onClick={() => visit('review')}><span aria-hidden="true">03</span>{t('Review & authorize')}</button>
     </nav>
     {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
       <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
@@ -309,7 +327,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <button type="button" onClick={() => preparationController.current?.abort()}>{t('Stop automatic retries')}</button>
     </section> : null}
     <fieldset disabled={pending || dataPending}>
-    <section ref={scopeSection} tabIndex={-1} aria-label={t('Research scope')}><div className="form-grid">
+    <section hidden={step !== 'scope'} ref={scopeSection} tabIndex={-1} aria-label={t('Research scope')}><div className="form-grid">
       <label>{t("Instrument")}<select value={instrumentId} onChange={event => { setInstrumentId(event.target.value); setPreparationNote(''); setNewsNote(''); setFundamentalsNote(''); setMacroNote(''); setSocialNotes({}); setSources({}); setRiskEnabled(false); setPolicyKey(''); setRiskSources({}); setConfirmed(false); }}>{catalog.map(item => <option key={item.instrument_id} value={item.instrument_id}>{item.canonical_symbol} — {item.display_name}</option>)}</select></label>
       <label>{t("Research date & time (UTC)")}<input type="datetime-local" step="0.001" value={Number.isFinite(Date.parse(asOf)) ? new Date(asOf).toISOString().slice(0, -1) : ''} disabled={riskEnabled} onChange={event => { setAsOf(event.target.value ? `${event.target.value}Z` : ''); setConfirmed(false); }} required /></label>
       <label>{t('Report language')}<select value={reportLanguage} onChange={event => {
@@ -317,15 +335,17 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       }}><option value="en-vi">{t('English + Vietnamese')}</option><option value="vi">{t('Vietnamese')}</option><option value="en">{t('English')}</option></select></label>
     </div>
     <p className="muted caption">{t('Choose the language for new research. Bilingual reports may use more output tokens. Changing the interface language does not translate saved reports.')}</p>
+    <div className="section-actions"><button type="button" className="primary" onClick={() => visit('data')}>{t('Continue to data')}</button></div>
     </section>
-    <section ref={preparationSection} tabIndex={-1} className="preparation-workspace" aria-label={t('Prepare market data')}>
-      <div className="preparation-heading"><h3>{t('1. Prepare market data')}</h3><div className="section-actions">
+    <section hidden={step !== 'data'} ref={preparationSection} tabIndex={-1} aria-label={t('Prepare market data')}>
+    <div className="preparation-workspace">
+      <div className="preparation-heading"><h3>{t('2. Prepare market data')}</h3><div className="section-actions">
         <button type="button" className="primary" disabled={riskEnabled || !instrumentId || dataPending} onClick={() => void prepare()}>{preparing ? t('Downloading and checking prices…') : t('Prepare latest prices')}</button>
         <button type="button" onClick={() => {
           const inspector = sourceInspector.current;
           if (inspector) {
             inspector.open = true;
-            inspector.scrollIntoView({block:'start'});
+            inspector.scrollIntoView?.({block:'start'});
             inspector.querySelector('summary')?.focus({preventScroll:true});
           }
         }}>{t('Choose saved sources')}</button>
@@ -374,7 +394,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         {fundamentalsNote ? <p role="status">{t(fundamentalsNote)}</p> : null}
       </div> : null}
       </div>
-    </section>
+    </div>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>
       <label>{t("Maximum source age (seconds)")}<input inputMode="numeric" value={maxAge} onChange={event => { setMaxAge(event.target.value); setConfirmed(false); }} required /></label>
@@ -422,8 +442,10 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     </fieldset>)}
     {discovery.data?.length === 200 ? <p className="warning">{t("Only the latest 200 source manifests are shown.")}</p> : null}
     </details>
-    <section ref={confirmationSection} tabIndex={-1} className="analysis-confirmation" aria-label={t('Analysis request summary')}>
-    <h3>{t('2. Review sources and authorize AI')}</h3>
+    <div className="section-actions"><button type="button" onClick={() => visit('scope')}>{t('Back to scope')}</button><button type="button" className="primary" onClick={() => visit('review')}>{t('Continue to review')}</button></div>
+    </section>
+    <section hidden={step !== 'review'} ref={confirmationSection} tabIndex={-1} className="analysis-confirmation" aria-label={t('Analysis request summary')}>
+    <h3>{t('3. Review sources and authorize AI')}</h3>
     <p className="muted">{t('Review these exact inputs before authorizing. Changing an input requires your authorization again; navigation alone never starts AI.')}</p>
     <dl className="request-summary">
       <dt>{t('Instrument')}</dt><dd>{asset ? `${asset.canonical_symbol} — ${asset.display_name}` : t('Unavailable')}</dd>
@@ -454,10 +476,11 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
     <label className="source-option"><input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} /><span>{t("I authorize this analysis run. The configured worker may call paid models; results require human review.")}</span></label>
     {!confirmed && selectedRoles.length > 0 ? <p className="muted">{t('One final step: authorize the AI run above to enable submission.')}</p> : null}
     {error ? <p role="alert" className="notice danger">{t(error)}  {t("Retrying unchanged inputs reuses the same request key.")}</p> : null}
-    <div className="section-actions"><button className="primary" disabled={!ready}>{pending ? t("Submitting…") : t("Queue analysis")}</button><button type="button" onClick={onClose}>{t("Close configuration")}</button></div>
+    <div className="section-actions"><button type="button" onClick={() => visit('data')}>{t('Back to data')}</button><button className="primary" disabled={!ready}>{pending ? t("Submitting…") : t("Queue analysis")}</button></div>
     <details><summary>{t('Processing setup')}</summary><ResearchSetup /></details>
     </section>
     </fieldset>
+    <button type="button" className="setup-close" disabled={pending || dataPending} onClick={onClose}>{t("Close configuration")}</button>
   </form>;
 }
 

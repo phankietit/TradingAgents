@@ -951,7 +951,10 @@ Decision review presents the selected research before history (including on
 mobile), with the saved report and portfolio context ahead of owner actions.
 Evidence and policy details remain accessible; this presentation order changes
 no review eligibility, backend revalidation or approval requirement.
-Analysis setup provides focusable scope/data/authorization sections. Before
+Analysis setup shows one focusable scope/data/authorization step at a time,
+retaining the mounted inputs, selected sources and preparation state when
+navigating back. Step navigation makes no acquisition or AI call; submitting
+from a step other than authorization is refused. Before
 paid consent, the request summary shows the selected asset, UTC time, report
 language, research mode, every selected source/cutoff and absent research areas;
 portfolio mode also shows the selected valuation, policy version and owner

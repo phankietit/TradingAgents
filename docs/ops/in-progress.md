@@ -10,6 +10,7 @@ recorded in GitHub history.
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
 | R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Canonical report/localization remediation, native preflight reliability, operational UX, live BTC/AAPL/NQ acceptance; Draft PR #7; full3309 terminal FAIL, API side d1a2424 integrated afterwards | in-progress | 2026-10-07 |
+| R11 | current thread, isolated UX continuation | fix/TA-R11-staged-workspace | /Volumes/Data/codex/worktrees/ta-r08-recovery-ui/TradingAgents | Staged research setup, compact mobile workspace/report hierarchy; preserve every source/consent/allowance/policy gate and payload; base02ed0cc; do not integrate while primary full18967 is live | in-progress | 2026-10-07 |
 
 Rules:
 
