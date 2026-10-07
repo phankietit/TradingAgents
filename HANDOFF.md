@@ -2,6 +2,28 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Native linked reader matrix and full regression FAIL (2026-10-07):** isolated
+base `d9030a361a7c6b399bb43195c3545cb03a667bc1` plus assertions in existing
+default prepared worker test. Actual default worker resume, reaped child/full
+trace/output/accounting/history/human REVIEW remain unchanged. Authenticated
+discovery must return exact completed state/report/decision IDs; paginate real
+linked events, only attempt2/sanitized fields, actual Portfolio Manager complete,
+strict monotonic cursor and no extra SDK child.14008 terminal0:6PASS/6manual
+deselected/12warnings/319.26s, EN/VI/bilingual × SQLite/PostgreSQL. Python3.14.7,
+Ruff/pip/diff PASS, source/HEAD frozen, only owned helper PG removed. Native SDK/
+model fixtures are synthetic, not paid provider or financial/browser acceptance.
+
+Original full5639 terminal1 on clean frozen6f60429:3176PASS/88subtestsPASS,
+1FAIL/2optional skips UNVERIFIED/480warnings/5209.66s. Exact failure:
+`test_default_stopped_job_to_authenticated_consent[postgresql-en-vi-manual]`,
+second identical `consents.record(**values)` refuses at continuation.py237
+(existing-row integrity/time checks), not a preflight/SDK timeout. Root cause
+not yet established; do not weaken timestamp/hash/payload/owner/budget fences
+or declare it resource-only from focused success. Main6f targeted clean
+reproducer started; preserve that source/HEAD while running, no side integration
+yet. Full failure/raw runtime logs remain private external artifacts, not Git.
+Full helper-owned PG removed; user DB/runtime/history untouched. Goal ACTIVE.
+
 **Owner recovery reader contract (2026-10-07):** base
 `43eada49b9d2cc58d85c86b88c0a1649b3b0a513` plus new
 `tests/test_continuation_reader_contract.py`; no production source changes.

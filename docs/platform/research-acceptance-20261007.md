@@ -4,6 +4,31 @@ Branch: `fix/TA-R01-research-quality`; Draft PR #7, no release or main merge.
 
 ## Isolated recovery UI groundwork — not integrated
 
+### Native default worker to authenticated linked reading
+
+Base `d9030a361a7c6b399bb43195c3545cb03a667bc1` plus existing
+`tests/test_default_prepared_resume.py` assertions. Native worker driver restores
+original graph, then API discovery exactly matches verified completed state and
+report/decision IDs. Read all event pages from limit1 through complete cursor,
+strict advancing sequence, only attempt2 and sanitized fields, valid declared
+stages and actual Portfolio Manager completion. Reads open no SDK child.
+Existing full graph trace/output equivalence, accounting/history/checkpoint
+prefix, child reaping, completion cancellation refusal and human REVIEW kept.
+14008 terminal0:6PASS/6manualdeselected/12warnings/319.26s, SQLite/PostgreSQL
+EN/VI/bilingual. Helper --focused tests/test_default_prepared_resume.py -k worker
+--tb=short -x; Python3.14.7/Ruff/pip/diff PASS; source/HEAD frozen; only owned
+disposable PG removed. SDK/model fake, not native browser or paid/live financial
+quality acceptance. No production source, budget, risk or provider changes.
+
+Full original5639 now terminal1: clean frozen6f60429,3176PASS/88subtestsPASS,
+1FAIL/2optional skips UNVERIFIED/480warnings/5209.66s. Exact failing case:
+default_stopped_job_to_authenticated_consent[postgresql-en-vi-manual], repeated
+identical consent at continuation.py237 fails existing-row validation. Not SDK
+preflight timeout. Actual hash/payload/time criterion must be diagnosed before
+fix; do not relax fences or replace full FAIL with this focused native PASS.
+Targeted main6f reproducer started; no side integration until it is terminal.
+Private raw runtime logs stay external, not cloud. Overall goal ACTIVE.
+
 ### Owner recovery reader contract
 
 Base `43eada49b9d2cc58d85c86b88c0a1649b3b0a513` plus

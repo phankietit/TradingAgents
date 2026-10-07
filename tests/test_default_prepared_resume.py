@@ -243,6 +243,36 @@ def test_default_stopped_job_to_authenticated_consent(tmp_path, monkeypatch, lan
             assert state.status_code == 200, state.text
             assert state.json()["status"] == "completed"
             assert state.json()["preparation_requires_review"] is False
+            children_before_reads = len(native.children)
+            root = f"/api/v1/runs/{run.run_id}/continuations"
+            discovered = client.get(root)
+            assert discovered.status_code == 200, discovered.text
+            assert discovered.json() == {"items": [state.json()], "has_more": False}
+            assert state.json()["attempt"] == 2
+            with database.session() as session:
+                committed = session.get(ResearchExecutionCompletionRow, consent.execution_id)
+                assert state.json()["report_artifact_id"] == str(committed.report_artifact_id)
+                assert state.json()["decision_id"] == str(committed.decision_id)
+            page = client.get(path + "/events?limit=1")
+            assert page.status_code == 200, page.text
+            assert page.json()["has_more"] is True
+            events = list(page.json()["events"])
+            while page.json()["has_more"]:
+                cursor = events[-1]["sequence"]
+                page = client.get(path + f"/events?after_sequence={cursor}")
+                assert page.status_code == 200, page.text
+                assert page.json()["approval_eligible"] is False
+                assert page.json()["events"]
+                assert page.json()["events"][0]["sequence"] > cursor
+                events.extend(page.json()["events"])
+            assert events[0]["event_type"] == "research.execution_started"
+            assert [event["sequence"] for event in events] == sorted({event["sequence"] for event in events})
+            assert all(event["attempt"] == 2 and set(event) == {
+                "sequence", "event_type", "occurred_at", "attempt", "stage"} for event in events)
+            assert all(event["stage"] in STAGES for event in events if event["stage"] is not None)
+            assert any(event["stage"] == "Portfolio Manager" and event["event_type"] == "stage.completed"
+                       for event in events)
+            assert len(native.children) == children_before_reads
             headers = {"Origin": "http://testserver", "X-CSRF-Token": new_login.csrf_token}
             assert client.post(path + "/cancel", headers=headers).status_code == 409
         with database.session() as session:
