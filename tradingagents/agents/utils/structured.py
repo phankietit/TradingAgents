@@ -171,12 +171,13 @@ def _safe_diagnostic(agent: str, error: Exception, phase: str) -> dict:
             ObservedNumber,
             QuantityBinding,
             SnapshotReportDraft,
+            SnapshotReportDraftV2,
         )
         from tradingagents.agents.schemas import PortfolioDecision, ResearchPlan, TraderProposal
 
         allowed = set().union(*(set(schema.model_fields) for schema in (
             PortfolioDecision, ResearchPlan, TraderProposal, LocalizedResearchReport, ObservedNumber,
-            QuantityBinding, SnapshotReportDraft)))
+            QuantityBinding, SnapshotReportDraft, SnapshotReportDraftV2)))
         allowed.update({"localized_report", "observed_numbers", "claim", "snapshot_ids"})
         fields = [{"field": ".".join(str(part) if isinstance(part, int) or part in allowed else "unknown_field"
                                     for part in item["loc"]),

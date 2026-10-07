@@ -108,6 +108,54 @@ SnapshotReportDraft = create_model(
         description="Leave empty. Application-generated from quantity_bindings.")),
     price_target=(Literal[None], Field(default=None)),
 )
+
+
+def _summary_evidence_matches(self):
+    if self.summary_evidence.claim != self.executive_summary:
+        raise ValueError("summary evidence must match the complete executive summary exactly")
+    if len(set(self.summary_evidence.snapshot_ids)) != len(self.summary_evidence.snapshot_ids):
+        raise ValueError("summary evidence must not duplicate snapshot references")
+    return self
+
+
+# V2 is required for new snapshot generation/review and adapter publication.
+# Legacy schemas remain separately readable, never new-output fallback.
+# No default version/citations: a model must explicitly provide both fields.
+SnapshotPortfolioDecisionV2 = create_model(
+    "PortfolioDecision", __base__=SnapshotPortfolioDecision,
+    __validators__={"summary_parity": model_validator(mode="after")(_summary_evidence_matches)},
+    report_contract_version=(Literal["2.0"], Field(description="Required explicit web report contract version 2.0.")),
+    summary_evidence=(DecisionEvidenceClaim, Field(description="Exact complete executive_summary text with its actual supplied snapshot IDs. Unrelated available sources are not support.")),
+)
+CanonicalSnapshotDecisionV2 = create_model(
+    "PortfolioDecision", __base__=SnapshotPortfolioDecisionV2,
+    localized_report=(Literal[None], Field(default=None,
+        description="Must be null. A separate protected translation stage handles presentation.")),
+)
+SnapshotReportDraftV2 = create_model(
+    "PortfolioDecision", __base__=SnapshotReportDraft,
+    __validators__={"summary_parity": model_validator(mode="after")(_summary_evidence_matches)},
+    report_contract_version=(Literal["2.0"], Field(description="Required explicit web report contract version 2.0.")),
+    summary_evidence=(BoundEvidenceClaim, Field(description="Exact complete executive_summary including identical quantity placeholders, with its actual supplied snapshot IDs. Never infer or copy the union of thesis sources.")),
+)
+
+
+def read_canonical_snapshot_report(raw):
+    """Read explicit V2 or original legacy bytes; unknown versions refuse.
+
+    Legacy readability does not authorize new-generation fallback or certify
+    summary support. Review/publication activation must enforce V2 separately.
+    """
+    schema = CanonicalSnapshotDecisionV2 if raw.get("report_contract_version") == "2.0" else CanonicalSnapshotDecision
+    return schema.model_validate(raw)
+
+
+def read_snapshot_report(raw):
+    """Read saved/presented reports without changing their contract or sources."""
+    schema = SnapshotPortfolioDecisionV2 if raw.get("report_contract_version") == "2.0" else SnapshotPortfolioDecision
+    return schema.model_validate(raw)
+
+
 SnapshotResearchPlan = create_model(
     "ResearchPlan", __base__=ResearchPlan,
     strategic_actions=(Text, Field(description="Conditional research scenarios and evidence to monitor. No quantities, sizing, allocation percentages or derivative strategies.")),

@@ -20,6 +20,23 @@ risk checks and human review. Its R01–R14 acceptance is incomplete; see
 Implemented web controls do not establish live financial/editorial quality or
 release readiness.
 
+The R07 continuation activates an explicit V2 summary-evidence contract
+and lossless compiler with required supplied source references for snapshot
+generation and ALL newly reviewed output, including review of legacy input.
+The snapshot adapter requires V2 for new publication; historical readers retain
+legacy reports unchanged, without authorizing new-output fallback. This branch
+is integrated into the R01–R14 candidate; side fake-model regression evidence
+does not prove integrated native/full/live acceptance. Explicit V2 input is supported by bounded financial
+review, localization and checkpoint transport, with original repair bounds and
+rejected input retained. This support does not certify accepted full-flow
+publication, native recovery or translation quality. Explicit V2 results also
+retain summary citations in the evidence graph, with adapter publication checks
+and independent worker metadata/narrative/source parity before readiness. Existing
+deterministic risk and human approval are unchanged. Original CLI and legacy report schemas
+are unchanged. Component validation is provenance evidence, not proof of causal
+entailment, live financial quality or permission to publish new legacy-format
+output. See [summary provenance](../platform/summary-provenance.md).
+
 Current candidate acquisition covers Yahoo daily prices and non-exhaustive
 recent news, plus the owner-approved existing SEC EDGAR adapter for AAPL web.
 Independent authenticated StockTwits/Reddit preparation now uses the original
@@ -187,7 +204,10 @@ separate unfinished gates.
 The draft financial/presentation stages additionally guard known semantic-loss
 families. Price-only evidence cannot publish a known external motive/flow as a
 factual cause; an explicit unverified hypothesis or coverage disclosure remains
-research. Mixed-source causal entailment is not established by this guard.
+research. Claim-local citations define this coverage check: unrelated nonprice
+snapshots elsewhere in the run cannot substantiate a claim citing only prices.
+No additional vocabulary blacklist or model/repair call is added. Actual mixed
+citation causal entailment is not established by this guard.
 EN/VI action intensity, time/condition, epistemic negation/uncertainty and retained
 opposing-case markers are checked in their financial sentence domains. Counts
 prevent one marker covering two separate conditions; decimal points and explicit

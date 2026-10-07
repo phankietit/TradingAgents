@@ -2,6 +2,19 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**R07/R14 integration · 2026-10-08:** merged owned side
+c32662f61e1cf06d95dcbc859c69469c4e9de049 into primaryd83d446 after full73101
+terminal/owned cleanup. Only HANDOFF prepend conflicted; both primary full and
+complete side progress/failed/clean receipts preserved, not selected away.
+Includes operator runbook/session fixture, claim-local guard and explicit V2
+generation/review/checkpoint/presentation/result/evidence/worker contracts and
+synthetic fixture migration. No provider/model/risk/allowance/CLI/history change.
+Side227selected/8native14 PASS and primary prior3248full PASS remain exact-source
+evidence only; integrated candidate must run focused/native resume/full plus
+browser/live/editorial/UX/operator gates. New source fingerprint invalidates
+incompatible old checkpoint restoration; never relabel private history. Goal
+ACTIVE, PR7 Draft; NQ owner-BLOCKED, no paid call/main merge/deployment.
+
 **R14 uninstrumented full candidate gate · 2026-10-08:** frozen clean
 `cfd31da326216e434e94cd68ee5efaf90f5a1366`, primary73101 terminal0:
 `set -o pipefail; TMPDIR=/Volumes/Data/codex-builds/TradingAgents/fix-TA-R01-research-quality/20261007T052328Z-89163/Tmp PYTHON_BIN=/Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh 2>&1 | sed -u -E 's#([[:alnum:]+.-]+://[^[:space:]:/@]+:)[^@[:space:]]+(@)#\1[REDACTED]\2#g'`.
@@ -21,6 +34,307 @@ Staged R14 operator/session and R07 V2 activation work on
 but340native resume and new-candidate integration/full/browser/live/UX gates
 remain open. Preserve prior failed receipts and private history. Whole R01–R14
 ACTIVE, PR7 Draft, NQ owner-BLOCKED, no paid/provider/risk/allowance/deploy change.
+
+**R07 clean activation/native14 checkpoint · 2026-10-08:** frozen clean
+`24512760fcf53214ddef67aae838c9637dcf073e`, side29634 terminal0:
+same explicit227-file-selection command as96748 below (13 test files),
+227selected PASS30.23s, Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same unchanged source83104 terminal0:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_supervised_native_graph.py -k all_fourteen --tb=short`:
+8PASS340deselected32.67s. Eight actual spawned original14-stage configurations
+cover English/VI/EN-VI, invalid translation and in-memory/committed checkpoint
+bridge. Existing role/order/translation refusal/call/privacy/legacy-write controls
+retained; final V2 summary/source metadata explicitly asserted. Model/provider
+responses synthetic; no financial/VI editorial or live-provider proof. The340
+native resume/message-boundary cases remain UNVERIFIED on this new candidate,
+not skipped into acceptance. Default causal regression now supplies explicit
+fake-model citations while retaining original refusal/conditional assertions and
+requiring the external-cause error; legacy input/output escape is separately
+refused with exactly2calls. Legacy CLI/report schemas/history stay unchanged.
+This source is side-only; integration, exact new-candidate full/native resume,
+browser/source readback/live finance/VI/UX/operator acceptance remain open.
+Primary full73101 separately terminal0 on cfd31da:3248PASS,88subtestsPASS,
+2optional skipsUNVERIFIED,502warnings,3234.25s. It is uninstrumented but does NOT
+include staged R07/R14 changes; helper reports owned PostgreSQL cleanup. No
+restart, paid/provider/risk/allowance/history/deploy change. Whole R01–R14 ACTIVE.
+
+**R07 clean activation component gate + native red · 2026-10-08:** frozen clean
+`fa82a1552a283437d167f1b00f90968329a2b116`, side96748 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_source_coverage.py tests/test_summary_review_v2.py tests/test_summary_result_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_report_compiler.py tests/test_snapshot_macro_facts.py tests/test_social_review_parity.py tests/test_snapshot_analysis.py tests/test_macro_full_graph.py tests/test_snapshot_decision_worker.py tests/test_claim_local_causal_coverage.py --tb=short`.
+227selected PASS29.85s, Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same clean source70286 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_supervised_native_graph.py -k all_fourteen --tb=short`:
+8FAIL340deselected21.22s; fake child model still returned legacy PM schema, repair
+then failed before downstream completion. This is native FAIL, not hidden by
+component PASS or expected skip. No source edits until both handles terminal.
+Native synthetic model fixture now explicitly supplies the actual known source
+ID for V2; original14-stage/spawn/checkpoint/translation/retry assertions retained,
+new final version/source assertions added. This fixture migration is UNVERIFIED
+until the next frozen gate. No runtime fallback, source guessing or provider call.
+Main full73101 remains on primarycfd31da/latest88%, does not cover this activation.
+SSD status verified available/writable334.9GiB; no owner-runtime mutation. Goal ACTIVE.
+
+**R07 V2 activation WIP · 2026-10-08:** isolated summary branch requires V2
+in snapshot Portfolio Manager and snapshot adapter output. Financial review may
+read legacy input, but every newly reviewed output (structured and sole repair)
+requires V2; original rejected input is unchanged, no downgrade. Canonical CLI
+is unchanged. Synthetic web fixtures updated to explicit V2/no live calls.
+Initial dirty48000 terminal1:30FAIL60PASS27.91s after schema activation: existing
+fake models still returned legacy output, including valid conditional controls.
+Fixtures now explicitly supply known test source IDs in fake model responses;
+runtime never guesses refs. Original causal/conditional/rejected-history/call-
+bound assertions retained; causal regression strengthened to require the actual
+external-cause publication code, not schema rejection. Legacy-output escape has
+an explicit two-call refusal test even with valid prose. Negative numeric repair
+now supplies valid V2 metadata so it still exercises the numeric guard.
+Dirty12416 terminal0:90PASS25.44s, dirty80484 terminal0:73PASS13.45s after worker/
+fixture migration, dirty66863 terminal0:227PASS33.00s across summary/compiler/
+review/transport/result, original-role macro/snapshot graph, social, worker and
+claim-local controls. Ruff PASS. Clean exact-SHA, native/integrated/full/live/
+browser/editorial gates remain UNVERIFIED; no scope reduction or completion.
+Main full73101 remains live on frozen cfd31da, latest79%; this activation is not
+in that full gate or PR head. No integration, paid call, provider/model/risk/
+allowance/history/public deployment change. Whole R01–R14 remains ACTIVE.
+
+**R07 clean V2 result/evidence gate · 2026-10-08:** frozen clean source
+`3bb5c50ff285bd35270beac6c2bdd6adda2ca9e2`, side24590 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_result_v2.py tests/test_snapshot_decision_worker.py tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_analysis_engine.py tests/test_snapshot_analysis.py tests/test_evidence_graph.py tests/test_decision_lifecycle.py tests/test_report_localization.py tests/test_artifact_store.py --tb=short`.
+141selected PASS15.23s; Ruff/dependency/diff PASS, Python3.14.7 existing venv;
+clean unchanged source through terminal. Earlier1715 terminal4 selected a
+nonexistent test_evidence_artifact_service.py: no tests ran; corrected explicit
+existing selection above, not product/source/assertion changes. Dirty12414
+terminal0:13worker cases PASS10.95s before freeze, including post-adapter tamper
+refusal. Synthetic worker V2 success retains saved canonical metadata, four
+evidence claims including summary, exact run source, deterministic owner target
+and ordinary approval; missing/unknown summary and tampered metadata stay REVIEW.
+Same frozen source6240 terminal1: unchanged default red
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS5.03s. Generator/default canonical reviewer activation still required;
+no claim of fixed default defect, native full-role/live/browser or full regression.
+Main full73101 remains live/frozen cfd31da, no integration. Goal ACTIVE; no paid
+call/provider/model/risk/allowance/history/public deployment change.
+
+**R07 V2 result/evidence WIP · 2026-10-08:** isolated summary branch now reads
+explicit V2 graph results, rechecks canonical/source/known price-only motive
+publication guards, retains audit quantities on publication failure and carries
+actual summary refs into existing evidence storage. Identical summary/thesis
+text merges only their supplied IDs, never infers citations from availability.
+Worker independently validates V2 metadata/narrative/material-source parity;
+tampered output stays INVALID/REVIEW, existing risk and owner approval unchanged.
+Graph/adaptor/evidence fixtures cover missing/unknown/version/parity refusal and
+exact summary source linkage without modifying input; isolated worker fixtures
+exercise saved canonical/evidence readback, risk and ordinary approval, plus
+post-adapter metadata tampering. Legacy/CLI/history remain unchanged; default
+generator activation and comprehensive native/full/live/UI acceptance pending.
+Dirty74524 terminal0:39PASS6.17s before final safe publication diagnostics;
+dirty73935 terminal0:39PASS5.65s afterward. Dirty22569 terminal0:18PASS11.35s
+selected summary-result and worker tests before post-adapter tamper control.
+No paid/provider/model/risk/allowance/history/deployment change; full73101 still
+live on frozen primarycfd31da, no integration. Whole R01–R14 remains ACTIVE.
+
+**R07 clean V2 review/transport gate · 2026-10-08:** frozen clean source
+`ac3a3105e867cad4a271df902cc203c8d5e4ff16`, side98936 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_snapshot_checkpoint_codec.py tests/test_report_localization.py tests/test_claim_local_causal_coverage.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.
+211selected PASS26.53s; Ruff/dependency/diff PASS, Python3.14.7 existing venv;
+source remained clean/unchanged until terminal. New controls cover exact saved
+locale/source transport, canonical/presentation separation, draft/final/rejected
+checkpoint state and pending-write parity, malformed version/source refusal,
+actual V2 financial-node no-downgrade and known price-cited cause refusal despite
+unrelated news, conditional preservation and original one-attempt/one-repair.
+Presentation stub tests isolate transport, not translator quality; existing
+translation/original-role graph fixtures remain synthetic, not paid/live proof.
+Same clean source1044 terminal1: unchanged default red test
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS5.01s. Default generation/publication activation still required; do not
+claim the legacy uncited-summary defect fixed from staged V2 PASS. Full73101
+polled same live handle; parent88944 confirmed running at38m46s, no restart or
+integration. Whole R01–R14, native/full/live/editorial/UX/operator gates remain
+incomplete. No owner data, paid call, provider/model/risk/allowance/deploy change.
+
+**R07 V2 review/transport WIP · 2026-10-08:** isolated summary branch adds
+explicit V2 financial-node schema/compiler selection, strict output/no-downgrade
+and source-binding prompt, retaining rejected candidate and one attempt/one repair.
+Saved/presented V2 reader permits separate locales; canonical review still
+requires null localization. Presentation and restricted checkpoint codec preserve
+summary references without source guessing or legacy fallback for malformed V2.
+Safe diagnostics allow new schema field names, not values. Default generation,
+engine/result evidence/publication/approval migration remains unfinished; legacy
+behavior/CLI/history unchanged and default summary red test still authoritative.
+Dirty14595 terminal1:1FAIL101PASS7.36s: draft transport fixture omitted schema
+defaults unlike actual generated model_dump; corrected input normalization, not
+weakened transport assertions. Dirty72421 terminal0:102PASS5.88s.
+Dirty78472 terminal0:119PASS5.83s with actual bounded-node V2 controls added:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_review_v2.py tests/test_summary_transport_v2.py tests/test_summary_provenance_v2.py tests/test_financial_validation_stage.py tests/test_snapshot_checkpoint_codec.py tests/test_report_localization.py --tb=short`.
+Ruff PASS after import formatting. These are synthetic component/reader tests,
+not clean-SHA/native/all-role integration/full/live/editorial acceptance. Full73101
+still live on unchanged primarycfd31da; no integration or paid call. Goal ACTIVE.
+
+**R07 clean staged V2 gate · 2026-10-08:** frozen clean source
+`2f16dfd02e9f8ae10c1ad02162e9896c796f683e`, side97397 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_summary_provenance_v2.py tests/test_report_compiler.py tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_report_localization.py --tb=short`.
+112selected PASS6.84s; Ruff/dependency/diff PASS, Python3.14.7 existing venv.
+Same unchanged source, side81768 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`:
+1FAIL3PASS4.20s. Default mixed-source uncited-summary cause still accepted;
+component PASS does not hide or repair that active-flow FAIL. No skip/xfail or
+relaxed original red assertion. No model/provider call. Default activation and
+all original-role/checkpoint/localization/publication/approval consumer migrations
+remain next; native/full/live/manual acceptance UNVERIFIED. Primary full73101
+polled on the same live handle, no new output, source cfd31da unchanged. Do not
+restart on observation silence or integrate while the source-frozen gate is live.
+
+**R07 staged V2 summary components · 2026-10-08:** isolated owned
+`fix/TA-R07-summary-provenance`, base31c2b1a. Required explicit version and full
+summary/citation parity, strict generation compiler entry, actual quantity/source
+binding, version-aware legacy reader and citation-local known-motive validation
+are implemented as components, NOT activated in the default graph. No guessed
+thesis-source union, removed summary, added blacklist or historical rewrite.
+Dirty10516 terminal0:46selected PASS6.37s in
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_provenance_v2.py tests/test_report_compiler.py tests/test_claim_local_causal_coverage.py --tb=short`.
+This is not clean-SHA, full, original-role integration or live acceptance.
+Default summary red regression remains unresolved until all generator/reviewer/
+checkpoint/localization/publication/approval consumers migrate together; legacy
+reading cannot authorize new output downgrade. Primary full73101 remains on
+unchanged cfd31da; no mid-gate integration. Whole R01–R14 stays ACTIVE; no paid
+call/provider/risk/allowance/public deployment change.
+
+**R07 clean summary red reproduction · 2026-10-08:** frozen clean
+`65bff3d685f89a5183febe437378bda6601d8e89`, side76715 terminal1:
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`.
+1FAIL3PASS2.76s; same mixed-source uncited executive-summary case as61119.
+This is FAIL, not an expected green gate. New schema/compiler/reviewer source
+binding is still unimplemented; no skip/xfail, relaxed assertion or text deletion.
+Clean docs YAML/relative links/whitespace PASS only; Python3.14.7 existing venv.
+Test/receipt/design source unchanged during reproduction. Branch deliberately
+remains WIP/red and must not be integrated/released before the fix and full
+acceptance. Main full73101 still running on clean cfd31da, separately unchanged.
+Next implement version-aware generated summary references/lossless projection,
+legacy reading tests and original-role/bounded-repair parity, then focused/native/
+integrated/full and explicitly approved live gates. Whole R01–R14 ACTIVE.
+
+**R07 summary provenance red baseline · 2026-10-08:** owned isolated
+`fix/TA-R07-summary-provenance`, base500a594 carrying staged claim-local/R14 work.
+Source inspection confirms canonical material-citation parity excludes the
+executive summary; the draft summary is plain text without a cited-source block.
+Synthetic read-only probe73260 terminal0 confirms an unsupported uncited factual
+summary is accepted with unrelated news, using one fake model call (no paid SDK).
+Dirty61119 terminal1:1FAIL3PASS4.61s in
+`TMPDIR=<managed-run>/Tmp <primary>/.venv/bin/python -m pytest -q tests/test_summary_source_coverage.py --tb=short`.
+The failing case is mixed available sources; price-only factual cause refusal
+and two explicitly unverified scenario controls pass. This is a reproducible
+product gap, not an expected PASS/skip/xfail. Test must remain red until fixed.
+Ruff focused/whitespace PASS does not change financial status.
+`docs/platform/summary-provenance.md` records the version-aware source-binding
+implementation requirements, not existing behavior. Preserve CLI/legacy reading,
+original source bytes, graph roles and repair bounds; no automatic guessed
+citations, blacklist expansion, new source/model/risk/allowance or history rewrite.
+Primary full73101 remains live/frozen cfd31da; no mid-gate integration. Fresh
+BTC/AAPL paid-run approval requested asynchronously; absent answer grants none.
+Goal ACTIVE; general finance/VI/live/UX/operational requirements remain open.
+
+**R07 clean claim-local gate · 2026-10-08:** frozen clean source
+`d7e5af810a756785cd16490212027dd184d78c18`, side89233 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python bash scripts/verify-local.sh local --focused tests/test_claim_local_causal_coverage.py tests/test_semantic_qualifier_regressions.py tests/test_financial_validation_stage.py tests/test_report_localization.py tests/test_report_compiler.py tests/test_social_review_parity.py tests/test_macro_full_graph.py tests/test_snapshot_analysis.py --tb=short`.
+167selected PASS12.22s,Ruff/dependency/diff PASS,Python3.14.7; source clean/
+unchanged during gate. Five new cases cover rejection despite unrelated available
+news, unchanged all-price rejection, conditional/unverified preservation and
+genuine mixed-source noncausal coverage. Existing original-role/round graph
+fixtures, numeric compiler, protected EN/VI and source count tests remain selected;
+SDK/vendor data synthetic, no live model/provider proof. Dirty64583 earlier
+42selected PASS2.89s. No new vocabulary/model loop or weakened original bound.
+This fixes claim-local known-motive coverage, not general mixed-source causal
+entailment, executive-summary semantic binding, unknown paraphrases, calibration
+or live financial/VI quality. Prompt/source changes alter recovery fingerprint;
+old private checkpoint compatibility cannot be presumed and must never be
+backfilled/relabelled to fit new code. No private history was touched. Primary
+full73101 remains frozen cfd31da and does not include this new runtime patch.
+Keep side separate until terminal/owned cleanup, then integrated/native/full
+verification remains mandatory. Staged R14 operator/session work retained.
+Goal ACTIVE, PR7 draft; NQ owner-BLOCKED, no paid call/provider/risk/deploy change.
+
+**R07 claim-local causal coverage WIP · 2026-10-08:** owned isolated
+`fix/TA-R07-claim-local-coverage`, base bd829c9 carrying staged R14 work. Inspection
+found the existing known external-motive guard returned early for any nonprice
+source, even when a material thesis claim cited only OHLCV. First scaffold28204
+failed3/5 because appended evidence was not anchored to rendered report text;
+that was a fixture error, not proof of the product defect. Correct full thesis/
+claim binding at29888 terminal1 produced1FAIL4PASS2.27s: adding unrelated news
+allowed the price-only cited factual cause through final financial capture.
+New guard keeps the old all-price narrative checks and additionally examines
+each claim's actual cited IDs against price-source IDs. No lexical blacklist,
+source truncation, graph role, provider/model, repair allowance, risk or history
+change. The original bounded reviewer prompt now explicitly excludes unrelated
+available records from claim support. Explicit unverified hypotheses/noncausal
+mixed-source observations remain eligible. Actual mixed-citation semantic
+entailment, unknown motive families, live quality and VI fidelity remain open;
+source presence is not authenticated entailment. Primary full73101 still frozen
+cfd31da; side not integrated until terminal/owned cleanup.
+
+**R14 clean copied-session gate · 2026-10-08:** frozen clean isolated source
+`5d7d51e40d69c6dba8cf189cb3b91267318d4dd1`, side87438 terminal0:
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused tests/test_postgres_paired_restore.py tests/test_owner_auth.py tests/test_paired_restore_api.py tests/test_platform_api.py tests/test_artifact_store.py tests/test_platform_persistence.py tests/test_local_verification_cli.py --tb=short`.
+75selected PASS46.08s; Ruff/dependency/diff PASS,Python3.14.7; source clean/
+unchanged during gate; helper confirmed removal of only its owned container.
+Source post-backup logout refusal and independent active token are verified;
+target backup initially revives the old token, proving the operator fence is
+required. Target-only existing password rotation revokes every copied session
+(active/expired, prior revocation preserved), rejects old API cookies and CSRF,
+accepts new credentials/readback across fresh API contexts, preserves non-auth
+tables/account identity and source SQL/rows/blobs. Invalid short password rolls
+back without table changes. This is synthetic PostgreSQL/auth acceptance, not
+automatic safe restore or an operator CLI, encrypted transfer, browser rollout,
+active-job recovery or an owner-runtime operation. Runtime/package/CLI/scripts/
+provider/risk behavior unchanged. Side also carries staged operator docs.
+Keep primary frozen cfd31da until full73101 terminal and owned cleanup; that
+full gate does not include this later side test. Goal ACTIVE; all remaining
+financial/live/UX/operational requirements retain their previous status.
+
+**R14 copied-session acceptance WIP · 2026-10-08:** isolated owned
+`fix/TA-R14-restored-session-fence`, base af3ed86 carrying the staged operator
+runbook. New synthetic actual PG16 dump/restore copies active/revoked/expired
+sessions and a preserved report, then simulates logout on source after capture.
+It demonstrates the old backup's token revival, then uses the existing public
+`OwnerAuth.change_password` on the new target only. Invalid short password rolls
+back; old cookies/artifact reads/CSRF-protected logout refuse, old password fails,
+new login reads exact original bytes/hash, and a fresh API context retains the
+revocation. Every copied session/account identity and non-auth table is checked;
+source SQL/rows/blobs stay unchanged after target rotation. No operator command,
+new provider/model, paid call, owner data or runtime behavior change.
+Dirty85060 terminal0:18selected PG restore/auth tests PASS16.57s,
+Ruff/dependency/diff PASS; helper removed only its owned container. Extra
+per-session/account/source-logout assertions were added afterward, still
+UNVERIFIED pending clean gate. Full73101 continues on primary frozen cfd31da;
+do not integrate this side source until terminal and owned cleanup confirmed.
+Whole goal ACTIVE; operational encryption/target validation, active jobs,
+browser and financial/live acceptance remain incomplete.
+
+**R14 clean operator-runbook docs gate · 2026-10-08:** clean frozen
+`8683688e1e4e6099ee824a3a3c9a805af549b863`, terminal0 docs gate:
+`git diff --check`; issue-template YAML via Ruby `YAML.load_file`;
+relative Markdown target existence via Ruby Pathname for the new runbook,
+persistence and startup docs. All PASS; source unchanged/clean. These commands
+only validate documentation structure/links, NOT encryption, session fencing,
+backup correctness, active-job safety or operational rehearsal. Branch awaits
+integration after primary full73101 terminal; no package/runtime/test change.
+
+**R14 operator restore contract · 2026-10-08:** isolated docs-only
+`docs/TA-R14-operator-restore`, base cfd31da. New
+`docs/platform/operator-backup-restore.md` defines approved private paired
+capture, authenticated encryption/transfer/key recovery, fresh empty target,
+artifact extraction/inventory integrity, copied-session fence and separate
+queued/active paid-worker audit/restart gates. Startup/persistence link to it.
+Existing auth/session code confirms password rotation revokes unrevoked sessions;
+this is not a tested restore/session fence or implemented operator command.
+No backup/transfer/restore/private DB/process/env/provider mutation occurred.
+Dirty docs whitespace, issue-template YAML and relative Markdown links PASS.
+Operational tooling, encryption/path/session/active-work/browser rehearsal and
+owner runtime remain UNVERIFIED; no release or full goal PASS is implied.
+Primary full73101 is running at frozen clean
+`cfd31da326216e434e94cd68ee5efaf90f5a1366`, default uninstrumented
+`TMPDIR=<managed-run>/Tmp PYTHON_BIN=<primary>/.venv/bin/python TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh`,
+with credential-URL redaction in output. No primary edit/integration until this
+same handle is terminal and owned cleanup confirmed; observation timeout alone
+does not authorize a restart. Full result remains UNVERIFIED while running.
 
 **R14 integrated PostgreSQL restore receipt · 2026-10-08:** frozen clean primary
 `e64de6ba4d97bd7daa61a32d9688ba65c7509c9d`, primary7164 terminal0:

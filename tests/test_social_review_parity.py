@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_platform_social import collect
 from tests.test_report_compiler import draft
 from tradingagents.agents.utils.financial_validation import create_financial_validation
@@ -53,6 +54,7 @@ def test_review_resolves_same_admitted_social_counts(vendor, count, mode):
         "key": "QA", "snapshot_id": snapshot_id,
         "fact_id": f"social.{vendor}.sample_count.{count}", "decimal_places": 0,
     }]
+    raw = summary_response(raw, [snapshot_id])
     compiled = compile_report(raw, facts)
     validate_canonical_report(compiled, facts, {snapshot_id})
     candidate = raw if mode == "draft" else compiled.model_dump(mode="json")

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.messages import AIMessage
 
+from tests.summary_fixtures import summary_response
 from tests.test_platform_fred import NOW
 from tests.test_platform_sec import collect as collect_sec, document, fact
 from tests.test_platform_social import collect as collect_social
@@ -40,6 +41,7 @@ def test_real_graph_keeps_all_roles_rounds_validation_and_bilingual_macro_semant
     store = LocalArtifactStore(tmp_path / "artifacts")
     macro = macro_source()
     raw, _ = macro_draft(macro)
+    raw = summary_response(raw, [macro["snapshot_id"]])
     if invalid_binding:
         raw["quantity_bindings"][0]["fact_id"] = raw["quantity_bindings"][0]["fact_id"].replace("DGS10", "CPIAUCSL")
     source_ids = {}

@@ -13,7 +13,12 @@ from uuid import UUID
 
 from langgraph.checkpoint.base import CheckpointTuple
 
-from tradingagents.agents.research_schemas import SnapshotPortfolioDecision, SnapshotReportDraft
+from tradingagents.agents.research_schemas import (
+    SnapshotPortfolioDecision,
+    SnapshotPortfolioDecisionV2,
+    SnapshotReportDraft,
+    SnapshotReportDraftV2,
+)
 from tradingagents.agents.utils.agent_states import InvestDebateState, RiskDebateState
 
 MAX_CHECKPOINT_BYTES = 16 * 1024 * 1024
@@ -146,9 +151,13 @@ class SnapshotCheckpointCodec:
                 return None
             # All rejected candidates reaching the native state are schema-valid
             # narrative/draft objects, not provider fallback text or exceptions.
-            schemas = (SnapshotReportDraft,) if name == "structured_draft" else (
-                (SnapshotReportDraft, SnapshotPortfolioDecision) if name == "rejected_structured_decision"
-                else (SnapshotPortfolioDecision,))
+            if not isinstance(value, dict):
+                _reject()
+            v2 = value.get("report_contract_version") == "2.0"
+            draft = SnapshotReportDraftV2 if v2 else SnapshotReportDraft
+            report = SnapshotPortfolioDecisionV2 if v2 else SnapshotPortfolioDecision
+            schemas = (draft,) if name == "structured_draft" else (
+                (draft, report) if name == "rejected_structured_decision" else (report,))
             for schema in schemas:
                 try:
                     if not isinstance(value, dict):

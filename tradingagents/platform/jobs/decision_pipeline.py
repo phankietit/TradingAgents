@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from uuid import uuid5
 
+from tradingagents.agents.research_schemas import SnapshotPortfolioDecisionV2
 from tradingagents.contracts import DataQualityStatus, DecisionCandidate
 from tradingagents.platform.analysis import DecisionCandidateFactory
 from tradingagents.platform.analysis.evidence_service import EvidenceGraphService
@@ -41,9 +42,26 @@ def build_run_decision(artifacts, run, result):
     if inputs is not None and result.decision_payload is not None:
         narrative = result.decision_payload
         required = {narrative.thesis, *narrative.risks, *narrative.invalidation_conditions}
+        contract_ok = True
+        report = result.final_state.get("structured_decision") or {}
+        if isinstance(report, dict) and ({"report_contract_version", "summary_evidence"} & report.keys()):
+            try:
+                canonical = SnapshotPortfolioDecisionV2.model_validate(report)
+                contract_ok = (canonical.investment_thesis == narrative.thesis
+                    and canonical.risks == narrative.risks
+                    and canonical.invalidation_conditions == narrative.invalidation_conditions
+                    and canonical.rating == narrative.rating
+                    and canonical.confidence == narrative.confidence)
+                expected = {item.claim: set(item.snapshot_ids) for item in canonical.evidence_claims}
+                summary = canonical.summary_evidence
+                expected.setdefault(summary.claim, set()).update(summary.snapshot_ids)
+                required.add(summary.claim)
+                contract_ok = contract_ok and expected == {text: set(ids) for text, ids in result.material_claims.items()}
+            except (ValueError, TypeError):
+                contract_ok = False
         allowed = {key for ids in inputs.snapshots_by_analyst.values() for key in ids}
         cited = {key for ids in result.material_claims.values() for key in ids}
-        if (set(result.material_claims) == required and cited <= allowed
+        if (contract_ok and set(result.material_claims) == required and cited <= allowed
                 and all(ids and len(ids) == len(set(ids)) for ids in result.material_claims.values())):
             service = EvidenceGraphService(artifacts)
             evidence_artifact = service.create(owner_id=run.owner_id, run_id=run.run_id,

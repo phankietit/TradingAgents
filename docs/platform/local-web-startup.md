@@ -28,6 +28,11 @@ setting the variables above. Do not use this as a migration/backup procedure for
 an existing owner database. Existing installations need a backup and reviewed
 migration plan; never downgrade an owner database to reproduce QA.
 
+Restoring an existing workspace follows the separate
+[operator backup/restore procedure](operator-backup-restore.md), not this fresh
+bootstrap. Keep restored workers off until copied sessions and pending jobs are
+audited; starting a worker can consume restored queued jobs and incur AI charges.
+
 ```python
 import os
 from getpass import getpass

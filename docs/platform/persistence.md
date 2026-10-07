@@ -15,6 +15,11 @@ changing the existing CLI files, Markdown reports, or checkpoint behavior.
 - Downgrades are available for candidate verification; production rollback must
   still follow a backup/restore runbook.
 
+The required [operator backup/restore procedure](operator-backup-restore.md)
+separates paired capture, encrypted transfer, new-target verification, copied
+session fencing and paid-worker restart. It is not an implemented operator CLI
+or an executed owner restore; exact acceptance remains in HANDOFF.
+
 ## Safety Properties
 
 - Market instruments and snapshot manifests are immutable and idempotent by ID.

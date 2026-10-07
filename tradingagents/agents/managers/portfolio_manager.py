@@ -24,9 +24,9 @@ from tradingagents.agents.utils.structured import (
 
 
 def create_portfolio_manager(llm, *, research_only=False):
-    from tradingagents.agents.research_schemas import SnapshotReportDraft
+    from tradingagents.agents.research_schemas import SnapshotReportDraftV2
 
-    schema = SnapshotReportDraft if research_only else PortfolioDecision
+    schema = SnapshotReportDraftV2 if research_only else PortfolioDecision
     structured_llm = bind_structured(llm, schema, "Portfolio Manager")
 
     def portfolio_manager_node(state) -> dict:
@@ -130,6 +130,12 @@ Write these sections, in this order, starting with the rating on its own line:
             from tradingagents.agents.utils.report_compiler import BINDING_INSTRUCTIONS
 
             prompt += BINDING_INSTRUCTIONS
+            prompt += ("\nSet report_contract_version=2.0. summary_evidence must contain the COMPLETE "
+                       "executive_summary exactly, with identical quantity placeholders and the actual "
+                       "supplied snapshot IDs supporting that summary. Sources merely available in "
+                       "the run do not support a claim. Never infer summary citations from the union "
+                       "of thesis sources. Preserve competing evidence, uncertainty and conditional "
+                       "scenarios; unsupported explanations must remain explicitly unverified.")
 
         def capture_decision(value):
             nonlocal structured_decision

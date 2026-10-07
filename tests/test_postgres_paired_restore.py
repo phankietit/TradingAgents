@@ -32,7 +32,7 @@ from tradingagents.contracts import (
 )
 from tradingagents.platform.api import ApiSettings, create_app
 from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
-from tradingagents.platform.auth import OwnerAuth
+from tradingagents.platform.auth import InvalidCredentials, OwnerAuth
 from tradingagents.platform.persistence import Database, PlatformRepository, upgrade_database
 
 NOW = datetime(2026, 10, 8, tzinfo=UTC)
@@ -241,3 +241,130 @@ def test_postgres_paired_dump_restore_authenticated_readback(tmp_path, artifact_
     assert {path.relative_to(source_root): path.read_bytes()
             for path in source_root.rglob("*") if path.is_file()} == original_blobs
     # The helper, not this test, removes its exact labelled container at exit.
+
+
+@pytest.mark.integration
+def test_copied_sessions_require_target_rotation_without_changing_source_history(tmp_path):
+    container, base_url = _owned_container()
+    suffix = uuid4().hex
+    source_name = "ta_session_source_" + suffix
+    restored_name = "ta_session_target_" + suffix
+    for name in (source_name, restored_name):
+        _docker("exec", container, "createdb", "-U", "ta_qa", name)
+    source_url = base_url.set(database=source_name).render_as_string(hide_password=False)
+    restored_url = base_url.set(database=restored_name).render_as_string(hide_password=False)
+    upgrade_database(source_url)
+    source_db = Database(source_url)
+    source_root = tmp_path / "source-artifacts"
+    owner_id = uuid4()
+    content = "Synthetic preserved report / báo cáo giả lập: 100.00 USD".encode()
+    try:
+        with source_db.session() as session:
+            auth = OwnerAuth(session)
+            auth.bootstrap_owner(EMAIL, PASSWORD, owner_id=owner_id,
+                                 now=NOW - timedelta(hours=1))
+            logged_out_later = auth.login(EMAIL, PASSWORD, now=NOW)
+            second_active = auth.login(EMAIL, PASSWORD, now=NOW)
+            already_revoked = auth.login(EMAIL, PASSWORD, now=NOW)
+            auth.revoke_session(already_revoked.token, now=NOW)
+            expired = OwnerAuth(session, session_ttl=timedelta(minutes=5)).login(
+                EMAIL, PASSWORD, now=NOW - timedelta(minutes=10))
+            report = ArtifactService(LocalArtifactStore(source_root),
+                                     PlatformRepository(session)).create(
+                owner_id=owner_id, kind=ArtifactKind.ANALYSIS_REPORT,
+                media_type="text/markdown", content=content, created_at=NOW)
+    finally:
+        source_db.dispose()
+    backup_rows = _table_rows(source_url)
+    archive = _docker("exec", container, "pg_dump", "-U", "ta_qa", "--format=custom",
+                      "--no-owner", "--no-privileges", source_name)
+    _docker("exec", "-i", container, "pg_restore", "-U", "ta_qa", "--exit-on-error",
+            "--no-owner", "--no-privileges", "-d", restored_name, content=archive)
+    assert _table_rows(restored_url) == backup_rows
+    restored_root = tmp_path / "restored-artifacts"
+    shutil.copytree(source_root, restored_root)
+    # Simulate a real logout AFTER backup: this revocation is absent in the copy.
+    source_db = Database(source_url)
+    try:
+        with source_db.session() as session:
+            auth = OwnerAuth(session)
+            assert auth.revoke_session(logged_out_later.token, now=NOW)
+            with pytest.raises(InvalidCredentials):
+                auth.authenticate_session(logged_out_later.token, now=NOW)
+            assert auth.authenticate_session(second_active.token, now=NOW).owner_id == owner_id
+    finally:
+        source_db.dispose()
+    source_rows = _table_rows(source_url)
+    source_dump = _logical_dump(container, source_name)
+    source_blobs = {path.relative_to(source_root): path.read_bytes()
+                    for path in source_root.rglob("*") if path.is_file()}
+    settings = ApiSettings(database_url=restored_url, artifact_root=restored_root,
+        allowed_origin=ORIGIN, secure_cookies=False, clock=lambda: NOW)
+    new_password = "new-synthetic-restore-password"
+    with TestClient(create_app(settings)) as client:
+        client.cookies.set("ta_session", logged_out_later.token)
+        # Demonstrates backup semantics, NOT acceptable operator restore state.
+        assert client.get("/api/v1/auth/me").status_code == 200
+        assert client.get(f"/api/v1/artifacts/{report.artifact_id}").content == content
+        target_before_rotation = _table_rows(restored_url)
+        target_db = Database(restored_url)
+        try:
+            with pytest.raises(ValueError), target_db.session() as session:
+                OwnerAuth(session).change_password(owner_id, PASSWORD, "short", now=NOW)
+            assert _table_rows(restored_url) == target_before_rotation
+            with target_db.session() as session:
+                OwnerAuth(session).change_password(owner_id, PASSWORD, new_password, now=NOW)
+        finally:
+            target_db.dispose()
+        for issued in (logged_out_later, second_active, already_revoked, expired):
+            client.cookies.clear()
+            client.cookies.set("ta_session", issued.token)
+            client.cookies.set("ta_csrf", issued.csrf_token)
+            assert client.get("/api/v1/auth/me").status_code == 401
+            assert client.get(f"/api/v1/artifacts/{report.artifact_id}").status_code == 401
+            assert client.post("/api/v1/auth/logout", headers={
+                "Origin": ORIGIN, "X-CSRF-Token": issued.csrf_token,
+            }).status_code == 401
+        client.cookies.clear()
+        assert client.post("/api/v1/auth/login", headers={"Origin": ORIGIN},
+                           json={"email": EMAIL, "password": PASSWORD}).status_code == 401
+        assert client.post("/api/v1/auth/login", headers={"Origin": ORIGIN},
+                           json={"email": EMAIL, "password": new_password}).status_code == 200
+        assert client.get("/api/v1/auth/me").json()["owner_id"] == str(owner_id)
+        response = client.get(f"/api/v1/artifacts/{report.artifact_id}")
+        assert response.status_code == 200 and response.content == content
+        assert "sha256:" + hashlib.sha256(response.content).hexdigest() == report.content_hash
+    # Revocation is durable across fresh API contexts, not a process-local cache.
+    with TestClient(create_app(settings)) as client:
+        client.cookies.set("ta_session", second_active.token)
+        assert client.get("/api/v1/auth/me").status_code == 401
+        client.cookies.clear()
+        assert client.post("/api/v1/auth/login", headers={"Origin": ORIGIN},
+                           json={"email": EMAIL, "password": new_password}).status_code == 200
+    target_rows = _table_rows(restored_url)
+    target_sessions = {json.loads(row)["session_id"]: json.loads(row)
+                       for row in target_rows["owner_sessions"]}
+    for row in backup_rows["owner_sessions"]:
+        previous = json.loads(row)
+        current = target_sessions[previous["session_id"]]
+        assert current["revoked_at"] is not None
+        assert {key: value for key, value in previous.items()
+                if key not in {"revoked_at", "last_seen_at"}} == {
+            key: value for key, value in current.items()
+            if key not in {"revoked_at", "last_seen_at"}}
+        if previous["revoked_at"] is not None:
+            assert current["revoked_at"] == previous["revoked_at"]
+    def account_identity(rows):
+        return [{key: value for key, value in json.loads(row).items()
+                 if key not in {"password_hash", "updated_at"}} for row in rows]
+
+    assert account_identity(target_rows["owner_accounts"]) == account_identity(
+        backup_rows["owner_accounts"])
+    assert {name: rows for name, rows in target_rows.items()
+            if name not in {"owner_accounts", "owner_sessions"}} == {
+        name: rows for name, rows in backup_rows.items()
+        if name not in {"owner_accounts", "owner_sessions"}}
+    assert _table_rows(source_url) == source_rows
+    assert _logical_dump(container, source_name) == source_dump
+    assert {path.relative_to(source_root): path.read_bytes()
+            for path in source_root.rglob("*") if path.is_file()} == source_blobs

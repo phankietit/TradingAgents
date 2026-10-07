@@ -268,13 +268,13 @@ def create_report_presentation(llm, reports=None):
         for report in (reports or {}).values() for source in json.loads(report)
         if source["provenance"]["dataset"] == "macro"}
     def present(state):
-        from tradingagents.agents.research_schemas import CanonicalSnapshotDecision
+        from tradingagents.agents.research_schemas import read_canonical_snapshot_report
         from tradingagents.dataflows.config import get_config
 
         raw = state.get("structured_decision")
         if raw is None:
             return {}
-        canonical = CanonicalSnapshotDecision.model_validate(raw)
+        canonical = read_canonical_snapshot_report(raw)
         diagnostics = list(state.get("structured_diagnostics", []))
         result = canonical.model_dump(mode="json")
         if get_config().get("output_language") in ("English and Vietnamese", "Vietnamese"):
