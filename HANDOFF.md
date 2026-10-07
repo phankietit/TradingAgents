@@ -2,6 +2,17 @@
 
 ## Cập nhật đang triển khai · 2026-10-03
 
+**Exact SQLite factory diagnostic PASS:** frozen
+`dfb14bf309dd021bad7bfa4bc7741ad7e1aa328a`, session63469 terminal0:
+5PASS/5 PostgreSQL cases deselected/55.94s, Python3.14.7. Command:
+`TMPDIR=<managed-run>/Tmp TA_TEST_PREFLIGHT_TRACE=1 .venv/bin/python -m pytest -q tests/test_recording_factory_lease.py -k sqlite --tb=short -x -rP`
+All original acknowledgement/reopen/idempotency and expired/foreign-worker/
+cancelled/heartbeat-failure no-ACK/no-row assertions retained. No watchdog dump
+occurred; this does not locate or fix the full-run post-reply exit stall. No
+production code or clock/deadline/allowance change, no model/provider request.
+Full c1308ef gate remains FAIL, native preflight reliability UNVERIFIED; side
+full recovery matrix remains live and frozen. No integration/release claim.
+
 **Opt-in native shutdown diagnostic:** synthetic test child only,
 `TA_TEST_PREFLIGHT_TRACE=1` enables stdlib faulthandler stack-location dumps
 after 10s, repeated until process exit. No locals, exception/provider text or
