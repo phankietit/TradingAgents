@@ -1,5 +1,30 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**Owner authorization / current SEC probe · 2026-10-08:** owner supplied actual
+SEC contact and approved exactly one fresh BTC plus one AAPL MiniMax acceptance
+execution. Contact saved only in ignored local worktree .env, mode600; no contact
+value/key copied to Git or reports. MiniMax provider/M3 quick/deep settings and
+existing keys are retained through explicit root dotenv loading, not fallback.
+Do not request paid authorization again for these two runs or automatically
+retry/add runs. Neither paid run has been submitted yet.
+
+Existing port8000 is a synthetic QA workspace; do not consume its fake candles
+for live acceptance or stop its pre-existing process. Read-only configured owner
+storage inspection found schema0010_owner_watchlist (candidate head0018), no
+active jobs, nine prior runs. No migration, bootstrap, backup, copy or history
+mutation occurred. Owner question is pending: isolated new real-data acceptance
+database versus approved backup/migration of existing storage. No choice inferred.
+
+Read-only actual AAPL SEC probe at clean
+`cd42885e2d3e23ed1083c4b64edd42589b3b2ad5`, session70861 terminal0:
+original `fetch_current_sec_facts` fixed child/75s boundary, existing AAPL identity
+read from configured DB, explicit local/root dotenv load and fresh external
+TRADINGAGENTS_CACHE_DIR. Returned OK/eligible_filed_facts,1159 facts,0 invalid,
+latest filed2026-07-31,retrieved2026-10-08T01:08:05.357786Z. Public-source cache
+only; no mocks/fallback, DB/artifact snapshot write or AI invocation. This is PASS
+current SEC acquisition, NOT web preparation/storage, AAPL full graph, historical
+vintage, financial/VI or release acceptance. Goal ACTIVE; NQ owner-BLOCKED remains.
+
 **R13 full Python3.12 / primary integration · 2026-10-08:** frozen clean
 `796c4178c3c710fba32eb20651c5ace7d46e71a7`, full session41168 terminal0:
 3306tests +88subtests PASS,2optional skips UNVERIFIED,502warnings,2068.46s
