@@ -355,6 +355,9 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
       <p className="muted caption">{t('New data is for research now, not a historical replay. Preparing data updates the research time; old reports remain unchanged.')}</p>
       {riskEnabled ? <p>{t('Turn off portfolio evaluation to prepare current prices. Portfolio research must keep its original valuation time.')}</p> : null}
       {preparationNote ? <p role={preparationExhausted ? 'alert' : 'status'}>{preparationExhausted ? `${t('Data is still incomplete after three checks.')} ` : ''}{t(preparationNote)}</p> : null}
+      <details className="supplementary-research">
+      <summary>{t('Broaden research coverage')}</summary>
+      <p className="muted caption">{t('Prepare additional sources below. Each source is checked independently; opening this section does not download data or start AI.')}</p>
       <div className="preparation-sources">
       {profile.data?.allowed_analysts.includes('social') && asset?.asset_class !== 'reference_future' ? <div className="news-supplement">
         <h4>{t('Market discussions · optional')}</h4>
@@ -394,6 +397,7 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
         {fundamentalsNote ? <p role="status">{t(fundamentalsNote)}</p> : null}
       </div> : null}
       </div>
+      </details>
     </div>
     <p className="muted">{t("All research times use UTC. Sources must be available by the selected time and pass content checks before research begins.")}</p>
     <details><summary>{t("Advanced data settings")}</summary>

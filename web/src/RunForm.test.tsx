@@ -11,6 +11,8 @@ afterEach(() => vi.unstubAllGlobals());
 // Exercise the visible staged journey; never query hidden panels to bypass it.
 async function visitData(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /^(Prepare market data|Chuẩn bị dữ liệu thị trường)$/ }));
+  const supplement = screen.getByText(/^(Broaden research coverage|Bổ sung phạm vi nghiên cứu)$/).closest('details')!;
+  if (!supplement.open) await user.click(within(supplement).getByText(/^(Broaden research coverage|Bổ sung phạm vi nghiên cứu)$/));
 }
 async function inspectSources(user: ReturnType<typeof userEvent.setup>) {
   await visitData(user);

@@ -1,5 +1,7 @@
 /** Reviewed application copy. Financial/source narrative is never a lookup key. */
 export const vietnamese: Record<string, string> = {
+  'Broaden research coverage': 'Bổ sung phạm vi nghiên cứu',
+  'Prepare additional sources below. Each source is checked independently; opening this section does not download data or start AI.': 'Chuẩn bị thêm các nguồn bên dưới. Từng nguồn được kiểm tra riêng; mở phần này không tải dữ liệu hay bắt đầu AI.',
   'None': 'Chưa có',
   'Economic context · optional': 'Bối cảnh kinh tế · tùy chọn',
   'Economic indicator': 'Chỉ báo kinh tế',

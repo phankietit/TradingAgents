@@ -258,6 +258,10 @@ dt { color: var(--muted); } dd { margin: 0; }
 .preparation-workspace { border-block: 1px solid var(--border); padding-block: 20px; margin-top: 20px; }
 .preparation-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .preparation-heading h3, .preparation-heading .section-actions { margin: 0; }
+.supplementary-research { margin-top: 20px; border: 1px solid var(--border); border-radius: 10px; padding: 0 18px; }
+.supplementary-research > summary { padding: 16px 0; font-size: 14px; font-weight: 600; cursor: pointer; }
+.supplementary-research[open] { padding-bottom: 18px; }
+.supplementary-research > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 3px; }
 .preparation-sources { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
 .preparation-sources .news-supplement { margin-top: 8px; min-width: 0; }
 .preparation-sources .news-supplement p { font-size: 13px; color: var(--muted); }

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import RunForm from './RunForm';
+import { setLocale } from './i18n';
 
 const catalog = [{ instrument_id: 'aapl', canonical_symbol: 'AAPL', display_name: 'Apple',
   asset_class: 'equity', tradability: 'investable', venue: 'NASDAQ', quote_currency: 'USD',
@@ -18,6 +19,31 @@ function setup() {
   return fetch;
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it.each(['en', 'vi'] as const)('keeps coverage visible and supplementary controls behind an explicit disclosure (%s)', async locale => {
+  const fetch = setup(); const user = userEvent.setup();
+  setLocale(locale);
+  render(<RunForm catalog={catalog} onClose={vi.fn()} onCreated={vi.fn()} />);
+  await user.click(screen.getByRole('button', { name: locale === 'en' ? 'Continue to data' : 'Tiếp tục: dữ liệu' }));
+  const summary = screen.getByText(locale === 'en' ? 'Broaden research coverage' : 'Bổ sung phạm vi nghiên cứu');
+  const disclosure = summary.closest('details')!;
+  expect(disclosure.open).toBe(false);
+  expect(screen.getByRole('heading', { name: locale === 'en' ? 'Research coverage' : 'Phạm vi nghiên cứu' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: locale === 'en' ? 'Continue to review' : 'Tiếp tục: kiểm tra' })).toBeTruthy();
+  // jsdom's role queries do not model closed-details visibility. Verify the
+  // native DOM contract here; actual visibility/keyboard behavior is browser QA.
+  expect(summary.tagName).toBe('SUMMARY');
+  expect(disclosure.firstElementChild).toBe(summary);
+  expect(disclosure.contains(screen.getByRole('button', { name: locale === 'en' ? 'Add recent headlines' : 'Thêm tin tức gần đây' }))).toBe(true);
+  await user.click(summary);
+  expect(disclosure.open).toBe(true);
+  expect(screen.getByRole('button', { name: locale === 'en' ? 'Add recent headlines' : 'Thêm tin tức gần đây' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: locale === 'en' ? 'Add economic context' : 'Thêm bối cảnh kinh tế' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: locale === 'en' ? 'Add SEC fundamentals' : 'Thêm phân tích cơ bản từ SEC' })).toBeTruthy();
+  await user.click(summary);
+  expect(disclosure.open).toBe(false);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs') || /\/prepare-/.test(url))).toBe(false);
+});
 
 it('shows one stage, preserves scope and sources, and navigation never starts AI', async () => {
   const fetch = setup(); const user = userEvent.setup();
@@ -55,6 +81,12 @@ it('requires unchanged explicit consent at review and refuses submit from anothe
   await user.click(screen.getByRole('button', { name: 'Continue to review' }));
   expect((screen.getByRole('button', { name: 'Queue analysis' }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole('checkbox', { name: /I authorize/ }));
+  await user.click(screen.getByRole('button', { name: 'Back to data' }));
+  await user.click(screen.getByText('Broaden research coverage'));
+  await user.click(screen.getByText('Broaden research coverage'));
+  await user.click(screen.getByRole('button', { name: 'Continue to review' }));
+  expect((screen.getByRole('checkbox', { name: /I authorize/ }) as HTMLInputElement).checked).toBe(true);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs') || /\/prepare-/.test(url))).toBe(false);
   await user.click(screen.getByRole('button', { name: 'Research scope' }));
   fireEvent.submit(screen.getByRole('form', { name: 'New analysis' }));
   expect(fetch.mock.calls.some(([url]) => url.endsWith('/runs'))).toBe(false);

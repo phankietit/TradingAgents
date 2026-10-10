@@ -425,6 +425,12 @@ It verifies five years of completed daily sessions using the original engine's
 shared history window, saves immutable evidence, then
 requires separate paid-AI consent. The price action itself does not ingest
 news/fundamental/macro sources and is not a historical-vintage feed;
+the data step groups supplementary preparation under **Broaden research
+coverage** (**Bổ sung phạm vi nghiên cứu**). Expand it to access the existing
+social, headline, FRED and eligible SEC actions. Opening or closing this section
+does not acquire data, select evidence or authorize AI. Coverage and missing-area
+disclosures remain visible outside it; this is presentation, not a reduced
+research flow or a claim of complete source coverage.
 The existing financial-review step receives complete selected immutable source
 records as untrusted evidence, in addition to the draft and numeric facts. This
 does not add a model call but may increase input tokens; it does not prove that
