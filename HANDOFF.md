@@ -1,5 +1,38 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 minimum Python3.10 clean install/full local regression · 2026-10-10:**
+frozen clean `c0268c70f6c67ea79ed6c7c848e54bbda94a7827`, session65550 terminal0:
+3306 tests +88 subtests PASS,2 optional skips UNVERIFIED,502 warnings,1762.85s
+(29m22s). Original `scripts/verify-postgres-local.sh`, fresh Python3.10.22
+noneditable environment, cleared inherited credentials and managed external
+TMPDIR; Ruff/pip check/full pytest/diff check included. Original source stayed
+unchanged throughout. Generated test DB URLs redacted by an external wrapper.
+Helpers14421/14425/14438, pytest14457/resource tracker14528 absent after terminal;
+only owned ta-research-qa-1791618692-14425 container removed by original helper,
+absence independently confirmed. No restart or owner-data access by the gate.
+
+Python runtime came from the official Astral20261003 aarch64-apple-darwin
+install_only release; GitHub asset SHA256 matched before bounded safe extraction
+under the existing managed external run, no system Python change. Env-cleared
+archive install87023 terminal0 from exact c0268c7 with dev/platform extras PASS;
+wheel538832 bytes, SHA2563c62621317e737af69823f18af1065546ca90fe9f3f52190acf4126bd714cc4e.
+Outside-checkout installed smoke72078 terminal0 PASS: noneditable import origins,
+packaged migration resources, pip check and API/worker/CLI help. Actual full gate
+ran against this source checkout, NOT the entire installed-wheel suite.
+Fresh dependency resolution includes pandas2.3.3, LangGraph1.2.14,
+langchain-core1.6.9, Pydantic2.14.0, SQLAlchemy2.0.54/FastAPI0.143.0.
+Owner runtime, provider/models and credentials unchanged; no AI job or CI call.
+Native fixtures still use synthetic SDK responses, not live financial evidence.
+
+Original inactive workflow's matrix is3.10/3.11/3.12/3.13;3.10 and prior3.12
+have full local receipts,3.11/3.13 still UNVERIFIED. Prior3.14 is additional local
+evidence, not a substitute for the missing matrix entries. Optional langchain_aws
+and live DeepSeek key checks remain UNVERIFIED; no provider installed/replaced
+or live key requested to turn skips green. Full R01–R14 ACTIVE; remaining live
+financial/VI/semantic/UX/recovery/operator gates and owner-BLOCKED NQ retained.
+API8001/worker restart approval remains pending, both approved BTC/AAPL paid runs
+remain unsubmitted. See [exact minimum-version receipt](docs/platform/python310-verification-20261010.md).
+
 **Owner backup/password reopen/source migration · 2026-10-10:** clean source
 `eae0a6caca4765ddaf7e70e080dbb8cf58885018`, Python3.14.7. Owner approved encrypted
 local paired backup and migration of existing storage; local AES-256 image

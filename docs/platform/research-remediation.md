@@ -5,6 +5,15 @@ platform, with human decision review. No broker or public deployment.
 
 ## Baseline
 
+Later 2026-10-10 update: frozen clean c0268c7 full local Python3.10.22 gate65550
+terminal0 PASS,3306 tests+88 subtests,2 optional skips UNVERIFIED,502 warnings,
+1762.85s; task-owned helper/container cleanup independently confirmed.
+Fresh noneditable install and outside-checkout smoke also PASS. Exact commands,
+source/dependency boundary and limits are in the
+[minimum-version receipt](python310-verification-20261010.md). The original
+inactive workflow's matrix is3.10–3.13:3.11/3.13 still UNVERIFIED, CI stays off.
+No owner runtime restart, paid model invocation or live acceptance implied.
+
 Current reconciliation — 2026-10-10, clean source
 `cd21d9e6bb8380340be33c448e8f37cf0864545f`: the ticket rows below now include the
 later full Python3.12/3.14, integrated web, scoped PostgreSQL/browser and approved
@@ -118,7 +127,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; native SQLite saved EN/VI report and later real-PG synthetic browser submission/completion/cancellation/new-attempt gates have separate PASS receipts (HANDOFF), not full live-journey acceptance. Integrated web build/lint/225 tests PASS at faf290a; rendered pending-cancel source a6917d3 unchanged at cd21d9e. Professional complete live journey/final-report acceptance UNVERIFIED; valid live final report FAIL retained |
 | R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full Python3.14 at37c1a42 and3.12 at796c417 PASS:3306 tests+88 subtests each, 2 optional skips UNVERIFIED; original FAILs retained. Backend source unchanged at cd21d9e; integrated web225 PASS atfaf290a, not new full execution at current SHA. Fresh noneditable3.12 smoke PASS; remaining supported runtime matrix UNVERIFIED. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full Python3.10 atc0268c7,3.12 at796c417 and additional3.14 at37c1a42 PASS:3306 tests+88 subtests each,2 optional skips UNVERIFIED; original FAILs retained. Fresh noneditable3.10/3.12 installation/smoke PASS; original matrix3.11/3.13 still UNVERIFIED, CI stays disabled. Integrated web225 PASS atfaf290a and source comparisons retained, not new rendered/full-web executions at current SHA. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
 | R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS redacted receipts/Draft PR7 and approved encrypted local paired backup/password reopen/source0010→0018 migration at eae0a6c, original history/artifacts preserved. Fresh-target restore/session fencing, cloud transfer, PostgreSQL operator rollout and fresh browser/authorized restart remain UNVERIFIED; no worker/API restart implied. Final R01–R14 acceptance/release UNVERIFIED, not an owner-approved deferral |
 
 Overall goal is not complete. The previous extra BTC execution failed report
