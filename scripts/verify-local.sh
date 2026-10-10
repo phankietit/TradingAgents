@@ -4,9 +4,19 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 mode="${1:-local}"
-if [[ $# -gt 1 || ( "$mode" != local && "$mode" != --postgres ) ]]; then
-  echo 'Usage: bash scripts/verify-local.sh [--postgres]' >&2
+if [[ "$mode" != local && "$mode" != --postgres ]]; then
+  echo 'Usage: bash scripts/verify-local.sh [local|--postgres] [--focused <pytest arguments...>]' >&2
   exit 2
+fi
+[[ $# == 0 ]] || shift
+focused=0
+if [[ $# -gt 0 ]]; then
+  if [[ "$1" != --focused || $# -lt 2 ]]; then
+    echo 'Focused verification requires --focused followed by pytest arguments.' >&2
+    exit 2
+  fi
+  focused=1
+  shift
 fi
 python_bin="${PYTHON_BIN:-.venv/bin/python}"
 if [[ "$mode" == --postgres ]]; then
@@ -27,6 +37,15 @@ git status --short
 "$python_bin" --version
 "$python_bin" -m ruff check .
 "$python_bin" -m pip check
-"$python_bin" -m pytest -q --disable-warnings
+if [[ "$focused" == 1 ]]; then
+  echo 'Focused local gate only; not the full regression gate.'
+  "$python_bin" -m pytest -q --disable-warnings "$@"
+else
+  "$python_bin" -m pytest -q --disable-warnings
+fi
 git diff --check
-echo 'PASS: local commands. Skipped tests remain UNVERIFIED; this is not release approval.'
+if [[ "$focused" == 1 ]]; then
+  echo 'PASS: focused local commands only. Skips remain UNVERIFIED; no full-regression or release claim.'
+else
+  echo 'PASS: local commands. Skipped tests remain UNVERIFIED; this is not release approval.'
+fi

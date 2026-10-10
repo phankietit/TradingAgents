@@ -1,0 +1,70 @@
+"""Full snapshot-bound engine replay QA; never rewrites or registers user history."""
+import argparse
+import json
+import os
+import subprocess
+from uuid import UUID
+
+from dotenv import load_dotenv
+
+load_dotenv('/Volumes/Data/Project/TradingAgents/.env', override=False)
+
+from tradingagents.default_config import DEFAULT_CONFIG
+from tradingagents.platform.analysis import AnalysisEngine, AnalysisRequest
+from tradingagents.platform.analysis.observer import ResearchObserver
+from tradingagents.platform.analysis.snapshots import load_snapshot_context
+from tradingagents.platform.artifacts import ArtifactService, LocalArtifactStore
+from tradingagents.platform.persistence import Database, PlatformRepository
+from tradingagents.platform.persistence.models import ArtifactRow
+
+parser = argparse.ArgumentParser()
+parser.add_argument('asset', choices=['AAPL', 'BTC'])
+args = parser.parse_args()
+parent_id = UUID({'AAPL':'12673674-0609-531e-b41f-e87f81c4832a',
+                  'BTC':'3215c517-c475-5627-9f27-50a7820fa00f'}[args.asset])
+candidate = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+if subprocess.check_output(['git', 'status', '--porcelain'], text=True).strip():
+    raise RuntimeError('A clean candidate is required for full replay QA')
+database = Database(os.environ['TRADINGAGENTS_DATABASE_URL'])
+store = LocalArtifactStore(os.environ['TRADINGAGENTS_ARTIFACT_ROOT'])
+with database.session() as session:
+    row = session.get(ArtifactRow, parent_id)
+    repository = PlatformRepository(session, artifact_store=store)
+    artifacts = ArtifactService(store, repository)
+    run = repository.get_run(row.run_id, row.owner_id)
+    context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst)
+    instrument = repository.get_instrument(run.instrument_id)
+database.dispose()
+assert run.llm_provider == DEFAULT_CONFIG['llm_provider']
+assert run.quick_model == DEFAULT_CONFIG['quick_think_llm']
+assert run.deep_model == DEFAULT_CONFIG['deep_think_llm']
+events = []
+def emit(kind, payload):
+    events.append({'event_type':kind, **payload})
+    if kind in ('stage.started', 'stage.completed'):
+        print(json.dumps({'asset':args.asset, 'event':kind, 'stage':payload.get('stage')}), flush=True)
+observer = ResearchObserver(check_cancelled=lambda:None, emit=emit)
+config = {**DEFAULT_CONFIG, 'output_language':'English and Vietnamese',
+    'data_cache_dir':str(store.root / 'worker-runtime' / 'cache'),
+    'results_dir':str(store.root / 'worker-runtime' / 'reports')}
+result = AnalysisEngine(base_config=config).analyze(AnalysisRequest(
+    instrument=instrument, analysis_date=run.analysis_as_of.date(),
+    selected_analysts=run.selected_analysts, snapshot_context=context,
+    execution_observer=observer))
+state = result.final_state
+receipt = {'kind':'full_graph_replay_qa_only', 'candidate_sha':candidate,
+    'asset':args.asset, 'parent_report_id':str(parent_id),
+    'selected_analysts':list(run.selected_analysts),
+    'source_as_of':run.analysis_as_of.isoformat(),
+    'snapshot_ids':[str(value) for value in run.snapshot_ids],
+    'validation_issues':list(result.validation_issues),
+    'decision_payload':result.decision_payload.model_dump(mode='json') if result.decision_payload else None,
+    'canonical_research':state.get('structured_decision'),
+    'structured_diagnostics':state.get('structured_diagnostics', []),
+    'research_sections':{key:state.get(key, '') for key in ('market_report','news_report','sentiment_report',
+        'fundamentals_report','investment_plan','trader_investment_plan')},
+    'execution':observer.receipt(), 'events':events}
+blob = store.put_json(receipt)
+print(json.dumps({'asset':args.asset, 'candidate':candidate, 'artifact':blob.storage_key,
+    'validation_issues':list(result.validation_issues), 'has_decision':result.decision_payload is not None,
+    'usage':observer.receipt()['usage']}), flush=True)

@@ -19,8 +19,11 @@ from tradingagents.agents.utils.structured import (
 )
 
 
-def create_trader(llm):
-    structured_llm = bind_structured(llm, TraderProposal, "Trader")
+def create_trader(llm, *, research_only=False):
+    from tradingagents.agents.research_schemas import SnapshotTraderProposal
+
+    schema = SnapshotTraderProposal if research_only else TraderProposal
+    structured_llm = bind_structured(llm, schema, "Trader")
 
     def trader_node(state, name):
         company_name = state["company_of_interest"]
@@ -84,18 +87,29 @@ def create_trader(llm):
             },
         ]
 
+        diagnostics = list(state.get("structured_diagnostics", []))
+        if research_only:
+            from tradingagents.agents.utils.research_scope import RESEARCH_SCOPE
+
+            messages[0]["content"] += "\n" + RESEARCH_SCOPE
+            messages[1]["content"] = messages[1]["content"].replace(
+                "sized by how strong the case is", "qualified by evidence strength")
+            messages[1]["content"] += "\nPosition Sizing must be null; no execution instruction is authorized."
         trader_plan = invoke_structured_or_freetext(
             structured_llm,
             llm,
             messages,
             render_trader_proposal,
             "Trader",
+            repair_schema=schema if research_only else None,
+            diagnostics=diagnostics,
         )
 
         return {
             "messages": [AIMessage(content=trader_plan)],
             "trader_investment_plan": trader_plan,
             "sender": name,
+            "structured_diagnostics": diagnostics,
         }
 
     return functools.partial(trader_node, name="Trader")

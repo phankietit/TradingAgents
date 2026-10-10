@@ -1,7 +1,39 @@
-# M4 native-code design specification
+# Research workspace design specification
+
+## Operational research flow
+
+Creating research is a dedicated workspace, not a form above an unrelated old
+report. Selecting a saved run retains its exact identity in the URL; a missing
+run never silently opens a different result. Read-only progress refreshes retain
+the previous display while fetching, clear it on error and clear it immediately
+when identity changes. Approval/control reads retain their fail-closed behavior.
+
+Preparation uses one instrument/time/report-language row and a responsive grid
+for independent optional sources. Choose saved sources opens, scrolls to and
+focuses the native evidence-inspector summary; it does not fetch data, select
+evidence, change coverage or authorize AI. Coverage and current-data limitations
+remain visible. The source grid collapses to one column on narrow viewports.
+
+Progress groups actual events into Evidence prepared, Research and challenge,
+Report preparation and Your decision. Only events from the latest attempt count.
+There is no invented percentage or ETA. Processing complete means a report is
+available, not that validation or portfolio approval passed.
+
+Reports use Summary, Price history, Research detail and Verification navigation.
+The default reader view presents the financial assessment and saved EN/VI prose;
+agent transcripts, JSON, hashes and token receipts are drilldowns. Material
+validation/coverage limitations remain visible. Decisions reuse the same report
+instead of repeating an English-only thesis above the bilingual reader.
+Review readiness and the existing explicit approve/reject actions appear before
+the long saved report. Missing risk checks and unsuccessful/mismatched research
+remain visible and disable approval; backend authorization is unchanged. Source
+and policy drilldowns stay separate. The embedded report does not link back to
+the same decision, and uses a single report heading. Reader summaries avoid nested
+lead/risk cards and preserve reading width on narrow screens; coverage warnings
+remain above the summary. These are scoped improvements, not overall UX acceptance.
 
 Owner chose direct code design, no Image Gen. This is the implementation brief,
-not evidence of rendered or functional UI. Reference screenshots will be captured
+not by itself evidence of rendered or functional UI. Reference screenshots are captured
 from the actual browser as each complete surface is implemented.
 
 ## Owner acceptance requirement: finance-first, not developer-first
@@ -48,30 +80,33 @@ including loading/empty/error/stale states. A passing build or functional flow
 alone does not satisfy this presentation requirement. Direct code design only;
 no Image Gen, paid service, new provider or public deployment is authorized.
 
-## Layout and visual system
+## Layout and visual system (R10–R12, 2026-09-27)
 
-- Theme: neutral near-black canvas `#0b0e13`, rail `#10151c`, raised surface
-  `#151c25`, dividers `#283342`, primary text `#e7edf5`, secondary `#a0afc1`.
-- Accent: cool blue `#80b7ff`; positive `#6bd7af`, warning `#efc16d`, negative
+- Reference: owner's Linkpolish, adapted to a financial workspace, not copied
+  as a landing page. No image generation or remote font dependency.
+- Theme: charcoal canvas `#111211`, rail `#141614`, raised surface
+  `#181a18`, dividers `#2c2e2b`, primary text `#ecece8`, secondary `#989c96`.
+- Accent: warm-white `#e4e8d9`, muted sage for charts; positive `#6bd7af`, warning `#efc16d`, negative
   `#ff8f99`. Never convey quality, rating or policy result by color alone.
 - Typography: system sans UI, system monospace for IDs and tabular numeric values.
-  Base 14px/1.5, table 13px, labels 12px, section 18px, page title 28px. Controls
+  Base 15px/1.6, table 13px, labels 13px, section 18px, page title 30–42px. Controls
   explicitly sized; no web-font network request. Minimum readable narrow UI 14px.
 - Spacing: 4/8/12/16/24/32px. Borders 1px, controls radius 6px, major regions
   mostly square/open with dividers. Avoid nested panels and decorative gradients.
-- Desktop: 208px navigation rail, main header 80px, 24px gutters; Markets uses
+- Desktop: 216px navigation rail, spacious main header and 44px gutters; Markets uses
   instrument list 280px plus flexible chart/detail. Analysis and Decisions use
   list/detail; Portfolio uses full-width positions table and valuation summary.
 - At <=900px, rail becomes top navigation; instrument/run lists collapse above
   detail. At <=600px, controls wrap and forms become one column. Tables stay in
   labelled horizontal scroll regions. No document-wide horizontal overflow.
-- Focus ring: 2px blue, offset 3px. Reduced motion supported; no animated prices,
+- Focus ring: 2px warm-white, offset 3px. Reduced motion supported; no animated prices,
   pulse indicators, fake connection status or decorative loaders.
 
 ## Information architecture and native component inventory
 
 Shell: text wordmark TradingAgents, Markets/Analysis/Portfolio/Decisions links,
-owner account/logout control, page heading and contextual action. No hero/kicker.
+owner account/logout control, page heading and contextual action. A restrained
+workspace eyebrow is not a marketing hero.
 Secondary text states “Local research workspace” and “Decision support · No order
 execution” where scope is useful, not as marketing badges.
 
@@ -111,6 +146,12 @@ parallel; run creation and approval are explicit mutation events, never effects.
 Reports render plain text or a strictly safe Markdown renderer with no raw HTML;
 arbitrary source URLs do not execute or embed remote content. Evidence IDs/hashes
 are details, not information users must type to navigate routine workflows.
+Saved reports include the exact snapshot history (1M/3M/1Y/all with keyboard
+inspection), source lag, research validity and a readable saved-language view.
+Invalid JSON responses stay in an explicitly unvalidated disclosure, not the
+main report body. Original analyst/debate sections are inspectable; they remain
+intermediate arguments, not approved conclusions. Portfolio controls collapse
+when reading research; absent holdings never display fabricated zero weights.
 
 Dev origin: http://127.0.0.1:5173; Vite proxy to local API with the browser Origin
 preserved for backend validation. Bind both servers to loopback, exact origin,

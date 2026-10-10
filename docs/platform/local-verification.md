@@ -39,6 +39,54 @@ Never use an existing application/owner/production database. Follow machine
 storage rules before starting containers, and remove only the task-owned
 disposable container after verification. The script does not manage its lifecycle.
 
+Alternatively, the repository-owned helper creates a labelled disposable
+PostgreSQL container, overrides any inherited database URL with its own URL,
+and removes only that container when the gate exits:
+
+```sh
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh
+```
+
+It requires an existing Docker runtime and cached `postgres:16-alpine` image;
+it does not install/start a runtime or accept an existing application database.
+On the designated Mac, check `codex-storage status` first and put per-command
+`TMPDIR` under the current managed external run. Do not inspect/print the generated
+database password or connection URL.
+
+The helper also exports its exact task-owned container identity for the synthetic
+paired PostgreSQL restore tests. Those tests refuse a bare `TEST_POSTGRES_URL`;
+they validate the ownership label and loopback port before creating fresh
+fixture source/target databases. They use cached PG16's real dump/restore tools,
+never restore over an existing DB, and leave container cleanup to the helper.
+Absent owned-container metadata means these restore cases skip (UNVERIFIED).
+No owner backup/restore or private runtime migration is authorized by this gate.
+
+### Focused diagnostics (not full regression)
+
+Both helpers optionally forward an explicit selection to pytest after the same
+Ruff/dependency checks. Omission of `--focused` retains the full suite:
+
+```sh
+bash scripts/verify-local.sh local --focused tests/test_local_verification_cli.py
+TA_ALLOW_TEST_DB_RESET=1 bash scripts/verify-postgres-local.sh --focused \
+  tests/test_native_recorder_spawn.py -k native_postgresql --tb=short -x
+```
+
+Missing selection or unmarked extra arguments fail before runtime/database
+allocation. Focused output is labelled separately; retain the exact selection,
+totals, skips, exit status, SHA and dirty state in the receipt. A focused PASS
+does not replace the baseline/full regression or release gates. Keep source
+unchanged while native checkpoint tests run: their real runtime fingerprint
+includes package source and installed dependency versions.
+
+The native PostgreSQL matrix reuses the original spawned graph/portfolio/API
+assertions for valid EN/VI/bilingual output, invalid VI and deterministic policy
+failures. It still uses synthetic SDK responses with HTTP refused. It proves
+local PostgreSQL persistence and authenticated approval mechanics, not live
+market/model reachability, investment quality, browser UX or recovery across
+every stop/cancel/expiry boundary. Outside an explicitly acknowledged disposable
+PostgreSQL environment these cases skip and remain UNVERIFIED.
+
 ## Evidence and remaining gates
 
 - Record exact SHA, runtime, commands, test totals, skips and limitations in the

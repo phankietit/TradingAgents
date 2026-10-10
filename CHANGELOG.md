@@ -8,7 +8,236 @@ Breaking changes within the 0.x line are called out explicitly.
 
 ## [Unreleased]
 
+### Fixed
+
+- Label failed/cancelled processing on decision review as the original attempt,
+  avoiding confusion when a separate continuation report exists. Preserve the
+  stored status and all approval/risk checks; the label grants no completion.
+
+- Offer an EN/VI reading shortcut only when a completed continuation's verified
+  report artifact is present. Move scroll/focus to the reading region without
+  route changes, new research requests or approval; tighten mobile analysis
+  picker/status spacing without hiding consent or evidence.
+
+- Keep a completed continuation's report and nonapproval warning prominent;
+  collapse its operational explanation, attempt selector and refresh controls
+  into an accessible EN/VI disclosure. Active, stopped and consent states retain
+  their full controls. Synthetic desktop/mobile QA is not live financial or
+  combined backend/browser acceptance.
+
+- Remove the canonical-report shortcut around Financial validation. Mechanically
+  valid legacy reports now receive the same bounded source-context review as
+  drafts; failed review cannot retain a publishable canonical decision. Preserve
+  all graph roles, report schema, source/authority checks and original caps. Draft
+  call count is unchanged; legacy canonical inputs normally add one review call,
+  with only the existing optional format repair. Live quality remains unverified.
+
+- Validate leased execution timestamps against a fresh clock after owner locks
+  rather than the pre-lock timestamp. A legitimate concurrent lease update no
+  longer looks future-dated. Preserve true-future, clock rollback, expiry, token
+  and original-budget checks; add deterministic PostgreSQL regression and safe
+  native failure diagnostics. Full and native stability acceptance remain pending.
+
+- Integrate the R08 recovery source into the R01 candidate after all frozen gates
+  ended. Add test-only predicate diagnostics for an unresolved PostgreSQL consent
+  idempotency refusal; keep real clock behavior, original assertion and all
+  production integrity/time/budget checks unchanged. Full regression is not PASS.
+
+- Consume complete paginated continuation progress, with incremental validated
+  cursors, coalesced polling, identity-change abort and fail-closed invalid-page
+  behavior. Handle long timelines without JavaScript argument-spread limits.
+  Clarify Vietnamese retained-time/call disclosures and distinguish failed
+  original processing from a completed linked report. Native combined acceptance
+  remains pending; no automatic analysis retry or new allowance.
+
+- Add explicit owner recovery controls to the web analysis reader: inspect saved
+  context, acknowledge all three retained-budget/cost/review disclosures, reserve
+  once, inspect linked status, request cancellation and display only verified
+  linked report IDs without rewriting failed original history. Original process
+  detail is collapsed. EN/VI desktop/mobile synthetic browser QA and all 158 web
+  tests pass; complete event-page consumption and native combined acceptance
+  remain unfinished. No automatic retry, provider call or default worker enablement.
+
+- Add bounded execution-linked progress reading for recovery UI groundwork.
+  Validate entry provenance and owner/run/attempt/time; return sanitized display
+  fields only, with explicit pagination and nonapproval status. Original terminal
+  events/history remain intact; browser integration and broader acceptance pending.
+
+- Add bounded owner continuation discovery and validated completed-report IDs
+  for browser recovery groundwork. Discovery never derives an SDK identity,
+  starts a model or changes original history; pagination cannot silently claim
+  full history. Recovery UI/event projection and integrated acceptance are pending.
+
+- Add explicit `--continuations` worker polling, durable preclaim refusal receipts
+  and authenticated continuation status/cancel APIs. Ordinary jobs take priority;
+  refused reservations stay excluded across restart. Completed status validates
+  the separate receipt/report; cancellation does not rewrite original history or
+  replenish allowance. Additive migration 0018 is operator-managed. Default
+  startup remains ordinary-only; browser controls/live acceptance remain pending.
+
+- Add trusted reserved-continuation preparation and a single-execution linked
+  worker operation without stored browser credentials. Rebuild actual original
+  identity before separate one-time claim, keep retained accounting, heartbeat,
+  original graph/receipt/report and human review gates; renewal uncertainty
+  blocks callbacks/publication. No blind retry, fresh budget, original-history
+  rewrite, default polling or browser dispatch enabled.
+
+- Add owner-authenticated original continuation preparation and explicit
+  disclosure/consent reservation API routes. Derive checkpoint identity on the
+  server, reject stale observations/client codecs, retain original allowance and
+  preserve terminal history. Short read-only authentication avoids holding the
+  ordinary session writer lock across SDK preparation. No default linked worker,
+  model dispatch, browser control or approval is enabled by these routes.
+
+- Add internal authenticated terminal checkpoint preparation and a retained
+  linked recording factory. Derive codec from original owner inputs and bounded
+  actual SDK identity, recheck authentication/source/accounting/private lease
+  and require a bound result publisher. No session last-seen/history/allowance
+  rewrite, automatic consent/model/dispatch, CLI or provider change. Default
+  continuation API/worker/UI remain off pending integration and acceptance.
+
+- Wire the draft default snapshot worker to original owner-scoped recording
+  inputs and a fresh per-run recording supervisor. Preserve exact Decimal
+  book/policy, full declared risk bytes, original observer/uncertainty fence and
+  parent lease/ACK boundaries. No silent recording fallback, CLI change or
+  automatic continuation. Full local recording baseline has passed; prior
+  preparation-deadline failures remain in dated receipts. Default owner
+  continuation and live/financial/editorial acceptance remain incomplete.
+
+- Add an internal spawn-isolated initialized SDK/graph identity prerequisite
+  for durable research recording. Bound JSON transfer and preparation lifetime,
+  preserve the original observer budget/cancellation/lease fence, reap owned
+  children and refuse cleanup/exit/transport failures. Do not close cached
+  HTTP pools in the worker. No model invocation, default worker activation,
+  CLI change, new provider or continuation authority is introduced.
+
+- Reuse the validated original social fact resolver during financial review.
+  Social quantities render source-owned EN/VI sample-count statements, preserving
+  user-label limitations and forbidding attached currency, probability or neutral
+  meanings. Canonical validation and localization preserve those statements;
+  social counts cannot attest monetary/percentage observations. Recognize unbound
+  `percent`/`per cent` spellings without misclassifying dates or indicator periods.
+  Original review/repair/debate and approval flow stay unchanged; local fixtures
+  are not live semantic acceptance.
+
+- Canonicalize role and JSON-object key order in the complete financial-review
+  source context so PostgreSQL durable reload does not change model prompts.
+  Preserve source record ordering and original values; no trace assertion,
+  checkpoint fingerprint, source admission or human-approval gate is weakened.
+
+- Supply complete selected immutable source records to the existing financial
+  review prompt, alongside fact bindings and the draft. Review instructions now
+  distinguish source facts, sampled opinions and unverified causal/predictive
+  hypotheses. No extra review call, source truncation or CLI change. This fixes
+  an input gap, not a deterministic proof of qualitative entailment; larger
+  context can increase input usage and live editorial acceptance remains open.
+
+- Compact analysis preparation into one instrument/time/language row and a
+  responsive source grid. Choose saved sources opens and focuses the existing
+  evidence inspector without fetching, selecting sources or authorizing AI.
+  Existing coverage warnings, source failures and explicit paid consent remain.
+
+- Keep decision review readiness and approval/rejection controls visible before
+  the saved report, with unchanged matching-run, policy and backend authority.
+  Remove duplicate report headings and self-navigation inside Decisions; retain
+  Analysis's bound decision link. Reduce nested report panels and narrow padding
+  while preserving coverage warnings, saved EN/VI text and verification details.
+
+- Add independent authenticated preparation of the original StockTwits/Reddit
+  public feeds, immutable full-text current snapshots and owner-bound Sentiment
+  input. Preserve publication/edit cutoffs, sample-versus-probability distinctions,
+  separate failed-source audits and EN/VI coverage. Bounded streamed/child transport
+  refuses malformed, ambiguous, unsafe or oversized data; no silent excerpt cap.
+  Web multi-source selection preserves the other feed and resets paid consent.
+  No AI call during preparation, CLI default change, new provider, graph role cut,
+  historical rewrite or approval authority. Local evidence is not live finance.
+
+- Add authenticated current FRED series/window preparation with bounded streamed
+  transport and supervised/reaped acquisition, immutable owner snapshots and
+  distinct failure states. Web economic-context selection preserves independent
+  headlines and other indicators, resets paid consent and never starts AI itself.
+  CLI defaults, historical records, research flow, policy and approval stay unchanged.
+  Synthetic local evidence does not establish live FRED or financial acceptance.
+
+- Add a structured current-vintage Yahoo news collector with publication and
+  retrieval provenance and explicit failure/coverage states. This is adapter
+  groundwork; web collection, persistence and full-source analyst parity are
+  not yet implemented by this change. Legacy CLI behavior is unchanged.
+
+- Validate complete MiniMax JSON text responses against the bound schema before
+  requesting format repair; keep publication gates and retry/usage accounting.
+  Reject prose fragments, failed tool-call recovery, duplicate JSON fields and
+  non-JSON numeric constants. No provider/model or research-flow change.
+- Translate research in identified blocks, preserving source-owned sections,
+  order and per-block quantities. Reject omitted/duplicate blocks and reproduced
+  literal Vietnamese calques within the existing bounded repair budget.
+- Render percentage relationships from verified fact IDs as complete EN/VI
+  statements; reject numeric anchors reattached to arbitrary comparison prose.
+  Preserve research interpretations and historical reports. Live acceptance is
+  not implied by local compiler/presentation regression tests.
+- Use one numeric lexer for protected translation and parity checks, including
+  indicator periods, dates and ranges; preserve strict rejection of changed values.
+- Compile final report quantities from immutable snapshot bindings, with a
+  separate bounded financial validation stage and protected EN/VI presentation.
+  Preserve original research/debate flow and rejected reports for audit.
+- Distinguish unused, missing, duplicate and unresolved report quantity bindings
+  in bounded repair feedback without accepting malformed or unsupported output.
+  Separate input instrument metadata from permitted report fields on initial
+  and repair calls; keep schema rejection fail-closed.
+- Reject reproduced percentage-direction/denominator mismatches before report
+  compilation, and known Vietnamese volatility/volume/liquidity and
+  crossover/divergence substitutions. These bounded checks are not a claim of
+  complete semantic verification; financial human review remains required.
+- Snapshot facts v4 no longer divide dimensionless RSI by the quote-currency
+  close. Raw RSI and valid price-unit ratios remain available; old saved reports
+  and their numerical evidence are not rewritten.
+- Separate analysis setup, actual-event progress and report reading; add
+  summary/history/research/verification sections and a compact mobile run picker.
+  Read-only polling no longer blanks the report, and deep links retain run identity.
+
+- Preserve quantitative references on rejected reports, distinguish reciprocal
+  percentage denominators in snapshot facts, and allow ten minutes for long
+  final model responses without reducing flow.
+- Preserve daily session labels separately from candle close instants in v1.1
+  Yahoo v4 snapshots without rewriting older evidence. Add full-history,
+  snapshot-bound stockstats tools and deterministic calendar return endpoints.
+- Align snapshot-mode structured schemas with the decision consumer, use one
+  bounded JSON format repair, and retain redacted field-level diagnostics.
+  Apply research authority constraints throughout the existing graph.
+- Emit real graph-stage events, report provider token usage when supplied,
+  check cancellation between model calls, and reconcile retry-wait cancellation
+  without rewriting prior artifacts.
+- Introduce a restrained research workspace, safe Markdown, immutable-report
+  price charts, bilingual saved-report views and separate portfolio impact.
+  Candidate validation remains in progress; see the remediation ledger.
+- Allow owner-approved latest-available crypto research with at most one missing
+  trailing daily candle, preserving internal-gap rejection and current retrieval
+  time. Disclose the actual cutoff in source metadata, UI and bilingual reports;
+  never fill missing prices or reuse delayed snapshots as current evidence.
+- Show bounded price-preparation progress and automatic retry countdowns before
+  a final source failure. Separate local cooldown from Yahoo rate limits, retain
+  the source cause, and support cancellation without starting paid analysis.
+- Align web price acquisition to the original engine's five-calendar-year
+  history window via a shared constant; retain old one-year snapshots without
+  reusing them as complete history. This does not claim full CLI/tool parity.
+- Connect the local analysis form to bounded Yahoo daily-price preparation,
+  owner-scoped verified reuse and immutable snapshots. Explain missing data,
+  coverage failures, paid-AI consent and queued-worker state in English/Vietnamese.
+  Current bootstrap stocks/ETFs, cash indices and BTC/ETH are supported; NQ/ES
+  preparation and automatic non-price ingestion remain unavailable.
+- Honor explicit provider, quick-model and deep-model environment settings in
+  the local API so new run manifests retain the operator's model selection.
+  Existing runs and API defaults are unchanged.
+
 ### Added
+
+- Add English/Vietnamese UI localization, persistent VI/EN controls and localized
+  financial display formatting without changing saved amounts, UTC cutoffs or
+  risk/approval states.
+- Add immutable per-run `report_language` selection (English, Vietnamese or
+  English–Vietnamese), worker propagation and schema-preserving bilingual
+  narrative instructions. Existing reports remain unchanged; no translation
+  service or automatic paid calls are introduced.
 
 - Add a local React/TypeScript Web UI with Markets, Analysis, Portfolio and
   Decisions workspaces, owner sessions, same-origin CSRF and opt-in built-asset

@@ -1,0 +1,111 @@
+# R07 summary provenance — implementation design
+
+Status: V2 generation/review/publication integrated into the R01–R14 candidate;
+side local/native14 regression verified, integrated native/full/live acceptance
+pending. Not release acceptance. Historical red receipts show an
+uncited external cause was accepted when unrelated news was available. The
+summary regression now supplies explicit synthetic model citations and retains
+the original refusal/conditional assertions, adding checks that refusal is for
+unsupported causality, not merely absent schema fields. See [HANDOFF](../../HANDOFF.md).
+Do not fix this by deleting the summary, selecting every available source,
+keyword-matching a guessed citation or expanding a vocabulary blacklist.
+
+## Required change
+
+Generated web research must bind summary statements to their actual immutable
+snapshot references, as thesis/risk/invalidation blocks already do. The original
+CLI `PortfolioDecision` remains unchanged. Introduce an explicit versioned web
+report contract: new generation/review output uses the new version, while stored
+legacy reports retain a separately readable original representation. The exact
+schema uses required `report_contract_version: "2.0"` and `summary_evidence`
+(complete summary text plus actual snapshot IDs). `SnapshotReportDraftV2` and
+`CanonicalSnapshotDecisionV2` preserve the provider tool name `PortfolioDecision`.
+The legacy schema and original CLI contract remain unchanged.
+
+`compile_report_v2` refuses missing V2 fields, including removal of both
+fields. Lossless quantity substitution preserves exact summary/evidence text
+parity and requires each summary quantity's source among its supplied references.
+The version-aware reader accepts explicit V2 or separately identified legacy
+reports, rejecting unknown explicit versions; legacy reading is not permission
+for new output to downgrade. Canonical validation checks supplied summary IDs,
+and the known price-only motive guard uses the summary's actual citations.
+Snapshot Portfolio Manager requires V2. The bounded financial node accepts V2
+or separately readable legacy input, but ALL newly reviewed output requires V2:
+legacy input cannot authorize legacy output. It retains the original rejected candidate
+and original structured-attempt/one-repair bound. Presentation and checkpoint
+transport understand explicit V2, including a separately localized saved report,
+and retain exact summary sources. Canonical review input still requires null
+localization. Unknown explicit versions or invalid metadata refuse checkpoint
+decoding rather than downgrade. Safe diagnostic fields include the schema names,
+never supplied private values. These are component/transport capabilities, not
+default graph activation or general semantic/translation proof. Explicit V2 graph
+results now recheck canonical references/known price-only attributions at the
+adapter boundary and carry summary support into the existing evidence graph.
+The worker evidence boundary independently compares V2 metadata, narrative and
+actual claim/source mappings; inconsistent/tampered metadata cannot grant data
+quality or decision readiness. Existing risk and owner approval stay authoritative.
+Worker fixtures verify V2 report/evidence readback and ordinary human approval,
+not native full-role/live/browser acceptance. Generation and full publication/
+approval integrity review plus original-role integrated/native gates must verify
+before integration/acceptance; retain rejected original
+inputs and immutable legacy history. The uncited-summary default-flow red test
+remains authoritative.
+
+The model supplies summary prose and citations. The deterministic compiler
+projects prose and references losslessly into canonical text plus versioned
+summary evidence; it must never infer support from the union of thesis citations,
+model memory, related words or a source's mere availability. Retain full source
+records and original opposing cases/uncertainty. Monetary/percentage placeholders
+still resolve through the same verified quantities/application-owned statements.
+
+Canonical validation must require exact summary/evidence parity and eligible
+known snapshot IDs for the new contract. Missing, duplicate, foreign, unknown or
+misbound support refuses publication, rather than fall back to the old format.
+The existing financial review receives the complete actual cited records;
+mechanical parity is not causal entailment. Known price-only attribution checks
+must use summary citations just as material thesis citations. Mixed citations
+still need financial/semantic review; source presence is not proof of causality.
+
+Keep the original roles, debates, financial review, translation, deterministic
+risk and human approval. Preserve one structured attempt/one repair; no model
+loop, provider/model switch, new allowance or reduction of data. Invalid output
+stays unvalidated/review-only. Model-generated confidence remains uncalibrated.
+New fields can affect provider schema/repair frequency; measure locally, then
+obtain explicit fresh live-run approval, not silently consume paid retries.
+
+## Historical and reader boundary
+
+Do not rewrite, backfill, automatically assign citations to or relabel stored
+reports/checkpoints. Legacy reading must preserve exact bytes, original schema,
+status and evidence; it does not certify summary entailment. New review output
+may use the new contract only as a separately validated result retaining its
+original rejected input, never an in-place repair of history. No fallback may
+publish new incomplete output as a legacy success. Existing approval integrity,
+policy and explicit owner gates remain authoritative.
+
+Rendered EN/VI reports must preserve complete financial meaning and quantity
+bindings. Summary source details should be readable financial provenance, not
+raw UUIDs in prose; technical identifiers can remain in authenticated expanded
+details. Saved-language switching creates no model job. Native fingerprint
+changes must refuse incompatible old checkpoint restoration, never rewrite its
+fingerprint or grant fresh allowance.
+
+## Acceptance before integration
+
+- Red uncited-summary cause withheld with price-only and mixed available sources.
+- New sourced factual summary and explicitly unverified scenario remain eligible;
+  unrelated source availability does not change cited-source support.
+- Compiler preserves every summary statement/reference through quantity
+  substitution; missing/unknown/misbound IDs and legacy-format output escape
+  refuse, without invented citations or truncation.
+- Legacy stored report reading preserves bytes/schema/history; new output cannot
+  bypass validation by claiming the legacy version.
+- Full original-role graph and bounded repair preserve trace, budgets and
+  immutable rejected candidate. EN/VI representation keeps meaning/numbers.
+- Authenticated API/artifact/browser source readback respects owner isolation and
+  approval. No report reading, language switch or source expansion dispatches AI.
+- Exact-source focused, native/integrated/full regression and separately approved
+  live BTC/AAPL finance/editorial acceptance. NQ remains owner-BLOCKED.
+
+All are requirements, not passed receipts. General semantic/translation quality,
+operational restore and whole R01–R14 acceptance remain open.

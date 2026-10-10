@@ -10,6 +10,36 @@ from tests.test_platform_api import (
 from tradingagents.platform.jobs import DurableJobQueue
 
 
+def test_cancel_retry_wait_updates_active_run_and_reload_projection(api_context):
+    from datetime import timedelta
+    from uuid import UUID
+
+    from tradingagents.contracts import RunStatus
+    from tradingagents.platform.persistence import PlatformRepository
+
+    client = api_context['client']
+    _login(client)
+    accepted = client.post('/api/v1/runs',
+        headers=_csrf_headers(client, **{'Idempotency-Key': 'retry-cancel'}),
+        json=_run_payload(api_context['instrument'].instrument_id))
+    assert accepted.status_code == 202
+    run_id = accepted.json()['run']['run_id']
+    owner_id = UUID(accepted.json()['run']['owner_id'])
+    with client.app.state.database.session() as session:
+        queue = DurableJobQueue(session)
+        job = queue.claim('test-retry-worker', lease_for=timedelta(minutes=1), now=NOW)
+        assert str(job.run_id) == run_id
+        repo = PlatformRepository(session)
+        run = repo.get_run(UUID(run_id), owner_id)
+        repo.save_run(run.model_copy(update={'status': RunStatus.RUNNING, 'started_at': NOW}))
+        queue.fail(job.job_id, 'test-retry-worker', error_code='TEST_TRANSPORT',
+                   retry_after=timedelta(minutes=1), now=NOW)
+    cancelled = client.post(f'/api/v1/runs/{run_id}/cancel', headers=_csrf_headers(client))
+    assert cancelled.json()['status'] == 'cancelled'
+    assert client.get(f'/api/v1/runs/{run_id}').json()['status'] == 'cancelled'
+    assert client.get(f'/api/v1/runs/{run_id}/job').json()['status'] == 'cancelled'
+
+
 def test_run_job_discovery_is_owner_scoped_and_minimal(api_context):
     client = api_context["client"]
     other = api_context["other_run"]

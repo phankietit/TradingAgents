@@ -243,6 +243,35 @@ def test_expired_lease_resumes_then_fails_after_attempt_budget(tmp_path):
     database.dispose()
 
 
+@pytest.mark.parametrize("event_type", [RunEventType.RESEARCH_EXECUTION_STARTED,
+    RunEventType.STAGE_STARTED, RunEventType.MODEL_USAGE])
+@pytest.mark.parametrize("failure_mode", ["lease", "post_handler_error"])
+def test_expired_research_execution_cannot_blindly_restart_even_with_attempts_remaining(tmp_path, event_type, failure_mode):
+    database, owner_id, run = _database(tmp_path)
+    queued = _enqueue(database, owner_id, run, max_attempts=3)
+    with database.session() as session:
+        DurableJobQueue(session).claim("old-worker", lease_for=timedelta(seconds=10), now=NOW)
+        RunEventStore(session).append(owner_id=owner_id, run_id=run.run_id,
+            event_type=event_type, occurred_at=NOW, payload={"attempt": 1})
+    with database.session() as session:
+        queue = DurableJobQueue(session)
+        recovered = (queue.recover_expired(now=NOW + timedelta(seconds=11)) if failure_mode == "lease"
+            else (queue.fail(queued.job_id, "old-worker", error_code="HANDLER_ERROR", retryable=True,
+                now=NOW + timedelta(seconds=1)),))
+        assert len(recovered) == 1
+        assert recovered[0].job_id == queued.job_id
+        assert recovered[0].status is JobStatus.FAILED
+        assert recovered[0].error_code == ("RESEARCH_RECOVERY_REVIEW_REQUIRED" if failure_mode == "lease"
+            else "RESEARCH_EXECUTION_FAILED")
+        assert recovered[0].attempt == 1 and recovered[0].max_attempts == 3
+        assert DurableJobQueue(session).claim("new-worker", lease_for=timedelta(seconds=10),
+            now=NOW + timedelta(hours=1)) is None
+        with pytest.raises(JobLeaseError):
+            DurableJobQueue(session).heartbeat(queued.job_id, "old-worker",
+                lease_for=timedelta(seconds=10), now=NOW + timedelta(seconds=12))
+    database.dispose()
+
+
 @pytest.mark.unit
 def test_heartbeat_extends_the_current_lease(tmp_path):
     database, owner_id, run = _database(tmp_path)

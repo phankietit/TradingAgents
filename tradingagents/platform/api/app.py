@@ -6,12 +6,14 @@ import asyncio
 import hashlib
 import json
 import logging
+import math
 import re
 import secrets
 import time
 from collections.abc import Iterator
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta
+from threading import Lock
 from typing import Annotated
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
@@ -92,6 +94,9 @@ from .schemas import (
     LoginRequest,
     LoginResponse,
     OwnerResponse,
+    PrepareDataResponse,
+    PrepareMacroRequest,
+    PrepareSocialRequest,
     RunAcceptedResponse,
     RunCreateRequest,
     RunJobStateResponse,
@@ -119,7 +124,8 @@ def _now(settings: ApiSettings) -> datetime:
     return value.astimezone(UTC)
 
 
-def _config_hash(settings: ApiSettings, analysts: tuple[str, ...]) -> str:
+def _config_hash(settings: ApiSettings, analysts: tuple[str, ...], report_language: str | None = None,
+                 execution_limits=None) -> str:
     value = json.dumps(
         {
             "llm_provider": settings.llm_provider,
@@ -127,6 +133,9 @@ def _config_hash(settings: ApiSettings, analysts: tuple[str, ...]) -> str:
             "deep_model": settings.deep_model,
             "prompt_version": settings.prompt_version,
             "selected_analysts": analysts,
+            **({"report_language": report_language} if report_language is not None else {}),
+            **({"execution_limits": execution_limits.model_dump(mode="json")}
+               if execution_limits is not None else {}),
         },
         separators=(",", ":"),
         sort_keys=True,
@@ -237,6 +246,24 @@ def create_app(settings: ApiSettings) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.database = database
+    # One bounded acquisition at a time on the private, single-process server.
+    from tradingagents.dataflows.platform_prices import fetch_daily_prices
+    app.state.fetch_daily_prices = fetch_daily_prices
+    from tradingagents.dataflows.platform_news import fetch_current_yahoo_news
+    app.state.collect_yahoo_news = fetch_current_yahoo_news
+    from tradingagents.dataflows.platform_sec import fetch_current_sec_facts
+    app.state.collect_sec_facts = fetch_current_sec_facts
+    from tradingagents.dataflows.platform_fred import fetch_current_fred_series
+    app.state.collect_fred_series = fetch_current_fred_series
+    from tradingagents.dataflows.platform_social import fetch_current_social
+    app.state.collect_social = fetch_current_social
+    preparation_lock = Lock()
+    preparation_attempts: dict[tuple[UUID, UUID], float] = {}
+    preparation_failures: dict[tuple[UUID, UUID], str] = {}
+    news_attempts: dict[tuple[UUID, UUID], float] = {}
+    sec_attempts: dict[tuple[UUID, UUID], float] = {}
+    macro_attempts: dict[tuple[UUID, UUID, str, int], float] = {}
+    social_attempts: dict[tuple[UUID, UUID, str], float] = {}
     app.state.artifact_store = artifact_store
     app.state.settings = settings
     app.state.metrics = metrics
@@ -611,6 +638,454 @@ def create_app(settings: ApiSettings) -> FastAPI:
             ) from error
         return TimeSeriesResponse(snapshot=snapshot, view=view, benchmark_snapshot=benchmark_snapshot)
 
+    @app.post(f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-data",
+              response_model=PrepareDataResponse, tags=["market-data"])
+    def prepare_data(instrument_id: UUID, owner: CsrfOwnerDependency,
+                     session: SessionDependency) -> PrepareDataResponse:
+        from tradingagents.contracts import NormalizedTimeSeries
+        from tradingagents.dataflows.platform_prices import (
+            DATASET,
+            VENDOR,
+            PricePreparationError,
+            approved_symbol,
+            history_start,
+            session_closes,
+            validate_price_coverage,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        now = _now(settings)
+
+        def outcome(code, **kwargs):
+            key = (owner.owner_id, instrument_id)
+            if code in {"no_data", "stale", "coverage_gap", "rate_limited", "unavailable"}:
+                preparation_failures[key] = code
+            if code in {"ready", "invalid", "unsupported"}:
+                preparation_failures.pop(key, None)
+            elapsed = time.monotonic() - preparation_attempts.get(key, time.monotonic() - 60)
+            wait = max(0, math.ceil(60 - elapsed))
+            return PrepareDataResponse(status=code, analysis_as_of=_now(settings),
+                retry_after_seconds=wait if code != "ready" else 0,
+                last_failure=preparation_failures.get(key), **kwargs)
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            from datetime import timedelta
+            expected_closes = {close for close in session_closes(instrument, now).values()
+                               if history_start(now) <= close <= now - timedelta(hours=1)}
+            latest_close = max(expected_closes)
+            artifacts = ArtifactService(artifact_store, repository)
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.vendor != VENDOR or snapshot.dataset != DATASET
+                        or snapshot.source_end != latest_close
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                artifact = repository.get_snapshot_artifact(snapshot.snapshot_id, owner.owner_id)
+                if artifact is None or artifact.content_hash != snapshot.content_hash:
+                    return outcome("invalid")
+                try:
+                    loaded = artifacts.read(artifact.artifact_id, owner.owner_id)
+                    if loaded is None:
+                        return outcome("invalid")
+                    series = NormalizedTimeSeries.model_validate_json(loaded[1])
+                    if (series.instrument_id != instrument_id or series.dataset != DATASET
+                            or series.as_of != snapshot.as_of):
+                        return outcome("invalid")
+                    if not expected_closes.issubset({bar.timestamp for bar in series.bars}):
+                        continue
+                except (ValueError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            if time.monotonic() - preparation_attempts.get(key, float("-inf")) < 60:
+                return outcome("cooldown")
+            preparation_attempts[key] = time.monotonic()
+            # Release the authentication/read transaction before the network request.
+            session.close()
+            try:
+                series = app.state.fetch_daily_prices(instrument)
+            except PricePreparationError as error:
+                return outcome(error.code)
+            except Exception:
+                return outcome("unavailable")
+            retrieved_at = _now(settings)
+            if (series.instrument_id != instrument_id or series.dataset != DATASET
+                    or series.as_of > retrieved_at or series.as_of < now):
+                return outcome("invalid")
+            try:
+                coverage = validate_price_coverage(instrument,
+                    (bar.timestamp for bar in series.bars), now=series.as_of)
+            except PricePreparationError as error:
+                return outcome(error.code)
+            with database.session() as write_session:
+                write_repository = PlatformRepository(write_session)
+                snapshot = TimeSeriesSnapshotService(write_repository,
+                    ArtifactService(artifact_store, write_repository)).persist(
+                        owner_id=owner.owner_id, series=series, vendor=VENDOR,
+                        retrieved_at=retrieved_at, source_metadata=coverage)
+            return outcome("ready", snapshot=snapshot)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-news",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_news(
+        instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """Collect current Yahoo headlines as an independent, optional source."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_news import NewsCollection, NewsPreparationError
+        from tradingagents.dataflows.platform_prices import PricePreparationError, approved_symbol
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.news import NewsSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+        now = _now(settings)
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(
+                status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds,
+            )
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            artifacts = ArtifactService(artifact_store, repository)
+            service = NewsSnapshotService(repository, artifacts)
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (
+                    snapshot.dataset != "news"
+                    or snapshot.vendor != "yfinance"
+                    or snapshot.retrieved_at < now - timedelta(minutes=15)
+                    or snapshot_ineligibility(snapshot, instrument_id, now, 604800)
+                ):
+                    continue
+                try:
+                    service.load(
+                        owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now,
+                        max_age_seconds=604800,
+                    )
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            elapsed = time.monotonic() - news_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            news_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_yahoo_news(instrument)
+                collection = NewsCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, NewsCollection) else acquired
+                )
+            except PricePreparationError:
+                return outcome("unsupported")
+            except NewsPreparationError as error:
+                return outcome(error.code)
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (
+                collection.instrument_id != instrument_id
+                or collection.retrieved_at > _now(settings)
+            ):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = NewsSnapshotService(
+                        write_repository, ArtifactService(artifact_store, write_repository),
+                    ).persist(owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            if collection.quality_status is DataQualityStatus.OK:
+                return outcome("ready", snapshot=manifest)
+            return outcome(collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-macro",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_macro(
+        instrument_id: UUID, body: PrepareMacroRequest, owner: CsrfOwnerDependency,
+        session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """One current FRED series/window; no model, substitution or backdating."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.fred import FRED_TZ
+        from tradingagents.dataflows.platform_fred import MacroCollection, MacroPreparationError
+        from tradingagents.dataflows.platform_prices import PricePreparationError, approved_symbol
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.macro import MacroSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds)
+
+        try:
+            approved_symbol(instrument)
+        except PricePreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            vintage = now.astimezone(FRED_TZ).date() - timedelta(days=1)
+            start = vintage - timedelta(days=body.lookback_days)
+            service = MacroSnapshotService(repository, ArtifactService(artifact_store, repository))
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "macro" or snapshot.vendor != "fred"
+                        or snapshot.metadata.get("series_id") != body.series_id
+                        or snapshot.metadata.get("observation_start") != start.isoformat()
+                        or snapshot.metadata.get("observation_end") != vintage.isoformat()
+                        or snapshot.metadata.get("vintage_date") != vintage.isoformat()
+                        or snapshot.retrieved_at < now - timedelta(minutes=15)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=604800)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id, body.series_id, body.lookback_days)
+            elapsed = time.monotonic() - macro_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            macro_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_fred_series(instrument, body.series_id,
+                    lookback_days=body.lookback_days, analysis_as_of=now)
+                collection = MacroCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, MacroCollection) else acquired)
+            except MacroPreparationError as error:
+                return outcome(error.code if error.code in {"invalid", "unavailable"} else "unavailable")
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (collection.series_id != body.series_id or collection.analysis_as_of != now
+                    or collection.vintage_date != vintage or collection.observation_start != start
+                    or collection.retrieved_at > _now(settings)
+                    or any(getattr(collection, name) != getattr(instrument, name) for name in
+                        ("instrument_id", "canonical_symbol", "venue", "quote_currency", "timezone"))
+                    or collection.asset_class != instrument.asset_class.value):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = MacroSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            return outcome("ready" if collection.quality_status is DataQualityStatus.OK
+                else collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-social",
+        response_model=PrepareDataResponse, tags=["market-data"],
+    )
+    def prepare_social(instrument_id: UUID, body: PrepareSocialRequest,
+                       owner: CsrfOwnerDependency, session: SessionDependency) -> PrepareDataResponse:
+        """One original public feed, independent failure audit, no AI job."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_prices import PricePreparationError
+        from tradingagents.dataflows.platform_social import (
+            SocialCollection,
+            SocialPreparationError,
+            _scope,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.social import SocialSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds)
+
+        try:
+            scope = _scope(instrument, body.vendor)
+        except (PricePreparationError, SocialPreparationError):
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            service = SocialSnapshotService(repository, ArtifactService(artifact_store, repository))
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "social" or snapshot.vendor != body.vendor
+                        or snapshot.retrieved_at < now - timedelta(minutes=15)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 604800)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=604800)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id, body.vendor)
+            elapsed = time.monotonic() - social_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60-elapsed))
+            social_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_social(instrument, body.vendor, analysis_as_of=now)
+                collection = SocialCollection.model_validate(acquired.model_dump()
+                    if isinstance(acquired, SocialCollection) else acquired)
+            except SocialPreparationError as error:
+                return outcome("invalid" if error.code == "invalid" else "unavailable")
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (any(getattr(collection, name) != value for name, value in scope.items())
+                    or collection.requested_at != now or collection.retrieved_at > _now(settings)):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = SocialSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            return outcome("ready" if collection.quality_status is DataQualityStatus.OK
+                else collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
+    @app.post(
+        f"{API_PREFIX}/instruments/{{instrument_id}}/prepare-fundamentals",
+        response_model=PrepareDataResponse,
+        tags=["market-data"],
+    )
+    def prepare_fundamentals(
+        instrument_id: UUID, owner: CsrfOwnerDependency, session: SessionDependency,
+    ) -> PrepareDataResponse:
+        """Prepare AAPL SEC filed facts; no Yahoo fallback or historical backdating."""
+        from tradingagents.contracts import DataQualityStatus
+        from tradingagents.dataflows.platform_sec import (
+            SecCollection,
+            SecPreparationError,
+            _approved,
+        )
+        from tradingagents.platform.analysis.snapshots import snapshot_ineligibility
+        from tradingagents.platform.market_data.sec_facts import SecSnapshotService
+
+        repository = PlatformRepository(session)
+        instrument = repository.get_instrument(instrument_id)
+        if instrument is None:
+            raise HTTPException(status_code=404, detail="instrument not found")
+
+        def outcome(code, *, snapshot=None, reused=False, retry_after_seconds=0):
+            return PrepareDataResponse(
+                status=code, snapshot=snapshot, analysis_as_of=_now(settings),
+                reused=reused, retry_after_seconds=retry_after_seconds,
+            )
+
+        try:
+            _approved(instrument)
+        except SecPreparationError:
+            return outcome("unsupported")
+        if not preparation_lock.acquire(blocking=False):
+            return outcome("busy")
+        try:
+            now = _now(settings)
+            service = SecSnapshotService(
+                repository, ArtifactService(artifact_store, repository),
+            )
+            for snapshot in repository.list_owner_snapshots(instrument_id, owner.owner_id, limit=200):
+                if (snapshot.dataset != "fundamentals" or snapshot.vendor != "sec_edgar"
+                        or snapshot.retrieved_at < now - timedelta(hours=24)
+                        or snapshot_ineligibility(snapshot, instrument_id, now, 31536000)):
+                    continue
+                try:
+                    service.load(owner_id=owner.owner_id, snapshot_id=snapshot.snapshot_id,
+                        instrument_id=instrument_id, as_of=now, max_age_seconds=31536000)
+                except (ValueError, LookupError, ArtifactIntegrityError, OSError):
+                    return outcome("invalid")
+                return outcome("ready", snapshot=snapshot, reused=True)
+            key = (owner.owner_id, instrument_id)
+            elapsed = time.monotonic() - sec_attempts.get(key, float("-inf"))
+            if elapsed < 60:
+                return outcome("cooldown", retry_after_seconds=math.ceil(60 - elapsed))
+            sec_attempts[key] = time.monotonic()
+            session.close()
+            try:
+                acquired = app.state.collect_sec_facts(instrument)
+                collection = SecCollection.model_validate(
+                    acquired.model_dump() if isinstance(acquired, SecCollection) else acquired)
+            except SecPreparationError as error:
+                return outcome(error.code)
+            except ValueError:
+                return outcome("invalid")
+            except Exception:
+                return outcome("unavailable")
+            if (collection.instrument_id != instrument_id
+                    or collection.retrieved_at > _now(settings)):
+                return outcome("invalid")
+            try:
+                with database.session() as write_session:
+                    write_repository = PlatformRepository(write_session)
+                    manifest = SecSnapshotService(write_repository,
+                        ArtifactService(artifact_store, write_repository)).persist(
+                            owner_id=owner.owner_id, collection=collection)
+            except (ValueError, ArtifactIntegrityError):
+                return outcome("invalid")
+            except OSError:
+                return outcome("unavailable")
+            if collection.quality_status is DataQualityStatus.OK:
+                return outcome("ready", snapshot=manifest)
+            return outcome(collection.quality_status.value.lower(), snapshot=manifest)
+        finally:
+            preparation_lock.release()
+
     @app.get(
         f"{API_PREFIX}/instruments/{{instrument_id}}/snapshots",
         response_model=list[SnapshotDiscoveryResponse], tags=["instruments"],
@@ -672,7 +1147,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="instrument not found"
             )
-        config_hash = _config_hash(settings, payload.selected_analysts)
+        config_hash = _config_hash(settings, payload.selected_analysts, payload.report_language, payload.execution_limits)
         job_payload = {
             "instrument_id": str(instrument.instrument_id),
             "analysis_as_of": payload.analysis_as_of.astimezone(UTC).isoformat(),
@@ -681,6 +1156,10 @@ def create_app(settings: ApiSettings) -> FastAPI:
         }
         if payload.decision_inputs is not None:
             job_payload["decision_inputs"] = payload.decision_inputs.model_dump(mode="json")
+        if payload.report_language is not None:
+            job_payload["report_language"] = payload.report_language
+        if payload.execution_limits is not None:
+            job_payload["execution_limits"] = payload.execution_limits.model_dump(mode="json")
         queue = DurableJobQueue(session)
         existing_job = queue.get_by_idempotency(owner.owner_id, idempotency_key)
         if existing_job:
@@ -710,6 +1189,8 @@ def create_app(settings: ApiSettings) -> FastAPI:
             deep_model=settings.deep_model,
             config_hash=config_hash,
             prompt_version=settings.prompt_version,
+            report_language=payload.report_language,
+            execution_limits=payload.execution_limits,
             snapshot_ids=payload.decision_inputs.snapshot_ids() if payload.decision_inputs else (),
             decision_inputs=payload.decision_inputs,
         )
@@ -760,13 +1241,25 @@ def create_app(settings: ApiSettings) -> FastAPI:
         )
         return RunAcceptedResponse(run=run, job=job)
 
+    def current_run_view(run, session):
+        # Older retry-wait cancellations left a RUNNING manifest. Project the
+        # durable terminal job state without rewriting immutable run inputs or
+        # historical evidence. New cancellations persist both states below.
+        if run.status in {RunStatus.QUEUED, RunStatus.RUNNING}:
+            job = DurableJobQueue(session).get_by_run(run.run_id, run.owner_id)
+            if job is not None and job.status is JobStatus.CANCELLED:
+                return run.model_copy(update={"status": RunStatus.CANCELLED,
+                    "started_at": run.started_at or job.created_at,
+                    "completed_at": job.completed_at or job.updated_at})
+        return run
+
     @app.get(f"{API_PREFIX}/runs", response_model=list[RunManifest], tags=["runs"])
     def list_runs(
         owner: OwnerDependency,
         session: SessionDependency,
         limit: int = Query(default=50, ge=1, le=200),
     ) -> tuple[RunManifest, ...]:
-        return PlatformRepository(session).list_runs(owner.owner_id, limit=limit)
+        return tuple(current_run_view(run, session) for run in PlatformRepository(session).list_runs(owner.owner_id, limit=limit))
 
     @app.get(f"{API_PREFIX}/runs/{{run_id}}", response_model=RunManifest, tags=["runs"])
     def get_run(
@@ -777,7 +1270,7 @@ def create_app(settings: ApiSettings) -> FastAPI:
         run = PlatformRepository(session).get_run(run_id, owner.owner_id)
         if run is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="run not found")
-        return run
+        return current_run_view(run, session)
 
     @app.get(
         f"{API_PREFIX}/runs/{{run_id}}/artifacts",
@@ -967,12 +1460,12 @@ def create_app(settings: ApiSettings) -> FastAPI:
                 occurred_at=timestamp,
                 payload={"job_id": str(job.job_id)},
             )
-        if cancelled.status is JobStatus.CANCELLED and run.status is RunStatus.QUEUED:
+        if cancelled.status is JobStatus.CANCELLED and run.status in {RunStatus.QUEUED, RunStatus.RUNNING}:
             repository.save_run(
                 run.model_copy(
                     update={
                         "status": RunStatus.CANCELLED,
-                        "started_at": timestamp,
+                        "started_at": run.started_at or timestamp,
                         "completed_at": timestamp,
                     }
                 )
@@ -1089,6 +1582,9 @@ def create_app(settings: ApiSettings) -> FastAPI:
             headers={"Content-Disposition": f'attachment; filename="{manifest.artifact_id}"'},
         )
 
+    from .continuation_routes import mount_continuation_routes
+
+    mount_continuation_routes(app, settings=settings, database=database, artifact_store=artifact_store)
     if settings.web_root is not None:
         mount_built_web(app, settings.web_root)
     return app

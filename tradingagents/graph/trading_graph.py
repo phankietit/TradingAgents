@@ -1,5 +1,6 @@
 # TradingAgents/graph/trading_graph.py
 
+import hashlib
 import json
 import logging
 import os
@@ -8,8 +9,10 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 import yfinance as yf
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import ToolNode
 
 # Import the abstract tool methods from agent_utils
@@ -101,6 +104,7 @@ class TradingAgentsGraph:
         config: dict[str, Any] = None,
         callbacks: list | None = None,
         snapshot_reports: dict[str, str] | None = None,
+        execution_observer: Any = None,
     ):
         """Initialize the trading agents graph and components.
 
@@ -117,6 +121,12 @@ class TradingAgentsGraph:
         # languages, and storage paths concurrently.
         self.config = deepcopy(config or DEFAULT_CONFIG)
         self.callbacks = callbacks or []
+        self.execution_observer = execution_observer
+        # Bind snapshot readers supplied at construction without retaining a
+        # second raw source copy. This is internal identity, not authorization.
+        self._snapshot_reports_digest = (hashlib.sha256(json.dumps(snapshot_reports,
+            sort_keys=True, ensure_ascii=False, allow_nan=False,
+            separators=(",", ":")).encode()).hexdigest() if snapshot_reports is not None else None)
 
         # Create necessary directories
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)
@@ -124,6 +134,13 @@ class TradingAgentsGraph:
 
         # Initialize LLMs with provider-specific thinking configuration
         llm_kwargs = self._get_provider_kwargs()
+        if snapshot_reports is not None:
+            # Long reasoning/report calls need the OpenAI-compatible SDK's
+            # normal ten-minute allowance. A shorter 180s ceiling interrupted
+            # valid MiniMax final reports after all preceding stages finished.
+            # The observer still enforces the run budget at model boundaries.
+            llm_kwargs.setdefault("timeout", 600)
+            llm_kwargs.setdefault("max_retries", 1)
 
         # Add callbacks to kwargs if provided (passed to LLM constructor)
         if self.callbacks:
@@ -164,6 +181,7 @@ class TradingAgentsGraph:
             self.conditional_logic,
             analyst_nodes=snapshot_analyst_nodes(self.quick_thinking_llm, snapshot_reports)
             if self.snapshot_mode else None,
+            snapshot_reports=snapshot_reports,
         )
 
         self.propagator = Propagator(
@@ -447,10 +465,36 @@ class TradingAgentsGraph:
             f"portfolio={portfolio.fingerprint() if portfolio is not None else 'none'}",
         ])
 
-    def propagate_snapshots(self, company_name, trade_date, *, asset_type, instrument_context, portfolio=None):
-        """Reuse debates and managers with no live tools, memory, logs or checkpoints."""
+    def propagate_snapshots(self, company_name, trade_date, *, asset_type, instrument_context,
+                            portfolio=None, checkpoint_saver=None, checkpoint_thread_id=None,
+                            checkpoint_resume=False):
+        """Snapshot-only execution; optional internal synchronous recording.
+
+        Saver/thread must be supplied together by a trusted platform caller.
+        Default starts a new invocation. Internal restore invokes the original
+        scheduler with None, never infers a next node or grants authority.
+        Legacy CLI checkpoints, memory and tool paths remain separate.
+        """
         if not self.snapshot_mode:
             raise ValueError("snapshot propagation requires snapshot analyst nodes")
+        if type(checkpoint_resume) is not bool:
+            raise ValueError("invalid snapshot checkpoint setup")
+        if checkpoint_saver is not None or checkpoint_thread_id is not None:
+            try:
+                valid = (isinstance(checkpoint_saver, BaseCheckpointSaver)
+                         and type(checkpoint_thread_id) is str
+                         and str(UUID(checkpoint_thread_id)) == checkpoint_thread_id)
+            except (ValueError, TypeError, AttributeError):
+                valid = False
+            if not valid:
+                raise ValueError("invalid snapshot checkpoint setup")
+        if checkpoint_resume:
+            from tradingagents.platform.analysis.checkpoint_saver import CommittedSnapshotSaver
+
+            if (type(checkpoint_saver) is not CommittedSnapshotSaver
+                    or checkpoint_saver.get_tuple({"configurable": {
+                        "thread_id": checkpoint_thread_id}}) is None):
+                raise ValueError("invalid snapshot checkpoint setup")
         trade_date = _validate_trade_date(trade_date)
         with self.config_scope():
             state = self.propagator.create_initial_state(
@@ -458,7 +502,20 @@ class TradingAgentsGraph:
                 instrument_context=instrument_context,
                 portfolio_context=portfolio.render(company_name) if portfolio is not None else "",
             )
-            final = self.graph.invoke(state, **self.propagator.get_graph_args())
+            from tradingagents.agents.utils.research_scope import RESEARCH_SCOPE
+
+            state["instrument_context"] += "\n" + RESEARCH_SCOPE
+            state["research_only"] = True
+            graph_args = self.propagator.get_graph_args(
+                callbacks=[self.execution_observer] if self.execution_observer is not None else None)
+            invocation_graph = self.graph
+            if checkpoint_saver is not None:
+                # Compile locally: never leave the instance/CLI graph bound to
+                # another owner's saver after success or ambiguous failure.
+                invocation_graph = self.workflow.compile(checkpointer=checkpoint_saver)
+                graph_args["config"]["configurable"] = {"thread_id": checkpoint_thread_id}
+                graph_args["durability"] = "sync"
+            final = invocation_graph.invoke(None if checkpoint_resume else state, **graph_args)
             structured = final.get("structured_decision")
             return final, structured.get("rating", "REVIEW") if structured else "REVIEW"
 

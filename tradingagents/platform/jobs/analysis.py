@@ -3,17 +3,96 @@
 import json
 from uuid import uuid5
 
+from sqlalchemy import select
+
 from tradingagents._compat import UTC
-from tradingagents.contracts import ArtifactKind
+from tradingagents.contracts import ArtifactKind, RunEventType
+from tradingagents.contracts.runs import ResearchExecutionLimits
 from tradingagents.platform.analysis import (
     AnalysisEngine,
     AnalysisRequest,
 )
+from tradingagents.platform.analysis.observer import (
+    ResearchBudgetExceeded,
+    ResearchExecutionFailed,
+    ResearchObserver,
+)
 from tradingagents.platform.analysis.snapshots import load_snapshot_context
+from tradingagents.platform.analysis.stage_records import ResearchStageService
 from tradingagents.platform.artifacts import ArtifactService
+from tradingagents.platform.events import RunEventStore
 from tradingagents.platform.persistence import PlatformRepository
+from tradingagents.platform.persistence.models import RunEventRow
 
 from .decision_pipeline import build_run_decision, load_run_portfolio
+from .report import build_run_report
+
+
+def publication_warning(snapshot_context):
+    """Deterministic disclosure retained even if a model omits its limitation."""
+    if snapshot_context is None:
+        return ""
+    warnings = []
+    social_vendors = {source.manifest.vendor for source in snapshot_context.by_analyst.get("social", ())
+                      if source.manifest.dataset == "social" and source.manifest.vendor in {"reddit", "stocktwits"}}
+    if social_vendors:
+        missing = ", ".join(sorted({"reddit", "stocktwits"} - social_vendors)) or "none / không có"
+        warnings.append(
+            "SOCIAL COVERAGE / PHẠM VI THẢO LUẬN: Recent supplied posts are a non-exhaustive sample, "
+            "not market probabilities or historical coverage. User labels are opinions; unlabeled is "
+            "not Neutral. Missing original feeds / Nguồn gốc chưa có: " + missing + ". / "
+            "Bài đăng gần đây chỉ là mẫu, không phải xác suất thị trường hay lịch sử đầy đủ. "
+            "Nhãn do người đăng chọn là ý kiến; không có nhãn không có nghĩa là trung lập."
+        )
+    delayed = {source.manifest.source_end for sources in snapshot_context.by_analyst.values()
+               for source in sources if source.manifest.metadata.get("freshness") == "delayed"}
+    if delayed:
+        cutoffs = ", ".join(sorted(value.isoformat() for value in delayed if value is not None))
+        warnings.append(
+            f"DATA LIMITATION / GIỚI HẠN DỮ LIỆU: Source publication delayed; completed candles through "
+            f"{cutoffs}. Not a current-market assessment. No missing candle filled. / "
+            f"Nguồn cập nhật trễ; nến hoàn tất đến {cutoffs}. Không phản ánh thị trường hiện tại; "
+            "không tự bù nến thiếu."
+        )
+    if any(source.manifest.dataset == "news"
+           and source.manifest.metadata.get("coverage") == "recent_feed_not_exhaustive"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "NEWS COVERAGE / PHẠM VI TIN TỨC: Recent vendor headlines are not an exhaustive "
+            "record of market or economic events. Missing coverage is unavailable, not neutral; "
+            "do not infer the absence of catalysts. / Tin gần đây từ nguồn không bao quát mọi "
+            "sự kiện thị trường hay kinh tế. Thiếu nguồn là chưa có dữ liệu, không phải trung lập; "
+            "không suy luận rằng không có chất xúc tác."
+        )
+    if any(source.manifest.dataset == "fundamentals"
+           and source.manifest.vendor == "sec_edgar"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "FILING COVERAGE / PHẠM VI BÁO CÁO: SEC facts cover reported US GAAP tags "
+            "and their filing dates, not a complete company profile or live valuation. "
+            "The saved response is current-vintage evidence and cannot be backdated. / "
+            "Số liệu SEC chỉ gồm các chỉ tiêu US GAAP được công bố và ngày nộp báo cáo, "
+            "không phải toàn bộ hồ sơ doanh nghiệp hay định giá trực tiếp. Bản đã lưu "
+            "là dữ liệu ghi nhận hiện tại, không được gán ngược cho thời điểm quá khứ."
+        )
+    if any(source.manifest.dataset == "macro"
+           for sources in snapshot_context.by_analyst.values() for source in sources):
+        warnings.append(
+            "MACRO COVERAGE / PHẠM VI VĨ MÔ: Only supplied FRED series/vintages are covered. "
+            "Observation labels are not release timestamps; native levels are not inferred "
+            "inflation/growth rates or asset returns. Missing series/events are unavailable, "
+            "not neutral. / Chỉ gồm các chuỗi FRED và vintage đã cung cấp. Nhãn kỳ quan sát "
+            "không phải thời điểm công bố; mức gốc không tự trở thành tỷ lệ lạm phát, tăng "
+            "trưởng hay lợi suất tài sản. Chuỗi hoặc sự kiện chưa có dữ liệu không phải trung lập."
+        )
+        if not any(source.manifest.dataset == "news"
+                   for source in snapshot_context.by_analyst.get("news", ())):
+            warnings.append(
+                "HEADLINE COVERAGE / PHẠM VI TIN TỨC: Macro-only input provides no headline "
+                "feed or event coverage. / Dữ liệu chỉ gồm vĩ mô không cung cấp nguồn tin tức "
+                "hay phạm vi sự kiện."
+            )
+    return "\n\n".join(warnings) + ("\n\n" if warnings else "")
 
 
 class AnalysisJobHandler:
@@ -24,13 +103,38 @@ class AnalysisJobHandler:
     exists. A free-text fallback is never parsed into a structured decision.
     """
 
-    def __init__(self, database, artifact_store, *, engine=None, prompt_version="1"):
+    def __init__(self, database, artifact_store, *, engine=None, prompt_version="1", recording_enabled=False):
+        from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
+
+        if type(recording_enabled) is not bool:
+            raise ValueError("recording configuration requires review")
         self.database = database
         self.artifact_store = artifact_store
-        self.engine = engine or AnalysisEngine()
+        self.engine = engine if engine is not None else AnalysisEngine()
+        if recording_enabled and type(self.engine) is not SupervisedAnalysisEngine:
+            raise ValueError("recording configuration requires review")
+        self.recording_enabled = recording_enabled
         self.prompt_version = prompt_version
 
     def __call__(self, job, context):
+        from .queue import JobLeaseError
+        from .worker import JobCancellationRequested
+
+        entered_engine = [False]
+        try:
+            return self._execute(job, context, entered_engine)
+        except (ResearchBudgetExceeded, JobLeaseError, JobCancellationRequested):
+            # Preserve cancellation, deadline and stale-worker authority.
+            raise
+        except Exception as error:
+            if entered_engine[0]:
+                # Includes provider errors with unknown billing and failures
+                # after model return but before final publication. Never make
+                # a new full paid attempt just because the error is transient.
+                raise ResearchExecutionFailed("analysis attempt requires explicit review") from error
+            raise
+
+    def _execute(self, job, context, entered_engine):
         context.raise_if_cancelled()
         context.heartbeat()
         report_id = uuid5(job.run_id, "analysis-report-v1")
@@ -48,6 +152,10 @@ class AnalysisJobHandler:
             }
             if run.decision_inputs is not None:
                 expected_payload["decision_inputs"] = run.decision_inputs.model_dump(mode="json")
+            if run.report_language is not None:
+                expected_payload["report_language"] = run.report_language
+            if run.execution_limits is not None:
+                expected_payload["execution_limits"] = run.execution_limits.model_dump(mode="json")
             if job.payload != expected_payload:
                 raise ValueError("analysis job does not match its immutable run")
             artifacts = ArtifactService(self.artifact_store, repository)
@@ -66,33 +174,96 @@ class AnalysisJobHandler:
                 return (report_id,)
             if existing is not None or candidate is not None:
                 raise ValueError("incomplete analysis output transaction")
+            if session.scalar(select(RunEventRow.event_id).where(
+                RunEventRow.owner_id == run.owner_id, RunEventRow.run_id == run.run_id,
+                RunEventRow.event_type.in_([RunEventType.RESEARCH_EXECUTION_STARTED.value,
+                    RunEventType.STAGE_STARTED.value, RunEventType.MODEL_USAGE.value]),
+            ).limit(1)) is not None:
+                # Even if previously committed output metadata disappears
+                # after a finalization retry was queued, never re-enter models.
+                raise ResearchExecutionFailed("prior research execution requires review")
             instrument = repository.get_instrument(run.instrument_id)
             if instrument is None:
                 raise ValueError("run instrument unavailable")
             snapshot_context = load_snapshot_context(artifacts, run, run.decision_inputs.snapshots_by_analyst) if run.decision_inputs else None
             portfolio = load_run_portfolio(repository, run)
-        result = self.engine.analyze(AnalysisRequest(
+            original_sources = None
+            if self.recording_enabled and snapshot_context is not None:
+                from tradingagents.platform.analysis.recording_sources import (
+                    load_original_recording_sources,
+                )
+
+                original_sources = load_original_recording_sources(repository=repository,
+                    artifacts=artifacts, run=run)
+        def emit(event_type, payload):
+            from datetime import datetime
+
+            # The same fenced session used for publication rejects cancelled
+            # or expired workers. No model call is made under this transaction.
+            with context.publication_session() as event_session:
+                RunEventStore(event_session).append(owner_id=run.owner_id, run_id=run.run_id,
+                    event_type=RunEventType(event_type), occurred_at=datetime.now(UTC),
+                    payload={**payload, "attempt": job.attempt})
+
+        stage_sequence = 0
+
+        def save_stage(stage, outputs):
+            nonlocal stage_sequence
+            from datetime import datetime
+
+            stage_sequence += 1
+            with context.publication_session() as stage_session:
+                stage_repository = PlatformRepository(stage_session, artifact_store=self.artifact_store)
+                service = ResearchStageService(ArtifactService(self.artifact_store, stage_repository))
+                manifest = service.persist(run, stage=stage, outputs=outputs,
+                    attempt=job.attempt, sequence=stage_sequence,
+                    snapshot_attestation="PASS" if snapshot_context is not None else "UNVERIFIED")
+                if manifest is not None:
+                    RunEventStore(stage_session).append(owner_id=run.owner_id, run_id=run.run_id,
+                        event_type=RunEventType.ARTIFACT_CREATED, occurred_at=datetime.now(UTC),
+                        payload={"artifact_id": str(manifest.artifact_id),
+                                 "kind": manifest.kind.value, "stage": stage,
+                                 "attempt": job.attempt, "research_quality": "unvalidated"})
+                    return manifest.artifact_id
+            return None
+
+        limits = run.execution_limits or ResearchExecutionLimits()
+        observer = ResearchObserver(check_cancelled=context.raise_if_cancelled, emit=emit,
+                                    max_seconds=limits.wall_seconds, max_calls=limits.model_calls,
+                                    save_stage=save_stage)
+        # Persist the uncertainty boundary before any graph/model construction.
+        # Recovery must not guess that a crashed provider request cost nothing.
+        emit("research.execution_started", {})
+        entered_engine[0] = True
+        request = AnalysisRequest(
             instrument=instrument, analysis_date=run.analysis_as_of.date(),
             selected_analysts=run.selected_analysts,
             snapshot_context=snapshot_context,
             portfolio=portfolio,
+            execution_observer=observer,
             config_overrides={"llm_provider": run.llm_provider,
                               "quick_think_llm": run.quick_model,
-                              "deep_think_llm": run.deep_model},
-        ))
+                              "deep_think_llm": run.deep_model,
+                              **({"output_language": {"en": "English", "vi": "Vietnamese", "en-vi": "English and Vietnamese"}[run.report_language]}
+                                 if run.report_language is not None else {})},
+        )
+        engine = self.engine
+        if self.recording_enabled and snapshot_context is not None:
+            from tradingagents.platform.analysis.recording_factory import build_recorded_engine
+
+            # Original owner-loaded Decimal inputs, not the LLM's float view.
+            # Per-run engine/codec/commit only; never mutate the shared template.
+            engine = build_recorded_engine(template=self.engine, context=context, run=run,
+                request=request, observer=observer,
+                portfolio_snapshot=original_sources.portfolio_snapshot,
+                policy=original_sources.policy, risk_snapshots=original_sources.risk_snapshots)
+        result = engine.analyze(request)
         context.raise_if_cancelled()
         context.heartbeat()  # Reject a lost/expired lease before publishing.
-        raw = result.decision_payload.model_dump(mode="json") if result.decision_payload else {}
         # Deliberately exclude raw graph messages, which may contain provider
         # objects or unrelated prompt context. Preserve the research artifact.
-        report = {
-            "run_id": str(run.run_id), "decision_id": str(decision_id),
-            "profile": result.profile_name, "reference_only": result.reference_only,
-            "selected_analysts": result.selected_analysts,
-            "narrative": result.final_state.get("final_trade_decision", result.narrative_signal),
-            "structured_narrative": raw or None,
-            "snapshot_attestation": "PASS" if snapshot_context is not None else "UNVERIFIED",
-        }
+        report = build_run_report(run, result, instrument=instrument,
+            snapshot_context=snapshot_context, observer=observer)
         with context.publication_session() as session:
             repository = PlatformRepository(session, artifact_store=self.artifact_store)
             artifacts = ArtifactService(self.artifact_store, repository)

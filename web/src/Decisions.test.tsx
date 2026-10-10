@@ -28,12 +28,35 @@ it('renders narrative as text and disables approval for REVIEW', async () => {
   expect(document.querySelector('script')).toBeNull();
   expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
 });
+it('presents research and portfolio checks before review, with selected details before history', async () => {
+  const fetch = setup(); render(<Decisions />);
+  await screen.findByText(candidate.thesis);
+  const review = screen.getByRole('region', {name:'Owner review'});
+  expect(review.closest('details')).toBeNull();
+  expect(screen.getByText(candidate.thesis).compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByText('Portfolio checks & human approval').compareDocumentPosition(review) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('region', {name:'Decision details'}).compareDocumentPosition(screen.getByRole('region', {name:'Decision history'})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect((screen.getByRole('button', {name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getAllByRole('button', {name:'Reject decision'})).toHaveLength(1);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/transitions'))).toBe(false);
+});
 it('explains unusable output while preserving original validation detail collapsed', async () => {
   setup(false,{...candidate,thesis:'Structured decision unavailable; manual review is required.',risks:['Schema validation failed: ValidationError'],invalidation_conditions:['Supply a schema-valid decision payload.']});
   render(<Decisions />);
   expect(await screen.findByText('No usable investment conclusion was produced. Manual review is required.')).toBeTruthy();
   expect(screen.getByText('Schema validation failed: ValidationError').closest('details')?.open).toBe(false);
   expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+});
+it('offers direct keyboard-accessible navigation to retained decision history', async () => {
+  const scroll = vi.fn();
+  const fetch = setup(); const user = userEvent.setup(); render(<Decisions />);
+  await screen.findByText(candidate.thesis);
+  const history = screen.getByRole('region', {name:'Decision history'});
+  history.scrollIntoView = scroll;
+  await user.click(screen.getByRole('button', {name:'Decision history'}));
+  expect(scroll).toHaveBeenCalledWith({block:'start'});
+  expect(document.activeElement).toBe(history);
+  expect(fetch.mock.calls.some(([url]) => url.endsWith('/transitions'))).toBe(false);
 });
 it('presents financial risk percentages without changing review eligibility',async()=>{
   const value={...candidate,policy_checks:[{check_id:'max_position_weight',policy_id:'p',policy_version:'1',result:'PASS',blocking:true,reason:'Within allocation limit',observed_value:0.2,limit_value:0.3}]};
@@ -87,7 +110,7 @@ it.each(['run_id', 'instrument_id', 'analysis_as_of', null])('requires matching 
   const run = {run_id:candidate.run_id,instrument_id:candidate.instrument_id,analysis_as_of:candidate.as_of,status:'succeeded', ...(field ? {[field]:'mismatched'} : {})};
   vi.stubGlobal('fetch',vi.fn(async(url:string)=>new Response(JSON.stringify(url.endsWith('/state') ? {candidate:ready,current_status:'ready_for_approval',events:[]} : url.includes('/decisions?') ? [ready] : url.includes('/runs/') ? run : []))));
   render(<Decisions />);
-  await screen.findByText(field ? 'Matching research status unavailable. Approval remains disabled.' : 'Research processing: Research complete');
+  await screen.findByText(field ? 'Matching research status unavailable. Approval remains disabled.' : 'Research processing: Processing complete');
   expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(field !== null);
 });
 
@@ -99,4 +122,19 @@ it('does not substitute another candidate when the deep link is missing or forbi
   expect(await screen.findByRole('alert')).toBeTruthy();
   expect(screen.queryByText(candidate.thesis)).toBeNull();
   expect(screen.queryByRole('button', {name:'Approve decision'})).toBeNull();
+});
+
+it.each(['failed', 'cancelled'])('labels retained original processing without granting approval: %s', async status => {
+  const run = {run_id:candidate.run_id,instrument_id:candidate.instrument_id,analysis_as_of:candidate.as_of,status};
+  const fetch = vi.fn(async (url:string) => new Response(JSON.stringify(url.endsWith('/state')
+    ? {candidate,current_status:'review',events:[]}
+    : url.includes('/decisions?') ? [candidate]
+    : url.includes('/artifacts?') ? []
+    : url.includes('/runs/') ? run : [])));
+  vi.stubGlobal('fetch', fetch);
+  render(<Decisions />);
+  expect(await screen.findByText(/^Original attempt processing:/)).toBeTruthy();
+  expect(screen.queryByText(/^Research processing:/)).toBeNull();
+  expect((screen.getByRole('button',{name:'Approve decision'}) as HTMLButtonElement).disabled).toBe(true);
+  expect(fetch.mock.calls.some(([url])=>url.endsWith('/transitions'))).toBe(false);
 });

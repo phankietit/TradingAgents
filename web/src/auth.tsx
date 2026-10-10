@@ -1,9 +1,12 @@
+import { t, useLocale } from './i18n';
 import { useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { ApiError, errorMessage, mutate, request, SESSION_EXPIRED, validateOwner } from './api';
 import type { Owner } from './api';
+import LanguageSwitch from './LanguageSwitch';
 
 export function SessionBoundary({ children }: { children: (owner: Owner, logout: () => Promise<void>) => ReactNode }) {
+  useLocale();
   const [owner, setOwner] = useState<Owner | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -20,7 +23,7 @@ export function SessionBoundary({ children }: { children: (owner: Owner, logout:
       }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => { controller.abort(); window.removeEventListener(SESSION_EXPIRED, expired); };
   }, [attempt]);
-  if (loading) return <main className="session-screen" aria-busy="true"><p role="status">Restoring your session…</p></main>;
+  if (loading) return <main className="session-screen" aria-busy="true"><p role="status">{t("Restoring your session…")}</p></main>;
   if (!owner) return <Login initialError={error} onLogin={setOwner} onRetry={() => setAttempt(value => value + 1)} />;
   return children(owner, async () => {
     await mutate('/auth/logout');
@@ -29,6 +32,7 @@ export function SessionBoundary({ children }: { children: (owner: Owner, logout:
 }
 
 function Login({ initialError, onLogin, onRetry }: { initialError: string; onLogin: (owner: Owner) => void; onRetry: () => void }) {
+  useLocale();
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -50,15 +54,16 @@ function Login({ initialError, onLogin, onRetry }: { initialError: string; onLog
   }
   return <main className="session-screen"><section className="login" aria-labelledby="login-title">
     <div className="wordmark">TradingAgents<span className="brand-dot" aria-hidden="true" /></div>
-    <h1 id="login-title">Your research workspace.</h1>
-    <p className="muted">Sign in to review markets, evidence and portfolio decisions.</p>
+    <LanguageSwitch />
+    <h1 id="login-title">{t("Your research workspace.")}</h1>
+    <p className="muted">{t("Sign in to review markets, evidence and portfolio decisions.")}</p>
     <form onSubmit={submit} aria-busy={pending}>
-      <label>Owner email<input name="email" type="email" autoComplete="username" required maxLength={254} disabled={pending} /></label>
-      <label>Password<input name="password" type="password" autoComplete="current-password" required maxLength={1024} disabled={pending} /></label>
-      {error || initialError ? <p className="notice danger" role="alert">{error || initialError}</p> : null}
-      <button className="primary" disabled={pending}>{pending ? 'Signing in…' : 'Sign in'}</button>
+      <label>{t("Owner email")}<input name="email" type="email" autoComplete="username" required maxLength={254} disabled={pending} /></label>
+      <label>{t("Password")}<input name="password" type="password" autoComplete="current-password" required maxLength={1024} disabled={pending} /></label>
+      {error || initialError ? <p className="notice danger" role="alert">{t(error || initialError)}</p> : null}
+      <button className="primary" disabled={pending}>{pending ? t("Signing in…") : t("Sign in")}</button>
     </form>
-    {initialError ? <button className="text-button" onClick={onRetry}>Retry connection</button> : null}
-    <p className="login-footer">Local research workspace<br />Decision support · No order execution</p>
+    {initialError ? <button className="text-button" onClick={onRetry}>{t("Retry connection")}</button> : null}
+    <p className="login-footer">{t("Local research workspace")}<br />{t("Decision support · No order execution")}</p>
   </section></main>;
 }

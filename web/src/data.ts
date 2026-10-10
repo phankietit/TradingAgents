@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { t, formatLocale } from './i18n';
+import { useEffect, useRef, useState } from 'react';
 import { ApiError, request } from './api';
 
 export interface Instrument {
@@ -10,13 +11,17 @@ export interface Snapshot {
   snapshot_id: string; dataset: string; vendor: string; as_of: string; retrieved_at: string;
   source_start: string | null; source_end: string | null; content_hash: string;
   quality_status: string; quality_reasons: string[];
+  metadata?: { freshness?: string; missing_trailing_sessions?: number; data_through?: string;
+    series_id?: string; units?: string; frequency_short?: string; vintage_date?: string;
+    last_observation_date?: string | null; observation_start?: string; observation_end?: string;
+    posts?: number; received_posts?: number | null; coverage?: string };
 }
 export interface SeriesResponse {
   snapshot: Snapshot;
   benchmark_snapshot?: Snapshot | null;
   view: {
     series: { instrument_id: string; interval: string; quote_currency: string; timezone: string; bars: {
-      timestamp: string; open: number; high: number; low: number; close: number;
+      timestamp: string; session_date?: string | null; open: number; high: number; low: number; close: number;
       adjusted_close: number | null; volume: number;
     }[] };
     returns: { timestamp: string; price: number; simple_return: number | null; drawdown: number }[];
@@ -49,6 +54,7 @@ export function priceResponse(value: SeriesResponse): SeriesResponse {
     const valid = snapshot(value.snapshot) && view.series &&
       [view.series.instrument_id, view.series.interval, view.series.quote_currency, view.series.timezone].every(string) &&
       Array.isArray(view.series.bars) && view.series.bars.length > 0 && view.series.bars.every(bar => bar && date(bar.timestamp) &&
+        (bar.session_date == null || (string(bar.session_date) && /^\d{4}-\d{2}-\d{2}$/.test(bar.session_date))) &&
         [bar.open, bar.high, bar.low, bar.close, bar.volume].every(Number.isFinite) && (bar.adjusted_close === null || Number.isFinite(bar.adjusted_close))) &&
       Array.isArray(view.returns) && view.returns.length > 0 && view.returns.every(point => point && date(point.timestamp) &&
         [point.price, point.drawdown].every(Number.isFinite) && (point.simple_return === null || Number.isFinite(point.simple_return))) &&
@@ -65,26 +71,49 @@ export function priceResponse(value: SeriesResponse): SeriesResponse {
 
 type Resource<T> = { path: string | null; data?: T; error?: unknown; loading: boolean };
 /** Path-tagged state prevents even one paint of a previous instrument's values. */
-export function useResource<T>(path: string | null, version = 0, validate?: (value: T) => T) {
+export function useResource<T>(path: string | null, version = 0, validate?: (value: T) => T, retainWhileRefreshing = false) {
   const [state, setState] = useState<Resource<T>>({ path, loading: !!path });
+  const refresh = useRef<(() => void) | null>(null);
+  // Default consumers still cancel/clear on every version change. Only read-only
+  // polling keeps the request scope stable across ticks, avoiding starvation.
+  const resetVersion = retainWhileRefreshing ? 0 : version;
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    setState({ path, loading: true });
-    request<T>(path, { signal: controller.signal }).then(value => validate ? validate(value) : value)
-      .then(data => { if (!controller.signal.aborted) setState({ path, data, loading: false }); })
-      .catch(error => { if (!controller.signal.aborted) setState({ path, error, loading: false }); });
-    return () => controller.abort();
-  }, [path, version, validate]);
+    let reading = false;
+    let again = false;
+    const read = async () => {
+      if (reading) { again = true; return; }
+      reading = true;
+      do {
+        again = false;
+        setState(previous => retainWhileRefreshing && previous.path === path && previous.data !== undefined
+          ? {path, data: previous.data, loading: false} : { path, loading: true });
+        try {
+          const value = await request<T>(path, {signal:controller.signal});
+          const data = validate ? validate(value) : value;
+          if (controller.signal.aborted) return;
+          setState({path, data, loading:false});
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          setState({path, error, loading:false});
+        }
+      } while (again && !controller.signal.aborted);
+      reading = false;
+    };
+    refresh.current = read;
+    return () => { controller.abort(); refresh.current = null; };
+  }, [path, resetVersion, validate, retainWhileRefreshing]);
+  useEffect(() => { refresh.current?.(); }, [path, version, validate, retainWhileRefreshing]);
   return state.path === path ? state : { path, loading: !!path } as Resource<T>;
 }
 
 export function number(value: number, digits = 2): string {
-  return Number.isFinite(value) ? value.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits }) : 'Unavailable';
+  return Number.isFinite(value) ? value.toLocaleString(formatLocale(), { maximumFractionDigits: digits, minimumFractionDigits: digits }) : t('Unavailable');
 }
-export const percent = (value: number) => Number.isFinite(value) ? `${number(value * 100)}%` : 'Unavailable';
+export const percent = (value: number) => Number.isFinite(value) ? `${number(value * 100)}%` : t('Unavailable');
 export function timestamp(value: string | null): string {
-  if (!value) return 'Unavailable';
+  if (!value) return t('Unavailable');
   const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, ' UTC') : 'Invalid timestamp';
+  return Number.isFinite(date.getTime()) ? date.toISOString().replace('T', ' ').replace(/(?:\.000)?Z$/, ' UTC') : t('Invalid timestamp');
 }

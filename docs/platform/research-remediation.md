@@ -1,0 +1,342 @@
+# Research quality and product delivery
+
+Approved scope: R01–R14, 2026-09-27. Release class: local private research
+platform, with human decision review. No broker or public deployment.
+
+## Baseline
+
+Latest2026-10-10: clean6b49320 full local3.11 session59766 terminal0 and3.13
+session34183 terminal0 PASS, each3306 tests+88 subtests/2optional UNVERIFIED/
+502warnings,1164.80s and1220.84s. Fresh installation/import/resources/console
+smoke PASS; sequential native gates and owned cleanup independently confirmed.
+Original matrix3.10–3.13 now has exact-SHA local macOS receipts, not Ubuntu/CI
+or live acceptance. See [matrix receipt](python-matrix-verification-20261010.md).
+R01–R14 remains ACTIVE; existing live failures and owner/runtime gates retained.
+
+Later 2026-10-10 update: frozen clean c0268c7 full local Python3.10.22 gate65550
+terminal0 PASS,3306 tests+88 subtests,2 optional skips UNVERIFIED,502 warnings,
+1762.85s; task-owned helper/container cleanup independently confirmed.
+Fresh noneditable install and outside-checkout smoke also PASS. Exact commands,
+source/dependency boundary and limits are in the
+[minimum-version receipt](python310-verification-20261010.md). The original
+inactive workflow's matrix is3.10–3.13:3.11/3.13 still UNVERIFIED, CI stays off.
+No owner runtime restart, paid model invocation or live acceptance implied.
+
+Current reconciliation — 2026-10-10, clean source
+`cd21d9e6bb8380340be33c448e8f37cf0864545f`: the ticket rows below now include the
+later full Python3.12/3.14, integrated web, scoped PostgreSQL/browser and approved
+operator migration receipts in [HANDOFF](../../HANDOFF.md). Historical dated
+paragraphs remain evidence, not today's runtime status. Current source comparisons
+`git diff --exit-code 796c4178c3c710fba32eb20651c5ace7d46e71a7 HEAD -- tradingagents tests scripts pyproject.toml uv.lock`
+and `git diff --exit-code a6917d31d5bc650a215c3731cf43f61b9d275a02 HEAD -- web/src web/package.json web/package-lock.json`
+both PASS. They establish unchanged scoped source, NOT new suite/browser runs
+at cd21d9e. A current machine inventory found only Python3.12 and3.14 runtimes;
+other supported versions remain UNVERIFIED, not silently excluded from the
+`>=3.10` package contract. No new interpreter installation, CI or provider/model
+invocation was performed in this reconciliation.
+
+Owner-approved encrypted paired backup, password reopen and original SQLite
+0010→0018 migration now PASS; all original history and artifact bytes preserved.
+See [operator receipt](operator-migration-20261010.md) for the distinct gates
+that remain UNVERIFIED. No API/worker restart or new paid job has occurred;
+separate runtime approval remains pending. NQ=F remains owner-BLOCKED and the
+existing BTC/AAPL live financial/VI failures are not superseded. Goal ACTIVE.
+
+Earlier 2026-10-08 checkpoint: primary full PostgreSQL/default regression on
+frozen `37c1a423ef20e53b6fab692021fdd440279f4ade` ended terminal0,
+3306 tests +88 subtests PASS/3355.28s; two optional-provider skips remain
+UNVERIFIED. After owned cleanup, isolated polling/preview fixes and scoped
+browser receipts fast-forwarded to `cf37fde9aa2c2e2400854c14d5525eb7b8ab1878`.
+Backend/Python tests/scripts/package files are unchanged between these SHAs;
+full evidence is pinned to 37c1a42, not relabeled as an executed cf37fde full.
+Clean integrated cf37fde build/lint/221 web tests PASS14.30s. Ordinary real-PG
+two-tab completion, cooperative cancellation and new-attempt fresh-consent
+browser gates have separate synthetic-graph receipts, not live/native/recovery
+acceptance. See HANDOFF for exact commands, earlier FAILs and cleanup proof.
+The dated checkpoints below remain historical. Full R01–R14, semantic/financial/
+Vietnamese/live/operator acceptance remain incomplete; no release is approved.
+
+- Base: origin/main `7dfec4d20709a702b130f3ba5813f097a930ffe6`.
+- Prerequisite: PRs #5/#6, through `0a81d479b1b150573a8854a94ee5d2900f0c0550`.
+- Branch: `fix/TA-R01-research-quality`; existing managed worktree reused.
+- GitHub Issues are disabled. This file records the approved tickets locally.
+- CI remains disabled by owner preference. Verification runs locally.
+- Existing run/snapshot artifacts are immutable; fixes produce new runs.
+
+Historical local acceptance (2026-10-08): full frozen02ed0cc gate18967 terminal0:
+3236tests/88subtests PASS,2optional-provider skips UNVERIFIED,502warnings,
+3580.84s. External native observer makes this instrumented full local evidence,
+not native root-cause/reliability or uninstrumented acceptance. Owned PostgreSQL
+cleanup and process termination confirmed before staged web/doc integration to
+2766a48. No Python/package/CLI/backend-test change in that integration; exact
+integrated web gate pending. Exact side2a8d739 web179tests/type/lint/build PASS;
+synthetic mobile/desktop staged navigation, heading clearance, focus, refusal
+and console checks PASS. Fresh installed selected75+18tests and paired synthetic
+SQLite/artifact restore PASS scoped only; full operational restore/matrix,
+financial/editorial/live and whole-product gates remain incomplete. See HANDOFF.
+
+Historical full frozen e3b837b gate3309 is FAIL,
+3231 tests and 88 subtests PASS, one PostgreSQL/VI/manual default-resume
+preflight failure, two optional-provider skips UNVERIFIED, 3465.29s. The child
+returned identity but exit wait crossed the preflight boundary; watchdog
+reported no Python frame, not an identified shutdown cause. Earlier c1308ef
+full11461 FAIL and focused retries are retained. Semantic side integrated;
+its exact recovery matrix13PASS does not supersede full failures. Native
+preflight reliability remains UNVERIFIED; the 45s boundary, original allowance
+and reaping/client-close checks are unchanged. API admission side d1a2424 was
+fast-forwarded only after full3309 terminal/owned PostgreSQL cleanup; its
+source50-test and installed-console PASS are scoped, not a new full gate.
+HANDOFF contains exact commands and receipts. Historical full9c evidence below
+is not current-candidate full acceptance.
+
+At frozen a2a5b04, the full twelve-case default-recovery matrix plus redaction
+test passed13/441.83s under an external read-only native observer. Samples
+captured a resource_tracker and normal graph children, not a failed preflight
+exit; the root cause is still UNVERIFIED. This instrumented selected diagnostic
+does not replace the failed full baseline or live/professional UX acceptance.
+
+R11 fresh browser audit at801a09c verified synthetic AAPL browser consent ->
+real durable worker/API/persistence -> saved bilingual report -> decision,
+not native original-graph or live financial acceptance. At clean40b32c6,
+selected decision precedes history on desktop/mobile and report/portfolio/policy
+disclosure precedes owner actions. History shortcut retains keyboard focus;
+no eligibility/transition changes. Exact174 web tests/type/lint/build PASS;
+1280x720/390x844 rendered no-overlay/console/reading-order/refusal/shortcut PASS.
+Mobile chrome/first-viewport summary, staged setup and full professional
+long-running journey remain incomplete. See HANDOFF for commands/private
+evidence boundaries; no current full baseline or live PASS is implied.
+
+At66e61fa, scope/data/review focus navigation and a complete pre-consent
+current-input brief add asset/time/language/mode, each selected analysis source
+and absent area; portfolio/policy/owner target and correlation disclosure are
+retained. Exact177 web tests/type/lint/build PASS. Synthetic browser selection
+-> brief -> consent enables submit -> language change resets consent PASS;
+EN/VI display and desktop/mobile review focus/overflow/console PASS. No new
+submission, acquisition, model request or payload/gate mutation. This is not
+source-quality, original native graph, live financial or full staged UX proof;
+the remaining journey and earlier FAIL/BLOCKED/UNVERIFIED gates are retained.
+
+## Tickets and acceptance
+
+Every ticket carries one type, area and priority below. Statuses distinguish
+implemented local evidence from live acceptance; see the verification receipt.
+
+| ID | Type / area / priority | Dependencies | Acceptance | Status |
+| --- | --- | --- | --- | --- |
+| R01 | docs / docs / P1 | — | Baseline, flow parity and regression cases recorded | PASS |
+| R02 | bug / data / P0 | R01 | Explicit session dates, closes, cutoff; legacy snapshots readable | PASS local + new Yahoo snapshot |
+| R03 | feature / data / P0 | R02 | Deterministic indicators, returns and window-high with provenance | PASS local |
+| R04 | feature / agents / P1 | R03 | Snapshot-bound tools and asset-specific coverage; no silent role loss | PASS full-graph fixtures, local current-news/SEC/FRED/social API and macro/social EN/VI browser flow; actual AAPL SEC + DGS10 acquisition/readback/reuse PASS at f900afa, actual StockTwits acquisition/full-text owner readback/reuse PASS at f7bca47. Reddit eligible acquisition UNVERIFIED (actual UNAVAILABLE retained); other-asset fundamentals, complete live analysis and financial/editorial acceptance UNVERIFIED |
+| R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
+| R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
+| R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS scoped local/native lifecycle and authenticated continuation receipts; later real-PG synthetic two-tab polling, cooperative cancellation and fresh-consent browser gates PASS (HANDOFF). Pending-cancel action at a6917d3 PASS, exactly one run POST/one cancel POST, no premature stopped state; unchanged web source verified at cd21d9e. Native/live general race/retry/expiry/recovery remains UNVERIFIED; original live wall-budget FAIL retained. Original-attempt and linked histories/allowances are not rewritten; ordinary startup is not blanket opt-in continuation consent |
+| R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
+| R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
+| R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; native SQLite saved EN/VI report and real-PG synthetic browser submission/completion/cancellation/new-attempt gates retain separate receipts (HANDOFF). Clean8771431 web build/lint/227 tests PASS; supplementary preparation disclosure EN/VI/keyboard/selection/consent rendered in isolated in-app QA, scoped receipt20261010. Not full live-journey acceptance. Report/decision layout and professional complete live journey/final-report acceptance UNVERIFIED; valid live final report FAIL retained |
+| R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full local Python3.10 atc0268c7,3.11/3.13 at6b49320,3.12 at796c417 and additional3.14 at37c1a42 PASS:3306 tests+88 subtests each,2 optional skips UNVERIFIED; original FAILs retained. Fresh noneditable3.10–3.13 installation/smoke receipts retained; original matrix covered locally on macOS, not Ubuntu/CI. CI stays disabled. Integrated web225 PASS atfaf290a and source comparisons retained, not new rendered/full-web executions at current SHA. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
+| R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS redacted receipts/Draft PR7 and approved encrypted local paired backup/password reopen/source0010→0018 migration at eae0a6c, original history/artifacts preserved. Fresh-target restore/session fencing, cloud transfer, PostgreSQL operator rollout and fresh browser/authorized restart remain UNVERIFIED; no worker/API restart implied. Final R01–R14 acceptance/release UNVERIFIED, not an owner-approved deferral |
+
+Overall goal is not complete. The previous extra BTC execution failed report
+acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
+renewed implementation and live-test authorization for BTC, AAPL and NQ, including
+the operational research journey and final decision-report presentation.
+
+Current isolated UI source `00d3ee68fe588e603178697981e8f92a2a386c29` on
+`fix/TA-R08-continuation-ui` makes completed operational details expandable and
+adds a report-reading shortcut with keyboard focus and no route/write change.
+Exact-source type/lint/164 web tests/build and synthetic desktop/mobile browser
+checks PASS; no actual backend/native/provider or financial/editorial acceptance
+is inferred. Primary full regression on clean frozen
+`9c891f5a4c4b2af398d30d2b90f624db2cbacb5f` ended terminal0:3200tests and88subtests
+PASS/3057.96s; 2optional skips remain UNVERIFIED. Only after terminal, primary
+fast-forwarded the owned UI branch to `d4dc2e197348ae59506fc7ff62b0c9a3c30f0156`.
+No Python/package/dependency changes after9c; integrated web/runtime gates remain
+separate. The full5894 and prior live FAIL receipts remain unchanged; unreproduced
+preparation/consent causes stay UNVERIFIED. NQ remains owner-BLOCKED pending
+contract/roll metadata. See HANDOFF for the full command and external log path.
+
+R04 structured FRED acquisition/storage and current web preparation are implemented:
+explicit series/window, pinned completed-day vintage, full observations and
+owner-scoped immutable provenance. R04 remains incomplete: stored-source
+admission and native-unit/period/vintage fact replay now
+have full original-role/round graph fixtures, including financial validation and
+protected EN/VI statements. Bounded whole-acquisition supervision and authenticated
+API/UI preparation have native process, API, browser and full regression evidence
+at `f900afaf64f1eb42705583aa38a7397b1f63c41f`. A separate authenticated live probe
+of that installed candidate acquired AAPL SEC and DGS10/1825-day sources, verified
+owner readback and reuse, and created no model job. Financial/editorial quality,
+complete economic coverage and other-asset fundamentals remain unverified.
+Original StockTwits/Reddit structured preparation now has bounded transport,
+immutable independent owner snapshots, full retained text in the original
+Sentiment path, source-count facts and explicit missing-feed/sample disclosures.
+Local native child/API/threaded lock/SQLite/PostgreSQL/full-graph and EN/VI browser
+evidence remains distinct from live finance proof. Clean f7bca47 full baseline
+has3,000 tests +88 subtests PASS; fresh installed default-source probe acquired
+all30 returned eligible StockTwits posts and verified owner readback/reuse.
+Reddit's real UNAVAILABLE result is retained, not converted into neutral data or
+claimed eligible-source acceptance. In-app synthetic report/review UX audit
+confirms saved Vietnamese summaries and disabled approval without risk checks,
+but identifies excessive preparation length, below-fold conclusions and buried
+review readiness. Professional R11/R12 UX acceptance is still UNVERIFIED.
+Existing FRED/CLI defaults, risk limits and graph flow are unchanged; synthetic
+fixtures alone never authorize a live-provider or paid-model request. Detailed
+scope and actual live-source evidence are in `research-acceptance-20261003.md`.
+
+### Current operational finding · 2026-10-01
+
+The authenticated live BTC market+news job at `f73d1a9` ended in
+`RESEARCH_BUDGET_EXHAUSTED` after about 37m38s / 539,339 reported tokens.
+All nine preceding stages completed; Portfolio Manager started and its bounded
+repair consumed the remaining time. Financial validation/presentation did not
+start. No final report or decision was published; this is FAIL, not finance or
+translation acceptance. The 30-minute observer deadline is checked between
+stages/calls and cannot interrupt an already-running SDK request.
+
+R08 still needs an explicit operator-visible execution allowance consistent
+with request timeouts, and durable recovery/read-only completed-stage research
+so a failure does not force blind paid recomputation. These must preserve all
+roles, immutable source/config bindings, lease/owner fencing, and final
+publication/approval gates. Do not simply increase budgets silently, skip
+roles, publish partial work as a decision, or retry whole paid jobs automatically.
+
+The next code slice adds `research_stage` immutable artifacts for returned
+allowlisted reader text, fenced by the existing job lease/cancellation boundary.
+These remain unvalidated/non-approvable even after Financial validation returns;
+only the separate final pipeline can publish a decision. No raw prompts,
+messages, reasoning metadata or executable state is serialized. Returned text
+can survive a boundary deadline without claiming stage/run completion.
+
+This is working-note retention, **not graph resume**. The existing CLI SQLite
+checkpoint signature lacks web owner/source/model/prompt binding, so it is not
+enabled for this path. The original failed BTC has no saved notes to backfill.
+The web groups these notes separately from final reports, loads contents only
+on demand and always displays nonapproval/unvalidated warnings. Interface
+language switching preserves original text without AI translation. Local DOM
+and built-web synthetic desktop/mobile checks cover this reader, not provider
+or financial acceptance. Notes above the preview byte limit remain download-only.
+Next: explicit allowance/request-timeout behavior and properly fingerprinted/
+fenced recovery without repeating completed paid work.
+
+The handler now marks `research.execution_started` durably before graph entry.
+Caught execution/publication failures and expired leases with this marker (or
+legacy stage/usage evidence) cannot trigger blind full-run retries. They require
+review, even when attempts remain. The existing storage-only retry of a complete
+committed report/decision pair is retained: the handler returns saved outputs
+before graph entry, checks integrity/context, and refuses re-entry if those
+outputs become unavailable. Cancellation still wins; stale workers cannot
+publish. Pre-engine retry and bounded SDK/schema repair remain distinct. This
+does not implement a hard request deadline or graph checkpoint resume.
+
+Snapshot-run API callers can explicitly bind `execution_limits` to the immutable
+manifest, config hash and job payload. The worker consumes them for observer
+wall-time/call-count checks. Strict ranges reject coercion and unknown SDK knobs;
+legacy omitted selections preserve historical inputs/hash and existing defaults.
+The private configuration API labels the observer mode `cooperative_boundaries`.
+The web now offers 30/60-minute selection, resets consent on changes and displays
+persisted allowances without inferring legacy values. Desktop/mobile synthetic
+interaction checks cover this behavior, not paid/provider acceptance.
+Default-worker snapshot supervision now stops local child execution on budget,
+cancellation or lease failure, including blocked SDK reads/retries. Native
+supervised live acceptance remains open; this does not stop remote
+provider work, cap provider charges or prove that a whole live report fits.
+
+Runtime budget groundwork: concurrent logical model starts now reserve the
+shared cap atomically. A monotonic remaining-allowance method preserves the
+original run start and cancellation precedence. Receipts distinguish logical
+invocations from unknown SDK-internal attempts; late returned usage remains
+accounted for without authorizing new calls. This is not request interruption.
+R08 total-deadline implementation must supervise actual blocking requests,
+including SDK retries/backoff and slow response reads, without a detached
+background call that could continue charging or publish after cancellation.
+Per-read HTTP timeout alone is insufficient. Verify hung and slow-trickle
+responses locally before authorizing any fresh paid acceptance; retain returned
+notes, usage uncertainty, all graph roles, and owner/lease publication fencing.
+
+The supervised path uses spawn isolation and parent-owned observer/publication
+authority. Local SDK blocked-read, trickle and retry-backoff tests pass alongside
+real durable-handler success/failure and a real elapsed-time deadline test.
+Pipe reads use a bounded private reader thread, not the budget authority thread;
+oversized/disconnected frames fail closed, and this thread cannot call providers
+or publish. Child termination/join precedes handler exit. Native 14-stage English
+graph through spawn and worker-crash/orphan local tests now pass on macOS.
+The same native graph now passes English/Vietnamese/bilingual fixtures through
+spawn, preserving canonical data and presentation reader text. Invalid added
+numeric content fails translation after one repair and leaves decision payload
+unavailable. These are fixtures, not semantic/MT quality proof. Other OSes, live provider
+quality and fingerprinted checkpoint resume still need evidence.
+
+### Renewed acceptance scope
+
+- Validate canonical financial content before a separate, bounded localization
+  stage. Protect quantitative tokens in translation; never weaken publication
+  validation to make a model response pass. Preserve every research/debate role.
+- Present a clear prepare → research → validation → review journey using real
+  events. Keep diagnostic details secondary and distinguish processing success
+  from a financially usable report.
+- Make summaries, evidence, opposing views, risks, invalidation and coverage easy
+  to navigate on desktop/mobile in both languages; retain original agent reports.
+- Run live BTC, Apple and NQ using the existing MiniMax configuration. NQ remains
+  reference-only. Record exact inputs, coverage, usage, output checks and limits;
+  do not imply that a price-only run includes fundamentals, news or macro data.
+- Verify locally without CI, update Draft PR #7 and its exact-SHA receipt. No
+  broker, new provider, risk-limit change, historical rewrite or public deployment.
+
+## Flow parity contract
+
+Financial review receives the complete selected immutable source records,
+not only snapshot IDs and numeric catalogs. Records are untrusted evidence;
+review must distinguish source-owned observations, opinions and conditional
+inferences. No additional review call or source excerpt cap is introduced.
+This closes an input gap, but qualitative entailment and live editorial quality
+remain UNVERIFIED; increased context may increase input usage.
+
+Both paths retain Market / applicable News / Social / Fundamentals analysts,
+Bull, Bear, Research Manager, Trader, Aggressive / Conservative / Neutral Risk,
+and Portfolio Manager. Analyst selection follows the asset profile and explicit
+source coverage. The web must never label a market-only run comprehensive.
+
+CLI uses the existing live tool boundary. Web uses immutable per-run sources:
+price queries and indicators must replay those sources rather than fetch live
+data during a historical research run. Provider failure is not missing data.
+Snapshots are not compressed by truncating history. Deterministic calculations
+provide grounded facts and tools retain access to full underlying history.
+
+The graph output is research. Only validated structured narrative and cited
+evidence can form a decision candidate. Portfolio evaluation additionally
+requires owner inputs and deterministic policy checks. Free-text fallback is
+retained for inspection and cannot authorize readiness.
+
+## Regression cases
+
+- BTC daily timestamps represent closes, not Yahoo session labels.
+- Alternating highs/lows must not be called consecutive lower highs/lows.
+- 365-calendar-day and 90-calendar-day returns must use explicit endpoints.
+- Five-year highest price is not asserted to be an all-time high.
+- Missing schema fields, absent tool calls, unsupported capabilities and
+  malformed output must remain distinguishable.
+- A cancelled job must not leave its run displayed as active.
+- A valid source with invalid LLM output must not be called inaccessible.
+- No portfolio input is different from an empty portfolio.
+
+## Design contract
+
+Reference: owner's Linkpolish desktop capture, 2026-09-27. Use its restrained
+charcoal surfaces, strong typography, generous spacing and clear primary action
+within a financial workspace (not the landing-page layout). No Image Gen.
+
+Keep four routes: Markets, Research, Portfolio, Decisions. Desktop uses a compact
+navigation rail and spacious content; mobile uses accessible navigation and a
+single content column. Use a shared type/space/color system: near-black canvas,
+neutral raised surfaces, warm-white primary action, semantic green/red only for
+financial meaning, visible keyboard focus. Controls use deliberate typography.
+
+Research anatomy: asset/cutoff/coverage, snapshot price chart and deterministic
+metrics, concise thesis, supporting and opposing evidence, invalidation,
+limitations, optional portfolio impact. IDs, model details and diagnostic events
+live in expandable audit sections. Source lag and invalid results remain visible.
+
+Read-only reports never invoke AI. Language switching changes presentation of
+saved content. No fake prices, fabricated progress percentages or mock charts in
+the shipped runtime. Approval state must agree with the backend.

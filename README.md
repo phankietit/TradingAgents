@@ -380,9 +380,38 @@ The optional `platform` extra now includes a private, authenticated FastAPI
 foundation for durable analysis jobs and owner-scoped results. The `web/`
 application provides Markets, Analysis, Portfolio and Decisions workspaces,
 served locally through `tradingagents-api` after a separate frontend build.
+`tradingagents-api --help` shows setup variable names without loading private
+configuration or starting a service. Unknown command-line options are refused
+before startup without echoing supplied values; runtime configuration stays in
+the server environment and binding remains local-only.
 It uses saved evidence, not a live trading feed. See the
 [local startup guide](docs/platform/local-web-startup.md) and
 [web build and verification guide](web/README.md).
+
+The local UI supports **English / Tiếng Việt** with a persistent VI/EN switch.
+The current remediation candidate adds snapshot-bound indicator tools, explicit
+daily session labels, deterministic return endpoints, readable Markdown reports,
+saved-report charts and separate source/research/portfolio states. It retains
+the original debate/manager graph. Final report quantities are compiled from
+snapshot-bound references before protected bilingual presentation. The research
+workspace separates setup, actual-event progress and report summary/price/history
+verification views; processing completion is not report approval. See the [implementation and verification
+ledger](docs/platform/research-remediation.md); local tests are not live-model
+quality or release approval.
+Completed runs lead with their saved report; the processing timeline remains
+available in a collapsed disclosure. Active and failed runs keep their status
+visible. Reports retain missing coverage and validation findings in the main view.
+Decisions show review readiness and the explicit
+approve/reject controls before the report, without opening technical details.
+These controls do not relax eligibility: matching successful research, data
+quality, deterministic policy checks and backend revalidation are still required.
+Reports embedded in Decisions omit navigation back to that same decision;
+the linked decision action remains available when reading Analysis.
+New research offers English, Vietnamese or bilingual English–Vietnamese reports
+(bilingual is the web form default). The language choice is recorded on each
+run; changing the UI language never translates or overwrites saved analysis.
+Bilingual generation can consume more output tokens and still needs human
+translation/financial review. See [language behavior](docs/platform/bilingual.md).
 
 The current platform layer also provides canonical instrument identity,
 immutable normalized price series, vendor-neutral equity/ETF evidence,
@@ -390,7 +419,99 @@ reference-only NQ/ES context, BTC/ETH UTC snapshots, a deterministic large-cap
 stock screener, transparent derived factors, and consistent data-health
 classification. These services operate on explicitly supplied or previously
 stored snapshots; this milestone does not select or configure a production
-market-data vendor.
+market-data vendor. The web now also offers **Prepare latest prices** using the
+existing Yahoo/yfinance integration for AAPL, SPY/QQQ, cash indices and BTC/ETH.
+It verifies five years of completed daily sessions using the original engine's
+shared history window, saves immutable evidence, then
+requires separate paid-AI consent. The price action itself does not ingest
+news/fundamental/macro sources and is not a historical-vintage feed;
+the data step groups supplementary preparation under **Broaden research
+coverage** (**Bổ sung phạm vi nghiên cứu**). Expand it to access the existing
+social, headline, FRED and eligible SEC actions. Opening or closing this section
+does not acquire data, select evidence or authorize AI. Coverage and missing-area
+disclosures remain visible outside it; this is presentation, not a reduced
+research flow or a claim of complete source coverage.
+The existing financial-review step receives complete selected immutable source
+records as untrusted evidence, in addition to the draft and numeric facts. This
+does not add a model call but may increase input tokens; it does not prove that
+all qualitative claims are entailed or remove the need for human review.
+The same validated social count facts are available during compilation and
+financial review. Count bindings render complete source-owned EN/VI statements
+about the supplied sample and user labels, not price, market probability or
+neutral absence. Publication and translation preserve their unit and scope;
+unreferenced `percent`/`per cent` values also require valid financial bindings.
+These checks do not establish general qualitative entailment or live acceptance.
+
+NQ/ES preparation remains unsupported. The preparation form groups instrument,
+research time and report language together, and offers **Choose saved sources**
+to open and focus the evidence inspector. This shortcut does not collect data,
+select evidence or authorize AI. Optional source actions remain independent.
+See [data preparation](docs/platform/data-preparation.md).
+
+The analysis form can also **Add recent headlines** from the existing
+Yahoo/yfinance source as an independent, optional, owner-scoped news snapshot.
+The seven-day feed is explicitly non-exhaustive and current-vintage only;
+empty, malformed or unavailable news cannot be selected as evidence. This
+headline action does not fetch discussions or make a price-only or
+market-plus-news report comprehensive. An owner-approved, separate **Add SEC
+fundamentals** action now prepares AAPL US GAAP companyfacts with filing dates
+and immutable provenance using the existing SEC EDGAR adapter. It requires a
+real `SEC_EDGAR_USER_AGENT` contact in the ignored local environment; no key or
+AI tokens are used for preparation. SEC facts are not a complete company profile,
+and their current retrieval cannot be backdated. CLI vendor defaults are unchanged.
+Final SEC quantities use application-owned sentences for the reported metric,
+period and USD-million/per-share unit, rather than a model-written scale label.
+The bilingual presentation protects complete verified fact sentences as well
+as numbers. These structural checks do not prove qualitative reasoning or
+translation quality; human review is still required.
+NQ/ES automatic preparation remains unsupported.
+
+The draft form offers independent **Add StockTwits discussions** and **Add Reddit
+discussions** actions using the repository's original public endpoints and symbol
+aliases. No API key or AI tokens are needed. Each feed retains every eligible
+returned post's full text from the original seven-day window, with publication,
+edit and current retrieval provenance; it is a non-exhaustive sample, not a
+historical archive or market probability. Author/account profiles and inferred
+engagement are not stored. StockTwits user labels are not verified events, and
+unlabeled posts are not neutral sentiment; Reddit does not supply sentiment labels.
+Authenticated preparation appends immutable owner evidence, audits distinct
+failed feeds and never starts AI. Selecting one source preserves the other and
+resets paid consent; oversized selections require review, not silent removal.
+Bounded streamed transport and supervised child lifetime refuse late, malformed,
+ambiguous or oversized results rather than truncating them. Original Sentiment
+research receives full retained text and source-count facts, with missing-feed
+coverage disclosed. CLI sources/defaults and all research/debate, financial,
+translation, risk and human-approval gates remain unchanged. NQ/ES refuse this
+preparation. Local fixtures do not prove live reachability, exhaustive social
+coverage, source entailment or investment quality; dated receipts state the scope.
+
+The draft analysis form now also offers **Add economic context** using the existing
+FRED key/endpoints and immutable macro snapshots. It requires `FRED_API_KEY` on the
+server, never a key in the browser. Explicitly choose a series and history window;
+365 days matches the original macro default and can be extended to 36,525 days.
+No AI call is made during preparation. Headline and other indicator selections
+are retained when replacing the same dataset/series, with an explicit 16-source
+selection limit rather than silently dropping evidence. Economic context and
+headlines have separate coverage disclosures even though both enter News research.
+The collector and storage reuse the existing configured FRED host/key,
+accept an explicit series/window, retain every returned observation including
+missing values, and pin metadata/values to the previous fully elapsed Chicago
+vintage day. Native-frequency observation freshness is checked separately from
+vintage/retrieval freshness. This day-level pin is not an exact release time or
+complete macro coverage; retrieval is never backdated. Failure snapshots remain
+auditable but ineligible. Validated stored FRED snapshots can now join the news
+analyst through read-only full-history paging and exact native-unit, observation-
+label, denominator and vintage-bound facts. Application-owned EN/VI statements
+keep these meanings intact without changing research/debate roles, repairs,
+deterministic risk or human approval. Macro-only input explicitly lacks headlines.
+Current preparation authenticates owner/CSRF, reuses only recent eligible matching
+series/window/vintage snapshots, spaces repeated requests and bounds streamed
+responses/child output. A supervised 75-second acquisition deadline kills/reaps
+unfinished children; late or invalid results are withheld. Failure snapshots cannot
+authorize research. Oversized data is rejected, never silently shortened. The CLI
+request/defaults remain unchanged. Local evidence is not live FRED availability,
+comprehensive macro coverage or financial/editorial acceptance; see
+[data integrity](docs/ops/data-integrity.md) and dated acceptance receipts.
 
 The analysis layer now connects those snapshots to an `AnalysisEngine`,
 asset-specific graph profiles, strict structured narrative, source-linked
@@ -398,6 +519,422 @@ evidence, deterministic portfolio/risk checks, and an audited owner-approval
 lifecycle. Invalid, stale, incomplete, or unattested output remains `REVIEW`.
 LLMs cannot choose portfolio weights or approve decisions. NQ/ES remain
 reference-only; supported crypto analysis is BTC/ETH.
+
+The candidate API provides owner/CSRF-protected
+`POST /api/v1/runs/{id}/continuation/prepare` and
+`POST /api/v1/runs/{id}/continuations`. Preparation derives the original
+checkpoint identity and remaining allowance without calling a model. Reservation
+requires its current observation hash, an idempotency UUID, literal confirmation
+and acknowledgment of retained allowance, unknown provider cost and unvalidated
+prior research. No client codec/config is accepted. Both responses explicitly
+state `dispatch_enabled: false`: HTTP does not directly dispatch a model and
+ordinary worker startup does not enable continuation polling. An operator can
+explicitly enable polling with `tradingagents-worker --continuations`; ordinary
+queued jobs take priority. Explicit browser continuation controls are implemented
+in this candidate; operator enablement and combined runtime acceptance are separate.
+Reservation does not approve a decision or rewrite history.
+Local/native API and full-candidate acceptance are recorded separately in HANDOFF.
+
+The trusted worker operation can rebuild a reserved continuation's actual SDK
+identity without browser credentials, claim once, retain original allowance,
+restore the original graph and publish a separately fenced report. Uncertain
+lease renewal blocks callbacks/publication; uncertain ACKs are not automatically
+retried. Opt-in polling consumes durable reservations without stored browser
+credentials. A preclaim preparation refusal is recorded separately and excluded
+from subsequent polls across restart; it cannot grant a claim or retry. After a
+claim, uncertainty never requeues or replenishes the original allowance.
+Authenticated `GET /api/v1/runs/{id}/continuations/{execution_id}` reads validated
+state without SDK construction; the corresponding `POST .../cancel` requires
+CSRF/Origin and cancels a reservation or requests an active attempt's stop.
+Completed status requires the full completion/report reader, not a database flag.
+While cancellation is requested, the EN/VI progress step explicitly says shutdown
+is not yet verified; requesting cancellation is not proof that processing stopped.
+Once the complete local-stop receipt is verified behind a cancellation/expired
+publication fence, the EN/VI browser shows local processing stopped, removes
+repeated-stop/new-attempt controls and retains unknown provider charges and
+nonapproval disclosures. Missing receipt remains pending/unknown; corrupt receipt
+refuses the read. Successful leased publication still polls for the final report.
+Neither message establishes provider termination, known charges or retry authority;
+operational, full regression and live acceptance remain separately evidenced.
+Candidate `GET /api/v1/runs/{id}/continuations` discovers owner-scoped attempts
+after browser refresh, with descending attempt pagination (`limit` up to 50,
+`before_attempt`) and explicit `has_more`. State includes attempt and report/
+evidence/decision IDs only after the full completion reader verifies them. These
+IDs are read links, not approval authority. The browser has explicit continuation
+controls; saved native-worker-to-API-to-browser readback has a disposable SQLite
+EN/VI fixture receipt in HANDOFF. Browser-driven native dispatch, live quality
+and full operational acceptance remain pending.
+After verified completion, its nonapproval warning stays visible while operational
+details, attempt selection and refresh use an expandable EN/VI section. Active
+processing and explicit consent remain fully visible; a compact completed panel
+does not establish the report's financial validity or human approval.
+When the verified report artifact is available, `Read report` moves scroll and
+keyboard focus to its reading region without changing the route, fetching new
+research or approving a decision. On mobile the analysis picker/status area uses
+tighter spacing; absent reports cannot offer this shortcut.
+Decision review labels failed/cancelled processing as the original attempt:
+retaining its status does not negate a separate continuation report or approve
+its conclusion. Risk and approval eligibility are unchanged.
+The corresponding `GET .../{execution_id}/events` provides cursor-paginated,
+actor-linked progress (`after_sequence`, `limit` up to 100, `has_more`). It
+validates entry provenance and owner/run/attempt/time bindings and returns only
+sequence/type/time/attempt/stage, never arbitrary payloads. Progress remains
+non-approval evidence and does not change the original terminal SSE lifecycle.
+Migration `0018_preparation_refusals` is additive and requires an explicit operator
+migration with a consistent private DB/artifact backup; worker startup never
+migrates. Downgrading removes refusal receipts and must not be used to enable a
+retry. Broader browser workflow and live operational acceptance remain unfinished.
+Synthetic native parity is not live financial/editorial proof.
+
+Durable snapshot jobs retain private, immutable working notes when each graph
+role returns reader text. Notes bind to the run, snapshots and declared config,
+are always **unvalidated**, and cannot authorize portfolio approval. Prompts,
+raw messages, model-reasoning fields and executable portfolio fields are not
+retained in these notes. A cancellation or lost worker lease prevents new writes.
+Notes are available on demand in the web artifact reader with a mandatory
+unvalidated/nonapproval warning; interface language changes preserve original
+stage text without calling AI. Graph resume remains unfinished. This does not enable the CLI's
+checkpoint path for web jobs, increase execution allowances, skip any role or
+recover text that was never saved by an older failed run.
+
+Local stopped-attempt fixtures now lose an ACK after the first returned market
+report's pending writes are durably committed. The supervisor actually stops
+and reaps that child; a new original child restores the latest validated tuple
+using the retained observer. Prefix plus continuation prompt/model trace and
+final published fields match uninterrupted EN/VI/bilingual/invalid-translation
+fixtures, without repeating the completed model call or rewriting old rows.
+Killed SDK cleanup remains unknown; this is not abrupt-parent-crash recovery,
+authenticated consent, linked execution or live financial acceptance.
+
+The internal supervisor can optionally transfer restricted checkpoint bytes to
+a new spawned original engine/recorder after parent thread/fingerprint/context
+validation and revalidation before spawn. The child independently checks its
+initialized original graph fingerprint before restore; database/lease/commit
+remain parent-only. Synthetic new-child fixtures compare continuation traces
+and outputs while debiting all first-attempt usage with the retained observer.
+These mechanism tests are not authenticated consent, transactional execution
+identity or permission to replay historical runs; default worker/API recovery
+and live acceptance remain disabled/unverified.
+
+The internal original-context recorder can now import restricted checkpoint
+bytes after checking the initialized graph fingerprint and original observer
+allowance. The paired snapshot graph hook invokes the original scheduler with
+`None` under original config scope, sync durability and callbacks. Synthetic
+recorder/engine fixtures compare continuation prompt traces and complete outputs
+with an uninterrupted run, preserving old checkpoint rows. No new observer is
+constructed here. New-child transport, consent, default worker/API recovery and
+live acceptance remain unverified and disabled.
+
+An internal committed saver restore method now imports a reviewed tuple only
+into an empty saver, bound to the expected thread and codec fingerprint. It
+preserves native versions, routing and completed pending writes without
+republishing old history; malformed/mismatched/repeated or partial imports
+poison the saver. Native graph fixtures exercise this method, but new-child
+restore, consent and default worker/API recovery remain unverified and disabled.
+
+The draft recovery work includes a restricted JSON checkpoint codec, not an
+enabled web resume feature. It removes messages from state/start/pending writes,
+preserves native channel versions/routing and rejects unknown fields, incompatible
+formats or oversized input without truncation. Local synthetic tests restore
+into a fresh saver, including completed pending writes, without repeating model
+calls. Full fingerprint construction, owner/lease-fenced durable storage and
+explicit continuation consent remain unfinished; a caller-supplied digest alone
+is not recovery authorization. See the
+[recovery implementation contract](docs/platform/research-recovery-contract.md).
+An internal recovery-fingerprint builder now validates original run/request and
+snapshot identities, hashes verified source manifests, full portfolio/policy
+content, effective graph configuration/options, supplied resolved-client bindings,
+package source bytes and installed dependency versions. It returns only a digest;
+it does not authenticate the caller, attest supplied SDK bindings, save a
+checkpoint or authorize paid continuation. Worker integration remains unfinished.
+An internal initialized-client adapter reads actual endpoint, timeout/retry and
+model options from reviewed OpenAI-compatible classes (including MiniMax), without
+invoking models or reading SDK authentication headers. It rejects declared custom
+headers/query/transports and unreviewed classes. This is not a complete transport
+attestation: worker-controlled construction, SDK mutation protection, other SDK
+adapters and durable recovery remain unverified and are not enabled.
+An internal initialized-identity preflight now constructs the original graph
+and reviewed SDKs in a separate spawned process. LangChain default HTTP pools
+can be shared between fresh SDK roots, so it never closes clients in the worker
+or clears its transport caches. It uses bounded JSON inputs/replies, the original
+observer's wall-time/cancellation/lease checks, a separate 45-second preparation
+ceiling and child reaping. Only a sanitized fingerprint/node list is returned
+after SDK cleanup and clean child exit; no model call or continuation permission
+is granted. Parent credentials are not serialized and no supplied client/factory
+is accepted. Default per-run recording, owner continuation and live acceptance
+remain unfinished. The draft default local worker now attempts per-run recording
+for snapshot jobs: reload original owner-scoped Decimal book/policy/risk bytes,
+retain the entered-attempt uncertainty fence and same observer, prepare actual
+identity, then construct a fresh supervisor with original parent-fenced commits.
+No shared template mutation, recording fallback, automatic retry/resume or new
+approval authority. Legacy tools/CLI stay unchanged; explicit engine injection
+is a testing seam, not production recording authority. Current integration QA
+has two preparation-deadline errors; default graph/owner journey and a new full
+baseline remain unverified. Do not infer acceptance from the prior preflight gate.
+Private checkpoint persistence now has an internal append-only database store
+and migration `0011_research_checkpoints`, separate from report artifacts. It
+validates restricted JSON, binds owner/run/job, commits under the existing
+publication lease/cancellation transaction, and returns an ACK only after
+commit. Fixture reopen/rollback/fencing checks do not establish native saver,
+child bridge, crash recovery, explicit consent or live acceptance; none is
+enabled. No existing owner database was migrated during this checkpoint.
+An internal native saver now commits filtered JSON for checkpoint/pending-write
+updates and refuses reuse after a failed or mismatched ACK. It requires native
+LangGraph `durability="sync"` to wait before advancing; default async durability
+is not a publication fence. Local synthetic tests restore committed SQLite
+bytes into a fresh saver across all 17 interruption boundaries without changing
+downstream prompts, model-call traces or validated results. This is not a
+separate-process crash test or enabled worker resume; bridge integration,
+trusted construction, consent/accounting and live acceptance remain open.
+The supervisor now has an internal opt-in checkpoint RPC: only non-secret
+identity reaches the child; codec validation, private commit callback and lease
+remain parent-owned, with cancellation/deadline checked before ACK. Incomplete
+setup or an engine without an explicit recording capability is rejected.
+The default AnalysisEngine/worker does not enable recording or resume. Native
+fixture graphs exercise this RPC, including parent crashes before/after commit
+while the child waits; production construction, restore/accounting/consent and
+bounded DB-lock behavior still require acceptance.
+Checkpoint transactions now use a local lock-wait budget (default five seconds,
+optionally shorter): SQLite busy_timeout is restored before pool reuse;
+PostgreSQL uses transaction-local lock_timeout/statement_timeout but remains
+unverified live. Real SQLite writer/commit contention fails without ACK or a
+second unbounded lease query. This is a per-operation lock/statement bound, not
+a hard whole-transaction, pool/connect/network or disk-stall deadline; defaults
+for other database sessions and model timeouts are unchanged.
+The original snapshot graph now exposes an internal paired saver/canonical
+run-thread hook. It compiles a local invocation graph and explicitly uses sync
+durability without replacing the instance/CLI graph, including on failure.
+Native spawn fixtures use this hook rather than replacing graph.invoke. It is
+not selected by default AnalysisEngine/worker, does not restore saved state,
+and does not supply fingerprint trust, consent or retained accounting.
+An internal initialized-graph guard now derives the full original recovery
+fingerprint from this graph's actual reviewed sync SDK clients, checking exact
+effective config, selected roles, declared model names and the construction-time
+digest of snapshot readers. Mismatches fail before invocation without printing
+inputs. Real graph/SDK tests use synthetic credentials and forbid network/model
+calls. This is still not complete transport/closure-mutation attestation or an
+enabled worker/owner continuation path.
+AnalysisEngine now accepts an internal opt-in SnapshotRecorder with the original
+run context, expected full fingerprint and trusted fenced commit callback. It
+requires the original ResearchObserver/allowance, recomputes identity from its
+newly initialized actual graph and refuses mismatch before invocation. It then
+passes a restricted committed saver/run thread to the native sync snapshot hook.
+Arbitrary recorder types/graph factories and non-snapshot requests are rejected;
+default engine/worker and CLI behavior is unchanged. This direct engine wiring
+does not enable supervised worker recovery, restore history or grant consent.
+Native fixtures now exercise this actual engine/recorder path with initialized
+SDK identity and synthetic responses: all four analysts, two debate/risk rounds,
+EN/VI/bilingual and invalid VI preserve baseline prompt/call/stage traces and
+non-message results. Private SQLite bytes reopen with original owner/run/hash
+and no raw messages/reasoning. Synthetic methods do not prove SDK callback usage,
+billing, live financial quality or supervised worker recording/recovery.
+Recorder allowance validation can now use the exact internal checkpoint-enabled
+child bridge: parent matches original limits/fingerprint/thread and checks its
+existing clock/cancellation/lease before ACK. Child creates no new allowance or
+clock. Wrong setup or non-True ACK fails closed. This is internal RPC groundwork,
+not original-context transfer, worker activation, continuation consent or resume.
+
+The analysis handler durably marks entry into the research engine. Caught
+engine/publication failures do not automatically replay the whole paid run;
+expired leases with execution evidence require review, even if attempts remain.
+Provider charges may be unknown. Pre-engine preparation retries and bounded
+SDK/schema repairs are separate and unchanged. Storage-only finalization of an
+already committed report/decision pair may retry without a model call; missing,
+partial or corrupt saved outputs fail closed instead of re-entering the engine.
+This is not automatic resume. Snapshot-run API callers can explicitly select
+immutable `execution_limits` (`wall_seconds`, `model_calls`); these bind to the
+run/config hash/job and worker observer. Omitted limits preserve the legacy
+30-minute/128-call defaults without rewriting history. `/analysis-configuration`
+discloses those defaults and `cooperative_boundaries`: already-running requests
+can overrun the allowance. SDK timeout/retries are unchanged. The web form offers
+30 minutes (default) or 60 minutes, resets paid-call consent when changed, and
+binds the selection to each new snapshot run. Processing displays recorded
+limits without inventing them for legacy runs. The default web worker now runs
+snapshot research in a spawned process; the parent monitors the same allowance,
+cancellation and lease checks while SDK requests block, then terminates/joins
+the child before returning or publishing. SDK retry/backoff and slow response
+reads cannot leave a detached local call after that termination. Safe graph
+resume remains unfinished; accepting a larger
+allowance does not shorten or skip graph roles or cap provider charges.
+The model-call cap counts logical LangChain invocations, not SDK-internal
+retries. Receipts explicitly leave provider attempt counts unknown; returned
+usage is preserved even after the allowance expires. Concurrent model starts
+share atomic admission. The CLI, legacy live-tool runs and explicitly injected
+engines retain their existing contracts. Reports record actual supervision mode;
+configuration disclosure describes the default worker, not proof that a running
+worker was upgraded. Stopping local processing does not stop or refund remote
+provider work. Process startup/cleanup and scheduler latency are not zero.
+
+Model observers now emit cumulative `model.usage` counters before a logical call
+as well as after completion/error. The worker's existing lease-fenced event
+transaction commits the reservation before provider admission; failed emission
+or deadline/cancellation during that commit stops admission. New events include
+original execution limits and observed monotonic elapsed seconds. An unfinished
+reservation remains `incomplete`, even if earlier calls supplied usage. No
+prompts, raw errors, provider reasoning or keys are included. Elapsed observations
+are lower bounds at event time, not exact crash duration or provider billing.
+This does not enable recovery, recreate missing history or reset any allowance;
+cross-attempt accounting/consent and live financial acceptance remain unfinished.
+
+An internal read-only accounting reader now validates an owner-scoped bounded
+event prefix, takes the latest cumulative counters per attempt, and aggregates
+reported tokens/reservations without double-counting earlier receipts. Missing
+or legacy attempt evidence yields unavailable totals, not zero usage. Invalid
+limits, counters, sequence gaps and unknown fields fail closed.
+Token growth without an additional usage-bearing completion and nonfinite
+aggregate elapsed also fail closed. Its high-water
+sequence is an observation, not a transaction fence; elapsed stays a lower bound.
+The reader is not wired to browser consent, worker continuation or budget
+admission and cannot authorize resume or infer actual provider cost.
+Observations now retain original owner/run/config/allowance identity. An internal
+recheck compares the full observation against freshly loaded evidence and rejects
+changes; it is not a database lock, consent token or check-then-dispatch fence.
+The supervised parent can append a final usage observation only after child
+reaping and reader shutdown. When every observed attempt has that boundary, the
+reader retains an upper bound on local supervised elapsed time. Missing stop
+evidence remains unknown, not inferred from run status. This does not bound
+remote provider duration/billing or authorize continuation; old rows are untouched.
+A read-only allowance observation subtracts all durable logical starts and the
+local elapsed upper bound from the original run limits. Missing time remains
+unknown; already exhausted limits remain blocked. A positive arithmetic result
+is not consent or admission and cannot reset caps or waive unreported usage.
+An internal retained-observer builder reloads and compares original accounting,
+refuses stale/unknown/exhausted observations, and debits prior time/calls at
+admission while emitting only current-attempt usage. It is not wired to worker
+or browser continuation and does not authenticate consent or restore a graph.
+The opt-in supervised restore path now requires that builder's original
+owner/run/config-bound, unused observer. Fresh/copied observers, reset prior
+debits, changed caps/clock/callbacks and already-used attempts are rejected
+before spawning. Its original clock still governs the remaining deadline.
+This local construction binding is not an authenticated consent token, a DB
+writer fence or authority to continue a terminal historical run; default
+worker/API recovery remains disabled.
+
+An internal continuation consent store now records a separate immutable
+research execution identity after locked owner-session/CSRF authentication,
+explicit confirmation and transactional reloading of the latest checkpoint,
+original terminal job/run and complete accounting prefix. Unknown/exhausted
+allowance, changed evidence, duplicate reservations and corrupt receipts fail
+closed. Disposable SQLite and PostgreSQL stopped-run/idempotency and writer-race
+fixtures are covered by dated exact-source receipts; these are not browser consent
+or private-runtime rollout evidence.
+Migration `0012_research_continuations` is additive and has only been applied
+to disposable tests. No old run/job/error/checkpoint is changed, no token/email
+is copied into the consent record and no model is invoked. This is NOT an API
+resume endpoint, queued execution, final source/client attestation or financial
+approval. The separate linked worker/default dispatch and browser journey still
+need implementation and verification; an execution ID is not a bearer
+permission or a fresh budget. Do not apply migrations to private history
+without the documented backup/owner rollout procedure.
+
+The internal linked-execution store additionally allocates that consent identity
+once into a separate private `0013_research_executions` lease record, not a new
+run or a default worker job. It rechecks authenticated owner/CSRF and the full
+original checkpoint/accounting observation before allocation and claim. One
+worker receives a hashed-token fence after commit; competing/expired/lost-ACK
+claims cannot reset the attempt. Renewal retains its original claim-time deadline
+minus all previously observed elapsed time. Cancellation of an unclaimed
+allocation is terminal; cancellation of a leased allocation stays requested
+until supervised termination is actually established. Expiration requires review,
+never automatic requeue or an invented zero-cost stop. No new research event,
+checkpoint, report, decision or model call is produced by these methods.
+Default API/worker/CLI do not consume this table. An internal
+`LinkedPublicationContext.prepare` now constructs a retained observer and
+transactionally rechecks consent before recording one parent entry. Linked
+usage/stage events and private checkpoints are lease-fenced in their own
+commit transaction, including a final expiry check. Additive `0014` actor links
+preserve the original job/run and old event/checkpoint bytes; new checkpoints
+use the linked attempt, not the terminal job's attempt. Prior and current
+logical starts share the original cap; elapsed includes claim/prepare time and
+unknown provider cost stays unknown. A lost entry ACK cannot re-enter. The
+trusted stop hook is accepted only from that bound observer under a valid lease;
+cancelled/expired late stop remains unknown, never a refund.
+
+The internal terminal-original-context loader now preserves the complete failed/
+cancelled manifest, including completion and errors, while the ordinary recording
+context continues to reject terminal manifests. It reloads owner-readable source
+bytes, source-row/manifest integrity, the original portfolio/policy and pinned
+checkpoint under the linked parent fence, again before dispatch. No live source
+fallback, new observer, budget reset or original-thread relabeling is allowed.
+Additive `0015_linked_dispatch` records one consumed dispatch before constructing
+the child; a lost committed ACK cannot respawn it. The private child receives JSON
+and checkpoint bytes, never a DB/lease nonce/session/callback. Synthetic native
+spawn fixtures compare interrupted prefix + restored suffix to the original
+uninterrupted EN/VI/bilingual flow, including invalid-VI handling. These are local
+mechanical proofs, not live provider/cost or financial/editorial acceptance.
+An opt-in parent `LinkedResultPublisher` now retains allowlisted stage reader
+artifacts with execution actor links and, only after a returned result, clean
+child exit/reaping and durable local stop accounting, atomically appends the
+ordinary report/evidence/risk candidate plus a separate `0016` completion receipt.
+The ordinary handler and linked publisher share the same report projection and
+decision pipeline; no financial/translation/risk gate is removed. The returned
+linked child must exit cleanly within the retained deadline; slow cleanup is
+polled with cancellation/lease checks, not terminated after a fixed one second.
+No new budget or model call is granted. The original
+FAILED/CANCELLED run/job remains immutable. Missing/invalid structured research
+still becomes REVIEW; an existing owner risk input still determines weights.
+An owner-scoped integrity reader can recover a committed receipt after lost ACK
+without models or a live lease. Completion blocks later linked publication,
+checkpoint writes, heartbeat or cancellation; automatic expiry maintenance does
+not rewrite a committed output marker. It is not an approval or cost/refund claim.
+Default continuation dispatch stays disabled. The existing authenticated owner
+transition route now accepts an integrity-verified linked completion as proof of
+completed research while preserving the original FAILED/CANCELLED run. Approval
+still requires the exact human owner, source bytes/evidence, deterministic risk
+replay, policy version and append-only lifecycle; a receipt alone grants no
+approval. Candidate payload/hash remains immutable, with current status projected
+from lifecycle events. Missing/corrupt approval receipt is refused. Every linked
+lifecycle event, including review/reject/expire, is rejected before writing if
+its timestamp precedes completion; a refusal does not poison readable history.
+Ordinary successful-run approval is unchanged. An internal `0017` local-stop
+receipt separately records a real joined child and closed pipe reader, including
+cancel/expiry when normal publication is refused. Private original dispatch
+identity and accounting bindings are verified; no checkpoint/report/decision
+write is allowed through this path. It does not change original allowance or
+unknown provider cost, claim remote work stopped, authorize another call or
+rewrite old root/job/event history. Lost committed stop ACK can be resolved by
+an owner-scoped integrity reader without a model or live lease. Default dispatch
+remains off; missing/corrupt stop facts remain unknown. Multi-continuation,
+all late-stop/crash/expiry boundaries and the default continuation API/UI journey
+remain unfinished; local API tests are not live/browser acceptance.
+
+The isolated R08 recovery UI candidate now lets the owner inspect saved context,
+explicitly acknowledge retained allowance, unknown provider cost and unvalidated
+working notes, then reserve a continuation. It shows authenticated linked status,
+supports cancellation requests and displays a linked report only after verified
+report IDs are returned. The original failed/cancelled history stays unchanged;
+completion does not approve a decision. No preparation or reservation occurs on
+page load. Desktop/mobile EN/VI synthetic browser tests and 158 web unit tests
+pass, not real worker/provider acceptance. The progress reader now consumes all
+cursor pages, validates their sequence/attempt and publishes only a complete
+projection. Later polling uses the validated cursor; overlapping polls coalesce
+rather than aborting a long read. A failed page clears both display and cursor,
+and selection changes abort in-flight reads. It does not persist private progress
+or silently cap the timeline. Native/backend combined acceptance is pending.
+The recovery candidate is now integrated into `fix/TA-R01-research-quality`
+from the preserved R08 branch. It is not installed or accepted in the user's
+runtime; current and earlier regression receipts are recorded separately in
+HANDOFF.md. Earlier consent failure causes remain unverified even after the
+separate full9c gate passed; the new integrated full candidate is still pending.
+Default polling remains off.
+
+Financial validation reviews both draft and legacy canonical research, even when
+numeric/provenance checks pass. Those checks alone do not establish qualitative
+financial entailment. The existing source-context review and one optional JSON
+format repair remain bounded by the original execution allowance; failed review
+withholds the structured decision. The draft path has no extra call. A legacy
+canonical input now normally uses one review call instead of skipping this stage.
+This is not a guarantee of model accuracy or a substitute for human review.
+The isolated semantic candidate also rejects known factual external cause/flow
+assertions from price-only sources and known EN/VI qualifier losses. Explicit
+unverified hypotheses remain research; valid recognized paraphrases remain
+eligible. Action intensity, conditions, uncertainty and opposing cases must not
+be dropped or moved into unrelated sentences to pass. Failed checks use the
+existing single repair, not additional analysis calls or silently edited prose.
+Original reports, source records, quantities, graph roles and human authority
+are preserved. These known-case guards do not prove general financial entailment,
+cross-language actor/object alignment or actual MiniMax output quality; see the
+exact scoped receipts and remaining gates in HANDOFF.md.
 
 Install with `pip install ".[platform]"`. After applying the documented
 migrations, `tradingagents-worker` processes durable research jobs using the
@@ -416,6 +953,19 @@ The UI supports saved watchlists, price/benchmark charts, screening history,
 queued research, reports and evidence, persisted portfolio valuations, and
 explicit decision review. Reloading data does not ingest new prices or call a
 model. A completed research run is not a valid or approved investment conclusion.
+Decision review presents the selected research before history (including on
+mobile), with the saved report and portfolio context ahead of owner actions.
+Evidence and policy details remain accessible; this presentation order changes
+no review eligibility, backend revalidation or approval requirement.
+Analysis setup shows one focusable scope/data/authorization step at a time,
+retaining the mounted inputs, selected sources and preparation state when
+navigating back. Step navigation makes no acquisition or AI call; submitting
+from a step other than authorization is refused. Before
+paid consent, the request summary shows the selected asset, UTC time, report
+language, research mode, every selected source/cutoff and absent research areas;
+portfolio mode also shows the selected valuation, policy version and owner
+target. This is a view of current form inputs, not a source-quality waiver or a
+cost quote. Existing source, allowance, consent and backend checks still apply.
 No portfolio simulator, broker connection, order execution,
 or autonomous trading path is included. See `docs/platform/api.md` and
 the contracts under `docs/platform/` for the current runtime and data

@@ -118,6 +118,17 @@ map to their corresponding role. Unknown/bundle datasets are withheld from
 analysis until a reviewed mapping exists. Both UI and snapshot-run validation
 enforce this boundary; a price source cannot stand in for news or fundamentals.
 
+Current-data acquisition is separate from paid analysis. Authenticated,
+CSRF-protected `POST /instruments/{instrument_id}/prepare-data` saves validated
+Yahoo daily prices; `prepare-news` optionally saves a non-exhaustive current
+Yahoo feed; `prepare-fundamentals` optionally saves AAPL SEC EDGAR facts with
+filing-date and retrieval provenance. All are under `/api/v1`, return a
+`PrepareDataResponse`, and never enqueue AI. The SEC route requires a real
+`SEC_EDGAR_USER_AGENT` contact at runtime and does not fall back to Yahoo.
+It is unsupported for ETF/index/futures/crypto identities. Fundamentals use
+their own one-year latest-filing freshness limit; price and news keep the
+separate selected limit. See [data preparation](data-preparation.md).
+
 Optional risk inputs bind an owner portfolio snapshot at the exact analysis
 timestamp, an existing policy effective at that timestamp for the instrument's
 asset class, and an explicit owner target weight. Reference-only instruments

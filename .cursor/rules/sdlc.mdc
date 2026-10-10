@@ -1,0 +1,38 @@
+---
+description: TradingAgents core SDLC, scope, verification, and product-boundary rules.
+alwaysApply: true
+---
+
+# TradingAgents SDLC
+
+Read `AGENTS.md` and `docs/ops/agent-map.md` before work.
+
+## Before Work
+
+- Confirm repository root, branch, full HEAD, remotes, and dirty state.
+- Classify the task as audit, planning, execution, PR/sync, or release.
+- Load the matching domain contract.
+- Preserve unrelated user changes.
+
+## Engineering Rules
+
+- Make the smallest contract-complete change.
+- Do not add speculative features or mix unrelated refactors.
+- Preserve point-in-time and vendor failure semantics.
+- Keep data/provider access behind existing tool/dataflow boundaries.
+- Keep LLM narrative separate from deterministic risk and execution policy.
+- Current capability and proposed platform behavior must be labeled separately.
+- Add or update tests for changed behavior.
+- Update the matching source-of-truth documentation in the same change.
+
+## Verification
+
+Use `docs/ops/verify-gates.md`. A skipped gate is `UNVERIFIED` or `BLOCKED`, not
+a pass. Evidence must identify exact branch/SHA/runtime.
+
+## Scope Hard Stop
+
+Stop when implementation requires a new provider, production environment,
+broker, live order, leverage/derivatives, risk-limit change, destructive data
+operation, weakened data-quality rule, or public deployment not explicitly
+approved by the user.

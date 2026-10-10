@@ -6,7 +6,17 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, MetaData, String, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    LargeBinary,
+    MetaData,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -100,6 +110,167 @@ class RunRow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+
+
+class ResearchCheckpointRow(Base):
+    """Private recovery bytes, never a report/artifact or approval candidate."""
+
+    __tablename__ = "research_checkpoints"
+    __table_args__ = (
+        UniqueConstraint("run_id", "sequence", name="uq_research_checkpoints_run_sequence"),
+        UniqueConstraint("run_id", "content_hash", name="uq_research_checkpoints_run_content_hash"),
+        Index("ix_research_checkpoints_owner_run", "owner_id", "run_id", "sequence"),
+    )
+
+    record_id: Mapped[UUID] = mapped_column(primary_key=True)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    owner_id: Mapped[UUID] = mapped_column(nullable=False)
+    job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    attempt: Mapped[int] = mapped_column(nullable=False)
+    sequence: Mapped[int] = mapped_column(nullable=False)
+    fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    checkpoint_id: Mapped[UUID] = mapped_column(nullable=False)
+    content_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchContinuationRow(Base):
+    """Immutable owner consent/link only; not a queued research execution."""
+
+    __tablename__ = "research_continuations"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "idempotency_key"),
+        UniqueConstraint("source_run_id", "source_event_sequence", "checkpoint_record_id"),
+        Index("ix_research_continuations_owner_run", "owner_id", "source_run_id"),
+    )
+
+    execution_id: Mapped[UUID] = mapped_column(primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    source_job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(
+        ForeignKey("research_checkpoints.record_id"), nullable=False)
+    source_event_sequence: Mapped[int] = mapped_column(nullable=False)
+    idempotency_key: Mapped[str] = mapped_column(String(36), nullable=False)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchExecutionRow(Base):
+    """Separately fenced allocation; not a new run or default worker job."""
+
+    __tablename__ = "research_executions"
+    __table_args__ = (
+        UniqueConstraint("source_run_id", "attempt", name="uq_research_executions_run_attempt"),
+        CheckConstraint("attempt >= 2 AND attempt <= 1000000", name="attempt"),
+        CheckConstraint("status IN ('reserved', 'leased', 'cancel_requested', 'cancelled', 'review_required')",
+                        name="status"),
+        Index("ix_research_executions_owner_run", "owner_id", "source_run_id"),
+    )
+
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_continuations.execution_id"), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    source_job_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_jobs.job_id"), nullable=False)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt: Mapped[int] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    worker_id: Mapped[str | None] = mapped_column(String(128))
+    lease_token_hash: Mapped[str | None] = mapped_column(String(64))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchPreparationRefusalRow(Base):
+    """Append-only preclaim refusal, never model or continuation authority."""
+
+    __tablename__ = "research_preparation_refusals"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    observation_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    worker_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    refused_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+
+
+class ResearchExecutionEntryRow(Base):
+    """One actual parent entry marker; never re-enter after a lost ACK."""
+
+    __tablename__ = "research_execution_entries"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("run_events.event_id"), nullable=False, unique=True)
+
+
+class ResearchExecutionEventRow(Base):
+    """Append-only actor provenance without modifying historical events."""
+
+    __tablename__ = "research_execution_events"
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("run_events.event_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
+class ResearchCheckpointExecutionRow(Base):
+    """Append-only actor provenance; original checkpoints are not backfilled."""
+
+    __tablename__ = "research_checkpoint_executions"
+    record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
+class ResearchExecutionDispatchRow(Base):
+    """One durable consumed parent spawn boundary; ACK loss cannot respawn."""
+
+    __tablename__ = "research_execution_dispatches"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), nullable=False)
+    checkpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchExecutionArtifactRow(Base):
+    """Actor linkage for appended reader artifacts, never historical backfill."""
+
+    __tablename__ = "research_execution_artifacts"
+    artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), primary_key=True)
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), nullable=False, index=True)
+
+
+class ResearchExecutionCompletionRow(Base):
+    """Atomic linked output receipt; does not rewrite terminal root lifecycle."""
+
+    __tablename__ = "research_execution_completions"
+    __table_args__ = (
+        UniqueConstraint("report_artifact_id", name="uq_linked_completion_report"),
+        UniqueConstraint("decision_id", name="uq_linked_completion_decision"),
+    )
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    checkpoint_record_id: Mapped[UUID] = mapped_column(ForeignKey("research_checkpoints.record_id"), nullable=False)
+    checkpoint_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    report_artifact_id: Mapped[UUID] = mapped_column(ForeignKey("artifacts.artifact_id"), nullable=False)
+    evidence_artifact_id: Mapped[UUID | None] = mapped_column(ForeignKey("artifacts.artifact_id"))
+    decision_id: Mapped[UUID] = mapped_column(ForeignKey("decisions.decision_id"), nullable=False)
+    result_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    accounting_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    report_hash: Mapped[str] = mapped_column(String(71), nullable=False)
+    decision_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    evidence_hash: Mapped[str | None] = mapped_column(String(71))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class ResearchExecutionStopRow(Base):
+    """One additive local-stop fact, never publication/admission authority."""
+
+    __tablename__ = "research_execution_stops"
+    execution_id: Mapped[UUID] = mapped_column(ForeignKey("research_executions.execution_id"), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("owner_accounts.owner_id"), nullable=False)
+    source_run_id: Mapped[UUID] = mapped_column(ForeignKey("analysis_runs.run_id"), nullable=False)
+    payload_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON_VALUE, nullable=False)
+    stopped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class DecisionRow(Base):

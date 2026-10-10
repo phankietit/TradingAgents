@@ -1,0 +1,48 @@
+name: Chore, docs, or governance
+description: Propose maintenance, documentation, workflow, dependency, or upstream-sync work.
+title: "[TA-] chore: "
+labels:
+  - "type:chore"
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Documentation or governance
+        - CI or developer tooling
+        - Dependency maintenance
+        - Upstream synchronization
+        - Release preparation
+        - Other maintenance
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Exact files/systems included and explicitly excluded.
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason and expected outcome
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: Commands, supported runtimes, evidence, and rollback considerations.
+    validations:
+      required: true
+  - type: checkboxes
+    id: separation
+    attributes:
+      label: Change separation
+      options:
+        - label: Upstream synchronization is not mixed with product feature work.
+          required: true
+        - label: This issue does not include secrets or private portfolio data.
+          required: true

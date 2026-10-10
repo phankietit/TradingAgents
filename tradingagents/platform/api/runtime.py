@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -34,16 +35,42 @@ def _boolean(environ: Mapping[str, str], name: str, *, default: bool) -> bool:
 
 def load_api_settings(environ: Mapping[str, str] | None = None) -> ApiSettings:
     source = environ if environ is not None else os.environ
+    # Persist the operator's model selection on each run; the worker consumes
+    # that manifest rather than substituting its own model environment.
+    model_settings = {
+        field: source[name].strip()
+        for field, name in (
+            ("llm_provider", "TRADINGAGENTS_LLM_PROVIDER"),
+            ("quick_model", "TRADINGAGENTS_QUICK_THINK_LLM"),
+            ("deep_model", "TRADINGAGENTS_DEEP_THINK_LLM"),
+        )
+        if source.get(name, "").strip()
+    }
     return ApiSettings(
         database_url=_required(source, "TRADINGAGENTS_DATABASE_URL"),
         artifact_root=Path(_required(source, "TRADINGAGENTS_ARTIFACT_ROOT")),
         allowed_origin=_required(source, "TRADINGAGENTS_ALLOWED_ORIGIN"),
         secure_cookies=_boolean(source, "TRADINGAGENTS_SECURE_COOKIES", default=True),
         web_root=Path(source["TRADINGAGENTS_WEB_ROOT"]) if source.get("TRADINGAGENTS_WEB_ROOT", "").strip() else None,
+        **model_settings,
     )
 
 
-def main() -> None:
+def main(argv: Sequence[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(
+        prog="tradingagents-api",
+        description="Serve the private TradingAgents API on local loopback only.",
+        epilog=("Configure TRADINGAGENTS_DATABASE_URL, TRADINGAGENTS_ARTIFACT_ROOT and "
+                "TRADINGAGENTS_ALLOWED_ORIGIN before starting. Optional settings include "
+                "TRADINGAGENTS_API_PORT, TRADINGAGENTS_SECURE_COOKIES and TRADINGAGENTS_WEB_ROOT. "
+                "Credentials remain in server environment variables, never command-line options."),
+        allow_abbrev=False,
+    )
+    _, unknown = parser.parse_known_args(argv)
+    if unknown:
+        # Refuse before configuration/DB/logging/server admission. Do not echo
+        # argument values: an operator may have pasted a private value here.
+        parser.error("unrecognized command-line options; use --help")
     settings = load_api_settings()
     configure_platform_logging()
     try:

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import date
 from enum import Enum
 from math import isfinite
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import AwareDatetime, Field, FiniteFloat, model_validator
@@ -29,6 +30,9 @@ class PriceBasis(str, Enum):
 
 class OHLCVBar(StrictContract):
     timestamp: AwareDatetime
+    # Vendor session label, distinct from the instant when the candle closes.
+    # Absent in immutable v1.0 snapshots; never infer it for unknown feeds.
+    session_date: date | None = None
     open: PositivePrice
     high: PositivePrice
     low: PositivePrice
@@ -58,6 +62,7 @@ class OHLCVBar(StrictContract):
 
 
 class NormalizedTimeSeries(VersionedContract):
+    schema_version: Literal["1.0", "1.1"] = "1.0"
     instrument_id: UUID
     dataset: NonEmptyText
     interval: PriceInterval
@@ -79,6 +84,18 @@ class NormalizedTimeSeries(VersionedContract):
         adjusted = [bar.adjusted_close is not None for bar in self.bars]
         if any(adjusted) and not all(adjusted):
             raise ValueError("adjusted_close coverage must be complete or absent")
+        sessions = [bar.session_date for bar in self.bars]
+        if any(day is not None for day in sessions):
+            if self.schema_version != "1.1" or any(day is None for day in sessions):
+                raise ValueError("session dates require complete v1.1 coverage")
+            if self.interval is not PriceInterval.ONE_DAY:
+                raise ValueError("session dates currently support daily bars only")
+            if sessions != sorted(set(sessions)):
+                raise ValueError("session dates must be sorted and unique")
+            if any(day > bar.timestamp.date() for day, bar in zip(sessions, self.bars, strict=True)):
+                raise ValueError("session date must not follow the candle close")
+        elif self.schema_version == "1.1":
+            raise ValueError("v1.1 requires explicit session dates")
         return self
 
     @property

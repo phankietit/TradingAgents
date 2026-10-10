@@ -12,12 +12,13 @@ from uuid import uuid4
 
 from tradingagents.contracts import JobKind
 from tradingagents.default_config import DEFAULT_CONFIG
-from tradingagents.platform.analysis import AnalysisEngine
+from tradingagents.platform.analysis.supervision import SupervisedAnalysisEngine
 from tradingagents.platform.artifacts import LocalArtifactStore
 from tradingagents.platform.observability import configure_platform_logging
 from tradingagents.platform.persistence import Database
 
 from .analysis import AnalysisJobHandler
+from .linked_worker import poll_reserved_continuation
 from .worker import JobWorker
 
 
@@ -37,21 +38,30 @@ def load_worker_settings(environ=None):
     return WorkerSettings(database_url=source[required[0]], artifact_root=Path(source[required[1]]))
 
 
-def run_worker(settings, *, once=False, stopped=None, poll_seconds=1.0, worker_id=None, engine=None):
+def run_worker(settings, *, once=False, stopped=None, poll_seconds=1.0, worker_id=None, engine=None,
+               continuations=False):
     if not math.isfinite(poll_seconds) or poll_seconds <= 0:
         raise ValueError("poll_seconds must be positive and finite")
+    if type(continuations) is not bool or (continuations and engine is not None):
+        raise ValueError("continuation polling requires the original default engine")
     stopped = stopped or Event()
     database = Database(settings.database_url)
     try:
         store = LocalArtifactStore(settings.artifact_root)
         config = {**DEFAULT_CONFIG, "data_cache_dir": str(store.root / "worker-runtime" / "cache"),
                   "results_dir": str(store.root / "worker-runtime" / "reports")}
-        handler = AnalysisJobHandler(database, store, engine=engine or AnalysisEngine(base_config=config),
-                                     prompt_version=settings.prompt_version)
+        # Explicit engine injection is a local testing seam, not production
+        # recording authority. Default snapshot jobs require per-run recording.
+        handler = AnalysisJobHandler(database, store,
+            engine=engine if engine is not None else SupervisedAnalysisEngine(base_config=config),
+            prompt_version=settings.prompt_version, recording_enabled=engine is None)
         worker = JobWorker(database, worker_id=worker_id or f"worker-{uuid4()}",
                            handlers={JobKind.ANALYSIS_RUN: handler})
         while not stopped.is_set():
             result = worker.run_once()
+            if result is None and continuations and not stopped.is_set():
+                result = poll_reserved_continuation(database=database, artifact_store=store,
+                    base_config=config, worker_id=worker.worker_id)
             if once:
                 return result
             if result is None:
@@ -64,6 +74,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Process private TradingAgents analysis jobs.")
     parser.add_argument("--once", action="store_true", help="Process at most one eligible job, then exit.")
     parser.add_argument("--poll-seconds", type=float, default=1.0, help="Idle queue poll interval.")
+    parser.add_argument("--continuations", action="store_true",
+                        help="Also process explicitly consented original continuations when ordinary queue is idle.")
     args = parser.parse_args(argv)
     stopped = Event()
     previous = {}
@@ -71,7 +83,8 @@ def main(argv=None):
     try:
         for signum in (signal.SIGINT, signal.SIGTERM):
             previous[signum] = signal.signal(signum, lambda *_: stopped.set())
-        run_worker(load_worker_settings(), once=args.once, stopped=stopped, poll_seconds=args.poll_seconds)
+        run_worker(load_worker_settings(), once=args.once, stopped=stopped, poll_seconds=args.poll_seconds,
+                   continuations=args.continuations)
     except Exception as error:
         # Provider/database exceptions can contain credentials or source content.
         logging.getLogger("tradingagents.platform.jobs").error("worker stopped: %s", type(error).__name__)
