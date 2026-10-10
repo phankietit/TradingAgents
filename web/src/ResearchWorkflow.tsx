@@ -24,7 +24,7 @@ export default function ResearchWorkflow({events, status, hasSources, hasReport}
   ];
   return <section className="research-workflow" aria-label={t('Research workflow')}>
     <ol>{steps.map((step, index) => <li key={step.title} className={step.state} aria-current={step.state === 'active' ? 'step' : undefined}>
-      <span className="workflow-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+      <span className="workflow-index" aria-hidden="true">{step.state === 'done' ? '✓' : index + 1}</span>
       <div><strong>{t(step.title)}</strong><span>{t(step.detail)}</span></div>
     </li>)}</ol>
     {hasReport ? <p className="muted caption">{t(status === 'succeeded'

@@ -60,7 +60,7 @@ export default function Analysis() {
         {history.loading ? <p role="status">{t("Loading runs…")}</p> : history.error ? <p role="alert" className="danger">{t(errorMessage(history.error))}</p>
           : !history.data?.length ? <p className="muted">{t("No runs yet. Create one using saved evidence.")}</p>
           : <ul className="desktop-run-history">{history.data.map(item => <li key={item.run_id}><button aria-pressed={runId === item.run_id} onClick={() => selectRun(item.run_id)}>
-            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t("Instrument")}</strong><span>{t(processingLabels[observedStatuses[item.run_id] ?? item.status] ?? 'Status unavailable')}</span></span>
+            <span className="instrument-row"><strong>{catalog.data?.find(asset => asset.instrument_id === item.instrument_id)?.canonical_symbol ?? t("Instrument")}</strong><span className="status-tag" data-status={observedStatuses[item.run_id] ?? item.status}>{t(processingLabels[observedStatuses[item.run_id] ?? item.status] ?? 'Status unavailable')}</span></span>
             <span className="instrument-name">{timestamp(item.created_at)}</span>
           </button></li>)}</ul>}
         {history.data?.length === 200 ? <p className="warning">{t("Showing the latest 200 runs.")}</p> : null}

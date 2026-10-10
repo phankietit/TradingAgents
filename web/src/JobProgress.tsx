@@ -29,7 +29,7 @@ export default function JobProgress({runId, version, onStatus}: {runId: string; 
   if (job.error || !job.data || job.data.run_id !== runId) return <p className="warning">{t("Processing details unavailable.")} {job.error instanceof ApiError && job.error.status === 404 ? t("No processing record was found for this research.") : t(errorMessage(job.error))}  {t("This does not confirm that research is running.")}</p>;
   const data = job.data;
   return <section aria-label={t("Processing status")}>
-    <p><strong>{t(processingLabels[data.status])}</strong> · {data.attempt === 0 ? t("No attempt started") : `${t("Attempt")} ${data.attempt} ${t("of")} ${data.max_attempts}`}</p>
+    <p className="job-status"><strong className="status-tag" data-status={data.status}>{t(processingLabels[data.status])}</strong> · {data.attempt === 0 ? t("No attempt started") : `${t("Attempt")} ${data.attempt} ${t("of")} ${data.max_attempts}`}</p>
     {data.status === 'queued' ? <p className="notice">{t('Your request is saved, but AI processing has not started. The local analysis worker must be running. Do not submit a duplicate request.')}</p> : null}
     {data.status === 'retry_wait' ? <p className="notice">{t("A retry is scheduled no earlier than")} {timestamp(data.available_at)}{t(". It starts only when a background service is available and may incur further model charges.")}</p> : null}
     {data.status === 'cancel_requested' ? <p className="notice">{t("Cancellation is pending. Work may continue until the current processing step stops.")}</p> : null}

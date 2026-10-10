@@ -344,3 +344,15 @@ cross-asset acceptance remain pending; earlier narrow checks used Vite.
   REVIEW approval denied, keyboard-opened rejection, required reason, persisted
   rejection after reload, original/current distinction and clean console. The
   final all-workspace visual/failure matrix remains open.
+
+Presentation refresh (2026-10-10): the four-phase research workflow renders as
+a stepper with decorative markers (✓ completed, filled current phase, numbered
+waiting phases); its existing detail text and `aria-current` remain the only
+meaning-bearing signals and no completion percentage is shown. Run-history and
+processing status labels carry a colour-coded `data-status` tag that only
+reinforces the existing text. The three setup sections mark earlier sections as
+visited for orientation only; this is not validation, consent or readiness.
+The paid-call authorization checkbox is set apart as its own panel. Palette
+values are consolidated into CSS tokens and nested report lists no longer
+inherit artifact-row styling. No status derivation, consent, source, report,
+approval or API behaviour changed.
