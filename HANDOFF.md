@@ -1,5 +1,39 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**Owner backup/password reopen/source migration · 2026-10-10:** clean source
+`eae0a6caca4765ddaf7e70e080dbb8cf58885018`, Python3.14.7. Owner approved encrypted
+local paired backup and migration of existing storage; local AES-256 image
+creation, complete SQLite backup-API/artifact capture and isolated migration
+rehearsal passed. Initial password-reopen failed authentication; retained image
+and untouched source, no reset/recreation. Owner reran the read-only TTY-password
+command successfully. Current readback sessions21858/10698 terminal0 reconfirmed
+trusted-manifest binding, both database files, complete artifact inventory and
+15/15 referenced blobs. No password entered, stored or sent by the agent.
+
+Owner-approved pinned source upgrade session82787 terminal0: source matched
+trusted pre-migration capture, no open handles/active jobs; schema0010_owner_watchlist
+to0018_preparation_refusals PASS. Every original non-version table (15), all
+rows/schema/sequence state and complete artifact bytes preserved; migrated DB
+exactly matches the verified rehearsal, new tables empty, integrity/FKs PASS.
+Backup remains unchanged/read-only. Original Alembic version is the intentional
+metadata change; no original financial/run/session/evidence row rewrite,
+bootstrap, downgrade, replay, provider/model/risk or product-code change.
+Operator scripts/manifests/private receipt remain outside Git, no private paths,
+hashes, credentials or raw rows in this receipt.
+
+Post-migration read-only audit: one owner, nine prior runs; eight succeeded jobs,
+one cancelled, no active jobs or leases. New continuation/execution/checkpoint/
+dispatch tables empty; no unrevoked nonexpired sessions. Configured MiniMax/M3
+quick/deep unchanged and required MiniMax/FRED/SEC env present (values withheld).
+No API/worker restarted and neither approved paid BTC/AAPL run submitted.
+Restart approval requested separately: real owner workspace on loopback8001,
+preserve pre-existing synthetic8000, worker limited to the two approved runs.
+Fresh owner login and actual browser/live financial/VI gates remain UNVERIFIED;
+NQ=F remains owner-BLOCKED. This in-place SQLite migration is NOT fresh-target
+restoration, encrypted cloud transfer, copied-session fencing, PostgreSQL rollout
+or release acceptance. Full R01–R14 goal remains ACTIVE.
+See [dated operator receipt](docs/platform/operator-migration-20261010.md).
+
 **Owner authorization / current SEC probe · 2026-10-08:** owner supplied actual
 SEC contact and approved exactly one fresh BTC plus one AAPL MiniMax acceptance
 execution. Contact saved only in ignored local worktree .env, mode600; no contact

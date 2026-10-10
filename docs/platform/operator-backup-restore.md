@@ -8,6 +8,14 @@ active-job recovery and restored browser acceptance remain UNVERIFIED. See
 [persistence](persistence.md) and [HANDOFF](../../HANDOFF.md) for executed receipts.
 A documented step is not a passed gate.
 
+Executed local exception to the older UNVERIFIED summary above:
+[2026-10-10 owner-approved receipt](operator-migration-20261010.md) proves a paired
+encrypted SQLite/artifact capture, owner-password reopen/readback and additive
+in-place migration preserving original history. It does not prove encrypted
+cloud transfer, fresh-target restore/session fencing, PostgreSQL rollout,
+worker restart or restored browser/live acceptance. The full checklist below
+remains required for those distinct operations.
+
 ## Preconditions
 
 Obtain explicit owner approval for source, new target, private encrypted

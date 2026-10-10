@@ -9,7 +9,7 @@ recorded in GitHub history.
 
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
-| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Full3.14 at37c1a42 and full3.12 session41168 at796c417 terminal3306PASS/88subtests/2optionalUNVERIFIED, ownedcleanup confirmed; priorFAIL retained; side fast-forward faf290a only afterward, backend unchanged, integrated build/lint225webPASS session44374; live/financial/VI/operator/runtime gates open, DraftPR7 whole goal incomplete | in-progress | 2026-10-08 |
+| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Full3.14/3.12 and web receipts retained; eae0a6c encrypted paired backup/password reopen/source0010→0018 session82787 PASS, all original tables/artifacts preserved; no API/worker restart or approved paid runs submitted, separate restart approval pending; live/financial/VI/broader restore/runtime gates open, DraftPR7 whole goal incomplete | in-progress | 2026-10-10 |
 
 Rules:
 
