@@ -63,6 +63,10 @@ provider/model/risk change, broker action or public deployment occurred.
 
 ## Remaining requirements
 
+Later2026-10-10: the [matrix receipt](python-matrix-verification-20261010.md)
+adds full local3.11/3.13 at6b49320. The following paragraph records the earlier
+minimum-version checkpoint, not the latest matrix state.
+
 The original inactive workflow records Python3.10–3.13. Current local full
 receipts cover3.10 and3.12;3.11/3.13 remain UNVERIFIED. Additional3.14 evidence
 does not silently replace a required version. Hosted CI remains owner-disabled.

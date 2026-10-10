@@ -5,6 +5,14 @@ platform, with human decision review. No broker or public deployment.
 
 ## Baseline
 
+Latest2026-10-10: clean6b49320 full local3.11 session59766 terminal0 and3.13
+session34183 terminal0 PASS, each3306 tests+88 subtests/2optional UNVERIFIED/
+502warnings,1164.80s and1220.84s. Fresh installation/import/resources/console
+smoke PASS; sequential native gates and owned cleanup independently confirmed.
+Original matrix3.10–3.13 now has exact-SHA local macOS receipts, not Ubuntu/CI
+or live acceptance. See [matrix receipt](python-matrix-verification-20261010.md).
+R01–R14 remains ACTIVE; existing live failures and owner/runtime gates retained.
+
 Later 2026-10-10 update: frozen clean c0268c7 full local Python3.10.22 gate65550
 terminal0 PASS,3306 tests+88 subtests,2 optional skips UNVERIFIED,502 warnings,
 1762.85s; task-owned helper/container cleanup independently confirmed.
@@ -127,7 +135,7 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
 | R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; native SQLite saved EN/VI report and later real-PG synthetic browser submission/completion/cancellation/new-attempt gates have separate PASS receipts (HANDOFF), not full live-journey acceptance. Integrated web build/lint/225 tests PASS at faf290a; rendered pending-cancel source a6917d3 unchanged at cd21d9e. Professional complete live journey/final-report acceptance UNVERIFIED; valid live final report FAIL retained |
 | R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full Python3.10 atc0268c7,3.12 at796c417 and additional3.14 at37c1a42 PASS:3306 tests+88 subtests each,2 optional skips UNVERIFIED; original FAILs retained. Fresh noneditable3.10/3.12 installation/smoke PASS; original matrix3.11/3.13 still UNVERIFIED, CI stays disabled. Integrated web225 PASS atfaf290a and source comparisons retained, not new rendered/full-web executions at current SHA. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full local Python3.10 atc0268c7,3.11/3.13 at6b49320,3.12 at796c417 and additional3.14 at37c1a42 PASS:3306 tests+88 subtests each,2 optional skips UNVERIFIED; original FAILs retained. Fresh noneditable3.10–3.13 installation/smoke receipts retained; original matrix covered locally on macOS, not Ubuntu/CI. CI stays disabled. Integrated web225 PASS atfaf290a and source comparisons retained, not new rendered/full-web executions at current SHA. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
 | R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS redacted receipts/Draft PR7 and approved encrypted local paired backup/password reopen/source0010→0018 migration at eae0a6c, original history/artifacts preserved. Fresh-target restore/session fencing, cloud transfer, PostgreSQL operator rollout and fresh browser/authorized restart remain UNVERIFIED; no worker/API restart implied. Final R01–R14 acceptance/release UNVERIFIED, not an owner-approved deferral |
 
 Overall goal is not complete. The previous extra BTC execution failed report

@@ -1,5 +1,20 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R13 remaining local Python matrix · 2026-10-10:** frozen clean
+`6b4932084140c568eb01543b746cb8d62f2f8f60`, full3.11.17 session59766 terminal0
+and3.13.16 session34183 terminal0: each3306 tests+88 subtests PASS,2 optional
+skips UNVERIFIED,502 warnings;1164.80s and1220.84s respectively. Original full
+PostgreSQL helper, isolated fresh noneditable environments, cleared credentials,
+sequential execution and owned cleanup independently confirmed. Outside-checkout
+installed import/resources/API/worker/CLI help72863 terminal0 PASS for both.
+All four original matrix versions3.10–3.13 now have local macOS arm64 full
+receipts, pinned to their actual SHAs; CI/Ubuntu and live evidence are not implied.
+Source stayed fixed until terminal/cleanup; this receipt is a later docs-only
+change. Financial/VI/semantic/UX/recovery/operator requirements remain incomplete,
+NQ owner-BLOCKED, separate real API/worker restart approval pending; no paid
+BTC/AAPL run submitted. Full goal ACTIVE. See
+[matrix receipt](docs/platform/python-matrix-verification-20261010.md).
+
 **R13 minimum Python3.10 clean install/full local regression · 2026-10-10:**
 frozen clean `c0268c70f6c67ea79ed6c7c848e54bbda94a7827`, session65550 terminal0:
 3306 tests +88 subtests PASS,2 optional skips UNVERIFIED,502 warnings,1762.85s

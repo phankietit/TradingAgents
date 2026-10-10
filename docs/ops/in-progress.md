@@ -9,7 +9,7 @@ recorded in GitHub history.
 
 | Issue | Owner/task | Branch | Worktree | Scope | Status | Updated UTC |
 | --- | --- | --- | --- | --- | --- | --- |
-| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Frozen c0268c7 full3.10 session65550 terminal3306PASS/88subtests/2optionalUNVERIFIED, ownedcleanup confirmed; full3.12/3.14/web and encrypted source-migration receipts retained; original matrix3.11/3.13 open; no API/worker restart or approved paid runs submitted, separate restart approval pending; live/financial/VI/broader restore/runtime gates open, DraftPR7 whole goal incomplete | in-progress | 2026-10-10 |
+| R01–R14 | current thread | fix/TA-R01-research-quality | /Volumes/Data/codex/worktrees/ta-030-analysis-risk/TradingAgents | Frozen6b49320 full3.11 session59766 and3.13 session34183 terminal0, each3306PASS/88subtests/2optionalUNVERIFIED, ownedcleanup confirmed; original3.10–3.13 local macOS matrix receipts complete, CI off. Prior full3.14/web/encrypted source migration retained. No API/worker restart or approved paid runs submitted, separate restart approval pending; live/financial/VI/broader restore/runtime gates open, DraftPR7 whole goal incomplete | in-progress | 2026-10-10 |
 
 Rules:
 
