@@ -1,5 +1,17 @@
 # TradingAgents — bàn giao 2026-09-27, tiếp nối 2026-10-03
 
+**R11 preparation disclosure · 2026-10-10:** clean source
+`877143168057237da3552f42944111c77c4bf2b6`, build54718/lint66786/full web61204
+terminal0:227 tests/29 files PASS. Native supplementary-source disclosure EN/VI,
+unchanged source/consent/risk/graph/CLI contracts; actual in-app synthetic QA
+scope/data/review, Enter/Space/Tab, selected-source persistence and disabled queue
+without consent PASS. Desktop/mobile images inspected; malformed post-resize tab
+capture rejected, accepted native desktop observation retained. Owned QA8000
+shutdown53707 terminal143/normal app shutdown, PID/listener absent; no owner
+runtime or new model job. Full professional report/decision/live journey remains
+unfinished; R01–R14 ACTIVE, NQ owner-BLOCKED and separate owner restart pending.
+See [scoped receipt](docs/platform/preparation-ux-verification-20261010.md).
+
 **R13 remaining local Python matrix · 2026-10-10:** frozen clean
 `6b4932084140c568eb01543b746cb8d62f2f8f60`, full3.11.17 session59766 terminal0
 and3.13.16 session34183 terminal0: each3306 tests+88 subtests PASS,2 optional
