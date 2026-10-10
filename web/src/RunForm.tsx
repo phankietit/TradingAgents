@@ -23,6 +23,7 @@ interface Profile { name: string; allowed_analysts: string[]; investable: boolea
 interface Source { snapshot: Snapshot; metadata_eligible: boolean; ineligibility_reasons: string[]; supported_analysts: string[] }
 const FUNDAMENTALS_MAX_AGE_SECONDS = 31_536_000;
 type SetupStep = 'scope' | 'data' | 'review';
+const setupSteps: SetupStep[] = ['scope', 'data', 'review'];
 const macroIndicators: Record<string, string> = { DGS10: 'US 10-year Treasury yield',
   CPIAUCSL: 'Consumer price index · level', UNRATE: 'US unemployment rate',
   GDPC1: 'Real gross domestic product', M2SL: 'M2 money supply' };
@@ -316,9 +317,9 @@ export default function RunForm({ catalog, initialInstrument, onClose, onCreated
   return <form className="analysis-form" onSubmit={submit} aria-label={t("New analysis")} aria-busy={pending || dataPending}>
     <h2>{t("Configure analysis")}</h2>
     <nav className="setup-navigation" aria-label={t('Analysis setup sections')}>
-      <button type="button" aria-current={step === 'scope' ? 'step' : undefined} onClick={() => visit('scope')}><span aria-hidden="true">01</span>{t('Research scope')}</button>
-      <button type="button" aria-current={step === 'data' ? 'step' : undefined} onClick={() => visit('data')}><span aria-hidden="true">02</span>{t('Prepare market data')}</button>
-      <button type="button" aria-current={step === 'review' ? 'step' : undefined} onClick={() => visit('review')}><span aria-hidden="true">03</span>{t('Review & authorize')}</button>
+      <button type="button" className={setupSteps.indexOf(step) > setupSteps.indexOf('scope') ? 'passed' : undefined} aria-current={step === 'scope' ? 'step' : undefined} onClick={() => visit('scope')}><span aria-hidden="true">01</span>{t('Research scope')}</button>
+      <button type="button" className={setupSteps.indexOf(step) > setupSteps.indexOf('data') ? 'passed' : undefined} aria-current={step === 'data' ? 'step' : undefined} onClick={() => visit('data')}><span aria-hidden="true">02</span>{t('Prepare market data')}</button>
+      <button type="button" className={setupSteps.indexOf(step) > setupSteps.indexOf('review') ? 'passed' : undefined} aria-current={step === 'review' ? 'step' : undefined} onClick={() => visit('review')}><span aria-hidden="true">03</span>{t('Review & authorize')}</button>
     </nav>
     {preparing && preparationProgress ? <section className="notice" aria-label={t('Data preparation progress')}>
       <p role="status">{t('Checking market data')} · {t('Attempt')} {preparationProgress.attempt}/3</p>
