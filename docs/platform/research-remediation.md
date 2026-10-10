@@ -5,7 +5,27 @@ platform, with human decision review. No broker or public deployment.
 
 ## Baseline
 
-Latest 2026-10-08 checkpoint: primary full PostgreSQL/default regression on
+Current reconciliation — 2026-10-10, clean source
+`cd21d9e6bb8380340be33c448e8f37cf0864545f`: the ticket rows below now include the
+later full Python3.12/3.14, integrated web, scoped PostgreSQL/browser and approved
+operator migration receipts in [HANDOFF](../../HANDOFF.md). Historical dated
+paragraphs remain evidence, not today's runtime status. Current source comparisons
+`git diff --exit-code 796c4178c3c710fba32eb20651c5ace7d46e71a7 HEAD -- tradingagents tests scripts pyproject.toml uv.lock`
+and `git diff --exit-code a6917d31d5bc650a215c3731cf43f61b9d275a02 HEAD -- web/src web/package.json web/package-lock.json`
+both PASS. They establish unchanged scoped source, NOT new suite/browser runs
+at cd21d9e. A current machine inventory found only Python3.12 and3.14 runtimes;
+other supported versions remain UNVERIFIED, not silently excluded from the
+`>=3.10` package contract. No new interpreter installation, CI or provider/model
+invocation was performed in this reconciliation.
+
+Owner-approved encrypted paired backup, password reopen and original SQLite
+0010→0018 migration now PASS; all original history and artifact bytes preserved.
+See [operator receipt](operator-migration-20261010.md) for the distinct gates
+that remain UNVERIFIED. No API/worker restart or new paid job has occurred;
+separate runtime approval remains pending. NQ=F remains owner-BLOCKED and the
+existing BTC/AAPL live financial/VI failures are not superseded. Goal ACTIVE.
+
+Earlier 2026-10-08 checkpoint: primary full PostgreSQL/default regression on
 frozen `37c1a423ef20e53b6fab692021fdd440279f4ade` ended terminal0,
 3306 tests +88 subtests PASS/3355.28s; two optional-provider skips remain
 UNVERIFIED. After owned cleanup, isolated polling/preview fixes and scoped
@@ -26,7 +46,7 @@ Vietnamese/live/operator acceptance remain incomplete; no release is approved.
 - CI remains disabled by owner preference. Verification runs locally.
 - Existing run/snapshot artifacts are immutable; fixes produce new runs.
 
-Current local acceptance (2026-10-08): full frozen02ed0cc gate18967 terminal0:
+Historical local acceptance (2026-10-08): full frozen02ed0cc gate18967 terminal0:
 3236tests/88subtests PASS,2optional-provider skips UNVERIFIED,502warnings,
 3580.84s. External native observer makes this instrumented full local evidence,
 not native root-cause/reliability or uninstrumented acceptance. Owned PostgreSQL
@@ -93,13 +113,13 @@ implemented local evidence from live acceptance; see the verification receipt.
 | R05 | bug / llm / P0 | R01 | Compatible strict schemas, bounded repair, safe diagnostics; invalid stays REVIEW | PASS local/fail-closed; live valid-report acceptance FAIL |
 | R06 | bug / agents / P0 | R05 | All graph roles preserve authority and product scope | PASS deterministic authority boundary; live narrative quality FAIL |
 | R07 | feature / data / P0 | R03–R06 | Claims trace to source and calculations; invalid claims block readiness | PASS local numeric/provenance gates; semantic entailment UNVERIFIED |
-| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS focused local lifecycle/native original parity and authenticated preparation/consent/opt-in worker/refusal/status/cancel receipts. Clean75e6f93 browser consent -> native bilingual SQLite worker -> EN/VI saved readback PASS. Clean c314913 active mobile cancel -> verified local-stop projection/EN-VI display PASS (20.90s), 173web tests PASS. Native cancelled/expired/completed/tamper and before-publication race dirty focused PASS, history/allowance unchanged. General concurrent polling and PostgreSQL rendered flow UNVERIFIED; new full candidate pending. Clean full9c PASS separately. Default startup ordinary-only; live operational acceptance FAIL at wall budget |
+| R08 | bug / infra / P1 | R05 | Real stage events, usage, cancel/retry lifecycle and bounded execution | PASS scoped local/native lifecycle and authenticated continuation receipts; later real-PG synthetic two-tab polling, cooperative cancellation and fresh-consent browser gates PASS (HANDOFF). Pending-cancel action at a6917d3 PASS, exactly one run POST/one cancel POST, no premature stopped state; unchanged web source verified at cd21d9e. Native/live general race/retry/expiry/recovery remains UNVERIFIED; original live wall-budget FAIL retained. Original-attempt and linked histories/allowances are not rewritten; ordinary startup is not blanket opt-in continuation consent |
 | R09 | bug / portfolio / P0 | R07–R08 | Separate source/research/approval status; deterministic risk remains authoritative | PASS local + live invalid-report display |
 | R10 | feature / web / P1 | R01,R09 | Complete design specification based on approved Linkpolish reference | PASS |
-| R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; synthetic continuation UI PASS at00d3ee6. Actual native SQLite fixture to real API/browser saved-report readback EN/VI desktop/mobile PASS atab13fe0; exact8bc original-attempt label/166web tests/rendered readback PASS. Browser-driven dispatch, professional full journey and live acceptance UNVERIFIED; valid live final report FAIL |
+| R11 | feature / web / P1 | R08–R10,R12 | Responsive workspace, real snapshot chart, working research flow | Implemented workspace/chart/process controls; native SQLite saved EN/VI report and later real-PG synthetic browser submission/completion/cancellation/new-attempt gates have separate PASS receipts (HANDOFF), not full live-journey acceptance. Integrated web build/lint/225 tests PASS at faf290a; rendered pending-cancel source a6917d3 unchanged at cd21d9e. Professional complete live journey/final-report acceptance UNVERIFIED; valid live final report FAIL retained |
 | R12 | feature / web / P1 | R05,R07,R10 | Safe readable bilingual report, identical evidence/numbers across views | PASS local/saved switching; live bilingual quality FAIL |
-| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Clean frozen full9c PASS:3200tests/88subtests/3057.96s, Ruff/pip/diff PASS; 2 optional skips UNVERIFIED. Prior full5894 preparation/full6f consent causes UNVERIFIED, original FAIL receipts retained. UI integrated only after terminal to d4dc2e1; full9c is not an exact integrated-candidate full gate. Actual combined browser/backend/native and live valid-report acceptance remain UNVERIFIED/FAIL respectively |
-| R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS current receipts and Draft PR #7; final R01–R14 acceptance and release UNVERIFIED, not an owner-approved deferral |
+| R13 | test / agents / P0 | R02–R12 | Local regression, representative asset fixtures and live MiniMax evidence | Full Python3.14 at37c1a42 and3.12 at796c417 PASS:3306 tests+88 subtests each, 2 optional skips UNVERIFIED; original FAILs retained. Backend source unchanged at cd21d9e; integrated web225 PASS atfaf290a, not new full execution at current SHA. Fresh noneditable3.12 smoke PASS; remaining supported runtime matrix UNVERIFIED. Live MiniMax financial/VI FAIL and broader operational/full-journey UNVERIFIED gates remain; two approved fresh BTC/AAPL runs not submitted, NQ owner-BLOCKED |
+| R14 | docs / docs / P1 | R13 | Exact-SHA receipt, local scripts, limitations and migration/recovery instructions | PASS redacted receipts/Draft PR7 and approved encrypted local paired backup/password reopen/source0010→0018 migration at eae0a6c, original history/artifacts preserved. Fresh-target restore/session fencing, cloud transfer, PostgreSQL operator rollout and fresh browser/authorized restart remain UNVERIFIED; no worker/API restart implied. Final R01–R14 acceptance/release UNVERIFIED, not an owner-approved deferral |
 
 Overall goal is not complete. The previous extra BTC execution failed report
 acceptance; its immutable failure receipt remains valid. On 2026-09-27 the owner
